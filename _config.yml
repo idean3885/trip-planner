@@ -9,8 +9,15 @@ exclude:
   - mcp-servers
   - specs
   - .specify
+  - .claude
+  - .omc
   - tests
   - scripts
   - templates
+  - docs
+  - CLAUDE.md
+  - README.md
+  - "02_honeymoon_plan.md"
+  - pyproject.toml
   - "*.py"
   - Makefile
