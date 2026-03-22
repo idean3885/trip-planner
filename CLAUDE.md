@@ -62,3 +62,10 @@ travel-planner/
 ### 블로그 활용
 - 모든 콘텐츠는 마크다운으로 관리
 - 추후 블로그 포스팅 소재로 재활용 가능하도록 작성
+
+## Active Technologies
+- Python 3.14 + FastMCP, httpx, python-dotenv, pytes (001-ax-travel-planning)
+- 마크다운 파일 (`trips/` 디렉토리, git 관리) (001-ax-travel-planning)
+
+## Recent Changes
+- 001-ax-travel-planning: Added Python 3.14 + FastMCP, httpx, python-dotenv, pytes
