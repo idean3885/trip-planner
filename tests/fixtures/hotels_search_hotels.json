@@ -1,0 +1,80 @@
+{
+  "status": true,
+  "message": "Success",
+  "data": {
+    "hotels": [
+      {
+        "hotel_id": 98765,
+        "accessibilityLabel": "Hotel room: Superior Double Room. 1 bed. 180 EUR per night.",
+        "property": {
+          "id": 98765,
+          "name": "Bairro Alto Hotel",
+          "wishlistName": "Lisbon",
+          "reviewScore": 9.2,
+          "reviewCount": 1842,
+          "reviewScoreWord": "Exceptional",
+          "latitude": 38.7128,
+          "longitude": -9.1426,
+          "propertyClass": 5,
+          "photoUrls": [
+            "https://example.com/bairro-alto-1.jpg",
+            "https://example.com/bairro-alto-2.jpg"
+          ],
+          "checkin": {
+            "fromTime": "15:00",
+            "untilTime": "00:00"
+          },
+          "checkout": {
+            "fromTime": "00:00",
+            "untilTime": "12:00"
+          },
+          "priceBreakdown": {
+            "grossPrice": {
+              "currency": "EUR",
+              "value": 280.0
+            },
+            "strikethroughPrice": {
+              "currency": "EUR",
+              "value": 350.0
+            }
+          }
+        }
+      },
+      {
+        "hotel_id": 54321,
+        "accessibilityLabel": "Hotel room: Standard Twin Room. 2 beds. 95 EUR per night.",
+        "property": {
+          "id": 54321,
+          "name": "Lisboa Central Hostel",
+          "wishlistName": "Lisbon",
+          "reviewScore": 8.5,
+          "reviewCount": 632,
+          "reviewScoreWord": "Fabulous",
+          "latitude": 38.7139,
+          "longitude": -9.1394,
+          "propertyClass": 2,
+          "photoUrls": [
+            "https://example.com/central-hostel-1.jpg"
+          ],
+          "checkin": {
+            "fromTime": "14:00",
+            "untilTime": "23:00"
+          },
+          "checkout": {
+            "fromTime": "00:00",
+            "untilTime": "11:00"
+          },
+          "priceBreakdown": {
+            "grossPrice": {
+              "currency": "EUR",
+              "value": 95.0
+            }
+          }
+        }
+      }
+    ],
+    "meta": {
+      "total": 2
+    }
+  }
+}

@@ -1,5 +1,4 @@
 import json
-import httpx
 import logging
 import re
 import signal
@@ -7,11 +6,8 @@ import sys
 import argparse
 from typing import Dict, List, Any, Optional
 from mcp.server.fastmcp import FastMCP
-from dotenv import load_dotenv
-import os
 
-# Load environment variables
-load_dotenv()
+from hotels_mcp.api_client import make_rapidapi_request, RAPIDAPI_KEY, RAPIDAPI_HOST
 
 # Configure logging
 logging.basicConfig(
@@ -24,34 +20,10 @@ logger = logging.getLogger("travel-mcp-server")
 # Initialize FastMCP server
 mcp = FastMCP("travel")
 
-# Constants
-RAPIDAPI_KEY = os.getenv("RAPIDAPI_KEY")
-RAPIDAPI_HOST = os.getenv("RAPIDAPI_HOST", "booking-com15.p.rapidapi.com")
-
 # Validate required environment variables
 if not RAPIDAPI_KEY:
     logger.error("RAPIDAPI_KEY environment variable is not set. Please create a .env file with your API key.")
     sys.exit(1)
-
-async def make_rapidapi_request(endpoint: str, params: Optional[Dict[str, str]] = None) -> Dict[str, Any]:
-    """Make a request to the RapidAPI with proper error handling."""
-    url = f"https://{RAPIDAPI_HOST}{endpoint}"
-    
-    headers = {
-        "X-RapidAPI-Key": RAPIDAPI_KEY,
-        "X-RapidAPI-Host": RAPIDAPI_HOST
-    }
-    
-    logger.info(f"Making API request to {endpoint} with params: {params}")
-    async with httpx.AsyncClient() as client:
-        try:
-            response = await client.get(url, headers=headers, params=params, timeout=30.0)
-            response.raise_for_status()
-            logger.info(f"API request to {endpoint} successful")
-            return response.json()
-        except Exception as e:
-            logger.error(f"API request to {endpoint} failed: {str(e)}")
-            return {"error": str(e)}
 
 @mcp.tool()
 async def search_destinations(query: str) -> str:

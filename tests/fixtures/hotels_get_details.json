@@ -1,0 +1,52 @@
+{
+  "status": true,
+  "message": "Success",
+  "data": {
+    "hotel_id": 98765,
+    "hotel_name": "Bairro Alto Hotel",
+    "address": "Praca Luis de Camoes 2",
+    "city": "Lisbon",
+    "country_trans": "Portugal",
+    "review_score": 9.2,
+    "review_nr": 1842,
+    "review_score_word": "Exceptional",
+    "class": 5,
+    "checkin": {
+      "from": "15:00",
+      "until": "00:00"
+    },
+    "checkout": {
+      "from": "00:00",
+      "until": "12:00"
+    },
+    "facilities_block": {
+      "facilities": [
+        {"name": "Free WiFi"},
+        {"name": "Restaurant"},
+        {"name": "Bar"},
+        {"name": "Spa"},
+        {"name": "Fitness centre"},
+        {"name": "Concierge service"},
+        {"name": "Room service"},
+        {"name": "Luggage storage"},
+        {"name": "Airport shuttle"},
+        {"name": "Non-smoking rooms"}
+      ]
+    },
+    "composite_price_breakdown": {
+      "gross_amount_per_night": {
+        "currency": "EUR",
+        "value": 280.0
+      },
+      "included_taxes_and_charges_amount": {
+        "currency": "EUR",
+        "value": 45.0
+      }
+    },
+    "description": "Bairro Alto Hotel is a five-star luxury boutique hotel located in the historic Chiado neighbourhood of Lisbon. The hotel offers stunning views over the Tagus River and the city rooftops. Each room is individually designed with Portuguese azulejo tiles and contemporary furnishings.",
+    "wifi_review_score": {
+      "rating": 9.0,
+      "count": 1200
+    }
+  }
+}

@@ -1,0 +1,146 @@
+{
+  "status": true,
+  "message": "Success",
+  "data": {
+    "flightOffers": [
+      {
+        "token": "flight-token-001",
+        "segments": [
+          {
+            "departureAirport": {
+              "type": "AIRPORT",
+              "code": "OPO",
+              "name": "Francisco Sa Carneiro Airport",
+              "cityName": "Porto",
+              "countryName": "Portugal"
+            },
+            "arrivalAirport": {
+              "type": "AIRPORT",
+              "code": "MAD",
+              "name": "Adolfo Suarez Madrid-Barajas Airport",
+              "cityName": "Madrid",
+              "countryName": "Spain"
+            },
+            "departureTime": "2026-06-14T07:30:00",
+            "arrivalTime": "2026-06-14T10:00:00",
+            "totalTime": 5400,
+            "legs": [
+              {
+                "departureTime": "2026-06-14T07:30:00",
+                "arrivalTime": "2026-06-14T10:00:00",
+                "cabinClass": "ECONOMY",
+                "flightInfo": {
+                  "flightNumber": "1234",
+                  "carrierInfo": {
+                    "operatingCarrier": "IB"
+                  }
+                },
+                "carriersData": [
+                  {
+                    "name": "Iberia",
+                    "code": "IB"
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "priceBreakdown": {
+          "total": {
+            "currencyCode": "EUR",
+            "units": 89,
+            "nanos": 990000000
+          },
+          "baseFare": {
+            "currencyCode": "EUR",
+            "units": 65,
+            "nanos": 0
+          },
+          "fee": {
+            "currencyCode": "EUR",
+            "units": 24,
+            "nanos": 990000000
+          }
+        },
+        "baggagePolicy": {
+          "cabin": {
+            "allowance": "1 bag (10kg)"
+          },
+          "checked": {
+            "allowance": "Not included"
+          }
+        }
+      },
+      {
+        "token": "flight-token-002",
+        "segments": [
+          {
+            "departureAirport": {
+              "type": "AIRPORT",
+              "code": "OPO",
+              "name": "Francisco Sa Carneiro Airport",
+              "cityName": "Porto",
+              "countryName": "Portugal"
+            },
+            "arrivalAirport": {
+              "type": "AIRPORT",
+              "code": "MAD",
+              "name": "Adolfo Suarez Madrid-Barajas Airport",
+              "cityName": "Madrid",
+              "countryName": "Spain"
+            },
+            "departureTime": "2026-06-14T14:15:00",
+            "arrivalTime": "2026-06-14T16:45:00",
+            "totalTime": 5400,
+            "legs": [
+              {
+                "departureTime": "2026-06-14T14:15:00",
+                "arrivalTime": "2026-06-14T16:45:00",
+                "cabinClass": "ECONOMY",
+                "flightInfo": {
+                  "flightNumber": "5678",
+                  "carrierInfo": {
+                    "operatingCarrier": "VY"
+                  }
+                },
+                "carriersData": [
+                  {
+                    "name": "Vueling",
+                    "code": "VY"
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "priceBreakdown": {
+          "total": {
+            "currencyCode": "EUR",
+            "units": 62,
+            "nanos": 500000000
+          },
+          "baseFare": {
+            "currencyCode": "EUR",
+            "units": 45,
+            "nanos": 0
+          },
+          "fee": {
+            "currencyCode": "EUR",
+            "units": 17,
+            "nanos": 500000000
+          }
+        },
+        "baggagePolicy": {
+          "cabin": {
+            "allowance": "1 bag (10kg)"
+          },
+          "checked": {
+            "allowance": "23kg included"
+          }
+        }
+      }
+    ],
+    "searchId": "search-abc-123",
+    "totalCount": 2
+  }
+}

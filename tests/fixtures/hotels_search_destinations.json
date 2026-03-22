@@ -1,0 +1,40 @@
+{
+  "status": true,
+  "message": "Success",
+  "data": [
+    {
+      "dest_id": "-2140479",
+      "search_type": "CITY",
+      "dest_type": "city",
+      "city_ufi": -2140479,
+      "name": "Lisbon",
+      "label": "Lisbon, Lisbon District, Portugal",
+      "region": "Lisbon District",
+      "country": "Portugal",
+      "roundtrip": "GgA=",
+      "latitude": 38.720832,
+      "longitude": -9.135632,
+      "nr_hotels": 1423,
+      "hotels": 1423,
+      "image_url": "https://example.com/lisbon.jpg",
+      "type": "city"
+    },
+    {
+      "dest_id": "-2167973",
+      "search_type": "CITY",
+      "dest_type": "city",
+      "city_ufi": -2167973,
+      "name": "Porto",
+      "label": "Porto, Porto District, Portugal",
+      "region": "Porto District",
+      "country": "Portugal",
+      "roundtrip": "GgA=",
+      "latitude": 41.157944,
+      "longitude": -8.629105,
+      "nr_hotels": 842,
+      "hotels": 842,
+      "image_url": "https://example.com/porto.jpg",
+      "type": "city"
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "status": true,
+  "message": "Success",
+  "data": [
+    {
+      "id": "LIS.AIRPORT",
+      "type": "AIRPORT",
+      "name": "Lisbon Humberto Delgado Airport",
+      "code": "LIS",
+      "cityName": "Lisbon",
+      "cityId": "LIS",
+      "countryName": "Portugal",
+      "countryId": "PT",
+      "regionId": "",
+      "coordinates": {
+        "latitude": 38.7756,
+        "longitude": -9.1354
+      }
+    },
+    {
+      "id": "OPO.AIRPORT",
+      "type": "AIRPORT",
+      "name": "Francisco Sa Carneiro Airport",
+      "code": "OPO",
+      "cityName": "Porto",
+      "cityId": "OPO",
+      "countryName": "Portugal",
+      "countryId": "PT",
+      "regionId": "",
+      "coordinates": {
+        "latitude": 41.2481,
+        "longitude": -8.6814
+      }
+    },
+    {
+      "id": "MAD.AIRPORT",
+      "type": "AIRPORT",
+      "name": "Adolfo Suarez Madrid-Barajas Airport",
+      "code": "MAD",
+      "cityName": "Madrid",
+      "cityId": "MAD",
+      "countryName": "Spain",
+      "countryId": "ES",
+      "regionId": "",
+      "coordinates": {
+        "latitude": 40.4936,
+        "longitude": -3.5668
+      }
+    }
+  ]
+}
