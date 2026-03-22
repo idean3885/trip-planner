@@ -3,6 +3,7 @@ title: "Travel Planner"
 description: "여행 일정 플래너 — AI 기반 검색·추천·생성"
 baseurl: "/travel-planner"
 url: "https://idean3885.github.io"
+header_pages: []
 include:
   - trips
 exclude:
