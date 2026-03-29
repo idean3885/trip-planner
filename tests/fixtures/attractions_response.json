@@ -1,0 +1,123 @@
+{
+  "searchLocation": {
+    "status": true,
+    "data": {
+      "destinations": [
+        {
+          "id": "eyJ1ZmkiOi0zNzI0OTB9",
+          "cityName": "Barcelona",
+          "country": "Spain",
+          "productCount": 847
+        },
+        {
+          "id": "eyJ1ZmkiOi0zNzI0OTF9",
+          "cityName": "Barcelona El Prat Airport",
+          "country": "Spain",
+          "productCount": 12
+        }
+      ],
+      "products": [
+        {
+          "title": "Sagrada Familia Skip-the-Line Ticket",
+          "taxonomySlug": "tickets-and-passes",
+          "cityName": "Barcelona",
+          "id": "prbspnfdkbkw-admission-to-sagrada-familia"
+        },
+        {
+          "title": "Park Güell Guided Tour",
+          "taxonomySlug": "tours",
+          "cityName": "Barcelona",
+          "id": "brcprkgll-park-guell-tour"
+        },
+        {
+          "title": "Barcelona Gothic Quarter Walking Tour",
+          "taxonomySlug": "walking-tours",
+          "cityName": "Barcelona",
+          "id": "brcgthc-gothic-quarter-tour"
+        }
+      ]
+    }
+  },
+  "searchAttractions": {
+    "status": true,
+    "data": {
+      "products": [
+        {
+          "name": "Sagrada Familia: Skip-the-Line Ticket",
+          "slug": "prbspnfdkbkw-admission-to-sagrada-familia",
+          "shortDescription": "Visit Gaudí's iconic basilica with skip-the-line access.",
+          "representativePrice": {
+            "currency": "EUR",
+            "chargeAmount": 36.0
+          },
+          "reviewsStats": {
+            "combinedNumericStats": {
+              "average": 4.8,
+              "total": 12543
+            }
+          },
+          "cancellationPolicy": {
+            "hasFreeCancellation": true
+          }
+        },
+        {
+          "name": "Park Güell: Guided Tour with Skip-the-Line",
+          "slug": "brcprkgll-park-guell-tour",
+          "shortDescription": "Explore Gaudí's colorful park with an expert guide.",
+          "representativePrice": {
+            "currency": "EUR",
+            "chargeAmount": 25.0
+          },
+          "reviewsStats": {
+            "combinedNumericStats": {
+              "average": 4.6,
+              "total": 8321
+            }
+          },
+          "cancellationPolicy": {
+            "hasFreeCancellation": false
+          }
+        }
+      ]
+    }
+  },
+  "getAttractionDetails": {
+    "status": true,
+    "data": {
+      "name": "Sagrada Familia: Skip-the-Line Ticket",
+      "description": "Marvel at Antoni Gaudí's masterpiece, the Sagrada Familia. This UNESCO World Heritage Site has been under construction since 1882 and blends Gothic and Art Nouveau styles.",
+      "addresses": {
+        "attraction": [
+          {
+            "address": "Carrer de Mallorca, 401",
+            "city": "Barcelona",
+            "country": "es",
+            "latitude": 41.4036,
+            "longitude": 2.1744
+          }
+        ]
+      },
+      "representativePrice": {
+        "currency": "EUR",
+        "chargeAmount": 36.0
+      },
+      "cancellationPolicy": {
+        "hasFreeCancellation": true
+      },
+      "labels": [
+        {"text": "Best Seller"},
+        {"text": "Skip the Line"}
+      ],
+      "flags": [
+        {"flag": "likely_to_sell_out", "value": true}
+      ],
+      "audioSupportedLanguages": ["en", "es", "fr", "de", "it"],
+      "additionalInfo": "Please bring your booking confirmation. Entry is at the time stated on your ticket. Dress modestly — shoulders and knees must be covered.",
+      "notIncluded": [
+        "Tower access (available as an add-on)",
+        "Audio guide (included in some ticket types)"
+      ],
+      "isBookable": true
+    }
+  }
+}
