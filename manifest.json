@@ -1,7 +1,7 @@
 {
   "manifest_version": "0.4",
   "name": "travel-planner-mcp",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "display_name": "Travel Planner",
   "description": "여행 숙소, 항공편, 관광지를 검색하고 추천하는 MCP 서버 (Booking.com API)",
   "long_description": "Booking.com RapidAPI를 통해 숙소, 항공편, 관광지를 검색하고 AI가 분석·추천합니다. Claude Desktop에서 대화형으로 여행 플래닝을 지원합니다.",
