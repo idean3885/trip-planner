@@ -65,7 +65,7 @@ async def search_destinations(query: str) -> str:
         return "Unexpected response format from the API."
 
 @mcp.tool()
-async def get_hotels(destination_id: str, checkin_date: str, checkout_date: str, adults: int = 2) -> str:
+async def get_hotels(destination_id: str, checkin_date: str, checkout_date: str, adults: int = 2, currency_code: str = "KRW") -> str:
     """Get hotels for a specific destination.
 
     Args:
@@ -73,15 +73,17 @@ async def get_hotels(destination_id: str, checkin_date: str, checkout_date: str,
         checkin_date: Check-in date in YYYY-MM-DD format
         checkout_date: Check-out date in YYYY-MM-DD format
         adults: Number of adults (default: 2)
+        currency_code: Currency code for prices (default: KRW). Examples: KRW, EUR, USD
     """
-    logger.info(f"Getting hotels for destination_id: {destination_id}, checkin: {checkin_date}, checkout: {checkout_date}, adults: {adults}")
+    logger.info(f"Getting hotels for destination_id: {destination_id}, checkin: {checkin_date}, checkout: {checkout_date}, adults: {adults}, currency: {currency_code}")
     endpoint = "/api/v1/hotels/searchHotels"
     params = {
         "dest_id": destination_id,
         "search_type": "CITY",
         "arrival_date": checkin_date,
         "departure_date": checkout_date,
-        "adults": str(adults)
+        "adults": str(adults),
+        "currency_code": currency_code
     }
 
     result = await make_rapidapi_request(endpoint, params)
@@ -112,6 +114,7 @@ async def get_hotels(destination_id: str, checkin_date: str, checkout_date: str,
 
                 hotel_info = (
                     f"Name: {property_data.get('name', 'Unknown')}\n"
+                    f"Hotel ID: {property_data.get('id', 'N/A')}\n"
                     f"Location: {property_data.get('wishlistName', 'Unknown')}\n"
                     f"Rating: {property_data.get('reviewScore', 'N/A')}/10\n"
                     f"Reviews: {property_data.get('reviewCount', 'N/A')} ({property_data.get('reviewScoreWord', 'N/A')})\n"
@@ -173,7 +176,7 @@ async def get_hotels(destination_id: str, checkin_date: str, checkout_date: str,
         return "Unexpected response format from the API."
 
 @mcp.tool()
-async def get_hotel_details(hotel_id: str, checkin_date: str, checkout_date: str, adults: int = 2) -> str:
+async def get_hotel_details(hotel_id: str, checkin_date: str, checkout_date: str, adults: int = 2, currency_code: str = "KRW") -> str:
     """Get detailed information about a specific hotel including reviews, facilities, and policies.
 
     Args:
@@ -181,6 +184,7 @@ async def get_hotel_details(hotel_id: str, checkin_date: str, checkout_date: str
         checkin_date: Check-in date in YYYY-MM-DD format
         checkout_date: Check-out date in YYYY-MM-DD format
         adults: Number of adults (default: 2)
+        currency_code: Currency code for prices (default: KRW). Examples: KRW, EUR, USD
     """
     logger.info(f"Getting hotel details for hotel_id: {hotel_id}")
     endpoint = "/api/v1/hotels/getHotelDetails"
@@ -189,7 +193,7 @@ async def get_hotel_details(hotel_id: str, checkin_date: str, checkout_date: str
         "arrival_date": checkin_date,
         "departure_date": checkout_date,
         "adults": str(adults),
-        "currency_code": "EUR"
+        "currency_code": currency_code
     }
 
     result = await make_rapidapi_request(endpoint, params)
@@ -241,6 +245,11 @@ async def get_hotel_details(hotel_id: str, checkin_date: str, checkout_date: str
         gross = price_data.get("gross_amount_per_night", {})
         if gross:
             info_parts.append(f"Price/night: {gross.get('currency', 'EUR')} {gross.get('value', 'N/A')}")
+
+    # Booking.com URL
+    url = data.get("url", "")
+    if url:
+        info_parts.append(f"Booking.com: {url}")
 
     # Description
     desc = data.get("description", "")
