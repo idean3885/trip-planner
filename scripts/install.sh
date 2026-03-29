@@ -190,7 +190,7 @@ echo ""
 echo "  테스트 방법:"
 echo -e "  ${CYAN}Claude Desktop에서 아래 메시지를 입력해 보세요:${NC}"
 echo ""
-echo '    "마드리드 6월 16일~20일 4박 숙소 추천해줘"'
+echo '    "바르셀로나 6월 16일~20일 4박 숙소 추천해줘"'
 echo ""
 echo "  설치 위치: ${INSTALL_DIR}"
 echo "  설정 파일: ${CLAUDE_CONFIG_FILE}"
