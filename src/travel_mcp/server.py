@@ -244,16 +244,16 @@ async def get_hotel_details(hotel_id: str, checkin_date: str, checkout_date: str
     # Booking links — multi-platform
     hotel_name = data.get("hotel_name", "")
     city = data.get("city", "")
-    from urllib.parse import quote
-    search_query = quote(f"{hotel_name} {city}")
+    from urllib.parse import quote_plus
+    search_query = quote_plus(f"{hotel_name} {city}")
 
     info_parts.append("\n=== 예약 링크 ===")
     url = data.get("url", "")
     if url:
         info_parts.append(f"Booking.com: {url}")
     if hotel_name:
-        info_parts.append(f"Agoda: https://www.agoda.com/search?q={search_query}&checkIn={checkin_date}&checkOut={checkout_date}")
-        info_parts.append(f"Hotels.com: https://hotels.com/search.do?q={search_query}")
+        info_parts.append(f"Agoda: https://www.google.com/search?q={search_query}+agoda")
+        info_parts.append(f"Hotels.com: https://www.google.com/search?q={search_query}+hotels.com")
         info_parts.append(f"Google Hotels: https://www.google.com/travel/hotels?q={search_query}")
 
     # Description
