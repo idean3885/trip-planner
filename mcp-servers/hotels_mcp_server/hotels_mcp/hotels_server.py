@@ -66,7 +66,7 @@ async def search_destinations(query: str) -> str:
 
 @mcp.tool()
 async def get_hotels(destination_id: str, checkin_date: str, checkout_date: str, adults: int = 2, currency_code: str = "KRW") -> str:
-    """Get hotels for a specific destination.
+    """Get hotels for a specific destination. After showing results, ALWAYS call get_hotel_details for hotels the user is interested in to provide booking links and detailed information.
 
     Args:
         destination_id: The destination ID (city_ufi from search_destinations)
@@ -177,10 +177,10 @@ async def get_hotels(destination_id: str, checkin_date: str, checkout_date: str,
 
 @mcp.tool()
 async def get_hotel_details(hotel_id: str, checkin_date: str, checkout_date: str, adults: int = 2, currency_code: str = "KRW") -> str:
-    """Get detailed information about a specific hotel including reviews, facilities, and policies.
+    """Get detailed information about a specific hotel including reviews, facilities, policies, and booking links across multiple platforms (Booking.com, Agoda, Hotels.com, etc.).
 
     Args:
-        hotel_id: The hotel ID (from get_hotels results or Booking.com URL)
+        hotel_id: The hotel ID (from get_hotels results)
         checkin_date: Check-in date in YYYY-MM-DD format
         checkout_date: Check-out date in YYYY-MM-DD format
         adults: Number of adults (default: 2)
@@ -246,10 +246,20 @@ async def get_hotel_details(hotel_id: str, checkin_date: str, checkout_date: str
         if gross:
             info_parts.append(f"Price/night: {gross.get('currency', 'EUR')} {gross.get('value', 'N/A')}")
 
-    # Booking.com URL
+    # Booking links — multi-platform
+    hotel_name = data.get("hotel_name", "")
+    city = data.get("city", "")
+    from urllib.parse import quote
+    search_query = quote(f"{hotel_name} {city}")
+
+    info_parts.append("\n=== 예약 링크 ===")
     url = data.get("url", "")
     if url:
         info_parts.append(f"Booking.com: {url}")
+    if hotel_name:
+        info_parts.append(f"Agoda: https://www.agoda.com/search?q={search_query}&checkIn={checkin_date}&checkOut={checkout_date}")
+        info_parts.append(f"Hotels.com: https://hotels.com/search.do?q={search_query}")
+        info_parts.append(f"Google Hotels: https://www.google.com/travel/hotels?q={search_query}")
 
     # Description
     desc = data.get("description", "")
