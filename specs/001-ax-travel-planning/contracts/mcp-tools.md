@@ -1,11 +1,14 @@
-# MCP 도구 인터페이스 계약
+# 검색 도구 인터페이스 계약
 
-**Branch**: `001-ax-travel-planning` | **Date**: 2026-03-22
-**서버**: `travel` (FastMCP) | **파일**: `mcp-servers/hotels_mcp_server/hotels_mcp/hotels_server.py`
+**Branch**: `001-ax-travel-planning` | **Date**: 2026-03-29 (갱신)
+**MCP 서버**: `travel` (FastMCP) | **파일**: `mcp-servers/hotels_mcp_server/hotels_mcp/hotels_server.py`
+**CLI 스크립트**: `scripts/` | **공용 클라이언트**: `mcp-servers/hotels_mcp_server/hotels_mcp/api_client.py`
+
+> **변경 이력**: MCP 전용 → MCP(기존) + CLI(신규) 하이브리드로 전환. [ADR-001](../adr/001-fe-only-stateless-architecture.md) 참조.
 
 ---
 
-## 기존 도구 (구현 완료)
+## MCP 도구 (구현 완료, 유지)
 
 ### search_destinations
 
@@ -79,17 +82,21 @@ Output: str            # 최대 10개 항공편, 포맷된 텍스트
 
 ---
 
-## 신규 도구 (구현 예정 — 엔드포인트 검증 필요)
+## CLI 스크립트 (구현 예정 — 엔드포인트 검증 필요)
+
+> MCP가 아닌 CLI 스크립트로 구현. `api_client.py`의 `make_rapidapi_request()`를 재사용.
 
 ### search_attraction_locations
 
 관광지 검색용 위치 ID를 검색한다.
 
 ```
-Input:
-  query: str           # 도시명 (예: "Barcelona", "Granada")
+CLI: python scripts/search_attraction_locations.py --query "Barcelona"
 
-Output: str            # 위치 목록, 포맷된 텍스트
+Input:
+  --query: str         # 도시명 (예: "Barcelona", "Granada")
+
+Output: stdout         # 위치 목록, 포맷된 텍스트
   - Name, ID, Type, Country
 
 예상 API: GET /api/v1/attraction/searchLocation
@@ -103,11 +110,13 @@ Output: str            # 위치 목록, 포맷된 텍스트
 특정 위치의 관광지/투어 목록을 검색한다.
 
 ```
-Input:
-  location_id: str     # search_attraction_locations에서 얻은 ID
-  date: str            # YYYY-MM-DD (방문 예정일)
+CLI: python scripts/search_attractions.py --location-id "eyJ..." --date "2026-06-18"
 
-Output: str            # 관광지 목록, 포맷된 텍스트
+Input:
+  --location-id: str   # search_attraction_locations에서 얻은 ID
+  --date: str          # YYYY-MM-DD (방문 예정일)
+
+Output: stdout         # 관광지 목록, 포맷된 텍스트
   - Name, Price, Duration, Rating, Reviews, Booking Required, Category
 
 예상 API: GET /api/v1/attraction/searchAttractions
@@ -121,11 +130,13 @@ Output: str            # 관광지 목록, 포맷된 텍스트
 특정 관광지/투어의 상세 정보를 조회한다.
 
 ```
-Input:
-  attraction_id: str   # search_attractions에서 얻은 ID
-  date: str            # YYYY-MM-DD
+CLI: python scripts/get_attraction_details.py --attraction-id "..." --date "2026-06-18"
 
-Output: str            # 포맷된 텍스트
+Input:
+  --attraction-id: str # search_attractions에서 얻은 ID
+  --date: str          # YYYY-MM-DD
+
+Output: stdout         # 포맷된 텍스트
   - Name, Description, Price, Duration, Included/Excluded, Meeting Point, Cancellation Policy, Photos
 
 예상 API: GET /api/v1/attraction/getAttractionDetails
@@ -149,17 +160,22 @@ Timeout: 30초
 ```
 
 ### 호출 패턴
-모든 도구는 동일한 패턴을 따른다:
-1. 파라미터 검증
-2. `make_rapidapi_request(endpoint, params)` 호출
-3. 응답 파싱 및 포맷팅
-4. 포맷된 문자열 반환
+
+**MCP 도구** (Hotels, Flights):
+1. Claude Desktop/Code가 MCP 프로토콜로 호출
+2. `make_rapidapi_request(endpoint, params)` 실행
+3. 응답 파싱 및 포맷팅 → 포맷된 문자열 반환
+
+**CLI 스크립트** (Attractions):
+1. Bash에서 `python scripts/*.py --arg value` 실행
+2. `api_client.py`의 `make_rapidapi_request()` 재사용
+3. 응답 파싱 및 포맷팅 → stdout 출력
 
 ### 도구 간 의존관계
 ```
-search_destinations → get_hotels → get_hotel_details
-search_flight_destinations → search_flights
-search_attraction_locations → search_attractions → get_attraction_details
+[MCP] search_destinations → get_hotels → get_hotel_details
+[MCP] search_flight_destinations → search_flights
+[CLI] search_attraction_locations → search_attractions → get_attraction_details
 ```
 
 각 체인의 첫 번째 도구로 ID를 획득한 뒤, 후속 도구에 전달하는 구조.

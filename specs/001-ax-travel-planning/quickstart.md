@@ -1,29 +1,31 @@
 # Quickstart: AX 기반 여행 플래닝 검증 시나리오
 
-**Branch**: `001-ax-travel-planning` | **Date**: 2026-03-22
+**Branch**: `001-ax-travel-planning` | **Date**: 2026-03-29 (갱신)
 **목적**: 구현 완료 후 핵심 기능이 동작하는지 빠르게 검증하는 시나리오
+**Architecture**: [ADR-001](adr/001-fe-only-stateless-architecture.md)
 
 ---
 
 ## 사전 조건
 
-1. MCP 서버가 Claude Desktop에 등록되어 있어야 함
+1. MCP 서버가 Claude Desktop에 등록되어 있어야 함 (Hotels, Flights 검색 시)
 2. `.env` 파일에 `RAPIDAPI_KEY` 설정 완료
-3. GitHub Pages가 활성화되어 있어야 함 (US3 검증 시)
+3. CLI 스크립트 실행 가능: `python scripts/search_attraction_locations.py --help`
+4. AppPaaS 웹앱이 배포되어 있어야 함 (US3 검증 시)
 
 ---
 
 ## QS1. 여행 요소 검색·추천 (US1)
 
-### 시나리오: 마드리드 숙소 검색
+### 시나리오: 마드리드 숙소 검색 (MCP)
 
 ```
 사용자: "마드리드 6/11~12 숙소 추천해줘"
 ```
 
 **예상 동작**:
-1. Claude가 `search_destinations("Madrid")` 호출 → 목적지 ID 획득
-2. Claude가 `get_hotels(destination_id, "2026-06-11", "2026-06-12")` 호출 → 호텔 목록
+1. Claude가 `search_destinations("Madrid")` MCP 호출 → 목적지 ID 획득
+2. Claude가 `get_hotels(destination_id, "2026-06-11", "2026-06-12")` MCP 호출 → 호텔 목록
 3. Claude가 결과를 분석하여 추천 기준(위치, 가격, 리뷰)과 함께 3~5개 후보 제시
 
 **검증 포인트**:
@@ -32,19 +34,20 @@
 - [ ] Claude가 추천 기준을 함께 제시하는가
 - [ ] 사용자가 후보 중 선택할 수 있는 형태인가
 
-### 시나리오: 바르셀로나 관광지 검색
+### 시나리오: 바르셀로나 관광지 검색 (CLI)
 
-```
-사용자: "바르셀로나 6/18 관광지 추천해줘"
+```bash
+python scripts/search_attraction_locations.py --query "Barcelona"
+python scripts/search_attractions.py --location-id "{위에서 얻은 ID}" --date "2026-06-18"
 ```
 
 **예상 동작**:
-1. Claude가 `search_attraction_locations("Barcelona")` 호출 → 위치 ID 획득
-2. Claude가 `search_attractions(location_id, "2026-06-18")` 호출 → 관광지 목록
+1. `search_attraction_locations` 실행 → 위치 ID 획득
+2. `search_attractions` 실행 → 관광지 목록 stdout 출력
 3. Claude가 결과를 분석하여 추천 제시
 
 **검증 포인트**:
-- [ ] Attractions API 엔드포인트가 정상 동작하는가
+- [ ] CLI 스크립트가 정상 실행되는가
 - [ ] 관광지 이름, 가격, 소요시간이 포함되는가
 - [ ] 예약 필요 여부가 안내되는가
 
@@ -103,21 +106,22 @@
 
 ---
 
-## QS3. 일정 공유 (US3)
+## QS3. 웹앱 딜리버리 (US3)
 
-### 시나리오: GitHub Pages 배포 후 모바일 열람
+### 시나리오: AppPaaS 배포 후 모바일 열람
 
 ```
-사용자: git push 후 GitHub Pages URL을 동행자에게 공유
+개발자: 웹앱 빌드 → AppPaaS 배포
+동행자: 공유받은 URL을 모바일에서 열기
 ```
 
 **예상 동작**:
-1. `git push` → GitHub Pages 자동 배포
-2. `https://idean3885.github.io/travel-planner/trips/2026-honeymoon-portugal-spain/itinerary` 접근 가능
+1. Next.js 앱 빌드 → AppPaaS 배포
+2. 웹앱 URL 접근 가능
 3. 모바일 브라우저에서 정상 표시
 
 **검증 포인트**:
-- [ ] GitHub Pages가 정상 빌드되는가
+- [ ] AppPaaS 배포가 정상 완료되는가
 - [ ] 모바일에서 추가 조작(줌, 가로 스크롤) 없이 열람 가능한가
 - [ ] 일별 일정 링크가 모바일에서 탭으로 이동 가능한가
 - [ ] 숙소/관광지 외부 링크가 모바일에서 정상 동작하는가
@@ -125,12 +129,12 @@
 ### 시나리오: 일정 수정 후 반영
 
 ```
-사용자: 일정 수정 → git push
+개발자: 일정 수정 → 앱 재배포
 동행자: 모바일에서 새로고침
 ```
 
 **검증 포인트**:
-- [ ] 수정된 내용이 GitHub Pages에 반영되는가
+- [ ] 수정된 내용이 웹앱에 반영되는가
 - [ ] 동행자가 새로고침으로 최신 일정을 확인할 수 있는가
 
 ---
@@ -140,7 +144,7 @@
 ### 시나리오: 단위 테스트 실행
 
 ```bash
-cd /Users/USER/claude-workspace/github-projects/idean3885/travel-planner
+cd /Users/nhn/git-project/idean3885/travel-planner
 pytest tests/unit/ -v
 ```
 
@@ -156,6 +160,6 @@ pytest tests/unit/ -v
 
 | 케이스 | 검증 방법 |
 |--------|----------|
-| 검색 결과 0건 | `search_destinations("xyzabc123")` 호출 → 안내 메시지 확인 |
+| 검색 결과 0건 | `python scripts/search_attraction_locations.py --query "xyzabc123"` → 안내 메시지 확인 |
 | 기존 예약 vs 검색 충돌 | 예약 완료 숙소가 있는 상태에서 같은 날짜 숙소 검색 → 기존 예약 유지 확인 |
-| API 타임아웃 | 네트워크 차단 상태에서 MCP 도구 호출 → 에러 메시지 확인 |
+| API 타임아웃 | 네트워크 차단 상태에서 CLI 스크립트 실행 → 에러 메시지 확인 |
