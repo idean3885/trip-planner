@@ -54,23 +54,27 @@ specs/001-ax-travel-planning/
 ### Source Code (repository root)
 
 ```text
-mcp-servers/
-└── hotels_mcp_server/          # 기존 MCP 서버 (hotels + flights, 유지)
-    ├── main.py                 # 엔트리포인트
-    ├── hotels_mcp/
-    │   ├── __init__.py
-    │   ├── api_client.py       # RapidAPI 공용 클라이언트 (CLI에서도 재사용)
-    │   └── hotels_server.py    # MCP 도구 정의 (hotels + flights)
-    ├── .env                    # API 키 (gitignore)
-    ├── requirements.txt
-    └── .venv/
+src/travel_mcp/                 # PyPI 패키지 (travel-planner-mcp)
+├── __init__.py                 # 버전 정보
+├── api_client.py               # RapidAPI 공용 클라이언트
+└── server.py                   # MCP 도구 8개 (hotels+flights+attractions)
 
-scripts/                        # CLI 스크립트 (검색 도구)
+mcp-servers/
+└── hotels_mcp_server/          # 레거시 MCP 서버 (src/travel_mcp/와 동기화)
+    ├── hotels_mcp/
+    │   ├── api_client.py
+    │   └── hotels_server.py
+    ├── .env
+    └── requirements.txt
+
+scripts/                        # CLI 스크립트 + 설치/검증
+├── install.sh                      # 1줄 설치 스크립트 (curl | bash)
+├── setup.sh                        # 개발 환경 설정
 ├── search_attraction_locations.py  # 관광지 위치 검색
 ├── search_attractions.py           # 관광지 목록 검색
 ├── get_attraction_details.py       # 관광지 상세 조회
-├── validate-daily.py               # 데일리 파일 포맷 검증 (구현 완료)
-└── validate-budget.py              # 예산 포맷 검증 (구현 완료)
+├── validate-daily.py               # 데일리 파일 포맷 검증
+└── validate-budget.py              # 예산 포맷 검증
 
 web/                            # Next.js 웹앱 (AppPaaS 배포)
 ├── package.json

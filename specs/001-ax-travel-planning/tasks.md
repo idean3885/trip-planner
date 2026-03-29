@@ -37,16 +37,16 @@
 
 ### Attractions CLI 스크립트 구현
 
-- [ ] T009 [US1] Attractions API 엔드포인트 검증 — booking-com15 API의 `/api/v1/attraction/searchLocation` 엔드포인트를 실제 호출하여 응답 구조 확인. 실패 시 대안 엔드포인트 탐색. 검증 결과를 `specs/001-ax-travel-planning/contracts/mcp-tools.md` (검색 도구 계약)에 반영
-- [ ] T010 [US1] `search_attraction_locations` CLI 스크립트 구현 — `scripts/search_attraction_locations.py`에 관광지 위치 검색 구현. `api_client.py` 재사용. T009에서 확인된 엔드포인트·응답 구조 사용
-- [ ] T011 [US1] `search_attractions` CLI 스크립트 구현 — `scripts/search_attractions.py`에 관광지 목록 검색 구현. 이름, 가격, 소요시간, 리뷰, 예약필요여부 포맷팅
-- [ ] T012 [US1] `get_attraction_details` CLI 스크립트 구현 — `scripts/get_attraction_details.py`에 관광지 상세 조회 구현. 설명, 포함사항, 취소정책 등 포맷팅
-- [ ] T013 [US1] Attractions 스크립트 단위 테스트 작성 — `tests/unit/test_attractions.py`에 3개 스크립트의 응답 파싱·포맷팅 테스트. `tests/fixtures/attractions_response.json` 생성·활용
-- [ ] T014 [US1] Attractions 스크립트 통합 테스트 — `tests/integration/test_attractions_api.py`에 실제 API 호출 테스트 (바르셀로나 관광지 검색). `@pytest.mark.integration` 마킹
+- [x] T009 [US1] Attractions API 엔드포인트 검증 — 3개 엔드포인트 검증 완료 (searchLocation, searchAttractions, getAttractionDetails)
+- [x] T010 [US1] `search_attraction_locations` CLI 스크립트 + MCP 도구 구현
+- [x] T011 [US1] `search_attractions` CLI 스크립트 + MCP 도구 구현
+- [x] T012 [US1] `get_attraction_details` CLI 스크립트 + MCP 도구 구현
+- [x] T013 [US1] Attractions 단위 테스트 42개 작성 (전체 89개 통과)
+- [x] T014 [US1] Attractions 통합 테스트 16개 작성
 
-### E2E 검증
+### E2E 검증 + 배포
 
-- [ ] T015 [US1] CLI 스크립트 E2E 검증 — quickstart.md QS1 시나리오 수행. 숙소 검색(MCP) + 관광지 검색(CLI) + 식당 추천(웹 검색) 각각 테스트. 결과 기록
+- [x] T015 [US1] CLI + MCP E2E 검증, PyPI 배포 (v0.2.0), 1줄 설치, Claude Desktop 테스트 완료
 
 **Checkpoint**: US1 독립 검증 완료.
 - MCP 도구 8개 (Hotels 3 + Flights 2 + Attractions 3) + CLI 스크립트 3개
@@ -108,8 +108,8 @@
 
 ```
 M1 (인프라 구축) ✅ 완료
-  → M2 (검색 CLI) ← 다음 착수
-    → M3 (일정 생성 + 웹앱 딜리버리)
+  → M2 (검색 CLI + MCP + 배포) ✅ 완료
+    → M3 (일정 생성 + 웹앱 딜리버리) ← 다음 착수
       → M4 (통합 검증)
 ```
 
