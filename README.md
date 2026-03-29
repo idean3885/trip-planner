@@ -5,7 +5,7 @@
 ## 설치 (맥북, 1줄)
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/idean3885/travel-planner/main/scripts/setup.sh | bash
+curl -sSL https://raw.githubusercontent.com/idean3885/travel-planner/main/scripts/install.sh | bash
 ```
 
 - RapidAPI 키 입력 → 자동 설치 완료
@@ -46,7 +46,7 @@ Claude Desktop에서 자연어로 질문하기:
 ## 업데이트
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/idean3885/travel-planner/main/scripts/setup.sh | bash
+curl -sSL https://raw.githubusercontent.com/idean3885/travel-planner/main/scripts/install.sh | bash
 ```
 
 같은 명령어로 업데이트됩니다 (기존 설정 자동 유지).
