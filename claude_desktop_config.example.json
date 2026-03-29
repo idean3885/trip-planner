@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "travel": {
+      "command": "/absolute/path/to/travel-planner/mcp-servers/hotels_mcp_server/.venv/bin/python",
+      "args": ["-m", "hotels_mcp.hotels_server"],
+      "cwd": "/absolute/path/to/travel-planner/mcp-servers/hotels_mcp_server",
+      "env": {
+        "RAPIDAPI_KEY": "your_key_here"
+      }
+    }
+  }
+}

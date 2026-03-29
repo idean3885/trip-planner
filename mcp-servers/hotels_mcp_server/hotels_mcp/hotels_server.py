@@ -376,6 +376,237 @@ async def search_flight_destinations(query: str) -> str:
     return "\n---\n".join(formatted)
 
 
+@mcp.tool()
+async def search_attraction_locations(query: str) -> str:
+    """Search for attraction location IDs by city name.
+
+    Args:
+        query: City name to search for (e.g., "Barcelona", "Lisbon", "Tokyo")
+    """
+    logger.info(f"Searching attraction locations for: {query}")
+    endpoint = "/api/v1/attraction/searchLocation"
+    params = {"query": query}
+
+    result = await make_rapidapi_request(endpoint, params)
+
+    if "error" in result:
+        logger.error(f"Error in search_attraction_locations: {result['error']}")
+        return f"Error fetching attraction locations: {result['error']}"
+
+    if not result.get("status"):
+        logger.warning(f"API returned status=false for query: {query}")
+        return "API returned unsuccessful status. No results found."
+
+    data = result.get("data", {})
+    destinations = data.get("destinations", [])
+    products = data.get("products", [])
+
+    formatted_parts = []
+
+    if destinations:
+        dest_lines = ["=== Destinations ==="]
+        for dest in destinations:
+            dest_lines.append(
+                f"  ID          : {dest.get('id', 'N/A')}\n"
+                f"  City        : {dest.get('cityName', 'N/A')}\n"
+                f"  Country     : {dest.get('country', 'N/A')}\n"
+                f"  Products    : {dest.get('productCount', 0)}"
+            )
+        formatted_parts.append("\n\n".join(dest_lines))
+    else:
+        formatted_parts.append("No destinations found.")
+
+    if products:
+        prod_lines = ["=== Top Products ==="]
+        for product in products[:5]:
+            prod_lines.append(
+                f"  Title       : {product.get('title', 'N/A')}\n"
+                f"  Category    : {product.get('taxonomySlug', 'N/A')}\n"
+                f"  City        : {product.get('cityName', 'N/A')}\n"
+                f"  ID          : {product.get('id', 'N/A')}"
+            )
+        formatted_parts.append("\n\n".join(prod_lines))
+    else:
+        formatted_parts.append("No products found.")
+
+    return "\n\n".join(formatted_parts)
+
+
+@mcp.tool()
+async def search_attractions(id: str, sortBy: str = "trending", page: int = 1) -> str:
+    """Search for attractions/tours in a specific location.
+
+    Args:
+        id: Destination ID (base64 encoded, from search_attraction_locations)
+        sortBy: Sort order (default: "trending")
+        page: Page number (default: 1)
+    """
+    logger.info(f"Searching attractions for location ID: {id} (sort: {sortBy}, page: {page})")
+    endpoint = "/api/v1/attraction/searchAttractions"
+    params = {
+        "id": id,
+        "sortBy": sortBy,
+        "page": str(page),
+    }
+
+    result = await make_rapidapi_request(endpoint, params)
+
+    if "error" in result:
+        logger.error(f"Error in search_attractions: {result['error']}")
+        return f"Error searching attractions: {result['error']}"
+
+    if not result.get("status"):
+        logger.warning(f"API returned status=false for location ID: {id}")
+        return "API returned unsuccessful status. No attractions found."
+
+    products = result.get("data", {}).get("products", [])
+
+    if not products:
+        return "No attractions found for the given location."
+
+    top = products[:15]
+    logger.info(f"Found {len(products)} attraction(s) for location: {id}, showing top {len(top)}")
+
+    formatted_results = []
+    for i, product in enumerate(top, start=1):
+        name = product.get("name", "Unknown")
+        slug = product.get("slug", "")
+        short_desc = product.get("shortDescription", "")
+
+        price_info = product.get("representativePrice", {})
+        currency = price_info.get("currency", "")
+        amount = price_info.get("chargeAmount")
+        price_str = f"{currency} {amount:.2f}" if amount is not None else "N/A"
+
+        reviews = product.get("reviewsStats", {})
+        combined = reviews.get("combinedNumericStats", {})
+        avg = combined.get("average")
+        total = combined.get("total", 0)
+        rating_str = f"{avg}/5 ({total} reviews)" if avg is not None else "N/A"
+
+        cancellation = product.get("cancellationPolicy", {})
+        free_cancel = "Yes" if cancellation.get("hasFreeCancellation") else "No"
+
+        attraction_info = (
+            f"[{i}]\n"
+            f"  Name        : {name}\n"
+            f"  Price       : {price_str}\n"
+            f"  Rating      : {rating_str}\n"
+            f"  Free cancel : {free_cancel}\n"
+            f"  Description : {short_desc}\n"
+            f"  Slug        : {slug}"
+        )
+        formatted_results.append(attraction_info)
+
+    return "\n---\n".join(formatted_results)
+
+
+@mcp.tool()
+async def get_attraction_details(slug: str) -> str:
+    """Get detailed information about a specific attraction.
+
+    Args:
+        slug: Product slug from search_attractions (e.g., "prbspnfdkbkw-admission-to-sagrada-familia")
+    """
+    logger.info(f"Getting attraction details for slug: {slug}")
+    endpoint = "/api/v1/attraction/getAttractionDetails"
+    params = {"slug": slug}
+
+    result = await make_rapidapi_request(endpoint, params)
+
+    if "error" in result:
+        logger.error(f"Error in get_attraction_details: {result['error']}")
+        return f"Error fetching attraction details: {result['error']}"
+
+    if not result.get("status"):
+        logger.warning(f"API returned status=false for slug: {slug}")
+        return "API returned unsuccessful status. Attraction not found."
+
+    data = result.get("data", {})
+    if not data:
+        return "No attraction data returned."
+
+    info_parts = []
+
+    # Name
+    info_parts.append(f"Name        : {data.get('name', 'N/A')}")
+
+    # Description
+    description = data.get("description", "")
+    if description:
+        info_parts.append(f"Description :\n  {description}")
+
+    # Address + coordinates
+    addresses = data.get("addresses", {})
+    attraction_addresses = addresses.get("attraction", [])
+    if attraction_addresses:
+        addr = attraction_addresses[0]
+        addr_str = f"  {addr.get('address', 'N/A')}, {addr.get('city', 'N/A')}, {addr.get('country', 'N/A').upper()}"
+        lat = addr.get("latitude")
+        lon = addr.get("longitude")
+        if lat and lon:
+            addr_str += f"\n  Coordinates : {lat}, {lon}"
+        info_parts.append(f"Address     :\n{addr_str}")
+
+    # Price
+    rep_price = data.get("representativePrice", {})
+    if rep_price:
+        currency = rep_price.get("currency", "")
+        charge_amount = rep_price.get("chargeAmount")
+        if charge_amount is not None:
+            info_parts.append(f"Price       : {charge_amount} {currency}")
+
+    # Cancellation policy
+    cancellation = data.get("cancellationPolicy", {})
+    if cancellation:
+        free = cancellation.get("hasFreeCancellation", False)
+        info_parts.append(f"Cancellation: {'Free cancellation available' if free else 'No free cancellation'}")
+
+    # Labels / flags
+    labels = data.get("labels", [])
+    flags = data.get("flags", [])
+    badges = []
+    for label in labels:
+        text = label.get("text")
+        if text:
+            badges.append(text)
+    for flag in flags:
+        flag_name = flag.get("flag", "")
+        flag_value = flag.get("value")
+        if flag_value and flag_name:
+            badges.append(flag_name.replace("_", " ").title())
+    if badges:
+        info_parts.append(f"Labels/Flags: {', '.join(badges)}")
+
+    # Audio languages
+    audio_langs = data.get("audioSupportedLanguages", [])
+    if audio_langs:
+        info_parts.append(f"Audio Langs : {', '.join(audio_langs)}")
+
+    # Additional info (truncated to 500 chars)
+    additional_info = data.get("additionalInfo", "")
+    if additional_info:
+        truncated = additional_info[:500]
+        if len(additional_info) > 500:
+            truncated += "..."
+        info_parts.append(f"Additional  :\n  {truncated}")
+
+    # Not included
+    not_included = data.get("notIncluded", [])
+    if not_included:
+        items = []
+        for item in not_included:
+            text = item if isinstance(item, str) else item.get("text", str(item))
+            items.append(f"  - {text}")
+        info_parts.append("Not Included:\n" + "\n".join(items))
+
+    # Bookable status
+    is_bookable = data.get("isBookable", False)
+    info_parts.append(f"Bookable    : {'Yes' if is_bookable else 'No'}")
+
+    return "\n\n".join(info_parts)
+
+
 def handle_shutdown(signum, frame):
     """Handle shutdown signals gracefully."""
     logger.info("Received shutdown signal, shutting down gracefully...")
