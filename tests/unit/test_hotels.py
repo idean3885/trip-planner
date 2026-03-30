@@ -3,6 +3,7 @@ import json
 import re
 import pytest
 from pathlib import Path
+from urllib.parse import quote_plus
 
 FIXTURES = Path(__file__).parent.parent / "fixtures"
 
@@ -70,7 +71,7 @@ class TestSearchDestinationsParsing:
 class TestGetHotelsParsing:
     """Replicate the formatting logic from get_hotels()."""
 
-    def _format(self, data: dict) -> str:
+    def _format(self, data: dict, checkin_date: str = "", checkout_date: str = "", adults: int = 2) -> str:
         formatted_results = []
         if "data" in data and "hotels" in data["data"] and isinstance(data["data"]["hotels"], list):
             hotels = data["data"]["hotels"]
@@ -133,6 +134,19 @@ class TestGetHotelsParsing:
                     hotel_info += f"Check-in: {checkin.get('fromTime', 'N/A')}-{checkin.get('untilTime', 'N/A')}\n"
                     hotel_info += f"Check-out: by {checkout.get('untilTime', 'N/A')}\n"
 
+                # Booking links with dates
+                hotel_name = property_data.get('name', '')
+                if hotel_name and checkin_date and checkout_date:
+                    encoded = quote_plus(hotel_name)
+                    hotel_info += (
+                        f"Booking.com: https://www.booking.com/searchresults.html"
+                        f"?ss={encoded}&checkin={checkin_date}&checkout={checkout_date}"
+                        f"&group_adults={adults}\n"
+                        f"Agoda: https://www.agoda.com/search"
+                        f"?q={encoded}&checkIn={checkin_date}&checkOut={checkout_date}"
+                        f"&adults={adults}\n"
+                    )
+
                 formatted_results.append(hotel_info)
 
         return "\n---\n".join(formatted_results) if formatted_results else "No hotels found for this destination and dates."
@@ -185,6 +199,25 @@ class TestGetHotelsParsing:
         result = self._format(data)
         assert "---" in result
 
+    def test_booking_link_with_dates(self):
+        data = load_fixture("hotels_search_hotels.json")
+        result = self._format(data, checkin_date="2026-06-07", checkout_date="2026-06-09")
+        assert "booking.com" in result.lower()
+        assert "2026-06-07" in result
+        assert "2026-06-09" in result
+
+    def test_agoda_link_with_dates(self):
+        data = load_fixture("hotels_search_hotels.json")
+        result = self._format(data, checkin_date="2026-06-07", checkout_date="2026-06-09")
+        assert "agoda.com" in result.lower()
+        assert "2026-06-07" in result
+
+    def test_both_booking_and_agoda_links_present(self):
+        data = load_fixture("hotels_search_hotels.json")
+        result = self._format(data, checkin_date="2026-06-07", checkout_date="2026-06-09")
+        assert "Booking.com" in result
+        assert "Agoda" in result
+
 
 # ---------------------------------------------------------------------------
 # get_hotel_details parsing
@@ -193,7 +226,7 @@ class TestGetHotelsParsing:
 class TestGetHotelDetailsParsing:
     """Replicate the formatting logic from get_hotel_details()."""
 
-    def _format(self, result: dict) -> str:
+    def _format(self, result: dict, checkin_date: str = "", checkout_date: str = "", adults: int = 2) -> str:
         data = result.get("data", {})
         if not data:
             return "No hotel details found."
@@ -236,6 +269,19 @@ class TestGetHotelDetailsParsing:
         desc = data.get("description", "")
         if desc:
             info_parts.append(f"\nDescription: {desc[:500]}")
+
+        # Booking links with dates
+        hotel_name = data.get("hotel_name", "")
+        if hotel_name and checkin_date and checkout_date:
+            encoded = quote_plus(hotel_name)
+            info_parts.append(
+                f"Booking.com: https://www.booking.com/searchresults.html"
+                f"?ss={encoded}&checkin={checkin_date}&checkout={checkout_date}"
+                f"&group_adults={adults}\n"
+                f"Agoda: https://www.agoda.com/search"
+                f"?q={encoded}&checkIn={checkin_date}&checkOut={checkout_date}"
+                f"&adults={adults}\n"
+            )
 
         return "\n".join(info_parts)
 
@@ -296,3 +342,22 @@ class TestGetHotelDetailsParsing:
     def test_empty_data_returns_no_details_message(self):
         result = self._format({"data": {}})
         assert result == "No hotel details found."
+
+    def test_booking_link_with_dates(self):
+        data = load_fixture("hotels_get_details.json")
+        result = self._format(data, checkin_date="2026-06-07", checkout_date="2026-06-09")
+        assert "booking.com" in result.lower()
+        assert "2026-06-07" in result
+        assert "2026-06-09" in result
+
+    def test_agoda_link_with_dates(self):
+        data = load_fixture("hotels_get_details.json")
+        result = self._format(data, checkin_date="2026-06-07", checkout_date="2026-06-09")
+        assert "agoda.com" in result.lower()
+        assert "2026-06-07" in result
+
+    def test_both_booking_and_agoda_links_present(self):
+        data = load_fixture("hotels_get_details.json")
+        result = self._format(data, checkin_date="2026-06-07", checkout_date="2026-06-09")
+        assert "Booking.com" in result
+        assert "Agoda" in result
