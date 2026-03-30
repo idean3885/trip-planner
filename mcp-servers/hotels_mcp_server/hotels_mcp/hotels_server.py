@@ -5,9 +5,26 @@ import signal
 import sys
 import argparse
 from typing import Dict, List, Any, Optional
+from urllib.parse import quote_plus
 from mcp.server.fastmcp import FastMCP
 
 from hotels_mcp.api_client import make_rapidapi_request
+
+
+def _booking_links(hotel_name: str, checkin_date: str, checkout_date: str, adults: int = 2) -> str:
+    """Generate Booking.com and Agoda search links with dates."""
+    encoded_name = quote_plus(hotel_name)
+    booking_url = (
+        f"https://www.booking.com/searchresults.html"
+        f"?ss={encoded_name}&checkin={checkin_date}&checkout={checkout_date}"
+        f"&group_adults={adults}"
+    )
+    agoda_url = (
+        f"https://www.agoda.com/search"
+        f"?q={encoded_name}&checkIn={checkin_date}&checkOut={checkout_date}"
+        f"&adults={adults}"
+    )
+    return f"Booking.com: {booking_url}\nAgoda: {agoda_url}\n"
 
 # Configure logging
 logging.basicConfig(
@@ -161,7 +178,12 @@ async def get_hotels(destination_id: str, checkin_date: str, checkout_date: str,
                 if checkin and checkout:
                     hotel_info += f"Check-in: {checkin.get('fromTime', 'N/A')}-{checkin.get('untilTime', 'N/A')}\n"
                     hotel_info += f"Check-out: by {checkout.get('untilTime', 'N/A')}\n"
-                
+
+                # Add booking links with dates
+                hotel_name = property_data.get('name', '')
+                if hotel_name:
+                    hotel_info += _booking_links(hotel_name, checkin_date, checkout_date, adults)
+
                 formatted_results.append(hotel_info)
             else:
                 formatted_results.append("Hotel information not available in the expected format.")
@@ -261,6 +283,11 @@ async def get_hotel_details(hotel_id: str, checkin_date: str, checkout_date: str
     desc = data.get("description", "")
     if desc:
         info_parts.append(f"\nDescription: {desc[:500]}")
+
+    # Booking links with dates
+    hotel_name = data.get("hotel_name", "")
+    if hotel_name:
+        info_parts.append(_booking_links(hotel_name, checkin_date, checkout_date, adults))
 
     return "\n".join(info_parts)
 
