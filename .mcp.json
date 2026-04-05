@@ -2,11 +2,7 @@
   "mcpServers": {
     "travel": {
       "command": "uvx",
-      "args": ["travel-planner-mcp"],
-      "env": {
-        "RAPIDAPI_KEY": "${RAPIDAPI_KEY}",
-        "RAPIDAPI_HOST": "booking-com15.p.rapidapi.com"
-      }
+      "args": ["travel-planner-mcp"]
     }
   }
 }
