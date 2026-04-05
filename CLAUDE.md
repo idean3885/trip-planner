@@ -27,6 +27,18 @@ travel-planner/
 └── docs/                           # GitHub Pages용 (추후)
 ```
 
+## Git 워크플로우 규칙
+
+### 필수: `/devex:flow` 사용
+- 모든 코드 변경은 반드시 `/devex:flow`를 통해 진행한다
+- main 브랜치에 직접 push 금지 (어드민 포함, `enforce_admins: true`)
+- feature 브랜치 → PR → 리뷰 → 머지 순서를 반드시 따른다
+
+### 브랜치 최신화
+- feature 브랜치 작업 전 반드시 `git pull origin main`으로 최신화
+- PR 생성 전 base 브랜치와 충돌 여부 확인
+- 충돌 발생 시 rebase로 해결 후 PR 생성
+
 ## 작업 규칙
 
 ### 데일리 파일 포맷
