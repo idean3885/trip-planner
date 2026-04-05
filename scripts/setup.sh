@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# travel-planner MCP server setup script
+# trip-planner MCP server setup script
 # 실행만 하면 venv + 의존성 + .env + Claude Desktop 설정까지 자동 완료
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

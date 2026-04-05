@@ -1,6 +1,6 @@
 {
   "manifest_version": "0.4",
-  "name": "travel-planner-mcp",
+  "name": "trip-planner-mcp",
   "version": "0.3.0",
   "display_name": "Travel Planner",
   "description": "여행 숙소, 항공편, 관광지를 검색하고 추천하는 MCP 서버 (Booking.com API)",
@@ -8,10 +8,10 @@
   "author": {
     "name": "idean3885"
   },
-  "homepage": "https://github.com/idean3885/travel-planner",
+  "homepage": "https://github.com/idean3885/trip-planner",
   "repository": {
     "type": "git",
-    "url": "https://github.com/idean3885/travel-planner.git"
+    "url": "https://github.com/idean3885/trip-planner.git"
   },
   "user_config": {
     "rapidapi_key": {
@@ -27,7 +27,7 @@
     "entry_point": "src/travel_mcp/server.py",
     "mcp_config": {
       "command": "uv",
-      "args": ["run", "travel-planner-mcp"],
+      "args": ["run", "trip-planner-mcp"],
       "env": {
         "RAPIDAPI_KEY": "${user_config.rapidapi_key}",
         "RAPIDAPI_HOST": "booking-com15.p.rapidapi.com"

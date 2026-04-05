@@ -1,9 +1,9 @@
 {
-  "name": "travel-planner-mcp",
+  "name": "trip-planner-mcp",
   "owner": { "name": "idean3885" },
   "plugins": [
     {
-      "name": "travel-planner",
+      "name": "trip-planner",
       "description": "여행 숙소, 항공편, 관광지를 검색하고 추천하는 MCP 서버",
       "version": "0.2.0",
       "author": { "name": "idean3885" },

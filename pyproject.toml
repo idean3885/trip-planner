@@ -1,10 +1,10 @@
-# Travel Planner MCP Server
+# Trip Planner MCP Server
 [build-system]
 requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "travel-planner-mcp"
+name = "trip-planner-mcp"
 version = "1.0.2"
 description = "여행 숙소, 항공편, 관광지를 검색하고 추천하는 MCP 서버 (Booking.com API)"
 requires-python = ">=3.10"
@@ -24,11 +24,11 @@ dependencies = [
 ]
 
 [project.scripts]
-travel-planner-mcp = "travel_mcp.server:main"
+trip-planner-mcp = "travel_mcp.server:main"
 
 [project.urls]
-Homepage = "https://github.com/idean3885/travel-planner"
-Repository = "https://github.com/idean3885/travel-planner"
+Homepage = "https://github.com/idean3885/trip-planner"
+Repository = "https://github.com/idean3885/trip-planner"
 
 [project.optional-dependencies]
 dev = [

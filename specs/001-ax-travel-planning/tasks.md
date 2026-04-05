@@ -53,7 +53,7 @@
 **Checkpoint**: US1 독립 검증 완료. (v1.0.2, #45 클로즈)
 - MCP 도구 8개 (Hotels 3 + Flights 2 + Attractions 3) + CLI 스크립트 3개
 - 한화(KRW) 기본 표시, 다중 플랫폼 예약 링크 (Booking.com, Agoda, Hotels.com, Google Hotels)
-- PyPI 배포 (travel-planner-mcp v1.0.2), 1줄 설치, Claude Desktop 자동 설정
+- PyPI 배포 (trip-planner-mcp v1.0.2), 1줄 설치, Claude Desktop 자동 설정
 - macOS 키체인 API 키 관리 (키체인 → .env 폴백)
 - Claude Code 유저 스코프 MCP 등록 (`~/.claude.json`)
 - Claude 웹 검색(식당, 교통)으로 모든 여행 요소 검색·추천 가능
@@ -62,7 +62,7 @@
 
 ## Milestone 3: 일정 생성 + 웹앱 딜리버리 (Phase 4+5, US2+US3)
 
-**Goal**: 확정된 여행 요소를 기반으로 일정을 생성하고, GitHub Pages(Next.js static export) 웹앱을 통해 동행자에게 모바일로 공유한다 (`travel.idean.me`)
+**Goal**: 확정된 여행 요소를 기반으로 일정을 생성하고, GitHub Pages(Next.js static export) 웹앱을 통해 동행자에게 모바일로 공유한다 (`trip.idean.me`)
 
 **Independent Test**: 확정된 여행 정보로 일정을 생성하고, 웹앱 URL을 모바일에서 열면 추가 조작 없이 열람 가능하다
 
@@ -77,7 +77,7 @@
 > 순서 변경: 웹앱 파이프라인을 먼저 구축하고, 기존 일정 초안을 샘플 데이터로 활용.
 > T022~T024를 #49로 통합. 기존 GitHub Pages 작업(#34, #30, #33)은 대체됨.
 
-- [x] T022 [US3] Next.js 프로젝트 초기화 + 마크다운 렌더링 + GitHub Pages 배포 (#49) — 루트에 Next.js 15 앱 생성. trips/ 마크다운을 빌드 시점에 정적 페이지로 렌더링 (remark + remark-gfm). GitHub Pages static export 배포. 커스텀 도메인 `travel.idean.me` 설정. AppPaaS 컨테이너 빌드 실패로 GitHub Pages로 전환 (ADR-001 Decision Log #6 참조)
+- [x] T022 [US3] Next.js 프로젝트 초기화 + 마크다운 렌더링 + GitHub Pages 배포 (#49) — 루트에 Next.js 15 앱 생성. trips/ 마크다운을 빌드 시점에 정적 페이지로 렌더링 (remark + remark-gfm). GitHub Pages static export 배포. 커스텀 도메인 `trip.idean.me` 설정. AppPaaS 컨테이너 빌드 실패로 GitHub Pages로 전환 (ADR-001 Decision Log #6 참조)
 
 ### 모바일 반응형 + 멀티 여행 구조 + 디자인 개선
 
@@ -177,4 +177,4 @@ T022 (웹앱 파이프라인) ✅ → T025 (반응형 + 멀티여행 + 디자인
 - Attractions API 엔드포인트는 T009에서 검증 후 T010~T012 구현 방향 결정
 - 식당·교통 추천은 CLI/MCP가 아닌 Claude 웹 검색으로 수행 — 별도 구현 태스크 없음
 - 자동 검증(pytest)은 CLI 스크립트 파싱·포맷팅 로직에 집중, Claude 추천 품질은 E2E에서 확인
-- T022~T024는 #49로 통합, GitHub Pages static export로 배포 (`travel.idean.me`)
+- T022~T024는 #49로 통합, GitHub Pages static export로 배포 (`trip.idean.me`)

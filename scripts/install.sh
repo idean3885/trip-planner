@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# travel-planner MCP server 원클릭 설치 스크립트
-# curl 파이프 실행 지원: curl -sSL https://raw.githubusercontent.com/idean3885/travel-planner/main/scripts/install.sh | bash
+# trip-planner MCP server 원클릭 설치 스크립트
+# curl 파이프 실행 지원: curl -sSL https://raw.githubusercontent.com/idean3885/trip-planner/main/scripts/install.sh | bash
 
-REPO_URL="https://github.com/idean3885/travel-planner.git"
-INSTALL_DIR="${HOME}/.travel-planner"
+REPO_URL="https://github.com/idean3885/trip-planner.git"
+INSTALL_DIR="${HOME}/.trip-planner"
 VENV_DIR="${INSTALL_DIR}/.venv"
 ENV_FILE="${INSTALL_DIR}/.env"
 SRC_DIR="${INSTALL_DIR}/src"
@@ -88,7 +88,7 @@ echo "▶ 필요한 패키지 설치 중... (잠시 기다려 주세요)"
 echo -e "  ${GREEN}패키지 설치 완료${NC}"
 
 # ── 5. RapidAPI 키 입력 ───────────────────────────────────────────
-KEYCHAIN_SERVICE="travel-planner"
+KEYCHAIN_SERVICE="trip-planner"
 KEYCHAIN_ACCOUNT="rapidapi-key"
 USE_KEYCHAIN=false
 RAPIDAPI_KEY_VALUE=""

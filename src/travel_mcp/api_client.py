@@ -13,7 +13,7 @@ except ImportError:
 
 logger = logging.getLogger("travel-mcp-server")
 
-KEYCHAIN_SERVICE = "travel-planner"
+KEYCHAIN_SERVICE = "trip-planner"
 KEYCHAIN_ACCOUNT = "rapidapi-key"
 
 

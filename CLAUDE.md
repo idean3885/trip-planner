@@ -5,7 +5,7 @@
 
 ## 디렉토리 구조
 ```
-travel-planner/
+trip-planner/
 ├── trips/                          # 여행별 폴더
 │   └── {year}-{trip-name}/         # 예: 2026-honeymoon-portugal-spain
 │       ├── overview.md             # 여행 개요 (인원, 기간, 루트, 항공, 날씨)

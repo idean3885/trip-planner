@@ -20,8 +20,8 @@
 **Performance Goals**: API 응답 30초 이내 (httpx timeout)
 **Constraints**: Booking.com API 월 250건 (Basic $8.99), FE-only Stateless, GitHub Pages (정적 export)
 **Currency**: KRW 기본, 다중 플랫폼 예약 링크 (Booking.com, Agoda, Hotels.com, Google Hotels)
-**Distribution**: PyPI (travel-planner-mcp v1.0.2), 1줄 설치 (curl | bash), Claude Desktop 자동 설정, Claude Code 유저 스코프 MCP (`claude mcp add -s user`)
-**Authentication**: macOS 키체인 우선 (서비스: `travel-planner`, 계정: `rapidapi-key`), `.env` 폴백
+**Distribution**: PyPI (trip-planner-mcp v1.0.2), 1줄 설치 (curl | bash), Claude Desktop 자동 설정, Claude Code 유저 스코프 MCP (`claude mcp add -s user`)
+**Authentication**: macOS 키체인 우선 (서비스: `trip-planner`, 계정: `rapidapi-key`), `.env` 폴백
 **Scale/Scope**: 1건 여행 (15일, 5개 도시), 사용자 1명 + 동행자 2~5명
 
 ## Constitution Check
@@ -56,7 +56,7 @@ specs/001-ax-travel-planning/
 
 ```text
 src/
-├── travel_mcp/                 # PyPI 패키지 (travel-planner-mcp)
+├── travel_mcp/                 # PyPI 패키지 (trip-planner-mcp)
 │   ├── __init__.py             # 버전 정보
 │   ├── api_client.py           # RapidAPI 공용 클라이언트 (키체인 → 환경변수 폴백)
 │   └── server.py               # MCP 도구 8개 (hotels+flights+attractions)
@@ -91,7 +91,7 @@ trips/                          # 여행 데이터 (마크다운)
     └── ...
 ```
 
-**Structure Decision**: Python MCP 서버(`src/travel_mcp/`)와 Next.js 웹앱(`src/app/`, `src/lib/`)이 루트에 공존. GitHub Pages로 정적 배포(static export), 커스텀 도메인 `travel.idean.me`. BE 확장 시 AppPaaS/Vercel로 전환 가능. 아키텍처 결정은 [ADR-001](adr/001-fe-only-stateless-architecture.md) 참조.
+**Structure Decision**: Python MCP 서버(`src/travel_mcp/`)와 Next.js 웹앱(`src/app/`, `src/lib/`)이 루트에 공존. GitHub Pages로 정적 배포(static export), 커스텀 도메인 `trip.idean.me`. BE 확장 시 AppPaaS/Vercel로 전환 가능. 아키텍처 결정은 [ADR-001](adr/001-fe-only-stateless-architecture.md) 참조.
 
 ## 모바일 UX 개선 (FR-013~016)
 

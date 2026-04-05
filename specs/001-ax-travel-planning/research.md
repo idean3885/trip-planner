@@ -98,11 +98,11 @@
 - 모바일 반응형 기본 지원
 - `git push`만으로 배포 완료 — 개발자 병목 최소화
 - 동행자는 URL만 공유받아 모바일 브라우저에서 열람
-- 기존 블로그(User Site)와 병행 가능 — Project Site는 `/travel-planner` 경로로 분리
+- 기존 블로그(User Site)와 병행 가능 — Project Site는 `/trip-planner` 경로로 분리
 
 ### URL 구조
-- **베이스**: `https://idean3885.github.io/travel-planner/`
-- **일정 예시**: `https://idean3885.github.io/travel-planner/trips/2026-honeymoon-portugal-spain/itinerary`
+- **베이스**: `https://idean3885.github.io/trip-planner/`
+- **일정 예시**: `https://idean3885.github.io/trip-planner/trips/2026-honeymoon-portugal-spain/itinerary`
 
 ### Alternatives Considered
 | 대안 | 평가 | 탈락 사유 |
@@ -171,7 +171,7 @@
 # _config.yml (repository root)
 theme: minima
 title: "Travel Planner"
-baseurl: "/travel-planner"
+baseurl: "/trip-planner"
 include:
   - trips
 ```

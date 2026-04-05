@@ -144,7 +144,7 @@ python scripts/search_attractions.py --location-id "{위에서 얻은 ID}" --dat
 ### 시나리오: 단위 테스트 실행
 
 ```bash
-cd /Users/nhn/git-project/idean3885/travel-planner
+cd /Users/nhn/git-project/idean3885/trip-planner
 pytest tests/unit/ -v
 ```
 
