@@ -5,71 +5,61 @@
 html {
   -webkit-text-size-adjust: 100%;
   scroll-behavior: smooth;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* ── Tables: card layout on mobile, normal on desktop ── */
+/* ── Tables: card layout (all breakpoints) ── */
+.prose .table-cards table,
+.prose .table-cards thead,
+.prose .table-cards tbody,
+.prose .table-cards tr,
+.prose .table-cards th,
+.prose .table-cards td {
+  display: block;
+  width: 100%;
+}
+
 .prose .table-cards table {
   font-size: 0.8125rem;
 }
 
-.prose .table-cards th {
-  padding: 0.5rem 0.75rem;
+.prose .table-cards thead {
+  display: none;
+}
+
+.prose .table-cards tr {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  margin-bottom: 0.75rem;
 }
 
 .prose .table-cards td {
-  padding: 0.5rem 0.75rem;
-  vertical-align: top;
+  padding: 0.25rem 0;
+  border: none;
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
 }
 
-@media (max-width: 480px) {
-  .prose .table-cards table,
-  .prose .table-cards thead,
-  .prose .table-cards tbody,
-  .prose .table-cards tr,
-  .prose .table-cards th,
-  .prose .table-cards td {
-    display: block;
-    width: 100%;
-  }
+.prose .table-cards td::before {
+  content: attr(data-label);
+  font-weight: 600;
+  color: #64748b;
+  font-size: 0.75rem;
+  flex-shrink: 0;
+  min-width: 4rem;
+}
 
-  .prose .table-cards thead {
-    display: none;
-  }
-
-  .prose .table-cards tr {
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 0.5rem;
-    padding: 0.75rem;
-    margin-bottom: 0.75rem;
-  }
-
-  .prose .table-cards td {
-    padding: 0.25rem 0;
-    border: none;
-    display: flex;
-    justify-content: space-between;
-    gap: 0.5rem;
-  }
-
-  .prose .table-cards td::before {
-    content: attr(data-label);
-    font-weight: 600;
-    color: #64748b;
-    font-size: 0.75rem;
-    flex-shrink: 0;
-    min-width: 4rem;
-  }
-
-  .prose .table-cards td:first-child {
-    font-weight: 600;
-    font-size: 0.875rem;
-    color: #1e293b;
-  }
+.prose .table-cards td:first-child {
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: #1e293b;
 }
 
 /* ── Code blocks (route 표시 등) ── */
@@ -113,6 +103,47 @@ body {
   padding-right: 1rem;
   background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='2'%3E%3Cpath d='M15 3h6v6M10 14L21 3M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6'/%3E%3C/svg%3E") no-repeat right center;
   background-size: 0.75rem;
+}
+
+/* ── Weather toggle (collapsible) ── */
+.prose .weather-toggle {
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.prose .weather-toggle .weather-summary {
+  cursor: pointer;
+  padding: 0.75rem 1rem;
+  background: #f8fafc;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.prose .weather-toggle .weather-summary::-webkit-details-marker {
+  display: none;
+}
+
+.prose .weather-toggle .weather-summary::before {
+  content: "▸";
+  font-size: 0.75rem;
+  color: #94a3b8;
+  transition: transform 0.15s;
+}
+
+.prose .weather-toggle[open] .weather-summary::before {
+  transform: rotate(90deg);
+}
+
+.prose .weather-toggle .weather-summary {
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.prose .weather-toggle > :not(summary) {
+  padding: 0 1rem 0.75rem;
 }
 
 .prose > :first-child {

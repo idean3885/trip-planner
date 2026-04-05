@@ -81,7 +81,7 @@
 
 ### 모바일 반응형 + 멀티 여행 구조 + 디자인 개선
 
-- [ ] T025 [US3] 모바일 반응형 + 멀티 여행 + 디자인/UX 전면 개선 (#32) — 범위 확장:
+- [x] T025 [US3] 모바일 반응형 + 멀티 여행 + 디자인/UX 전면 개선 (#32) — 범위 확장:
   - 멀티 여행 라우트: `/` 여행 목록 → `/trips/[slug]` 여행 상세 → `/trips/[slug]/day/[num]` 일별 상세
   - 모바일 테이블 가로 스크롤 (overflow-x-auto)
   - 마크다운 H1 중복 제거 (stripFirstH1)
@@ -91,6 +91,15 @@
   - 모바일 테이블 → 카드형 변환 (addTableLabels + CSS media query)
   - 구글맵 링크: CID 우선, search+국가 폴백 (DAY 1 샘플 적용 완료)
   - 외부 링크 새 탭 열기 (externalLinksNewTab)
+- [ ] T025a [US3] 오늘의 일정 보기 + 브레드크럼 + 맨 위로 버튼 (#60) — 범위:
+  - `src/lib/trips.ts`: 도시→타임존 매핑, 날씨 데이터 파싱(`extractWeatherFromOverview`), `TripMeta`에 days/timezone 추가
+  - `src/components/TodayButton.tsx`: 클라이언트 컴포넌트. 현지시각 기준 오늘 일정 매칭, 여행 기간 내에만 표시
+  - `src/components/ScrollToTop.tsx`: 클라이언트 컴포넌트. 300px 스크롤 시 플로팅 버튼 표시
+  - `src/app/page.tsx`: TodayButton 삽입 (홈 최상단)
+  - `src/app/trips/[slug]/day/[num]/page.tsx`: 브레드크럼(여행명 > DAY N), 상단 전날/다음날 네비, 날씨 배지
+  - `src/app/trips/[slug]/page.tsx`: 날씨 테이블 `<details>` 토글
+  - `src/app/layout.tsx`: ScrollToTop 삽입
+  - 기준 디바이스: iPhone 13 Mini (375pt), 정적 export 호환
 - [ ] T026 [US3] 일정 수정 후 반영 검증 (#31) — 일정 수정 → 재배포 → 모바일에서 최신 일정 확인
 
 ### E2E 일정 생성 검증 (웹앱 구축 후)

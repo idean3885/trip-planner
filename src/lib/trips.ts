@@ -6,6 +6,69 @@ import html from "remark-html";
 
 const TRIPS_DIR = path.join(process.cwd(), "trips");
 
+const CITY_TIMEZONES: Record<string, string> = {
+  lisbon: "Europe/Lisbon",
+  porto: "Europe/Lisbon",
+  madrid: "Europe/Madrid",
+  sevilla: "Europe/Madrid",
+  granada: "Europe/Madrid",
+  barcelona: "Europe/Madrid",
+};
+
+const CITY_KO_MAP: Record<string, string> = {
+  lisbon: "리스본", porto: "포르투", madrid: "마드리드",
+  sevilla: "세비야", granada: "그라나다", barcelona: "바르셀로나",
+};
+
+function getPrimaryCityFromDay(cityStr: string): string | null {
+  const lower = cityStr.toLowerCase();
+  return Object.keys(CITY_TIMEZONES).find((c) => lower.includes(c)) ?? null;
+}
+
+function getTimezoneForCity(cityStr: string): string {
+  const city = getPrimaryCityFromDay(cityStr);
+  return city ? CITY_TIMEZONES[city] : "Europe/Madrid";
+}
+
+export function extractWeatherFromOverview(overviewMd: string): WeatherInfo[] {
+  const result: WeatherInfo[] = [];
+  const tableMatch = overviewMd.match(
+    /날씨[\s\S]*?\n\|[^\n]+\|\n\|[-\s|]+\|\n((?:\|[^\n]+\|\n?)+)/
+  );
+  if (!tableMatch) return result;
+
+  const rows = tableMatch[1].trim().split("\n");
+  for (const row of rows) {
+    const cells = row.split("|").map((c) => c.trim()).filter(Boolean);
+    if (cells.length >= 3) {
+      result.push({ cityKo: cells[0], temp: cells[1], note: cells[2] });
+    }
+  }
+  return result;
+}
+
+export function getWeatherForCity(
+  weather: WeatherInfo[],
+  cityStr: string
+): WeatherInfo | null {
+  const city = getPrimaryCityFromDay(cityStr);
+  if (!city) return null;
+  const ko = CITY_KO_MAP[city];
+  return weather.find((w) => w.cityKo === ko) ?? null;
+}
+
+export interface TripDayInfo {
+  dayNum: number;
+  fullDate: string; // "2026-06-07"
+  timezone: string; // "Europe/Lisbon"
+}
+
+export interface WeatherInfo {
+  cityKo: string;
+  temp: string;
+  note: string;
+}
+
 export interface TripMeta {
   slug: string;
   title: string;
@@ -13,6 +76,8 @@ export interface TripMeta {
   cities?: string;
   theme?: string;
   coverCity?: string;
+  days?: TripDayInfo[];
+  weather?: WeatherInfo[];
 }
 
 export interface TripOverview {
@@ -76,7 +141,33 @@ export async function getAllTrips(): Promise<TripMeta[]> {
     // First city as cover
     const coverCity = slug.split("-").slice(2, 3).join("") || "lisbon";
 
-    result.push({ slug, title, period, cities, theme, coverCity });
+    // Extract year from slug or period
+    const yearMatch = slug.match(/^(\d{4})-/);
+    const year = yearMatch ? parseInt(yearMatch[1], 10) : new Date().getFullYear();
+
+    // Build day info for TodayButton
+    const dailyDir = path.join(TRIPS_DIR, slug, "daily");
+    const days: TripDayInfo[] = [];
+    if (fs.existsSync(dailyDir)) {
+      const files = fs.readdirSync(dailyDir).filter((f) => f.endsWith(".md")).sort();
+      for (const filename of files) {
+        const dayMatch = filename.match(/^day(\d+)-(\d{4})-(.+)\.md$/);
+        if (!dayMatch) continue;
+        const dayNum = parseInt(dayMatch[1], 10);
+        const mmdd = dayMatch[2];
+        const city = dayMatch[3].replace(/-/g, " ");
+        const month = mmdd.slice(0, 2);
+        const day = mmdd.slice(2);
+        const fullDate = `${year}-${month}-${day}`;
+        const timezone = getTimezoneForCity(city);
+        days.push({ dayNum, fullDate, timezone });
+      }
+    }
+
+    // Extract weather data
+    const weather = extractWeatherFromOverview(raw);
+
+    result.push({ slug, title, period, cities, theme, coverCity, days, weather });
   }
   return result;
 }
@@ -116,7 +207,6 @@ function addTableLabels(htmlStr: string): string {
     const tbodyMatch = table.match(/<tbody>([\s\S]*?)<\/tbody>/);
     if (!tbodyMatch) return `<div class="table-cards">${table}</div>`;
 
-    let rowIndex = 0;
     const labeledTbody = tbodyMatch[1].replace(/<tr>([\s\S]*?)<\/tr>/g, (_, rowContent) => {
       let colIndex = 0;
       const labeledCells = rowContent.replace(/<td([^>]*)>([\s\S]*?)<\/td>/g, (_: string, attrs: string, content: string) => {
@@ -124,7 +214,6 @@ function addTableLabels(htmlStr: string): string {
         colIndex++;
         return `<td${attrs} data-label="${label}">${content}</td>`;
       });
-      rowIndex++;
       return `<tr>${labeledCells}</tr>`;
     });
 
@@ -145,6 +234,34 @@ async function markdownToHtml(md: string): Promise<string> {
   const masked = maskSensitive(md);
   const result = await remark().use(remarkGfm).use(html, { sanitize: false }).process(masked);
   return externalLinksNewTab(addTableLabels(result.toString()));
+}
+
+/** Convert KST date (MM.DD) + year to local date string in the given timezone */
+export function toLocalDate(
+  year: number,
+  kstDate: string, // "06.07"
+  timezone: string
+): string {
+  const [month, day] = kstDate.split(".").map(Number);
+  // KST is UTC+9. Create a Date in KST noon to avoid edge cases
+  const kstNoon = new Date(Date.UTC(year, month - 1, day, 3, 0, 0)); // 12:00 KST = 03:00 UTC
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    timeZone: timezone,
+    month: "2-digit",
+    day: "2-digit",
+  });
+  const parts = formatter.formatToParts(kstNoon);
+  const m = parts.find((p) => p.type === "month")!.value;
+  const d = parts.find((p) => p.type === "day")!.value;
+  return `${m}.${d}`;
+}
+
+/** Wrap weather section in <details> for collapsible toggle */
+export function wrapWeatherInDetails(htmlStr: string): string {
+  return htmlStr.replace(
+    /<h2[^>]*>([^<]*날씨[^<]*)<\/h2>([\s\S]*?)(?=<h2[^>]*>|$)/,
+    '<details class="weather-toggle"><summary class="weather-summary">$1</summary>$2</details>'
+  );
 }
 
 /** Strip the first H1 heading from HTML (to avoid duplicate with page header) */

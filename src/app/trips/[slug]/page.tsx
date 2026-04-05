@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getAllTripSlugs, getTripOverview, getAllDays, stripFirstH1 } from "@/lib/trips";
+import { getAllTripSlugs, getTripOverview, getAllDays, stripFirstH1, wrapWeatherInDetails } from "@/lib/trips";
 
 export async function generateStaticParams() {
   const slugs = getAllTripSlugs();
@@ -37,9 +37,13 @@ export default async function TripPage({
 
   return (
     <div className="space-y-8">
-      <Link href="/" className="inline-flex items-center text-sm text-gray-500 hover:text-gray-900 min-h-[44px]">
-        &larr; 여행 목록
-      </Link>
+      <nav className="flex items-center gap-1.5 text-sm text-gray-500 min-h-[44px]">
+        <Link href="/" className="hover:text-gray-900 transition-colors" aria-label="홈">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        </Link>
+        <span className="text-gray-300">/</span>
+        <span className="text-gray-900 font-medium">{overview.title}</span>
+      </nav>
 
       <div>
         <h1 className="text-2xl font-bold">{overview.title}</h1>
@@ -48,7 +52,7 @@ export default async function TripPage({
       <section className="rounded-lg border border-gray-200 p-5">
         <div
           className="prose prose-sm max-w-none"
-          dangerouslySetInnerHTML={{ __html: stripFirstH1(overview.content) }}
+          dangerouslySetInnerHTML={{ __html: wrapWeatherInDetails(stripFirstH1(overview.content)) }}
         />
       </section>
 
