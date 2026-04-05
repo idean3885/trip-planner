@@ -34,3 +34,5 @@ build/
 
 # OMC state
 .omc/
+web/node_modules/
+web/.next/
