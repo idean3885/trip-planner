@@ -6,10 +6,8 @@ export default async function Home() {
   const trips = await getAllTrips();
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold">나의 여행</h1>
-
-      <div className="space-y-3">
+    <div className="space-y-4">
+      <h1 className="text-xl font-bold">우리의 여행</h1>
         {trips.map((trip) => (
           <div key={trip.slug} className="space-y-2">
             {trip.days && trip.days.length > 0 && (
@@ -39,8 +37,6 @@ export default async function Home() {
             </Link>
           </div>
         ))}
-      </div>
-
       {trips.length === 0 && (
         <div className="text-center py-16 text-gray-400">
           <p className="text-lg">아직 등록된 여행이 없습니다.</p>

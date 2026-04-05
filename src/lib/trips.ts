@@ -236,6 +236,26 @@ async function markdownToHtml(md: string): Promise<string> {
   return externalLinksNewTab(addTableLabels(result.toString()));
 }
 
+/** Convert KST date (MM.DD) + year to local date string in the given timezone */
+export function toLocalDate(
+  year: number,
+  kstDate: string, // "06.07"
+  timezone: string
+): string {
+  const [month, day] = kstDate.split(".").map(Number);
+  // KST is UTC+9. Create a Date in KST noon to avoid edge cases
+  const kstNoon = new Date(Date.UTC(year, month - 1, day, 3, 0, 0)); // 12:00 KST = 03:00 UTC
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    timeZone: timezone,
+    month: "2-digit",
+    day: "2-digit",
+  });
+  const parts = formatter.formatToParts(kstNoon);
+  const m = parts.find((p) => p.type === "month")!.value;
+  const d = parts.find((p) => p.type === "day")!.value;
+  return `${m}.${d}`;
+}
+
 /** Wrap weather section in <details> for collapsible toggle */
 export function wrapWeatherInDetails(htmlStr: string): string {
   return htmlStr.replace(

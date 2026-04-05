@@ -1,22 +1,57 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export default function ScrollToTop() {
   const [visible, setVisible] = useState(false);
+  const [fading, setFading] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    const onScroll = () => setVisible(window.scrollY > 300);
+    const onScroll = () => {
+      const scrolled = window.scrollY > 300;
+
+      if (scrolled) {
+        setVisible(true);
+        setFading(false);
+
+        // Reset fade timer
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => setFading(true), 2000);
+      } else {
+        setVisible(false);
+        setFading(false);
+        if (timerRef.current) clearTimeout(timerRef.current);
+      }
+    };
+
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
   }, []);
 
   if (!visible) return null;
 
   return (
     <button
-      onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-      className="fixed right-4 z-30 flex h-10 w-10 items-center justify-center rounded-full bg-gray-800/80 text-white shadow-lg backdrop-blur-sm hover:bg-gray-700 active:scale-95 transition-all"
+      onClick={() => {
+        const start = window.scrollY;
+        const duration = Math.min(300, start * 0.15); // 빠르되 부드럽게 (최대 300ms)
+        const startTime = performance.now();
+        const step = (now: number) => {
+          const elapsed = now - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+          const ease = 1 - Math.pow(1 - progress, 3); // easeOutCubic
+          window.scrollTo(0, start * (1 - ease));
+          if (progress < 1) requestAnimationFrame(step);
+        };
+        requestAnimationFrame(step);
+      }}
+      className={`fixed right-4 z-30 flex h-10 w-10 items-center justify-center rounded-full bg-gray-800/80 text-white shadow-lg backdrop-blur-sm hover:bg-gray-700 active:scale-95 transition-opacity duration-500 ${
+        fading ? "opacity-0 pointer-events-none" : "opacity-100"
+      }`}
       style={{ bottom: "calc(1.5rem + env(safe-area-inset-bottom, 0px))" }}
       aria-label="맨 위로 스크롤"
     >

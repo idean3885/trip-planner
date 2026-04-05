@@ -9,8 +9,14 @@ interface TripDayInfo {
   timezone: string; // "Europe/Lisbon"
 }
 
+// TODO: 드라이런 — 실제 배포 전 아래 DRY_RUN_DATE를 null로 되돌릴 것
+const DRY_RUN_DATE = "2026-06-07"; // DAY 1 시뮬레이션 (null이면 실제 날짜 사용)
+
 function findTodayDay(days: TripDayInfo[]): TripDayInfo | null {
   if (days.length === 0) return null;
+  if (DRY_RUN_DATE) {
+    return days.find((d) => d.fullDate === DRY_RUN_DATE) ?? null;
+  }
   const now = new Date();
   for (const day of days) {
     const formatter = new Intl.DateTimeFormat("en-CA", {
