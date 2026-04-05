@@ -115,6 +115,47 @@ body {
   background-size: 0.75rem;
 }
 
+/* ── Weather toggle (collapsible) ── */
+.prose .weather-toggle {
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.prose .weather-toggle .weather-summary {
+  cursor: pointer;
+  padding: 0.75rem 1rem;
+  background: #f8fafc;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.prose .weather-toggle .weather-summary::-webkit-details-marker {
+  display: none;
+}
+
+.prose .weather-toggle .weather-summary::before {
+  content: "▸";
+  font-size: 0.75rem;
+  color: #94a3b8;
+  transition: transform 0.15s;
+}
+
+.prose .weather-toggle[open] .weather-summary::before {
+  transform: rotate(90deg);
+}
+
+.prose .weather-toggle .weather-summary {
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.prose .weather-toggle > :not(summary) {
+  padding: 0 1rem 0.75rem;
+}
+
 .prose > :first-child {
   margin-top: 0;
 }

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getAllTripSlugs, getTripOverview, getAllDays, stripFirstH1 } from "@/lib/trips";
+import { getAllTripSlugs, getTripOverview, getAllDays, stripFirstH1, wrapWeatherInDetails } from "@/lib/trips";
 
 export async function generateStaticParams() {
   const slugs = getAllTripSlugs();
@@ -48,7 +48,7 @@ export default async function TripPage({
       <section className="rounded-lg border border-gray-200 p-5">
         <div
           className="prose prose-sm max-w-none"
-          dangerouslySetInnerHTML={{ __html: stripFirstH1(overview.content) }}
+          dangerouslySetInnerHTML={{ __html: wrapWeatherInDetails(stripFirstH1(overview.content)) }}
         />
       </section>
 

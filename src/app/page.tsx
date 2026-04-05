@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getAllTrips } from "@/lib/trips";
+import TodayButton from "@/components/TodayButton";
 
 export default async function Home() {
   const trips = await getAllTrips();
@@ -10,28 +11,33 @@ export default async function Home() {
 
       <div className="space-y-3">
         {trips.map((trip) => (
-          <Link
-            key={trip.slug}
-            href={`/trips/${trip.slug}`}
-            className="block rounded-lg border border-gray-200 bg-white p-5 hover:border-gray-400 hover:shadow-sm transition-all active:scale-[0.99]"
-          >
-            <h2 className="text-lg font-semibold">{trip.title}</h2>
-
-            {(trip.period || trip.theme) && (
-              <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-500">
-                {trip.period && <span>{trip.period}</span>}
-                {trip.theme && <span>{trip.theme}</span>}
-              </div>
+          <div key={trip.slug} className="space-y-2">
+            {trip.days && trip.days.length > 0 && (
+              <TodayButton tripSlug={trip.slug} days={trip.days} />
             )}
 
-            {trip.cities && (
-              <p className="mt-2 text-sm text-gray-600">{trip.cities}</p>
-            )}
+            <Link
+              href={`/trips/${trip.slug}`}
+              className="block rounded-lg border border-gray-200 bg-white p-5 hover:border-gray-400 hover:shadow-sm transition-all active:scale-[0.99]"
+            >
+              <h2 className="text-lg font-semibold">{trip.title}</h2>
 
-            <span className="mt-3 inline-block text-sm font-medium text-blue-600">
-              일정 보기 &rarr;
-            </span>
-          </Link>
+              {(trip.period || trip.theme) && (
+                <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-500">
+                  {trip.period && <span>{trip.period}</span>}
+                  {trip.theme && <span>{trip.theme}</span>}
+                </div>
+              )}
+
+              {trip.cities && (
+                <p className="mt-2 text-sm text-gray-600">{trip.cities}</p>
+              )}
+
+              <span className="mt-3 inline-block text-sm font-medium text-blue-600">
+                일정 보기 &rarr;
+              </span>
+            </Link>
+          </div>
         ))}
       </div>
 

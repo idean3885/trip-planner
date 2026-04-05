@@ -92,3 +92,29 @@ trips/                          # 여행 데이터 (마크다운)
 ```
 
 **Structure Decision**: Python MCP 서버(`src/travel_mcp/`)와 Next.js 웹앱(`src/app/`, `src/lib/`)이 루트에 공존. GitHub Pages로 정적 배포(static export), 커스텀 도메인 `travel.idean.me`. BE 확장 시 AppPaaS/Vercel로 전환 가능. 아키텍처 결정은 [ADR-001](adr/001-fe-only-stateless-architecture.md) 참조.
+
+## 모바일 UX 개선 (FR-013~016)
+
+### 오늘의 일정 보기 (FR-013)
+- **클라이언트 컴포넌트**: `src/components/TodayButton.tsx` — 서버에서 전달받은 날짜+타임존으로 `Intl.DateTimeFormat`으로 현지시각 매칭
+- **타임존 매핑**: `src/lib/trips.ts`에 도시→타임존 매핑 (`lisbon→Europe/Lisbon`, `porto→Europe/Lisbon`, 나머지→`Europe/Madrid`)
+- **데이터**: `TripMeta`에 `days: {dayNum, fullDate, timezone}[]` 추가. 연도는 trip slug에서 추출, MMDD는 daily 파일명에서 추출
+- **자동 리다이렉트 금지**: 버튼 클릭 시에만 이동. 무한루프 방지
+
+### 브레드크럼 + 상단 네비게이션 (FR-014)
+- 서버 컴포넌트로 구현. 일별 페이지 상단에 `여행명 > DAY N` 형태
+- 전날/다음날 네비게이션을 하단에서 상단으로 이동
+
+### 날씨 표시 (FR-015)
+- `src/lib/trips.ts`에 `extractWeatherFromOverview()` — overview.md 날씨 테이블 파싱
+- 일별 페이지 상단: 해당 도시 날씨 배지 표시
+- 전체 날씨 테이블: `<details>` HTML 엘리먼트로 접힘 (JS 불필요, 정적 export 호환)
+
+### 맨 위로 버튼 (FR-016)
+- **클라이언트 컴포넌트**: `src/components/ScrollToTop.tsx` — `scroll` 이벤트로 300px 이상 시 표시
+- `layout.tsx`에 삽입. z-index 관리 (z-30, 헤더 z-20 위)
+
+### 클라이언트 컴포넌트 최소화 원칙
+- 클라이언트 컴포넌트: `TodayButton`, `ScrollToTop` (2개만)
+- 날씨 토글: `<details>/<summary>` (순수 HTML, JS 불필요)
+- 브레드크럼/네비게이션: 서버 컴포넌트 (기존 패턴 유지)
