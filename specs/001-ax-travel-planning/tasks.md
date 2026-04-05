@@ -77,7 +77,7 @@
 > 순서 변경: 웹앱 파이프라인을 먼저 구축하고, 기존 일정 초안을 샘플 데이터로 활용.
 > T022~T024를 #49로 통합. 기존 GitHub Pages 작업(#34, #30, #33)은 대체됨.
 
-- [ ] T022 [US3] Next.js 프로젝트 초기�� + 마크다운 렌더링 + AppPaaS 배포 (#49) — `web/` 디렉토리에 Next.js 앱 생성 (Node 20). trips/ 마크다운을 빌드 시점에 정적 페이지로 렌더링. 모바일 반응형. AppPaaS 배포 + 파이프라인 검증 (마크다운 수정 → 재배포 → 반영)
+- [x] T022 [US3] Next.js 프로젝트 초기화 + 마크다운 렌더링 + GitHub Pages 배포 (#49) — 루트에 Next.js 15 앱 생성. trips/ 마크다운을 빌드 시점에 정적 페이지로 렌더링 (remark + remark-gfm). GitHub Pages static export 배포. 커스텀 도메인 `travel.idean.me` 설정. AppPaaS 컨테이너 빌드 실패로 GitHub Pages로 전환 (ADR-001 Decision Log #6 참조)
 
 ### 모바일 최적화 + 파이프라인 검증
 

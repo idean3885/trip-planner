@@ -147,6 +147,16 @@
 **전환점**: AppPaaS로 Svelte/React 배포 가능하다는 사실 확인
 **결정**: AppPaaS 웹앱으로 전환. 검색 + 일정 조회 + 모바일 최적화를 하나의 앱으로
 
+### 6. AppPaaS → GitHub Pages 재전환 (2026-04-05)
+
+**기존**: AppPaaS Next.js 서버 모드 배포 (ADR Decision Log #4)
+**문제**: Next.js 빌드는 성공하나 AppPaaS 컨테이너 이미지 생성이 반복 실패. 원인은 AppPaaS 내부 빌더가 monorepo 구조(`web/` 하위)를 처리하지 못하고, 루트로 이동 후에도 "An unexpected error occurred"로 실패. AppPaaS 지원팀 문의 외에는 해결 불가.
+**전환점**: 현재 모든 페이지가 SSG(정적 생성)이므로 서버가 불필요. `output: "export"`로 정적 HTML만 출력하면 GitHub Pages에서 서빙 가능.
+**결정**: GitHub Pages + Next.js static export로 전환. 커스텀 도메인 `travel.idean.me` 설정.
+- AppPaaS는 BE가 필요해질 때 재전환 (ADR Decision Log #4의 확장 방향 유지)
+- `output: "export"` 제거만으로 서버 모드 복구 가능
+- React(Next.js) 프레임워크 선택은 변경 없음 — 확장성 판단 유지
+
 ### 5. 마일스톤 재편
 
 **기존**: tasks.md 6개 Phase와 GitHub 마일스톤 4개가 별개 체계로 운영
@@ -171,4 +181,4 @@
 
 **리스크:**
 - Next.js 메이저 업데이트 시 AI 생성 코드 호환성 확인 필요
-- Node 20 EOL 시 AppPaaS 업그레이드 필요 (Astro 전환은 그때 재검토)
+- BE 도입 시 AppPaaS 컨테이너 빌드 문제 재발 가능 — Vercel 전환 검토

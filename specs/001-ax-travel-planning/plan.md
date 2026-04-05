@@ -5,7 +5,7 @@
 
 ## Summary
 
-사용자가 자연어로 여행 조건을 제시하면, Claude가 CLI 스크립트/모듈을 통해 숙소·항공편·관광지를 검색하고 분석·추천한다. 식당과 도시 간 교통은 Claude 웹 검색(딥 리서치) + 최신 리뷰 크로스체크로 추천한다. 확정된 여행 요소로 일별 일정과 전체 요약을 마크다운으로 생성하며, AppPaaS Next.js 웹앱을 통해 동행자에게 모바일로 공유한다.
+사용자가 자연어로 여행 조건을 제시하면, Claude가 CLI 스크립트/모듈을 통해 숙소·항공편·관광지를 검색하고 분석·추천한다. 식당과 도시 간 교통은 Claude 웹 검색(딥 리서치) + 최신 리뷰 크로스체크로 추천한다. 확정된 여행 요소로 일별 일정과 전체 요약을 마크다운으로 생성하며, GitHub Pages(Next.js static export) 웹앱을 통해 동행자에게 모바일로 공유한다.
 
 > **아키텍처 결정**: [ADR-001](adr/001-fe-only-stateless-architecture.md) 참조
 
@@ -15,10 +15,10 @@
 **Primary Dependencies**: httpx, python-dotenv, pytest (검색) / Next.js, React (웹앱)
 **Storage**: 마크다운 파일 (`trips/` 디렉토리, git 관리), 정적 JSON (빌드 번들)
 **Testing**: pytest 자동 검증 (API 파싱·포맷팅) + 실제 여행 데이터 E2E
-**Target Platform**: CLI 스크립트 (검색) + Next.js 웹앱 (AppPaaS, 모바일 딜리버리)
+**Target Platform**: CLI 스크립트 (검색) + Next.js 웹앱 (GitHub Pages, 모바일 딜리버리)
 **Project Type**: CLI 스크립트 (검색 도구) + FE-only 웹앱 (딜리버리)
 **Performance Goals**: API 응답 30초 이내 (httpx timeout)
-**Constraints**: Booking.com API 월 250건 (Basic $8.99), AppPaaS Node 20, FE-only Stateless
+**Constraints**: Booking.com API 월 250건 (Basic $8.99), FE-only Stateless, GitHub Pages (정적 export)
 **Currency**: KRW 기본, 다중 플랫폼 예약 링크 (Booking.com, Agoda, Hotels.com, Google Hotels)
 **Distribution**: PyPI (travel-planner-mcp v1.0.2), 1줄 설치 (curl | bash), Claude Desktop 자동 설정, Claude Code 유저 스코프 MCP (`claude mcp add -s user`)
 **Authentication**: macOS 키체인 우선 (서비스: `travel-planner`, 계정: `rapidapi-key`), `.env` 폴백
@@ -55,35 +55,25 @@ specs/001-ax-travel-planning/
 ### Source Code (repository root)
 
 ```text
-src/travel_mcp/                 # PyPI 패키지 (travel-planner-mcp)
-├── __init__.py                 # 버전 정보
-├── api_client.py               # RapidAPI 공용 클라이언트 (키체인 → 환경변수 폴백)
-└── server.py                   # MCP 도구 8개 (hotels+flights+attractions)
-
-mcp-servers/
-└── hotels_mcp_server/          # 레거시 MCP 서버 (src/travel_mcp/와 동기화)
-    ├── hotels_mcp/
-    │   ├── api_client.py
-    │   └── hotels_server.py
-    ├── .env
-    └── requirements.txt
+src/
+├── travel_mcp/                 # PyPI 패키지 (travel-planner-mcp)
+│   ├── __init__.py             # 버전 정보
+│   ├── api_client.py           # RapidAPI 공용 클라이언트 (키체인 → 환경변수 폴백)
+│   └── server.py               # MCP 도구 8개 (hotels+flights+attractions)
+├── app/                        # Next.js 웹앱 (App Router, GitHub Pages)
+│   ├── page.tsx                # 메인: 여행 개요 + 일정 목차
+│   └── day/[num]/page.tsx      # 일별 상세 일정
+└── lib/
+    └── trips.ts                # 마크다운 → HTML 변환 (remark + remark-gfm)
 
 scripts/                        # CLI 스크립트 + 설치/검증
-├── install.sh                      # 1줄 설치 스크립트 (curl | bash)
-├── setup.sh                        # 개발 환경 설정
-├── search_attraction_locations.py  # 관광지 위치 검색
-├── search_attractions.py           # 관광지 목록 검색
-├── get_attraction_details.py       # 관광지 상세 조회
-├── validate-daily.py               # 데일리 파일 포맷 검증
-└── validate-budget.py              # 예산 포맷 검증
-
-web/                            # Next.js 웹앱 (AppPaaS 배포)
-├── package.json
-├── next.config.js
-├── src/
-│   ├── app/                    # App Router
-│   └── components/
-└── public/
+├── install.sh                  # 1줄 설치 스크립트 (curl | bash)
+├── setup.sh                    # 개발 환경 설정
+├── search_attraction_locations.py
+├── search_attractions.py
+├── get_attraction_details.py
+├── validate-daily.py           # 데일리 파일 포맷 검증
+└── validate-budget.py          # 예산 포맷 검증
 
 tests/                          # 자동 검증 테스트
 ├── unit/                       # API 파싱·포맷팅 단위 테스트
@@ -101,4 +91,4 @@ trips/                          # 여행 데이터 (마크다운)
     └── ...
 ```
 
-**Structure Decision**: 기존 `mcp-servers/` MCP 서버(Hotels + Flights)는 유지. Attractions 검색은 `scripts/` 에 CLI 스크립트로 구현하며 `api_client.py`를 재사용. 웹앱은 `web/` 디렉토리에 Next.js 프로젝트로 신규 추가. `_config.yml`(GitHub Pages)은 제거 예정. 아키텍처 결정은 [ADR-001](adr/001-fe-only-stateless-architecture.md) 참조.
+**Structure Decision**: Python MCP 서버(`src/travel_mcp/`)와 Next.js 웹앱(`src/app/`, `src/lib/`)이 루트에 공존. GitHub Pages로 정적 배포(static export). BE 확장 시 AppPaaS로 전환 가능. 아키텍처 결정은 [ADR-001](adr/001-fe-only-stateless-architecture.md) 참조.
