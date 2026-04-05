@@ -1,41 +1,46 @@
 import Link from "next/link";
-import { getTripOverview, getAllDays } from "@/lib/trips";
+import { getAllTrips } from "@/lib/trips";
 
 export default async function Home() {
-  const overview = await getTripOverview();
-  const days = await getAllDays();
+  const trips = await getAllTrips();
 
   return (
-    <div className="space-y-8">
-      <section>
-        <div
-          className="prose prose-sm max-w-none"
-          dangerouslySetInnerHTML={{ __html: overview.content }}
-        />
-      </section>
+    <div className="space-y-6">
+      <h1 className="text-2xl font-bold">나의 여행</h1>
 
-      <hr className="border-gray-200" />
+      <div className="space-y-3">
+        {trips.map((trip) => (
+          <Link
+            key={trip.slug}
+            href={`/trips/${trip.slug}`}
+            className="block rounded-lg border border-gray-200 bg-white p-5 hover:border-gray-400 hover:shadow-sm transition-all active:scale-[0.99]"
+          >
+            <h2 className="text-lg font-semibold">{trip.title}</h2>
 
-      <section>
-        <h2 className="text-xl font-semibold mb-4">일정표</h2>
-        <div className="space-y-2">
-          {days.map((day) => (
-            <Link
-              key={day.dayNum}
-              href={`/day/${day.dayNum}`}
-              className="block rounded-lg border border-gray-200 bg-white p-4 hover:border-gray-400 transition-colors"
-            >
-              <div className="flex items-baseline gap-3">
-                <span className="inline-block rounded bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
-                  DAY {day.dayNum}
-                </span>
-                <span className="text-sm text-gray-400">{day.date}</span>
+            {(trip.period || trip.theme) && (
+              <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-500">
+                {trip.period && <span>{trip.period}</span>}
+                {trip.theme && <span>{trip.theme}</span>}
               </div>
-              <p className="mt-1 font-medium capitalize">{day.city}</p>
-            </Link>
-          ))}
+            )}
+
+            {trip.cities && (
+              <p className="mt-2 text-sm text-gray-600">{trip.cities}</p>
+            )}
+
+            <span className="mt-3 inline-block text-sm font-medium text-blue-600">
+              일정 보기 &rarr;
+            </span>
+          </Link>
+        ))}
+      </div>
+
+      {trips.length === 0 && (
+        <div className="text-center py-16 text-gray-400">
+          <p className="text-lg">아직 등록된 여행이 없습니다.</p>
+          <p className="text-sm mt-1">trips/ 폴더에 여행 디렉토리를 추가하세요.</p>
         </div>
-      </section>
+      )}
     </div>
   );
 }

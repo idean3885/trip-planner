@@ -1,3 +1,120 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Tables: card layout on mobile, normal on desktop ── */
+.prose .table-cards table {
+  font-size: 0.8125rem;
+}
+
+.prose .table-cards th {
+  padding: 0.5rem 0.75rem;
+}
+
+.prose .table-cards td {
+  padding: 0.5rem 0.75rem;
+  vertical-align: top;
+}
+
+@media (max-width: 480px) {
+  .prose .table-cards table,
+  .prose .table-cards thead,
+  .prose .table-cards tbody,
+  .prose .table-cards tr,
+  .prose .table-cards th,
+  .prose .table-cards td {
+    display: block;
+    width: 100%;
+  }
+
+  .prose .table-cards thead {
+    display: none;
+  }
+
+  .prose .table-cards tr {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .prose .table-cards td {
+    padding: 0.25rem 0;
+    border: none;
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  .prose .table-cards td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: #64748b;
+    font-size: 0.75rem;
+    flex-shrink: 0;
+    min-width: 4rem;
+  }
+
+  .prose .table-cards td:first-child {
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: #1e293b;
+  }
+}
+
+/* ── Code blocks (route 표시 등) ── */
+.prose pre {
+  background-color: #1e293b;
+  color: #e2e8f0;
+  font-size: 0.8125rem;
+  overflow-x: auto;
+}
+
+.prose code:not(pre code) {
+  background-color: #f1f5f9;
+  border-radius: 0.25rem;
+  padding: 0.1em 0.35em;
+  font-size: 0.875em;
+  color: #334155;
+}
+
+/* ── Blockquotes ── */
+.prose blockquote {
+  background-color: #f8fafc;
+  border-left-color: #3b82f6;
+  border-radius: 0 0.375rem 0.375rem 0;
+  padding: 0.75rem 1rem;
+  font-style: normal;
+}
+
+/* ── Links ── */
+.prose a {
+  color: #2563eb;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.prose a:hover {
+  text-decoration: underline;
+}
+
+/* External link indicator */
+.prose a[href^="https://maps"] {
+  padding-right: 1rem;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='2'%3E%3Cpath d='M15 3h6v6M10 14L21 3M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6'/%3E%3C/svg%3E") no-repeat right center;
+  background-size: 0.75rem;
+}
+
+.prose > :first-child {
+  margin-top: 0;
+}
