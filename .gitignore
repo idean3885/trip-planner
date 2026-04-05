@@ -34,5 +34,6 @@ build/
 
 # OMC state
 .omc/
-web/node_modules/
-web/.next/
+node_modules/
+.next/
+next-env.d.ts

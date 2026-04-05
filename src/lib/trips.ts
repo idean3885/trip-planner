@@ -4,7 +4,7 @@ import { remark } from "remark";
 import remarkGfm from "remark-gfm";
 import html from "remark-html";
 
-const TRIPS_DIR = path.join(process.cwd(), "..", "trips");
+const TRIPS_DIR = path.join(process.cwd(), "trips");
 
 export interface TripOverview {
   slug: string;
