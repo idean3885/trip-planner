@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "travel-planner-mcp"
-version = "0.3.0"
+version = "1.0.0"
 description = "여행 숙소, 항공편, 관광지를 검색하고 추천하는 MCP 서버 (Booking.com API)"
 requires-python = ">=3.10"
 license = "MIT"

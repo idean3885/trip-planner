@@ -88,11 +88,29 @@ echo "▶ 필요한 패키지 설치 중... (잠시 기다려 주세요)"
 echo -e "  ${GREEN}패키지 설치 완료${NC}"
 
 # ── 5. RapidAPI 키 입력 ───────────────────────────────────────────
+KEYCHAIN_SERVICE="travel-planner"
+KEYCHAIN_ACCOUNT="rapidapi-key"
+USE_KEYCHAIN=false
+RAPIDAPI_KEY_VALUE=""
+
 echo ""
-if [ -f "${ENV_FILE}" ] && grep -q "^RAPIDAPI_KEY=.\+" "${ENV_FILE}" 2>/dev/null; then
-    echo -e "  ${GREEN}.env 파일이 이미 존재합니다. API 키 설정을 건너뜁니다.${NC}"
+
+# 기존 저장소 확인: 키체인 → .env
+if command -v security &>/dev/null; then
+    RAPIDAPI_KEY_VALUE=$(security find-generic-password -s "${KEYCHAIN_SERVICE}" -a "${KEYCHAIN_ACCOUNT}" -w 2>/dev/null || true)
+    if [ -n "${RAPIDAPI_KEY_VALUE}" ]; then
+        USE_KEYCHAIN=true
+        echo -e "  ${GREEN}macOS 키체인에서 API 키를 찾았습니다.${NC}"
+    fi
+fi
+
+if [ -z "${RAPIDAPI_KEY_VALUE}" ] && [ -f "${ENV_FILE}" ] && grep -q "^RAPIDAPI_KEY=.\+" "${ENV_FILE}" 2>/dev/null; then
     RAPIDAPI_KEY_VALUE=$(grep '^RAPIDAPI_KEY=' "${ENV_FILE}" | cut -d= -f2-)
-else
+    echo -e "  ${GREEN}.env 파일에서 API 키를 찾았습니다.${NC}"
+fi
+
+# 키가 없으면 입력받기
+if [ -z "${RAPIDAPI_KEY_VALUE}" ]; then
     echo -e "${YELLOW}▶ RapidAPI 키 설정${NC}"
     echo ""
     echo "  호텔/항공/관광지 검색을 위해 RapidAPI 키가 필요합니다."
@@ -118,12 +136,28 @@ else
         fi
         echo -e "  ${RED}키를 입력해야 합니다. 다시 시도해 주세요.${NC}"
     done
+fi
 
+# 저장: 키체인 우선, 실패 시 .env 폴백
+if command -v security &>/dev/null; then
+    # 기존 항목 삭제 후 새로 추가 (업데이트 지원)
+    security delete-generic-password -s "${KEYCHAIN_SERVICE}" -a "${KEYCHAIN_ACCOUNT}" &>/dev/null || true
+    if security add-generic-password -s "${KEYCHAIN_SERVICE}" -a "${KEYCHAIN_ACCOUNT}" -w "${RAPIDAPI_KEY_VALUE}" &>/dev/null; then
+        USE_KEYCHAIN=true
+        echo -e "  ${GREEN}macOS 키체인에 API 키 저장 완료${NC}"
+        # 키체인 사용 시 .env 파일 제거 (보안)
+        rm -f "${ENV_FILE}"
+    else
+        echo -e "  ${YELLOW}키체인 저장 실패. .env 파일로 저장합니다.${NC}"
+    fi
+fi
+
+if [ "${USE_KEYCHAIN}" = false ]; then
     cat > "${ENV_FILE}" <<EOF
 RAPIDAPI_KEY=${RAPIDAPI_KEY_VALUE}
 RAPIDAPI_HOST=booking-com15.p.rapidapi.com
 EOF
-    echo -e "  ${GREEN}.env 파일 저장 완료${NC}"
+    echo -e "  ${GREEN}.env 파일에 API 키 저장 완료${NC}"
 fi
 
 # ── 6. Claude Desktop 자동 설정 ──────────────────────────────────
@@ -138,21 +172,29 @@ PYTHON_PATH="${VENV_DIR}/bin/python"
 "${PYTHON_PATH}" - <<PYEOF
 import json, os, sys
 
-config_file = "${CLAUDE_CONFIG_FILE}"
-python_path = "${PYTHON_PATH}"
-install_dir = "${INSTALL_DIR}"
-src_dir     = "${SRC_DIR}"
-api_key     = "${RAPIDAPI_KEY_VALUE}"
+config_file   = "${CLAUDE_CONFIG_FILE}"
+python_path   = "${PYTHON_PATH}"
+install_dir   = "${INSTALL_DIR}"
+src_dir       = "${SRC_DIR}"
+api_key       = "${RAPIDAPI_KEY_VALUE}"
+use_keychain  = "${USE_KEYCHAIN}"
 
 travel_entry = {
     "command": python_path,
     "args": ["-m", "travel_mcp.server"],
     "cwd": install_dir,
-    "env": {
-        "RAPIDAPI_KEY": api_key,
-        "RAPIDAPI_HOST": "booking-com15.p.rapidapi.com"
-    }
 }
+
+# 키체인 미사용 시에만 env 블록에 API 키 포함
+if use_keychain == "false":
+    travel_entry["env"] = {
+        "RAPIDAPI_KEY": api_key,
+        "RAPIDAPI_HOST": "booking-com15.p.rapidapi.com",
+    }
+else:
+    travel_entry["env"] = {
+        "RAPIDAPI_HOST": "booking-com15.p.rapidapi.com",
+    }
 
 # 기존 설정 파일 읽기 (없으면 빈 구조 생성)
 if os.path.exists(config_file):

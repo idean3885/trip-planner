@@ -1,6 +1,8 @@
 import httpx
 import logging
 import os
+import platform
+import subprocess
 from typing import Dict, Any, Optional
 
 try:
@@ -11,8 +13,28 @@ except ImportError:
 
 logger = logging.getLogger("travel-mcp-server")
 
-# 환경변수는 모듈 로드 시 읽되, Claude Desktop의 env 블록으로 주입된 값도 반영됨
-RAPIDAPI_KEY = os.getenv("RAPIDAPI_KEY")
+KEYCHAIN_SERVICE = "travel-planner"
+KEYCHAIN_ACCOUNT = "rapidapi-key"
+
+
+def _read_keychain() -> Optional[str]:
+    """macOS 키체인에서 RapidAPI 키를 읽는다. 실패 시 None 반환."""
+    if platform.system() != "Darwin":
+        return None
+    try:
+        result = subprocess.run(
+            ["security", "find-generic-password", "-s", KEYCHAIN_SERVICE, "-a", KEYCHAIN_ACCOUNT, "-w"],
+            capture_output=True, text=True, timeout=5,
+        )
+        if result.returncode == 0 and result.stdout.strip():
+            return result.stdout.strip()
+    except Exception:
+        pass
+    return None
+
+
+# 키체인 → 환경변수 순서로 API 키 로드
+RAPIDAPI_KEY = _read_keychain() or os.getenv("RAPIDAPI_KEY")
 RAPIDAPI_HOST = os.getenv("RAPIDAPI_HOST", "booking-com15.p.rapidapi.com")
 
 
