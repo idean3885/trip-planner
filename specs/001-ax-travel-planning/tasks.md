@@ -47,11 +47,15 @@
 ### E2E 검증 + 배포
 
 - [x] T015 [US1] CLI + MCP E2E 검증, PyPI 배포 (v0.2.0), 1줄 설치, Claude Desktop 테스트 완료
+- [x] T015a [US1] macOS 키체인 기반 API 키 관리 (v1.0.2) — `api_client.py`에 `_read_keychain()` 추가, `install.sh` 키체인 우선 저장, Claude Desktop env 블록에서 API 키 제거
+- [x] T015b [US1] Claude Code 유저 스코프 MCP 등록 — `claude mcp add travel -s user` 로 글로벌 등록. #45 클로즈.
 
-**Checkpoint**: US1 독립 검증 완료.
+**Checkpoint**: US1 독립 검증 완료. (v1.0.2, #45 클로즈)
 - MCP 도구 8개 (Hotels 3 + Flights 2 + Attractions 3) + CLI 스크립트 3개
 - 한화(KRW) 기본 표시, 다중 플랫폼 예약 링크 (Booking.com, Agoda, Hotels.com, Google Hotels)
-- PyPI 배포 (travel-planner-mcp), 1줄 설치, Claude Desktop 자동 설정
+- PyPI 배포 (travel-planner-mcp v1.0.2), 1줄 설치, Claude Desktop 자동 설정
+- macOS 키체인 API 키 관리 (키체인 → .env 폴백)
+- Claude Code 유저 스코프 MCP 등록 (`~/.claude.json`)
 - Claude 웹 검색(식당, 교통)으로 모든 여행 요소 검색·추천 가능
 
 ---
@@ -108,7 +112,7 @@
 
 ```
 M1 (인프라 구축) ✅ 완료
-  → M2 (검색 CLI + MCP + 배포) ✅ 완료
+  → M2 (검색 CLI + MCP + 배포) ✅ 완료 (v1.0.2, 키체인, #45 클로즈)
     → M3 (일정 생성 + 웹앱 딜리버리) ← 다음 착수
       → M4 (통합 검증)
 ```

@@ -20,7 +20,8 @@
 **Performance Goals**: API 응답 30초 이내 (httpx timeout)
 **Constraints**: Booking.com API 월 250건 (Basic $8.99), AppPaaS Node 20, FE-only Stateless
 **Currency**: KRW 기본, 다중 플랫폼 예약 링크 (Booking.com, Agoda, Hotels.com, Google Hotels)
-**Distribution**: PyPI (travel-planner-mcp), 1줄 설치 (curl | bash), Claude Desktop 자동 설정
+**Distribution**: PyPI (travel-planner-mcp v1.0.2), 1줄 설치 (curl | bash), Claude Desktop 자동 설정, Claude Code 유저 스코프 MCP (`claude mcp add -s user`)
+**Authentication**: macOS 키체인 우선 (서비스: `travel-planner`, 계정: `rapidapi-key`), `.env` 폴백
 **Scale/Scope**: 1건 여행 (15일, 5개 도시), 사용자 1명 + 동행자 2~5명
 
 ## Constitution Check
@@ -56,7 +57,7 @@ specs/001-ax-travel-planning/
 ```text
 src/travel_mcp/                 # PyPI 패키지 (travel-planner-mcp)
 ├── __init__.py                 # 버전 정보
-├── api_client.py               # RapidAPI 공용 클라이언트
+├── api_client.py               # RapidAPI 공용 클라이언트 (키체인 → 환경변수 폴백)
 └── server.py                   # MCP 도구 8개 (hotels+flights+attractions)
 
 mcp-servers/
