@@ -15,7 +15,7 @@
 
 **Purpose**: 피드백 MCP 서버 패키지 구조 생성
 
-- [ ] T001 feedback_mcp 패키지 디렉토리 및 __init__.py 생성 — src/feedback_mcp/__init__.py
+- [x] T001 feedback_mcp 패키지 디렉토리 및 __init__.py 생성 — src/feedback_mcp/__init__.py
 
 ---
 
@@ -23,8 +23,8 @@
 
 **Purpose**: US1, US3 모두에 필요한 공통 인프라
 
-- [ ] T002 GitHub GraphQL API 클라이언트 구현 (키체인 읽기 + httpx + createDiscussion/discussions/discussionCategories) — src/feedback_mcp/github_client.py
-- [ ] T003 [P] pyproject.toml에 feedback_mcp 모듈 엔트리포인트 등록 — pyproject.toml
+- [x] T002 GitHub GraphQL API 클라이언트 구현 (키체인 읽기 + httpx + createDiscussion/discussions/discussionCategories) — src/feedback_mcp/github_client.py
+- [x] T003 [P] pyproject.toml에 feedback_mcp 모듈 엔트리포인트 등록 — pyproject.toml
 
 **Checkpoint**: `python -m feedback_mcp.github_client` 임포트 가능, 키체인에서 토큰 읽기 동작 확인
 
@@ -38,9 +38,9 @@
 
 ### Implementation
 
-- [ ] T004 [US1] FastMCP 서버 초기화 + list_categories 도구 구현 (discussionCategories GraphQL query) — src/feedback_mcp/server.py
-- [ ] T005 [US1] create_feedback 도구 구현 (createDiscussion GraphQL mutation, 제목/본문/카테고리ID 매개변수) — src/feedback_mcp/server.py
-- [ ] T006 [US1] list_feedback 도구 구현 (discussions GraphQL query, 최근 N건 조회) — src/feedback_mcp/server.py
+- [x] T004 [US1] FastMCP 서버 초기화 + list_categories 도구 구현 (discussionCategories GraphQL query) — src/feedback_mcp/server.py
+- [x] T005 [US1] create_feedback 도구 구현 (createDiscussion GraphQL mutation, 제목/본문/카테고리ID 매개변수) — src/feedback_mcp/server.py
+- [x] T006 [US1] list_feedback 도구 구현 (discussions GraphQL query, 최근 N건 조회) — src/feedback_mcp/server.py
 
 **Checkpoint**: 로컬에서 MCP 서버 실행 → create_feedback 호출 → GitHub Discussion 생성 확인
 
@@ -54,9 +54,9 @@
 
 ### Implementation
 
-- [ ] T007 [US3] install.sh에 GitHub PAT 설정 섹션 추가 (키체인 확인 → 없으면 fine-grained PAT 발급 가이드 + 입력 → 키체인 저장, Enter로 건너뛰기 지원) — scripts/install.sh
-- [ ] T008 [US3] install.sh Claude Desktop 설정 Python 블록에 feedback 서버 항목 추가 (PAT 입력 시에만, 기존 항목 있으면 스킵) — scripts/install.sh
-- [ ] T009 [US3] install.sh 완료 메시지에 피드백 기능 상태 표시 (설정됨/스킵됨, 사용법 안내) — scripts/install.sh
+- [x] T007 [US3] install.sh에 GitHub PAT 설정 섹션 추가 (키체인 확인 → 없으면 fine-grained PAT 발급 가이드 + 입력 → 키체인 저장, Enter로 건너뛰기 지원) — scripts/install.sh
+- [x] T008 [US3] install.sh Claude Desktop 설정 Python 블록에 feedback 서버 항목 추가 (PAT 입력 시에만, 기존 항목 있으면 스킵) — scripts/install.sh
+- [x] T009 [US3] install.sh 완료 메시지에 피드백 기능 상태 표시 (설정됨/스킵됨, 사용법 안내) — scripts/install.sh
 
 **Checkpoint**: install.sh 실행 → travel + calendar + feedback 모두 Claude Desktop에 등록 확인
 
@@ -70,7 +70,7 @@
 
 ### Implementation
 
-- [ ] T010 [US2] quickstart.md 시나리오대로 일정 보완([일정]) + 디자인 피드백([디자인]) 수동 검증 — specs/003-companion-feedback-channel/quickstart.md
+- [x] T010 [US2] quickstart.md 시나리오대로 일정 보완([일정]) + 디자인 피드백([디자인]) 수동 검증 — specs/003-companion-feedback-channel/quickstart.md
 
 **Checkpoint**: 일정/디자인 피드백이 각각 [일정]/[디자인] prefix로 Discussion에 게시됨
 
@@ -80,7 +80,7 @@
 
 **Purpose**: 문서 업데이트
 
-- [ ] T011 [P] README.md에 피드백 채널 기능 안내 추가 (사용법, GitHub PAT 발급 방법) — README.md
+- [x] T011 [P] README.md에 피드백 채널 기능 안내 추가 (사용법, GitHub PAT 발급 방법) — README.md
 
 ---
 

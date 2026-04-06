@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "trip-planner-mcp"
 version = "1.0.2"
-description = "여행 숙소, 항공편, 관광지를 검색하고 추천하는 MCP 서버 (Booking.com API)"
+description = "여행 숙소, 항공편, 관광지 검색 + 동행자 피드백 MCP 서버"
 requires-python = ">=3.10"
 license = "MIT"
 readme = "README.md"
@@ -25,6 +25,7 @@ dependencies = [
 
 [project.scripts]
 trip-planner-mcp = "travel_mcp.server:main"
+trip-planner-feedback = "feedback_mcp.server:main"
 
 [project.urls]
 Homepage = "https://github.com/idean3885/trip-planner"

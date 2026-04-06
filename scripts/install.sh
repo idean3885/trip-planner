@@ -199,7 +199,57 @@ else
     echo -e "  ${YELLOW}macOS가 아닌 환경입니다. Apple 캘린더 MCP는 macOS 전용이므로 건너뜁니다.${NC}"
 fi
 
-# ── 7. Claude Desktop 자동 설정 ──────────────────────────────────
+# ── 7. GitHub PAT 설정 (피드백 채널) ─────────────────────────────
+GITHUB_PAT_INSTALLED=false
+GITHUB_PAT_VALUE=""
+
+echo ""
+echo "▶ 피드백 채널 (GitHub Discussions) 설정 중..."
+
+# 키체인에서 기존 토큰 확인
+GITHUB_PAT_VALUE=$(security find-generic-password -s "${KEYCHAIN_SERVICE}" -a "github-pat" -w 2>/dev/null || true)
+
+if [ -n "${GITHUB_PAT_VALUE}" ]; then
+    echo -e "  ${GREEN}macOS 키체인에서 GitHub 토큰을 찾았습니다.${NC}"
+    GITHUB_PAT_INSTALLED=true
+else
+    echo -e "${YELLOW}▶ GitHub 토큰 설정 (선택사항)${NC}"
+    echo ""
+    echo "  여행 일정 피드백을 GitHub에 올리려면 토큰이 필요합니다."
+    echo "  건너뛰려면 Enter를 누르세요. 나중에 install.sh를 다시 실행하면 설정할 수 있습니다."
+    echo ""
+    echo -e "  ${CYAN}토큰 발급 방법:${NC}"
+    echo "    1) https://github.com/settings/tokens?type=beta 접속"
+    echo "    2) 'Generate new token' 클릭"
+    echo "    3) Token name: trip-planner"
+    echo "    4) Repository access → 'Only select repositories' → idean3885/trip-planner"
+    echo "    5) Permissions → Discussions → Read and write"
+    echo "    6) 'Generate token' 클릭 후 토큰 복사"
+    echo ""
+
+    if [ -t 0 ]; then
+        INPUT_DEV="/dev/stdin"
+    else
+        INPUT_DEV="/dev/tty"
+    fi
+
+    printf "  GitHub 토큰을 입력하세요 (Enter로 건너뛰기): "
+    read -r GITHUB_PAT_VALUE < "${INPUT_DEV}"
+
+    if [ -n "${GITHUB_PAT_VALUE}" ]; then
+        security delete-generic-password -s "${KEYCHAIN_SERVICE}" -a "github-pat" &>/dev/null || true
+        if security add-generic-password -s "${KEYCHAIN_SERVICE}" -a "github-pat" -w "${GITHUB_PAT_VALUE}" &>/dev/null; then
+            echo -e "  ${GREEN}macOS 키체인에 GitHub 토큰 저장 완료${NC}"
+            GITHUB_PAT_INSTALLED=true
+        else
+            echo -e "  ${YELLOW}키체인 저장 실패. 피드백 기능 없이 계속합니다.${NC}"
+        fi
+    else
+        echo "  GitHub 토큰을 건너뛰었습니다."
+    fi
+fi
+
+# ── 8. Claude Desktop 자동 설정 ──────────────────────────────────
 echo ""
 echo "▶ Claude Desktop 설정 중..."
 
@@ -264,6 +314,18 @@ if ical_installed == "true" and "che-ical-mcp" not in config["mcpServers"]:
 elif ical_installed == "true":
     print("  che-ical-mcp 서버 설정이 이미 존재합니다. 유지합니다.")
 
+# feedback (GitHub Discussions) 설정 — PAT 입력 시에만, 기존 항목 없을 때만 추가
+github_pat_installed = "${GITHUB_PAT_INSTALLED}"
+if github_pat_installed == "true" and "feedback" not in config["mcpServers"]:
+    config["mcpServers"]["feedback"] = {
+        "command": python_path,
+        "args": ["-m", "feedback_mcp.server"],
+        "cwd": install_dir,
+    }
+    print("  feedback 서버 설정 추가 완료")
+elif github_pat_installed == "true":
+    print("  feedback 서버 설정이 이미 존재합니다. 유지합니다.")
+
 with open(config_file, "w", encoding="utf-8") as f:
     json.dump(config, f, indent=2, ensure_ascii=False)
 
@@ -290,6 +352,15 @@ if [ "${ICAL_INSTALLED}" = true ]; then
     echo '    "여행 일정 캘린더에 넣어줘" 로 캘린더 등록 가능'
 else
     echo -e "  ${YELLOW}△ 캘린더 연동${NC}: 미설치 (macOS 전용)"
+fi
+echo ""
+if [ "${GITHUB_PAT_INSTALLED}" = true ]; then
+    echo -e "  ${GREEN}✓ 피드백 채널${NC}: GitHub Discussions 연동됨"
+    echo '    "셋째 날 저녁 식당 추가하고 싶어" 로 일정 보완 요청 가능'
+    echo '    "모바일에서 표가 잘려 보여" 로 디자인 피드백 가능'
+else
+    echo -e "  ${YELLOW}△ 피드백 채널${NC}: 미설정 (GitHub 토큰 필요)"
+    echo "    install.sh를 다시 실행하면 설정할 수 있습니다."
 fi
 echo ""
 echo "  설치 위치: ${INSTALL_DIR}"
