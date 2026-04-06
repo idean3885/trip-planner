@@ -160,7 +160,46 @@ EOF
     echo -e "  ${GREEN}.env 파일에 API 키 저장 완료${NC}"
 fi
 
-# ── 6. Claude Desktop 자동 설정 ──────────────────────────────────
+# ── 6. che-ical-mcp (Apple 캘린더) 설치 ──────────────────────────
+ICAL_INSTALLED=false
+ICAL_BIN="${INSTALL_DIR}/bin/CheICalMCP"
+ICAL_REPO="kiki830621/che-ical-mcp"
+
+if [ "$(uname -s)" = "Darwin" ]; then
+    echo ""
+    echo "▶ Apple 캘린더 MCP 설치 중..."
+
+    if [ -x "${ICAL_BIN}" ]; then
+        echo "  CheICalMCP가 이미 설치되어 있습니다."
+        ICAL_INSTALLED=true
+    else
+        mkdir -p "${INSTALL_DIR}/bin"
+        # GitHub API로 최신 릴리즈의 CheICalMCP 바이너리 URL 가져오기
+        ICAL_URL=$(curl -sL "https://api.github.com/repos/${ICAL_REPO}/releases/latest" \
+            | grep -o '"browser_download_url": *"[^"]*CheICalMCP"' \
+            | head -1 \
+            | sed 's/.*"browser_download_url": *"//;s/"$//')
+
+        if [ -n "${ICAL_URL}" ]; then
+            if curl -sL -o "${ICAL_BIN}" "${ICAL_URL}"; then
+                chmod +x "${ICAL_BIN}"
+                # macOS Gatekeeper 허용
+                xattr -d com.apple.quarantine "${ICAL_BIN}" 2>/dev/null || true
+                echo -e "  ${GREEN}CheICalMCP 설치 완료${NC}"
+                ICAL_INSTALLED=true
+            else
+                echo -e "  ${YELLOW}CheICalMCP 다운로드 실패. 캘린더 기능 없이 계속합니다.${NC}"
+            fi
+        else
+            echo -e "  ${YELLOW}CheICalMCP 릴리즈를 찾을 수 없습니다. 캘린더 기능 없이 계속합니다.${NC}"
+        fi
+    fi
+else
+    echo ""
+    echo -e "  ${YELLOW}macOS가 아닌 환경입니다. Apple 캘린더 MCP는 macOS 전용이므로 건너뜁니다.${NC}"
+fi
+
+# ── 7. Claude Desktop 자동 설정 ──────────────────────────────────
 echo ""
 echo "▶ Claude Desktop 설정 중..."
 
@@ -213,6 +252,18 @@ if "mcpServers" not in config:
 action = "업데이트" if "travel" in config["mcpServers"] else "추가"
 config["mcpServers"]["travel"] = travel_entry
 
+# che-ical-mcp (Apple 캘린더) 설정 — 기존 항목이 없을 때만 추가
+ical_installed = "${ICAL_INSTALLED}"
+ical_bin = "${ICAL_BIN}"
+if ical_installed == "true" and "che-ical-mcp" not in config["mcpServers"]:
+    config["mcpServers"]["che-ical-mcp"] = {
+        "command": ical_bin,
+        "args": [],
+    }
+    print("  che-ical-mcp 서버 설정 추가 완료")
+elif ical_installed == "true":
+    print("  che-ical-mcp 서버 설정이 이미 존재합니다. 유지합니다.")
+
 with open(config_file, "w", encoding="utf-8") as f:
     json.dump(config, f, indent=2, ensure_ascii=False)
 
@@ -221,7 +272,7 @@ PYEOF
 
 echo -e "  ${GREEN}Claude Desktop 설정 완료${NC}"
 
-# ── 7. 완료 메시지 ────────────────────────────────────────────────
+# ── 8. 완료 메시지 ────────────────────────────────────────────────
 echo ""
 echo "============================================================"
 echo -e "${GREEN}  설치 완료!${NC}"
@@ -233,6 +284,13 @@ echo "  테스트 방법:"
 echo -e "  ${CYAN}Claude Desktop에서 아래 메시지를 입력해 보세요:${NC}"
 echo ""
 echo '    "바르셀로나 6월 16일~20일 4박 숙소 추천해줘"'
+echo ""
+if [ "${ICAL_INSTALLED}" = true ]; then
+    echo -e "  ${GREEN}✓ 캘린더 연동${NC}: Apple 캘린더 MCP 설치됨"
+    echo '    "여행 일정 캘린더에 넣어줘" 로 캘린더 등록 가능'
+else
+    echo -e "  ${YELLOW}△ 캘린더 연동${NC}: 미설치 (macOS 전용)"
+fi
 echo ""
 echo "  설치 위치: ${INSTALL_DIR}"
 echo "  설정 파일: ${CLAUDE_CONFIG_FILE}"

@@ -78,6 +78,7 @@ trip-planner/
 ## Active Technologies
 - Python 3.14 + FastMCP, httpx, python-dotenv, pytes (001-ax-travel-planning)
 - 마크다운 파일 (`trips/` 디렉토리, git 관리) (001-ax-travel-planning)
+- Bash (install.sh) + che-ical-mcp (macOS 네이티브 바이너리, GitHub Releases) (002-bundle-ical-mcp)
 
 ## Recent Changes
 - 001-ax-travel-planning: Added Python 3.14 + FastMCP, httpx, python-dotenv, pytes

@@ -7,6 +7,10 @@
         "RAPIDAPI_KEY": "${RAPIDAPI_KEY}",
         "RAPIDAPI_HOST": "booking-com15.p.rapidapi.com"
       }
+    },
+    "che-ical-mcp": {
+      "command": "CheICalMCP",
+      "args": []
     }
   }
 }

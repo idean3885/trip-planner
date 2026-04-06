@@ -1,12 +1,16 @@
 {
   "mcpServers": {
     "travel": {
-      "command": "/absolute/path/to/trip-planner/mcp-servers/hotels_mcp_server/.venv/bin/python",
-      "args": ["-m", "hotels_mcp.hotels_server"],
-      "cwd": "/absolute/path/to/trip-planner/mcp-servers/hotels_mcp_server",
+      "command": "/Users/you/.trip-planner/.venv/bin/python",
+      "args": ["-m", "travel_mcp.server"],
+      "cwd": "/Users/you/.trip-planner",
       "env": {
-        "RAPIDAPI_KEY": "your_key_here"
+        "RAPIDAPI_HOST": "booking-com15.p.rapidapi.com"
       }
+    },
+    "che-ical-mcp": {
+      "command": "/Users/you/.trip-planner/bin/CheICalMCP",
+      "args": []
     }
   }
 }
