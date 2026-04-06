@@ -79,6 +79,8 @@ trip-planner/
 - Python 3.14 + FastMCP, httpx, python-dotenv, pytes (001-ax-travel-planning)
 - 마크다운 파일 (`trips/` 디렉토리, git 관리) (001-ax-travel-planning)
 - Bash (install.sh) + che-ical-mcp (macOS 네이티브 바이너리, GitHub Releases) (002-bundle-ical-mcp)
+- Python 3.10+ (기존 travel_mcp과 동일), Bash (install.sh) + FastMCP, httpx (기존 의존성 재활용) (003-companion-feedback-channel)
+- macOS Keychain (GitHub PAT 저장) (003-companion-feedback-channel)
 
 ## Recent Changes
 - 001-ax-travel-planning: Added Python 3.14 + FastMCP, httpx, python-dotenv, pytes

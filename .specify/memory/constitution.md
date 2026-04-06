@@ -1,10 +1,14 @@
 <!--
 Sync Impact Report
-- Version change: N/A → 1.0.0 (initial ratification)
-- Added principles: I. AX-First, II. Minimum Cost, III. Mobile-First Delivery, IV. Incremental Release
-- Added sections: Constraints, Development Workflow
+- Version change: 1.0.0 → 1.0.1
+- Modified principles:
+  - I. AX-First: "Claude Desktop/Code" → "AI 에이전트" (기술 중립화)
+  - II. Minimum Cost: "Claude 구독 + Booking.com API ($8.99/월)" → "기존 구독 및 API 비용" (기술 중립화)
+  - III. Mobile-First Delivery: "GitHub 렌더링 기준" → "웹 렌더링 기준" (기술 중립화)
+- Added sections: none
+- Removed sections: none
 - Templates requiring updates:
-  - .specify/templates/plan-template.md ✅ (no changes needed, Constitution Check section will be filled per feature)
+  - .specify/templates/plan-template.md ✅ (no changes needed)
   - .specify/templates/spec-template.md ✅ (no changes needed)
   - .specify/templates/tasks-template.md ✅ (no changes needed)
 - Follow-up TODOs: none
@@ -18,15 +22,15 @@ Sync Impact Report
 
 모든 기능은 AI Experience를 핵심으로 설계한다. 사용자가 자연어로 여행 조건을 제시하면 AI가 검색·분석·생성을 수행한다. AI가 중간에서 데이터를 가공하고, 사용자는 결과를 확인·피드백하는 구조를 기본으로 한다.
 
-- 플래닝 워크플로우는 반드시 Claude Desktop/Code를 통해 수행한다.
+- 플래닝 워크플로우는 반드시 AI 에이전트를 통해 수행한다.
 - API 호출 결과는 AI가 분석·요약하여 사용자에게 제공한다.
 - 사용자가 직접 API를 호출하거나 데이터를 가공할 필요가 없어야 한다.
 
 ### II. Minimum Cost
 
-추가 비용을 최소화한다. Claude 구독 + Booking.com API ($8.99/월) 외의 비용은 발생하지 않아야 한다.
+추가 비용을 최소화한다. 기존 구독 및 API 비용 외의 추가 비용은 발생하지 않아야 한다.
 
-- 별도 Claude API 과금이 필요한 기능은 도입하지 않는다.
+- 별도 AI API 과금이 필요한 기능은 도입하지 않는다.
 - 무료 인프라(GitHub, GitHub Pages 등)를 우선 활용한다.
 - 유료 서비스 도입 시 반드시 비용 대비 효과를 명시하고 승인을 받는다.
 
@@ -34,7 +38,7 @@ Sync Impact Report
 
 모든 산출물은 모바일에서 잘 보여야 한다. 비개발자 동행자가 모바일 브라우저에서 불편 없이 열람할 수 있는 것이 기준이다.
 
-- 마크다운 일정은 GitHub 렌더링 기준 모바일 반응형을 확인한다.
+- 마크다운 일정은 웹 렌더링 기준 모바일 반응형을 확인한다.
 - 테이블은 모바일에서 가로 스크롤 또는 축소 없이 읽을 수 있도록 설계한다.
 - 링크(숙소, 항공, 지도 등)는 모바일에서 탭하여 바로 이동 가능해야 한다.
 
@@ -70,4 +74,4 @@ Sync Impact Report
 - **버전 정책**: MAJOR.MINOR.PATCH (원칙 삭제/재정의 = MAJOR, 원칙 추가/확장 = MINOR, 문구 수정 = PATCH)
 - **준수 확인**: 각 specify/plan/tasks 단계에서 헌법 원칙 위반 여부를 검증한다
 
-**Version**: 1.0.0 | **Ratified**: 2026-03-22 | **Last Amended**: 2026-03-22
+**Version**: 1.0.1 | **Ratified**: 2026-03-22 | **Last Amended**: 2026-04-07
