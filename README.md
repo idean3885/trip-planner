@@ -57,6 +57,7 @@ curl -sSL https://raw.githubusercontent.com/idean3885/trip-planner/main/scripts/
 - macOS 키체인에 API 키 자동 저장
 - Claude Desktop 자동 설정
 - Apple 캘린더 MCP 자동 설치 (macOS 전용)
+- GitHub Discussions 피드백 채널 자동 설정 (선택)
 - Claude Desktop 재시작 후 바로 사용
 
 ### RapidAPI 키 발급
@@ -81,7 +82,15 @@ Claude Desktop 또는 Claude Code에서:
 "포르투에서 리스본 가는 6월 10일 항공편 찾아줘"
 ```
 
-### MCP 도구 (8개)
+### GitHub PAT 발급 (피드백 채널, 선택)
+
+1. [GitHub Fine-grained PAT](https://github.com/settings/tokens?type=beta) 접속
+2. Token name: `trip-planner`
+3. Repository access → **Only select repositories** → `idean3885/trip-planner`
+4. Permissions → **Discussions** → Read and write
+5. Generate token 후 복사 (설치 스크립트에서 입력)
+
+### MCP 도구 (11개)
 
 | 카테고리 | 도구 | 설명 |
 |---------|------|------|
@@ -93,6 +102,9 @@ Claude Desktop 또는 Claude Code에서:
 | 관광지 | search_attraction_locations | 관광지 위치 검색 |
 | | search_attractions | 관광지 목록 (입장료, 리뷰) |
 | | get_attraction_details | 관광지 상세 (주소, 포함 사항) |
+| 피드백 | list_categories | 디스커션 카테고리 목록 |
+| | create_feedback | 피드백 디스커션 생성 |
+| | list_feedback | 최근 피드백 목록 조회 |
 
 ## 개발자용
 
