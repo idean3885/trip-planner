@@ -32,9 +32,7 @@ body {
 }
 
 .prose .table-cards tr {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 0.5rem;
+  @apply bg-surface-50 shadow-card rounded-card;
   padding: 0.75rem;
   margin-bottom: 0.75rem;
 }
@@ -50,7 +48,7 @@ body {
 .prose .table-cards td::before {
   content: attr(data-label);
   font-weight: 600;
-  color: #64748b;
+  @apply text-surface-500;
   font-size: 0.75rem;
   flex-shrink: 0;
   min-width: 4rem;
@@ -59,29 +57,26 @@ body {
 .prose .table-cards td:first-child {
   font-weight: 600;
   font-size: 0.875rem;
-  color: #1e293b;
+  @apply text-surface-800;
 }
 
-/* ── Code blocks (route 표시 등) ── */
+/* ── Code blocks ── */
 .prose pre {
-  background-color: #1e293b;
-  color: #e2e8f0;
+  @apply bg-surface-800 text-surface-200;
   font-size: 0.8125rem;
   overflow-x: auto;
 }
 
 .prose code:not(pre code) {
-  background-color: #f1f5f9;
+  @apply bg-surface-100 text-surface-700;
   border-radius: 0.25rem;
   padding: 0.1em 0.35em;
   font-size: 0.875em;
-  color: #334155;
 }
 
 /* ── Blockquotes ── */
 .prose blockquote {
-  background-color: #f8fafc;
-  border-left-color: #3b82f6;
+  @apply bg-surface-50 border-l-primary-500;
   border-radius: 0 0.375rem 0.375rem 0;
   padding: 0.75rem 1rem;
   font-style: normal;
@@ -89,7 +84,7 @@ body {
 
 /* ── Links ── */
 .prose a {
-  color: #2563eb;
+  @apply text-primary-600;
   text-decoration: none;
   font-weight: 500;
 }
@@ -101,21 +96,19 @@ body {
 /* External link indicator */
 .prose a[href^="https://maps"] {
   padding-right: 1rem;
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='2'%3E%3Cpath d='M15 3h6v6M10 14L21 3M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6'/%3E%3C/svg%3E") no-repeat right center;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%230272be' stroke-width='2'%3E%3Cpath d='M15 3h6v6M10 14L21 3M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6'/%3E%3C/svg%3E") no-repeat right center;
   background-size: 0.75rem;
 }
 
 /* ── Weather toggle (collapsible) ── */
 .prose .weather-toggle {
-  border: 1px solid #e2e8f0;
-  border-radius: 0.5rem;
-  overflow: hidden;
+  @apply shadow-card rounded-card overflow-hidden;
 }
 
 .prose .weather-toggle .weather-summary {
   cursor: pointer;
   padding: 0.75rem 1rem;
-  background: #f8fafc;
+  @apply bg-surface-50;
   list-style: none;
   display: flex;
   align-items: center;
@@ -129,7 +122,7 @@ body {
 .prose .weather-toggle .weather-summary::before {
   content: "▸";
   font-size: 0.75rem;
-  color: #94a3b8;
+  @apply text-surface-400;
   transition: transform 0.15s;
 }
 

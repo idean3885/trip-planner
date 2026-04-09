@@ -44,7 +44,7 @@ export default function TodayButton({
   return (
     <Link
       href={`/trips/${tripSlug}/day/${todayDay.dayNum}`}
-      className="flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-3 text-white font-semibold text-sm hover:bg-blue-700 transition-colors active:scale-[0.98] min-h-[48px]"
+      className="flex items-center justify-center gap-2 rounded-card bg-primary-600 px-4 py-3 text-white font-semibold text-sm hover:bg-primary-700 transition-colors active:scale-[0.98] min-h-[48px]"
     >
       <span aria-hidden="true">📍</span>
       오늘의 일정 보기 — DAY {todayDay.dayNum}

@@ -8,6 +8,7 @@ import {
   extractWeatherFromOverview,
   getWeatherForCity,
   toLocalDate,
+  displayCity,
 } from "@/lib/trips";
 import fs from "fs";
 import path from "path";
@@ -22,18 +23,6 @@ export async function generateStaticParams() {
     }
   }
   return params;
-}
-
-const cityDisplay: Record<string, string> = {
-  lisbon: "리스본", porto: "포르투", madrid: "마드리드",
-  sevilla: "세비야", granada: "그라나다", barcelona: "바르셀로나",
-  arrival: "도착", departure: "출발", wine: "와인",
-  douro: "도우루", valley: "계곡", gaudi: "가우디",
-  montserrat: "몬세라트", beach: "해변", shopping: "쇼핑",
-};
-
-function displayCity(raw: string): string {
-  return raw.split(" ").map((w) => cityDisplay[w.toLowerCase()] ?? w).join(" · ");
 }
 
 export default async function DayPage({
@@ -59,7 +48,7 @@ export default async function DayPage({
     // fallback to slug
   }
 
-  // Get weather + local date for this day's city
+  // Get weather for this day's city
   const overviewPath = path.join(process.cwd(), "trips", slug, "overview.md");
   let weather = null;
   if (fs.existsSync(overviewPath)) {
@@ -87,29 +76,29 @@ export default async function DayPage({
   return (
     <div className="space-y-4 -mt-6">
       {/* Sticky Header: breadcrumb + nav + title + weather */}
-      <div className="sticky top-0 z-20 -mx-4 px-4 pt-3 pb-3 bg-white/95 backdrop-blur-sm border-b border-gray-100 space-y-2">
+      <div className="sticky top-0 z-20 -mx-4 px-4 pt-3 pb-3 bg-white/95 backdrop-blur-sm border-b border-surface-100 space-y-2">
         {/* Breadcrumb */}
-        <nav className="flex items-center gap-1.5 text-sm text-gray-500">
-          <Link href="/" className="hover:text-gray-900 transition-colors" aria-label="홈">
+        <nav className="flex items-center gap-1.5 text-sm text-surface-500">
+          <Link href="/" className="hover:text-surface-900 transition-colors" aria-label="홈">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
           </Link>
-          <span className="text-gray-300">/</span>
-          <Link href={`/trips/${slug}`} className="hover:text-gray-900 transition-colors">
+          <span className="text-surface-300">/</span>
+          <Link href={`/trips/${slug}`} className="hover:text-surface-900 transition-colors">
             {tripTitle}
           </Link>
-          <span className="text-gray-300">/</span>
-          <span className="text-gray-900 font-medium">DAY {day.dayNum}</span>
+          <span className="text-surface-300">/</span>
+          <span className="text-surface-900 font-medium">DAY {day.dayNum}</span>
         </nav>
 
         {/* Day Header */}
         <div className="flex items-center gap-3">
-          <span className="inline-block rounded bg-blue-600 text-white text-xs font-semibold px-2.5 py-1 shrink-0">
+          <span className="inline-block rounded bg-primary-600 text-white text-xs font-semibold px-2.5 py-1 shrink-0">
             DAY {day.dayNum} - {day.date}
           </span>
           <h1 className="text-lg font-bold">
             {displayCity(day.city)}
             {showLocalDate && (
-              <span className="text-sm font-normal text-gray-400 ml-1.5">
+              <span className="text-sm font-normal text-surface-400 ml-1.5">
                 (현지 {localDate})
               </span>
             )}
@@ -117,11 +106,11 @@ export default async function DayPage({
         </div>
 
         {/* Prev/Next Navigation */}
-        <nav className="flex items-center justify-center gap-6 text-gray-400 text-sm">
+        <nav className="flex items-center justify-center gap-6 text-surface-400 text-sm">
           {prevDay ? (
             <Link
               href={`/trips/${slug}/day/${prevDay.dayNum}`}
-              className="hover:text-gray-900 min-h-[36px] inline-flex items-center gap-1"
+              className="hover:text-surface-900 min-h-[36px] inline-flex items-center gap-1"
               aria-label={`DAY ${prevDay.dayNum}`}
             >
               &larr; DAY {prevDay.dayNum}
@@ -132,7 +121,7 @@ export default async function DayPage({
           {nextDay ? (
             <Link
               href={`/trips/${slug}/day/${nextDay.dayNum}`}
-              className="hover:text-gray-900 min-h-[36px] inline-flex items-center gap-1"
+              className="hover:text-surface-900 min-h-[36px] inline-flex items-center gap-1"
               aria-label={`DAY ${nextDay.dayNum}`}
             >
               DAY {nextDay.dayNum} &rarr;
@@ -144,10 +133,10 @@ export default async function DayPage({
 
         {/* Weather Badge */}
         {weather && (
-          <div className="flex items-center gap-2 rounded-lg bg-sky-50 border border-sky-200 px-3 py-1.5 text-sm">
-            <span className="text-sky-600 font-medium">{weather.cityKo}</span>
-            <span className="text-gray-700">{weather.temp}</span>
-            <span className="text-gray-500">{weather.note}</span>
+          <div className="flex items-center gap-2 rounded-card bg-sky-50 border border-sky-100 px-3 py-1.5 text-sm">
+            <span className="text-sky-700 font-medium">{weather.cityKo}</span>
+            <span className="text-surface-700">{weather.temp}</span>
+            <span className="text-surface-500">{weather.note}</span>
           </div>
         )}
       </div>
@@ -156,7 +145,6 @@ export default async function DayPage({
         className="prose prose-sm max-w-none"
         dangerouslySetInnerHTML={{ __html: day.content }}
       />
-
     </div>
   );
 }
