@@ -81,6 +81,8 @@ trip-planner/
 - Bash (install.sh) + che-ical-mcp (macOS 네이티브 바이너리, GitHub Releases) (002-bundle-ical-mcp)
 - Python 3.10+ (기존 travel_mcp과 동일), Bash (install.sh) + FastMCP, httpx (기존 의존성 재활용) (003-companion-feedback-channel)
 - macOS Keychain (GitHub PAT 저장) (003-companion-feedback-channel)
+- TypeScript 5.x, Node.js 20+ + Next.js 15 (App Router), Auth.js v5 (next-auth@5.x), Prisma, @auth/prisma-adapter, @neondatabase/serverless (004-fullstack-transition)
+- Neon Postgres (Vercel Marketplace 통합, 무료 티어 0.5GB) (004-fullstack-transition)
 
 ## Recent Changes
 - 001-ax-travel-planning: Added Python 3.14 + FastMCP, httpx, python-dotenv, pytes
