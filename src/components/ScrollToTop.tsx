@@ -49,7 +49,7 @@ export default function ScrollToTop() {
         };
         requestAnimationFrame(step);
       }}
-      className={`fixed right-4 z-30 flex h-10 w-10 items-center justify-center rounded-full bg-gray-800/80 text-white shadow-lg backdrop-blur-sm hover:bg-gray-700 active:scale-95 transition-opacity duration-500 ${
+      className={`fixed right-4 z-30 flex h-10 w-10 items-center justify-center rounded-full bg-surface-800/80 text-white shadow-fab backdrop-blur-sm hover:bg-surface-700 active:scale-95 transition-opacity duration-500 ${
         fading ? "opacity-0 pointer-events-none" : "opacity-100"
       }`}
       style={{ bottom: "calc(1.5rem + env(safe-area-inset-bottom, 0px))" }}

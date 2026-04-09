@@ -23,7 +23,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko">
-      <body className={`${inter.className} bg-white text-gray-900 min-h-screen`}>
+      <body className={`${inter.className} bg-white text-surface-900 min-h-screen`}>
         <main className="max-w-content mx-auto w-full px-4 py-6 pb-16">
           {children}
         </main>

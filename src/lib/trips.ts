@@ -20,6 +20,20 @@ const CITY_KO_MAP: Record<string, string> = {
   sevilla: "세비야", granada: "그라나다", barcelona: "바르셀로나",
 };
 
+/** City/keyword → Korean display label (used in breadcrumbs and day list) */
+export const CITY_DISPLAY: Record<string, string> = {
+  lisbon: "리스본", porto: "포르투", madrid: "마드리드",
+  sevilla: "세비야", granada: "그라나다", barcelona: "바르셀로나",
+  arrival: "도착", departure: "출발", wine: "와인",
+  douro: "도우루", valley: "계곡", gaudi: "가우디",
+  montserrat: "몬세라트", beach: "해변", shopping: "쇼핑",
+};
+
+/** Convert a raw city string (space-separated keywords) to a Korean display label */
+export function displayCity(raw: string): string {
+  return raw.split(" ").map((w) => CITY_DISPLAY[w.toLowerCase()] ?? w).join(" · ");
+}
+
 function getPrimaryCityFromDay(cityStr: string): string | null {
   const lower = cityStr.toLowerCase();
   return Object.keys(CITY_TIMEZONES).find((c) => lower.includes(c)) ?? null;
