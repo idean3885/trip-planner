@@ -1,6 +1,6 @@
-# Travel Planner
+# Trip Planner
 
-AI 기반 여행 플래너 — 숙소/항공편/관광지 검색(MCP) + 일정 웹앱(Next.js)
+여행 서포터/플래너 — MCP 검색 + Next.js SSR 웹앱 + Neon Postgres
 
 ## 주요 기능
 
@@ -17,11 +17,16 @@ trip-planner/
 │   ├── travel_mcp/          # MCP 서버 (Python, PyPI 배포)
 │   │   ├── api_client.py    # RapidAPI 클라이언트 (키체인 지원)
 │   │   └── server.py        # MCP 도구 8개
-│   ├── app/                 # Next.js 웹앱 (App Router)
+│   ├── feedback_mcp/        # 피드백 MCP (GitHub Discussions)
+│   ├── app/                 # Next.js 웹앱 (App Router, SSR)
 │   │   ├── page.tsx         # 메인: 여행 개요 + 일정 목차
 │   │   └── day/[num]/       # 일별 상세 일정
 │   └── lib/
-│       └── trips.ts         # 마크다운 → HTML 변환
+│       ├── trips.ts         # 마크다운 → HTML 변환
+│       └── prisma.ts        # Prisma 클라이언트 싱글톤
+├── prisma/
+│   ├── schema.prisma        # DB 스키마 (Auth.js + App 모델)
+│   └── migrations/          # 마이그레이션 히스토리
 ├── trips/                   # 여행 일정 데이터 (마크다운)
 │   └── 2026-honeymoon-portugal-spain/
 │       ├── overview.md
@@ -30,13 +35,14 @@ trip-planner/
 ├── scripts/                 # 설치, 검증 스크립트
 ├── tests/                   # 단위 테스트 89개 + 통합 테스트
 ├── specs/                   # 설계 문서 (스펙, 플랜, ADR)
+├── prisma.config.ts         # Prisma CLI 설정
 ├── package.json             # Next.js 웹앱
 └── pyproject.toml           # MCP 서버 (PyPI)
 ```
 
 ## 웹앱 (일정 공유)
 
-trips/ 마크다운을 빌드 시점에 정적 페이지로 변환합니다.
+trips/ 마크다운을 Next.js SSR로 제공합니다.
 
 ```bash
 npm install
@@ -124,6 +130,7 @@ pip install trip-planner-mcp
 ## 기술 스택
 
 - **MCP 서버**: Python 3.14, FastMCP, httpx, macOS Keychain
-- **웹앱**: Next.js 15, Tailwind CSS v3, remark (마크다운 파싱)
-- **배포**: PyPI (MCP), AppPaaS (웹앱)
+- **웹앱**: Next.js 15 (SSR), Tailwind CSS v3, remark (마크다운 파싱)
+- **DB**: Neon Postgres, Prisma 7
+- **배포**: Vercel (웹앱), PyPI (MCP)
 - **CI/CD**: GitHub Actions (auto-tag + pypi-publish)
