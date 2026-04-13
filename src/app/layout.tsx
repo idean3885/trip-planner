@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import ScrollToTop from "@/components/ScrollToTop";
+import SessionProvider from "@/components/SessionProvider";
+import AuthButton from "@/components/AuthButton";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -24,10 +26,15 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body className={`${inter.className} bg-white text-surface-900 min-h-screen`}>
-        <main className="max-w-content mx-auto w-full px-4 py-6 pb-16">
-          {children}
-        </main>
-        <ScrollToTop />
+        <SessionProvider>
+          <header className="max-w-content mx-auto w-full px-4 pt-4 flex justify-end">
+            <AuthButton />
+          </header>
+          <main className="max-w-content mx-auto w-full px-4 py-6 pb-16">
+            {children}
+          </main>
+          <ScrollToTop />
+        </SessionProvider>
       </body>
     </html>
   );
