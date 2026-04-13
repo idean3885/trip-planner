@@ -107,16 +107,17 @@ scripts/
 
 ### Phase 3: 데이터 마이그레이션 + CRUD
 
-7. **마이그레이션 스크립트**: trips/ 마크다운 → DB (Trip + Day 레코드 생성)
-8. **데이터 소스 전환**: lib/trips.ts (파일 읽기) → Prisma 쿼리로 교체
-9. **Trip CRUD**: API Routes (생성/조회/수정/삭제) + 권한 검증
-10. **Day CRUD**: API Routes (추가/조회/수정/삭제) + 하루 단위 텍스트 편집기
+7. **스키마 마이그레이션**: TripMember(HOST/GUEST), Trip.createdBy/updatedBy 반영, prisma migrate dev
+8. **마이그레이션 스크립트**: trips/ 마크다운 → DB (Trip + Day + TripMember(HOST) 레코드 생성)
+9. **데이터 소스 전환**: lib/trips.ts (파일 읽기) → Prisma 쿼리로 교체
+10. **Trip CRUD**: API Routes (생성/조회/수정/삭제) + TripMember 기반 권한 검증
+11. **Day CRUD**: API Routes (추가/조회/수정/삭제) + 하루 단위 텍스트 편집기
 
 ### Phase 4: 팀 기능
 
-11. **초대 시스템**: 토큰 생성 API, 초대 수락 페이지, Member 레코드 생성
-12. **팀 관리 UI**: TeamManager 컴포넌트 (팀원 목록, 권한 변경, 제거)
-13. **권한 검증**: 미들웨어 + API 레벨 이중 검증 (UI 비활성화 + 서버 403)
+12. **초대 시스템**: 토큰 생성 API, 초대 수락 페이지, TripMember 레코드 생성
+13. **동행자 관리 UI**: 멤버 목록, 게스트→호스트 승격, 제거
+14. **접근 제어**: API 레벨 TripMember 검증 (멤버가 아니면 403, 호스트 전용 기능은 role 체크)
 
 ### Phase 5: 검증
 
