@@ -18,11 +18,12 @@ model User {
   image         String?
   createdAt     DateTime  @default(now()) @map("created_at")
 
-  accounts    Account[]
-  sessions    Session[]
-  trips       Trip[]       @relation("TripOwner")
-  members     Member[]
-  invitations Invitation[]
+  accounts       Account[]
+  sessions       Session[]
+  createdTrips   Trip[]         @relation("TripCreator")
+  updatedTrips   Trip[]         @relation("TripUpdater")
+  tripMembers    TripMember[]
+  invitations    Invitation[]
 
   @@map("users")
 }
@@ -68,31 +69,33 @@ model VerificationToken {
 }
 
 // ============================================================
-// App 모델
+// 비즈니스 모델 (Trip, Day, Member, Invitation)
 // ============================================================
 
 model Trip {
-  id          String   @id @default(cuid())
+  id          Int       @id @default(autoincrement())
   title       String
-  description String?  @db.Text
-  startDate   DateTime? @map("start_date")
-  endDate     DateTime? @map("end_date")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-  ownerId     String   @map("owner_id")
+  description String?   @db.Text
+  startDate   DateTime? @map("start_date") @db.Timestamptz(3)
+  endDate     DateTime? @map("end_date") @db.Timestamptz(3)
+  createdBy   String    @map("created_by")
+  updatedBy   String    @map("updated_by")
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  owner       User         @relation("TripOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  creator     User         @relation("TripCreator", fields: [createdBy], references: [id])
+  updater     User         @relation("TripUpdater", fields: [updatedBy], references: [id])
   days        Day[]
-  members     Member[]
+  tripMembers TripMember[]
   invitations Invitation[]
 
   @@map("trips")
 }
 
 model Day {
-  id        String   @id @default(cuid())
-  tripId    String   @map("trip_id")
-  date      DateTime
+  id        Int      @id @default(autoincrement())
+  tripId    Int      @map("trip_id")
+  date      DateTime @db.Timestamptz(3)
   title     String?
   content   String?  @db.Text
   sortOrder Int      @default(0) @map("sort_order")
@@ -103,24 +106,23 @@ model Day {
   @@map("days")
 }
 
-enum Role {
-  OWNER
-  EDITOR
-  VIEWER
+enum TripRole {
+  HOST
+  GUEST
 }
 
-model Member {
-  id       String   @id @default(cuid())
-  tripId   String   @map("trip_id")
+model TripMember {
+  id       Int      @id @default(autoincrement())
+  tripId   Int      @map("trip_id")
   userId   String   @map("user_id")
-  role     Role     @default(VIEWER)
-  joinedAt DateTime @default(now()) @map("joined_at")
+  role     TripRole @default(GUEST)
+  joinedAt DateTime @default(now()) @map("joined_at") @db.Timestamptz(3)
 
   trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([tripId, userId])
-  @@map("members")
+  @@map("trip_members")
 }
 
 enum InvitationStatus {
@@ -131,15 +133,15 @@ enum InvitationStatus {
 }
 
 model Invitation {
-  id          String           @id @default(cuid())
-  tripId      String           @map("trip_id")
+  id          Int              @id @default(autoincrement())
+  tripId      Int              @map("trip_id")
   invitedById String           @map("invited_by_id")
   email       String
   token       String           @unique @default(cuid())
-  role        Role             @default(VIEWER)
+  role        TripRole         @default(GUEST)
   status      InvitationStatus @default(PENDING)
-  expiresAt   DateTime         @map("expires_at")
-  createdAt   DateTime         @default(now()) @map("created_at")
+  expiresAt   DateTime         @map("expires_at") @db.Timestamptz(3)
+  createdAt   DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
 
   trip      Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
   invitedBy User @relation(fields: [invitedById], references: [id])
