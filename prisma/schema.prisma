@@ -1,0 +1,149 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================================
+// Auth.js v5 표준 모델 (@auth/prisma-adapter)
+// ============================================================
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime? @map("email_verified")
+  image         String?
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  accounts    Account[]
+  sessions    Session[]
+  trips       Trip[]       @relation("TripOwner")
+  members     Member[]
+  invitations Invitation[]
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String  @map("user_id")
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique @map("session_token")
+  userId       String   @map("user_id")
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// ============================================================
+// App 모델
+// ============================================================
+
+model Trip {
+  id          String   @id @default(cuid())
+  title       String
+  description String?  @db.Text
+  startDate   DateTime? @map("start_date")
+  endDate     DateTime? @map("end_date")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  ownerId     String   @map("owner_id")
+
+  owner       User         @relation("TripOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  days        Day[]
+  members     Member[]
+  invitations Invitation[]
+
+  @@map("trips")
+}
+
+model Day {
+  id        String   @id @default(cuid())
+  tripId    String   @map("trip_id")
+  date      DateTime
+  title     String?
+  content   String?  @db.Text
+  sortOrder Int      @default(0) @map("sort_order")
+
+  trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  @@index([tripId, date])
+  @@map("days")
+}
+
+enum Role {
+  OWNER
+  EDITOR
+  VIEWER
+}
+
+model Member {
+  id       String   @id @default(cuid())
+  tripId   String   @map("trip_id")
+  userId   String   @map("user_id")
+  role     Role     @default(VIEWER)
+  joinedAt DateTime @default(now()) @map("joined_at")
+
+  trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([tripId, userId])
+  @@map("members")
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  EXPIRED
+}
+
+model Invitation {
+  id          String           @id @default(cuid())
+  tripId      String           @map("trip_id")
+  invitedById String           @map("invited_by_id")
+  email       String
+  token       String           @unique @default(cuid())
+  role        Role             @default(VIEWER)
+  status      InvitationStatus @default(PENDING)
+  expiresAt   DateTime         @map("expires_at")
+  createdAt   DateTime         @default(now()) @map("created_at")
+
+  trip      Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  invitedBy User @relation(fields: [invitedById], references: [id])
+
+  @@index([email, status])
+  @@map("invitations")
+}
