@@ -1,6 +1,13 @@
 import { signIn } from "@/auth";
 
-export default function SignInPage() {
+export default async function SignInPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ callbackUrl?: string }>;
+}) {
+  const { callbackUrl } = await searchParams;
+  const redirectTo = callbackUrl || "/";
+
   return (
     <div className="flex min-h-[60vh] items-center justify-center">
       <div className="w-full max-w-sm space-y-6 text-center">
@@ -15,7 +22,7 @@ export default function SignInPage() {
         <form
           action={async () => {
             "use server";
-            await signIn("google", { redirectTo: "/" });
+            await signIn("google", { redirectTo });
           }}
         >
           <button
