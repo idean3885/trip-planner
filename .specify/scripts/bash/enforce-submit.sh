@@ -47,6 +47,25 @@ if [[ ! "$BRANCH" =~ ^[0-9]{3}- ]]; then
   exit 0
 fi
 
+# 스테이징된 파일 중 소스 파일이 있는지 확인
+# 소스 파일이 없으면 (스펙/설정만 커밋) 검증 없이 허용
+HAS_SOURCE=false
+while IFS= read -r staged_file; do
+  case "$staged_file" in
+    *.ts|*.tsx|*.js|*.jsx|*.py|*.css|*.scss|*.prisma)
+      # speckit/config 경로 제외
+      case "$staged_file" in
+        .specify/*|specs/*|.claude/*|.omc/*) ;;
+        *) HAS_SOURCE=true; break ;;
+      esac
+      ;;
+  esac
+done < <(git diff --cached --name-only 2>/dev/null)
+
+if [[ "$HAS_SOURCE" == "false" ]]; then
+  exit 0  # 소스 파일 없음 → 스펙/설정 커밋 허용
+fi
+
 # 검증 마커 확인
 REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || echo ".")
 MARKER="$REPO_ROOT/.specify/state/submit-ready.json"

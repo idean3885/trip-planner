@@ -91,5 +91,15 @@ if [[ ${#MISSING[@]} -gt 0 ]]; then
   exit 2
 fi
 
+# 7) spec.md 기술 중립성 검증
+SCRIPT_DIR="$(CDPATH="" cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LINT_RESULT=$("$SCRIPT_DIR/lint-spec-neutrality.sh" "$FEATURE_DIR/spec.md" 2>&1) || {
+  echo "BLOCKED: spec.md에 기술 구체명이 포함되어 있습니다." >&2
+  echo "$LINT_RESULT" >&2
+  echo "" >&2
+  echo "→ spec.md에서 기술명을 중립 표현으로 교체한 후 구현을 시작하세요." >&2
+  exit 2
+}
+
 # 모든 조건 충족 → 허용
 exit 0
