@@ -28,18 +28,18 @@ export default async function TripDetailPage({
   const session = await auth();
   if (!session?.user?.id) redirect("/auth/signin");
 
-  const member = await prisma.tripMember.findUnique({
-    where: { tripId_userId: { tripId, userId: session.user.id } },
-  });
-  if (!member) notFound();
-
-  const trip = await prisma.trip.findUnique({
-    where: { id: tripId },
-    include: {
-      days: { orderBy: { sortOrder: "asc" } },
-    },
-  });
-  if (!trip) notFound();
+  const [member, trip] = await Promise.all([
+    prisma.tripMember.findUnique({
+      where: { tripId_userId: { tripId, userId: session.user.id } },
+    }),
+    prisma.trip.findUnique({
+      where: { id: tripId },
+      include: {
+        days: { orderBy: { sortOrder: "asc" } },
+      },
+    }),
+  ]);
+  if (!member || !trip) notFound();
 
   const descriptionHtml = trip.description
     ? await markdownToHtml(trip.description)

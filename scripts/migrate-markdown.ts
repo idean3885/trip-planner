@@ -7,15 +7,10 @@
  * 전제: 로그인한 사용자(AUTH_USER_EMAIL)가 Trip 생성자 겸 HOST로 등록된다.
  */
 
-import { neonConfig } from "@neondatabase/serverless";
-import { PrismaNeon } from "@prisma/adapter-neon";
+import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 import * as fs from "fs";
 import * as path from "path";
-import ws from "ws";
-
-// Node.js 환경에서 WebSocket 폴리필 (Neon 서버리스 드라이버 요구)
-neonConfig.webSocketConstructor = ws;
 
 /** 영어 slug → 한국어 표시명 */
 const CITY_DISPLAY: Record<string, string> = {
@@ -33,10 +28,9 @@ function toKoreanTitle(slug: string): string {
     .join(" · ");
 }
 
-const adapter = new PrismaNeon({
-  connectionString: process.env.DATABASE_URL!,
+const prisma = new PrismaClient({
+  adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL! }),
 });
-const prisma = new PrismaClient({ adapter });
 
 const TRIPS_DIR = path.join(process.cwd(), "trips");
 const AUTH_USER_EMAIL = process.env.AUTH_USER_EMAIL;

@@ -13,16 +13,18 @@ export async function GET(request: Request, { params }: Params) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const member = await getTripMember(tripId, session.user.id);
+  const [member, members] = await Promise.all([
+    getTripMember(tripId, session.user.id),
+    prisma.tripMember.findMany({
+      where: { tripId },
+      include: { user: { select: { id: true, name: true, email: true, image: true } } },
+      orderBy: [{ role: "asc" }, { joinedAt: "asc" }],
+    }),
+  ]);
+
   if (!member) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
-
-  const members = await prisma.tripMember.findMany({
-    where: { tripId },
-    include: { user: { select: { id: true, name: true, email: true, image: true } } },
-    orderBy: [{ role: "asc" }, { joinedAt: "asc" }],
-  });
 
   return NextResponse.json({ members, myRole: member.role });
 }

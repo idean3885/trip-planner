@@ -29,16 +29,16 @@ export default async function DayDetailPage({
   const session = await auth();
   if (!session?.user?.id) redirect("/auth/signin");
 
-  const member = await prisma.tripMember.findUnique({
-    where: { tripId_userId: { tripId, userId: session.user.id } },
-  });
-  if (!member) notFound();
-
-  const day = await prisma.day.findUnique({
-    where: { id: dayIdNum, tripId },
-    include: { trip: { select: { title: true } } },
-  });
-  if (!day) notFound();
+  const [member, day] = await Promise.all([
+    prisma.tripMember.findUnique({
+      where: { tripId_userId: { tripId, userId: session.user.id } },
+    }),
+    prisma.day.findUnique({
+      where: { id: dayIdNum, tripId },
+      include: { trip: { select: { title: true } } },
+    }),
+  ]);
+  if (!member || !day) notFound();
 
   const contentHtml = day.content ? await markdownToHtml(day.content) : "";
 
