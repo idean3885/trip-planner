@@ -29,7 +29,10 @@ function toKoreanTitle(slug: string): string {
 }
 
 const prisma = new PrismaClient({
-  adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL! }),
+  adapter: new PrismaPg({
+    connectionString: process.env.DATABASE_URL!,
+    ssl: { rejectUnauthorized: true },
+  }),
 });
 
 const TRIPS_DIR = path.join(process.cwd(), "trips");
