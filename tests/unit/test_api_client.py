@@ -4,8 +4,8 @@ import httpx
 from pytest_httpx import HTTPXMock
 from unittest.mock import patch
 
-import hotels_mcp.api_client as api_client_module
-from hotels_mcp.api_client import make_rapidapi_request
+import trip_mcp.rapidapi as api_client_module
+from trip_mcp.rapidapi import make_rapidapi_request
 
 
 # Patch module-level constants so tests work without a real .env file

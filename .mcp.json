@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-    "travel": {
+    "trip": {
       "command": "uvx",
       "args": ["trip-planner-mcp"],
       "env": {

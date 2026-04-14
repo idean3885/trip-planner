@@ -5,26 +5,9 @@ import signal
 import sys
 import argparse
 from typing import Dict, List, Any, Optional
-from urllib.parse import quote_plus
 from mcp.server.fastmcp import FastMCP
 
-from hotels_mcp.api_client import make_rapidapi_request
-
-
-def _booking_links(hotel_name: str, checkin_date: str, checkout_date: str, adults: int = 2) -> str:
-    """Generate Booking.com and Agoda search links with dates."""
-    encoded_name = quote_plus(hotel_name)
-    booking_url = (
-        f"https://www.booking.com/searchresults.html"
-        f"?ss={encoded_name}&checkin={checkin_date}&checkout={checkout_date}"
-        f"&group_adults={adults}"
-    )
-    agoda_url = (
-        f"https://www.agoda.com/search"
-        f"?q={encoded_name}&checkIn={checkin_date}&checkOut={checkout_date}"
-        f"&adults={adults}"
-    )
-    return f"Booking.com: {booking_url}\nAgoda: {agoda_url}\n"
+from trip_mcp.rapidapi import make_rapidapi_request
 
 # Configure logging
 logging.basicConfig(
@@ -37,27 +20,26 @@ logger = logging.getLogger("travel-mcp-server")
 # Initialize FastMCP server
 mcp = FastMCP("travel")
 
-
 @mcp.tool()
 async def search_destinations(query: str) -> str:
     """Search for hotel destinations by name.
-    
+
     Args:
         query: The destination to search for (e.g., "Paris", "New York", "Tokyo")
     """
     logger.info(f"Searching for destinations with query: {query}")
     endpoint = "/api/v1/hotels/searchDestination"
     params = {"query": query}
-    
+
     result = await make_rapidapi_request(endpoint, params)
-    
+
     if "error" in result:
         logger.error(f"Error in search_destinations: {result['error']}")
         return f"Error fetching destinations: {result['error']}"
-    
+
     # Format the response
     formatted_results = []
-    
+
     if "data" in result and isinstance(result["data"], list):
         destinations_count = len(result["data"])
         logger.info(f"Found {destinations_count} destinations for query: {query}")
@@ -71,7 +53,7 @@ async def search_destinations(query: str) -> str:
                 f"Coordinates: {destination.get('latitude', 'N/A')}, {destination.get('longitude', 'N/A')}\n"
             )
             formatted_results.append(dest_info)
-        
+
         return "\n---\n".join(formatted_results) if formatted_results else "No destinations found matching your query."
     else:
         logger.warning(f"Unexpected response format from API for query: {query}")
@@ -98,16 +80,16 @@ async def get_hotels(destination_id: str, checkin_date: str, checkout_date: str,
         "adults": str(adults),
         "currency_code": currency_code
     }
-    
+
     result = await make_rapidapi_request(endpoint, params)
-    
+
     if "error" in result:
         logger.error(f"Error in get_hotels: {result['error']}")
         return f"Error fetching hotels: {result['error']}"
-    
+
     # Format the response
     formatted_results = []
-    
+
     if "data" in result and "hotels" in result["data"] and isinstance(result["data"]["hotels"], list):
         hotels_count = len(result["data"]["hotels"])
         logger.info(f"Found {hotels_count} hotels for destination: {destination_id}")
@@ -115,7 +97,7 @@ async def get_hotels(destination_id: str, checkin_date: str, checkout_date: str,
         for hotel_entry in hotels[:10]:  # Limit to 10 hotels to avoid too much text
             if "property" in hotel_entry:
                 property_data = hotel_entry["property"]
-                
+
                 # Parse accessibility label for room info
                 room_info = "Not available"
                 accessibility_label = hotel_entry.get("accessibilityLabel", "")
@@ -124,7 +106,7 @@ async def get_hotels(destination_id: str, checkin_date: str, checkout_date: str,
                     room_match = re.search(r'(Hotel room|Entire villa|Private suite|Private room)[^\.]*', accessibility_label)
                     if room_match:
                         room_info = room_match.group(0).strip()
-                
+
                 hotel_info = (
                     f"Name: {property_data.get('name', 'Unknown')}\n"
                     f"Hotel ID: {property_data.get('id', 'N/A')}\n"
@@ -132,15 +114,15 @@ async def get_hotels(destination_id: str, checkin_date: str, checkout_date: str,
                     f"Rating: {property_data.get('reviewScore', 'N/A')}/10\n"
                     f"Reviews: {property_data.get('reviewCount', 'N/A')} ({property_data.get('reviewScoreWord', 'N/A')})\n"
                 )
-                
+
                 # Add room information
                 hotel_info += f"Room: {room_info}\n"
-                
+
                 # Add pricing info if available
                 if "priceBreakdown" in property_data and "grossPrice" in property_data["priceBreakdown"]:
                     price_data = property_data["priceBreakdown"]["grossPrice"]
                     hotel_info += f"Price: {price_data.get('currency', '$')}{price_data.get('value', 'N/A')}\n"
-                    
+
                     # Add discount information if available
                     if "strikethroughPrice" in property_data["priceBreakdown"]:
                         original_price = property_data["priceBreakdown"]["strikethroughPrice"].get("value", "N/A")
@@ -153,25 +135,25 @@ async def get_hotels(destination_id: str, checkin_date: str, checkout_date: str,
                                     discount_pct = round((1 - current/original) * 100)
                             except (ValueError, TypeError):
                                 pass
-                            
+
                             if discount_pct > 0:
                                 hotel_info += f"Discount: {discount_pct}% off original price\n"
                 else:
                     hotel_info += "Price: Not available\n"
-                
+
                 # Add location coordinates
                 if "latitude" in property_data and "longitude" in property_data:
                     hotel_info += f"Coordinates: {property_data.get('latitude', 'N/A')}, {property_data.get('longitude', 'N/A')}\n"
-                
+
                 # Add star rating
                 if "propertyClass" in property_data:
                     stars = property_data.get('propertyClass', 'N/A')
                     hotel_info += f"Stars: {stars}\n"
-                
+
                 # Add photo URL
                 if property_data.get('photoUrls') and len(property_data.get('photoUrls', [])) > 0:
                     hotel_info += f"Photo: {property_data['photoUrls'][0]}\n"
-                
+
                 # Add check-in/check-out times
                 checkin = property_data.get('checkin', {})
                 checkout = property_data.get('checkout', {})
@@ -179,15 +161,10 @@ async def get_hotels(destination_id: str, checkin_date: str, checkout_date: str,
                     hotel_info += f"Check-in: {checkin.get('fromTime', 'N/A')}-{checkin.get('untilTime', 'N/A')}\n"
                     hotel_info += f"Check-out: by {checkout.get('untilTime', 'N/A')}\n"
 
-                # Add booking links with dates
-                hotel_name = property_data.get('name', '')
-                if hotel_name:
-                    hotel_info += _booking_links(hotel_name, checkin_date, checkout_date, adults)
-
                 formatted_results.append(hotel_info)
             else:
                 formatted_results.append("Hotel information not available in the expected format.")
-        
+
         return "\n---\n".join(formatted_results) if formatted_results else "No hotels found for this destination and dates."
     else:
         logger.warning(f"Unexpected response format from API for destination: {destination_id}")
@@ -283,11 +260,6 @@ async def get_hotel_details(hotel_id: str, checkin_date: str, checkout_date: str
     desc = data.get("description", "")
     if desc:
         info_parts.append(f"\nDescription: {desc[:500]}")
-
-    # Booking links with dates
-    hotel_name = data.get("hotel_name", "")
-    if hotel_name:
-        info_parts.append(_booking_links(hotel_name, checkin_date, checkout_date, adults))
 
     return "\n".join(info_parts)
 
@@ -655,15 +627,15 @@ def handle_shutdown(signum, frame):
     sys.exit(0)
 
 def main():
-    """Main function to run the Hotels MCP server."""
+    """Main function to run the Travel MCP server."""
     # Parse command line arguments
     parser = argparse.ArgumentParser(description='Travel MCP Server')
     args = parser.parse_args()
-    
+
     # Register signal handlers for graceful shutdown
     signal.signal(signal.SIGINT, handle_shutdown)
     signal.signal(signal.SIGTERM, handle_shutdown)
-    
+
     try:
         # Use STDIO transport - it's the most reliable for Claude for Desktop
         logger.info("Starting Travel MCP Server with stdio transport...")
@@ -676,4 +648,4 @@ def main():
         logger.info("Travel MCP Server shutting down...")
 
 if __name__ == "__main__":
-    sys.exit(main()) 
+    sys.exit(main())

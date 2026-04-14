@@ -20,9 +20,10 @@ model User {
 
   accounts       Account[]
   sessions       Session[]
-  createdTrips   Trip[]         @relation("TripCreator")
-  updatedTrips   Trip[]         @relation("TripUpdater")
-  tripMembers    TripMember[]
+  createdTrips           Trip[]                @relation("TripCreator")
+  updatedTrips           Trip[]                @relation("TripUpdater")
+  tripMembers            TripMember[]
+  personalAccessTokens   PersonalAccessToken[]
 
   @@map("users")
 }
@@ -125,3 +126,23 @@ model TripMember {
 }
 
 // Invitation 테이블 삭제 — JWT 토큰 기반 초대로 대체 (D-007)
+
+// ============================================================
+// Personal Access Token (외부 클라이언트 API 인증)
+// ============================================================
+
+model PersonalAccessToken {
+  id          Int       @id @default(autoincrement())
+  userId      String    @map("user_id")
+  name        String
+  tokenHash   String    @unique @map("token_hash")
+  tokenPrefix String    @map("token_prefix") @db.VarChar(11)
+  expiresAt   DateTime? @map("expires_at") @db.Timestamptz(3)
+  lastUsedAt  DateTime? @map("last_used_at") @db.Timestamptz(3)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("personal_access_tokens")
+}
