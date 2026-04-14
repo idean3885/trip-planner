@@ -51,7 +51,11 @@ export default async function Home() {
             )}
             <span>{trip._count.days}일</span>
             <span className="text-primary-600">
-              {trip.tripMembers[0]?.role === "HOST" ? "호스트" : "게스트"}
+              {trip.tripMembers[0]?.role === "OWNER"
+                ? "내 여행"
+                : trip.tripMembers[0]?.role === "HOST"
+                  ? "호스트"
+                  : "게스트"}
             </span>
           </div>
 
