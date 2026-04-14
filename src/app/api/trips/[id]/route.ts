@@ -13,21 +13,22 @@ export async function GET(request: Request, { params }: Params) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const member = await getTripMember(tripId, session.user.id);
+  const [member, trip] = await Promise.all([
+    getTripMember(tripId, session.user.id),
+    prisma.trip.findUnique({
+      where: { id: tripId },
+      include: {
+        days: { orderBy: { sortOrder: "asc" } },
+        tripMembers: {
+          include: { user: { select: { id: true, name: true, image: true } } },
+        },
+      },
+    }),
+  ]);
+
   if (!member) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
-
-  const trip = await prisma.trip.findUnique({
-    where: { id: tripId },
-    include: {
-      days: { orderBy: { sortOrder: "asc" } },
-      tripMembers: {
-        include: { user: { select: { id: true, name: true, image: true } } },
-      },
-    },
-  });
-
   if (!trip) {
     return NextResponse.json({ error: "Not Found" }, { status: 404 });
   }

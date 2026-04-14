@@ -13,15 +13,17 @@ export async function GET(request: Request, { params }: Params) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const member = await getTripMember(tripId, session.user.id);
+  const [member, days] = await Promise.all([
+    getTripMember(tripId, session.user.id),
+    prisma.day.findMany({
+      where: { tripId },
+      orderBy: { sortOrder: "asc" },
+    }),
+  ]);
+
   if (!member) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
-
-  const days = await prisma.day.findMany({
-    where: { tripId },
-    orderBy: { sortOrder: "asc" },
-  });
 
   return NextResponse.json(days);
 }
