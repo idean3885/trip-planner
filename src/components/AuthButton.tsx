@@ -7,10 +7,12 @@ export default function AuthButton() {
 
   if (!session?.user) return null;
 
+  const displayName = session.user.email || session.user.name || "사용자";
+
   return (
     <div className="flex items-center gap-3">
       <span className="text-body-sm text-surface-500">
-        {session.user.name}
+        {displayName}
       </span>
       <button
         onClick={() => signOut()}
