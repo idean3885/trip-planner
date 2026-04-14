@@ -17,6 +17,22 @@ import ws from "ws";
 // Node.js 환경에서 WebSocket 폴리필 (Neon 서버리스 드라이버 요구)
 neonConfig.webSocketConstructor = ws;
 
+/** 영어 slug → 한국어 표시명 */
+const CITY_DISPLAY: Record<string, string> = {
+  lisbon: "리스본", porto: "포르투", madrid: "마드리드",
+  sevilla: "세비야", granada: "그라나다", barcelona: "바르셀로나",
+  arrival: "도착", departure: "출발", wine: "와인",
+  douro: "도우루", valley: "계곡", gaudi: "가우디",
+  montserrat: "몬세라트", beach: "해변", shopping: "쇼핑",
+};
+
+function toKoreanTitle(slug: string): string {
+  return slug
+    .split(" ")
+    .map((w) => CITY_DISPLAY[w.toLowerCase()] ?? w)
+    .join(" · ");
+}
+
 const adapter = new PrismaNeon({
   connectionString: process.env.DATABASE_URL!,
 });
@@ -152,8 +168,9 @@ function parseOverview(content: string) {
     const endMonth = parseInt(periodMatch[4]) - 1;
     const endDay = parseInt(periodMatch[5]);
 
-    startDate = new Date(year, startMonth, startDay);
-    endDate = new Date(year, endMonth, endDay);
+    // KST 정오 → UTC 변환 (타임존 밀림 방지)
+    startDate = new Date(Date.UTC(year, startMonth, startDay, 3, 0, 0));
+    endDate = new Date(Date.UTC(year, endMonth, endDay, 3, 0, 0));
   }
 
   return { title, startDate, endDate };
@@ -179,13 +196,17 @@ function parseDayFile(filename: string, tripStartDate: Date | null) {
   const month = parseInt(match[2]) - 1;
   const day = parseInt(match[3]);
   const titleSlug = match[4].replace(/-/g, " ");
+  const titleKo = toKoreanTitle(titleSlug);
 
   // 연도는 tripStartDate에서 가져옴
   const year = tripStartDate ? tripStartDate.getFullYear() : new Date().getFullYear();
 
+  // KST 정오(12:00)를 UTC로 → 타임존 밀림 방지
+  const dateUtc = new Date(Date.UTC(year, month, day, 3, 0, 0)); // KST 12:00 = UTC 03:00
+
   return {
-    date: new Date(year, month, day),
-    title: titleSlug,
+    date: dateUtc,
+    title: titleKo,
     sortOrder: dayNum,
   };
 }
