@@ -2,7 +2,7 @@
 Integration tests for attractions CLI scripts.
 
 These tests make real API calls to the Booking.com RapidAPI and require a valid
-RAPIDAPI_KEY in mcp-servers/hotels_mcp_server/.env.
+RAPIDAPI_KEY in .env or macOS Keychain.
 
 Run with:
     pytest -m integration
@@ -17,16 +17,16 @@ from pathlib import Path
 import pytest
 from dotenv import load_dotenv
 
-# Load .env before importing api_client so RAPIDAPI_KEY is available
-_env_path = Path(__file__).parent.parent.parent / "mcp-servers" / "hotels_mcp_server" / ".env"
+# Load .env before importing rapidapi so RAPIDAPI_KEY is available
+_env_path = Path(__file__).parent.parent.parent / ".env"
 load_dotenv(dotenv_path=_env_path)
 
-# Ensure hotels_mcp package is importable (mirrors pyproject.toml pythonpath setting)
-_hotels_mcp_root = Path(__file__).parent.parent.parent / "mcp-servers" / "hotels_mcp_server"
-if str(_hotels_mcp_root) not in sys.path:
-    sys.path.insert(0, str(_hotels_mcp_root))
+# Ensure trip_mcp package is importable (mirrors pyproject.toml pythonpath setting)
+_mcp_root = Path(__file__).parent.parent.parent / "mcp"
+if str(_mcp_root) not in sys.path:
+    sys.path.insert(0, str(_mcp_root))
 
-from hotels_mcp.api_client import make_rapidapi_request  # noqa: E402
+from trip_mcp.rapidapi import make_rapidapi_request  # noqa: E402
 
 
 # ---------------------------------------------------------------------------

@@ -5,8 +5,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "trip-planner-mcp"
-version = "1.0.2"
-description = "여행 숙소, 항공편, 관광지 검색 + 동행자 피드백 MCP 서버"
+version = "2.0.0"
+description = "여행 숙소, 항공편, 관광지 검색 + 일정 관리 MCP 서버"
 requires-python = ">=3.10"
 license = "MIT"
 readme = "README.md"
@@ -24,8 +24,7 @@ dependencies = [
 ]
 
 [project.scripts]
-trip-planner-mcp = "travel_mcp.server:main"
-trip-planner-feedback = "feedback_mcp.server:main"
+trip-planner-mcp = "trip_mcp.server:main"
 
 [project.urls]
 Homepage = "https://github.com/idean3885/trip-planner"
@@ -40,11 +39,11 @@ dev = [
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["src", "mcp-servers/hotels_mcp_server"]
+pythonpath = ["mcp"]
 asyncio_mode = "auto"
 markers = [
     "integration: marks tests as integration tests (deselect with '-m \"not integration\"')",
 ]
 
 [tool.setuptools.packages.find]
-where = ["src"]
+where = ["mcp"]

@@ -1,8 +1,8 @@
 {
   "mcpServers": {
-    "travel": {
+    "trip": {
       "command": "/Users/you/.trip-planner/.venv/bin/python",
-      "args": ["-m", "travel_mcp.server"],
+      "args": ["-m", "trip_mcp.server"],
       "cwd": "/Users/you/.trip-planner",
       "env": {
         "RAPIDAPI_HOST": "booking-com15.p.rapidapi.com"

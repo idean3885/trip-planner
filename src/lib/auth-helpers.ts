@@ -1,5 +1,40 @@
+import { headers } from "next/headers";
+import { createHash } from "crypto";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+
+/**
+ * 현재 요청의 인증된 사용자 ID를 반환한다.
+ * 1. Authorization: Bearer <pat> 헤더가 있으면 PAT 인증 시도
+ * 2. 없으면 기존 세션 인증으로 폴백
+ * 미인증이면 null.
+ */
+export async function getAuthUserId(): Promise<string | null> {
+  const headersList = await headers();
+  const authorization = headersList.get("authorization");
+
+  if (authorization?.startsWith("Bearer ")) {
+    const token = authorization.slice(7);
+    const tokenHash = createHash("sha256").update(token).digest("hex");
+
+    const pat = await prisma.personalAccessToken.findUnique({
+      where: { tokenHash },
+    });
+
+    if (!pat) return null;
+    if (pat.expiresAt && pat.expiresAt < new Date()) return null;
+
+    await prisma.personalAccessToken.update({
+      where: { id: pat.id },
+      data: { lastUsedAt: new Date() },
+    });
+
+    return pat.userId;
+  }
+
+  const session = await auth();
+  return session?.user?.id ?? null;
+}
 
 /**
  * 현재 로그인 사용자의 세션을 가져온다. 미인증이면 null.

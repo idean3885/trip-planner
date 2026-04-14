@@ -11,13 +11,12 @@ from dotenv import load_dotenv
 load_dotenv()
 
 try:
-    from travel_mcp.api_client import make_rapidapi_request
+    from trip_mcp.rapidapi import make_rapidapi_request
 except ImportError:
-    # Fallback: load from mcp-servers directory when package is not installed
-    env_path = Path(__file__).parent.parent / "mcp-servers" / "hotels_mcp_server" / ".env"
-    load_dotenv(dotenv_path=env_path)
-    sys.path.insert(0, str(Path(__file__).parent.parent / "mcp-servers" / "hotels_mcp_server"))
-    from hotels_mcp.api_client import make_rapidapi_request
+    # Fallback: add mcp/ to path when package is not installed
+    _mcp_root = Path(__file__).parent.parent / "mcp"
+    sys.path.insert(0, str(_mcp_root))
+    from trip_mcp.rapidapi import make_rapidapi_request  # noqa: E402
 
 ENDPOINT = "/api/v1/attraction/searchAttractions"
 MAX_RESULTS = 15

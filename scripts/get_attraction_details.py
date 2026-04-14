@@ -15,14 +15,12 @@ from dotenv import load_dotenv
 load_dotenv()
 
 try:
-    from travel_mcp.api_client import make_rapidapi_request
+    from trip_mcp.rapidapi import make_rapidapi_request
 except ImportError:
-    # Fallback: load from mcp-servers directory when package is not installed
-    _env_path = Path(__file__).parent.parent / "mcp-servers" / "hotels_mcp_server" / ".env"
-    load_dotenv(dotenv_path=_env_path)
-    _api_client_dir = Path(__file__).parent.parent / "mcp-servers" / "hotels_mcp_server" / "hotels_mcp"
-    sys.path.insert(0, str(_api_client_dir))
-    from api_client import make_rapidapi_request  # noqa: E402
+    # Fallback: add mcp/ to path when package is not installed
+    _mcp_root = Path(__file__).parent.parent / "mcp"
+    sys.path.insert(0, str(_mcp_root))
+    from trip_mcp.rapidapi import make_rapidapi_request  # noqa: E402
 
 
 async def get_attraction_details(slug: str) -> None:

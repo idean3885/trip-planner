@@ -14,8 +14,8 @@ from typing import Optional
 import httpx
 from dotenv import load_dotenv
 
-# Load .env from MCP server directory
-env_path = Path(__file__).parent.parent / "mcp-servers" / "hotels_mcp_server" / ".env"
+# Load .env from project root
+env_path = Path(__file__).parent.parent / ".env"
 load_dotenv(env_path)
 
 RAPIDAPI_KEY = os.getenv("RAPIDAPI_KEY")
