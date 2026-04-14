@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { formatCalendarDateFull, formatCalendarDate } from "@/lib/date-utils";
 import { remark } from "remark";
 import remarkGfm from "remark-gfm";
 import html from "remark-html";
@@ -58,8 +59,8 @@ export default async function TripDetailPage({
         <h1 className="text-heading-lg font-bold">{trip.title}</h1>
         {trip.startDate && trip.endDate && (
           <p className="mt-1 text-body-md text-surface-500">
-            {trip.startDate.toLocaleDateString("ko-KR")} ~{" "}
-            {trip.endDate.toLocaleDateString("ko-KR")}
+            {formatCalendarDateFull(trip.startDate)} ~{" "}
+            {formatCalendarDateFull(trip.endDate)}
           </p>
         )}
       </div>
@@ -96,11 +97,7 @@ export default async function TripDetailPage({
                 )}
               </div>
               <span className="text-body-sm text-surface-400">
-                {day.date.toLocaleDateString("ko-KR", {
-                  month: "numeric",
-                  day: "numeric",
-                  weekday: "short",
-                })}
+                {formatCalendarDate(day.date)}
               </span>
             </div>
           </Link>
