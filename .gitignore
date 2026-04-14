@@ -32,6 +32,9 @@ build/
 # Claude Code (로컬 설정)
 .claude/settings.local.json
 
+# Speckit state (검증 마커 등 임시 파일)
+.specify/state/
+
 # OMC state
 .omc/
 node_modules/
