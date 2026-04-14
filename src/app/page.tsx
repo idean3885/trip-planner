@@ -2,6 +2,7 @@ import Link from "next/link";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
+import { formatCalendarDateFull } from "@/lib/date-utils";
 
 export default async function Home() {
   const session = await auth();
@@ -44,8 +45,8 @@ export default async function Home() {
           <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-surface-500">
             {trip.startDate && trip.endDate && (
               <span>
-                {trip.startDate.toLocaleDateString("ko-KR")} ~{" "}
-                {trip.endDate.toLocaleDateString("ko-KR")}
+                {formatCalendarDateFull(trip.startDate)} ~{" "}
+                {formatCalendarDateFull(trip.endDate)}
               </span>
             )}
             <span>{trip._count.days}일</span>

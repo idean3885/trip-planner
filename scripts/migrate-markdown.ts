@@ -168,9 +168,9 @@ function parseOverview(content: string) {
     const endMonth = parseInt(periodMatch[4]) - 1;
     const endDay = parseInt(periodMatch[5]);
 
-    // KST 정오 → UTC 변환 (타임존 밀림 방지)
-    startDate = new Date(Date.UTC(year, startMonth, startDay, 3, 0, 0));
-    endDate = new Date(Date.UTC(year, endMonth, endDay, 3, 0, 0));
+    // UTC 자정으로 저장. 표시 시 UTC 기준 날짜 추출 → 타임존 무관
+    startDate = new Date(Date.UTC(year, startMonth, startDay, 0, 0, 0));
+    endDate = new Date(Date.UTC(year, endMonth, endDay, 0, 0, 0));
   }
 
   return { title, startDate, endDate };
@@ -201,8 +201,8 @@ function parseDayFile(filename: string, tripStartDate: Date | null) {
   // 연도는 tripStartDate에서 가져옴
   const year = tripStartDate ? tripStartDate.getFullYear() : new Date().getFullYear();
 
-  // KST 정오(12:00)를 UTC로 → 타임존 밀림 방지
-  const dateUtc = new Date(Date.UTC(year, month, day, 3, 0, 0)); // KST 12:00 = UTC 03:00
+  // UTC 자정으로 저장. 표시 시 UTC 기준 날짜 추출 → 타임존 무관
+  const dateUtc = new Date(Date.UTC(year, month, day, 0, 0, 0));
 
   return {
     date: dateUtc,

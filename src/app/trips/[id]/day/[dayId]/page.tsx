@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { formatCalendarDateLong } from "@/lib/date-utils";
 import { remark } from "remark";
 import remarkGfm from "remark-gfm";
 import html from "remark-html";
@@ -64,12 +65,7 @@ export default async function DayDetailPage({
           {day.title && ` — ${day.title}`}
         </h1>
         <p className="mt-1 text-body-md text-surface-500">
-          {day.date.toLocaleDateString("ko-KR", {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-            weekday: "long",
-          })}
+          {formatCalendarDateLong(day.date)}
         </p>
       </div>
 
