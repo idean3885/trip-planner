@@ -1,12 +1,16 @@
 <!--
 Sync Impact Report
-- Version change: 1.0.0 → 1.0.1
+- Version change: 1.0.1 → 1.1.0
 - Modified principles:
-  - I. AX-First: "Claude Desktop/Code" → "AI 에이전트" (기술 중립화)
-  - II. Minimum Cost: "Claude 구독 + Booking.com API ($8.99/월)" → "기존 구독 및 API 비용" (기술 중립화)
-  - III. Mobile-First Delivery: "GitHub 렌더링 기준" → "웹 렌더링 기준" (기술 중립화)
+  - II. Minimum Cost: "GitHub, GitHub Pages" → "Vercel Hobby, Neon 무료 티어, GitHub" (인프라 전환 반영)
+  - IV. Incremental Release: v1 완료 상태 반영, v2 진행 중 명시
+- Modified constraints:
+  - 기술 스택: v1/v2 분리, Next.js/Vercel/Neon/Prisma/Auth.js 추가
+  - 데이터 관리: 마크다운 → DB 전환 반영
+  - v1 제약 → v1→v2 전환 상태로 갱신
 - Added sections: none
 - Removed sections: none
+- Renamed: "Travel Planner" → "Trip Planner"
 - Templates requiring updates:
   - .specify/templates/plan-template.md ✅ (no changes needed)
   - .specify/templates/spec-template.md ✅ (no changes needed)
@@ -14,7 +18,7 @@ Sync Impact Report
 - Follow-up TODOs: none
 -->
 
-# Travel Planner Constitution
+# Trip Planner Constitution
 
 ## Core Principles
 
@@ -31,7 +35,7 @@ Sync Impact Report
 추가 비용을 최소화한다. 기존 구독 및 API 비용 외의 추가 비용은 발생하지 않아야 한다.
 
 - 별도 AI API 과금이 필요한 기능은 도입하지 않는다.
-- 무료 인프라(GitHub, GitHub Pages 등)를 우선 활용한다.
+- 무료 인프라(Vercel Hobby, Neon 무료 티어, GitHub 등)를 우선 활용한다.
 - 유료 서비스 도입 시 반드시 비용 대비 효과를 명시하고 승인을 받는다.
 
 ### III. Mobile-First Delivery
@@ -47,16 +51,17 @@ Sync Impact Report
 점진적으로 릴리즈한다. v1은 최소 기능(플래닝 + 마크다운 딜리버리)으로 빠르게 완성하고, v2에서 웹앱을 도입한다.
 
 - 각 릴리즈는 독립적으로 사용 가능한 완성된 산출물을 제공한다.
-- v1 완료 전에 v2 기능을 구현하지 않는다.
+- v1(MCP 플래닝 + 마크다운 딜리버리) 완료. v2(풀스택 웹앱) 진행 중.
 - 기능 추가 시 기존 기능이 깨지지 않아야 한다.
 
 ## Constraints
 
 - **타겟 사용자**: 개발자 1명(개발/운영) + 비개발자 동행자 2~5명(열람/사용)
-- **기술 스택**: Python, Booking.com RapidAPI (booking-com15), Claude Desktop/Code, MCP
-- **데이터 관리**: 마크다운 파일 기반 (레포 `trips/` 디렉토리), 기존 구조 유지
+- **기술 스택 (v1)**: Python, Booking.com RapidAPI (booking-com15), Claude Desktop/Code, MCP
+- **기술 스택 (v2)**: Next.js (SSR), Vercel, Neon Postgres, Prisma, Auth.js — v1 도구와 공존
+- **데이터 관리**: 데이터베이스 기반 (Neon Postgres). 기존 마크다운(`trips/`)은 레거시로 보존
 - **레포 공개**: public 전환 예정 — 시크릿 정리 후 전환, 포트폴리오 활용
-- **v1 제약**: 플래닝 시 개발자가 병목 (Claude 실행 + push 담당), v2 웹앱 도입 시 해소
+- **v1→v2 전환**: v1의 개발자 병목(Claude 실행 + push 담당)을 v2 웹앱으로 해소 중
 
 ## Development Workflow
 
@@ -74,4 +79,4 @@ Sync Impact Report
 - **버전 정책**: MAJOR.MINOR.PATCH (원칙 삭제/재정의 = MAJOR, 원칙 추가/확장 = MINOR, 문구 수정 = PATCH)
 - **준수 확인**: 각 specify/plan/tasks 단계에서 헌법 원칙 위반 여부를 검증한다
 
-**Version**: 1.0.1 | **Ratified**: 2026-03-22 | **Last Amended**: 2026-04-07
+**Version**: 1.1.0 | **Ratified**: 2026-03-22 | **Last Amended**: 2026-04-14
