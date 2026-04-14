@@ -23,7 +23,6 @@ model User {
   createdTrips   Trip[]         @relation("TripCreator")
   updatedTrips   Trip[]         @relation("TripUpdater")
   tripMembers    TripMember[]
-  invitations    Invitation[]
 
   @@map("users")
 }
@@ -87,7 +86,6 @@ model Trip {
   updater     User         @relation("TripUpdater", fields: [updatedBy], references: [id])
   days        Day[]
   tripMembers TripMember[]
-  invitations Invitation[]
 
   @@map("trips")
 }
@@ -126,27 +124,4 @@ model TripMember {
   @@map("trip_members")
 }
 
-enum InvitationStatus {
-  PENDING
-  ACCEPTED
-  DECLINED
-  EXPIRED
-}
-
-model Invitation {
-  id          Int              @id @default(autoincrement())
-  tripId      Int              @map("trip_id")
-  invitedById String           @map("invited_by_id")
-  email       String
-  token       String           @unique @default(cuid())
-  role        TripRole         @default(GUEST)
-  status      InvitationStatus @default(PENDING)
-  expiresAt   DateTime         @map("expires_at") @db.Timestamptz(3)
-  createdAt   DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
-
-  trip      Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
-  invitedBy User @relation(fields: [invitedById], references: [id])
-
-  @@index([email, status])
-  @@map("invitations")
-}
+// Invitation 테이블 삭제 — JWT 토큰 기반 초대로 대체 (D-007)

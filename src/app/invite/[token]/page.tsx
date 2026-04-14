@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { verifyInviteToken } from "@/lib/invite-token";
 
 export default async function InvitePage({
   params,
@@ -15,46 +16,37 @@ export default async function InvitePage({
     redirect(`/auth/signin?callbackUrl=/invite/${token}`);
   }
 
-  // 초대 조회
-  const invitation = await prisma.invitation.findUnique({
-    where: { token },
-    include: { trip: { select: { id: true, title: true } } },
-  });
+  // JWT 검증 (만료/변조 체크)
+  const payload = await verifyInviteToken(token);
 
-  if (!invitation) {
+  if (!payload) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <div className="text-center space-y-2">
-          <h1 className="text-heading-lg font-bold text-surface-900">초대를 찾을 수 없습니다</h1>
-          <p className="text-body-md text-surface-500">링크가 잘못되었거나 만료되었습니다.</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (invitation.status !== "PENDING") {
-    return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <div className="text-center space-y-2">
-          <h1 className="text-heading-lg font-bold text-surface-900">이미 처리된 초대입니다</h1>
+          <h1 className="text-heading-lg font-bold text-surface-900">
+            초대가 만료되었거나 유효하지 않습니다
+          </h1>
           <p className="text-body-md text-surface-500">
-            {invitation.status === "ACCEPTED" ? "이미 수락된 초대입니다." : "만료된 초대입니다."}
+            호스트에게 새 초대 링크를 요청하세요.
           </p>
         </div>
       </div>
     );
   }
 
-  if (new Date() > invitation.expiresAt) {
-    await prisma.invitation.update({
-      where: { id: invitation.id },
-      data: { status: "EXPIRED" },
-    });
+  // 여행 존재 확인
+  const trip = await prisma.trip.findUnique({
+    where: { id: payload.tripId },
+    select: { id: true, title: true },
+  });
+
+  if (!trip) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <div className="text-center space-y-2">
-          <h1 className="text-heading-lg font-bold text-surface-900">초대가 만료되었습니다</h1>
-          <p className="text-body-md text-surface-500">호스트에게 새 초대를 요청하세요.</p>
+          <h1 className="text-heading-lg font-bold text-surface-900">
+            여행을 찾을 수 없습니다
+          </h1>
         </div>
       </div>
     );
@@ -62,27 +54,21 @@ export default async function InvitePage({
 
   // 이미 멤버인지 확인
   const existing = await prisma.tripMember.findUnique({
-    where: { tripId_userId: { tripId: invitation.tripId, userId: session.user.id } },
+    where: { tripId_userId: { tripId: trip.id, userId: session.user.id } },
   });
 
   if (existing) {
-    redirect(`/trips/${invitation.tripId}`);
+    redirect(`/trips/${trip.id}`);
   }
 
-  // 초대 수락: TripMember 생성 + Invitation 상태 변경
-  await prisma.$transaction([
-    prisma.tripMember.create({
-      data: {
-        tripId: invitation.tripId,
-        userId: session.user.id,
-        role: invitation.role,
-      },
-    }),
-    prisma.invitation.update({
-      where: { id: invitation.id },
-      data: { status: "ACCEPTED" },
-    }),
-  ]);
+  // TripMember 생성
+  await prisma.tripMember.create({
+    data: {
+      tripId: trip.id,
+      userId: session.user.id,
+      role: payload.role,
+    },
+  });
 
-  redirect(`/trips/${invitation.tripId}`);
+  redirect(`/trips/${trip.id}`);
 }

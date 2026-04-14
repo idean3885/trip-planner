@@ -57,10 +57,8 @@ erDiagram
 ```mermaid
 erDiagram
     User ||--o{ TripMember : "참여 (userId)"
-    User ||--o{ Invitation : "초대 발송 (invitedById)"
     Trip ||--o{ Day : "contains"
     Trip ||--o{ TripMember : "has"
-    Trip ||--o{ Invitation : "has"
 
     User {
         string id PK "Auth.js 영역에서 관리"
@@ -91,22 +89,12 @@ erDiagram
         int id PK "autoincrement"
         int tripId FK "-> Trip.id"
         string userId FK "-> User.id"
-        TripRole role "HOST | GUEST"
+        TripRole role "OWNER | HOST | GUEST"
         timestamptz_3 joinedAt
     }
-
-    Invitation {
-        int id PK "autoincrement"
-        int tripId FK "-> Trip.id"
-        string invitedById FK "-> User.id"
-        string email
-        string token "unique, cuid"
-        TripRole role "HOST | GUEST"
-        InvitationStatus status "PENDING | ACCEPTED | DECLINED | EXPIRED"
-        timestamptz_3 expiresAt
-        timestamptz_3 createdAt
-    }
 ```
+
+> **초대**: Invitation 테이블 없이 JWT 토큰 기반 링크로 처리. 토큰에 tripId, role, 만료 시각을 포함하며, 서명으로 변조를 방지한다 (D-007).
 
 ## 설계 결정
 
@@ -129,14 +117,16 @@ erDiagram
 
 **Auth.js 제약**: PrismaAdapter가 User/Account/Session의 PK를 `String @default(cuid())`로 강제한다. 이를 변경하려면 어댑터를 포크해야 하므로 수용한다.
 
-**비즈니스 모델**: Trip, Day, TripMember, Invitation은 `Int @default(autoincrement())`를 사용한다. 분산 생성이 불필요한 소규모 프로젝트에서 시퀀스가 인덱스 효율, 가독성, URL 길이 모두에서 유리하다.
+**비즈니스 모델**: Trip, Day, TripMember은 `Int @default(autoincrement())`를 사용한다. 분산 생성이 불필요한 소규모 프로젝트에서 시퀀스가 인덱스 효율, 가독성, URL 길이 모두에서 유리하다.
 
 **FK 타입 혼용**: 비즈니스 모델에서 User를 참조하는 FK(createdBy, updatedBy, userId, invitedById)만 String이고, 나머지 FK(tripId 등)는 Int이다. Auth.js 영역과 비즈니스 영역이 명확히 분리되므로 혼란은 없다.
 
 | 영역 | 모델 | PK | 이유 |
 |------|------|----|------|
 | Auth.js | User, Account, Session, VerificationToken | String (cuid) | 어댑터 강제 |
-| 비즈니스 | Trip, Day, TripMember, Invitation | Int (autoincrement) | 시퀀스 효율 |
+| 비즈니스 | Trip, Day, TripMember | Int (autoincrement) | 시퀀스 효율 |
+
+> Invitation 테이블은 삭제됨. JWT 토큰 기반 초대로 대체 (D-007).
 
 ### D-002: 다중 OAuth 프로바이더와 계정 병합
 
@@ -278,22 +268,35 @@ createdAt DateTime @db.Timestamptz(3)
 - 애플리케이션 표시: KST로 변환 (`Asia/Seoul`)
 - 개인 개발자 + 한국 사용자 대상이므로 다중 TZ 고려 불필요
 
-**Auth.js 테이블 제외**: User, Account, Session, VerificationToken은 Auth.js PrismaAdapter가 스키마를 관리하므로 `@db.Timestamptz()` 미적용. 비즈니스 모델(Trip, Day, TripMember, Invitation)에만 적용한다.
+**Auth.js 테이블 제외**: User, Account, Session, VerificationToken은 Auth.js PrismaAdapter가 스키마를 관리하므로 `@db.Timestamptz()` 미적용. 비즈니스 모델(Trip, Day, TripMember)에만 적용한다.
 
-### D-006: 권한 모델 — HOST/GUEST 2권한 + 오너 없음
+### D-006: 권한 모델 — OWNER/HOST/GUEST 3단계
 
-**결정**: TripMember.role은 HOST / GUEST 2단계. 오너 개념 없음. 다중 호스트 허용.
+**결정**: TripMember.role은 OWNER / HOST / GUEST 3단계.
 
 **스펙**:
-1. 여행 생성자는 HOST로 TripMember에 등록
-2. 초대 시 HOST 또는 GUEST로 초대 가능
-3. 호스트는 게스트를 호스트로 승격 가능
-4. Trip 테이블에 ownerId 없음 — createdBy/updatedBy는 감사(audit) 필드일 뿐 권한과 무관
-5. 다중 호스트이므로 오너 양도 개념 없음
+1. 여행 생성자는 OWNER로 TripMember에 등록 (여행당 1명)
+2. 초대 시 HOST 또는 GUEST로 초대 가능 (OWNER는 양도로만 부여)
+3. 호스트는 게스트를 호스트로 승격 가능. 주인만 호스트를 게스트로 강등 가능
+4. 주인은 다른 호스트에게 양도 가능. 양도 시 기존 주인은 호스트로 변경
+5. 화면에서 OWNER와 HOST는 모두 "호스트"로 표시. 주인 전용 기능(삭제/강등/양도)만 추가 노출
+6. 홈 목록에서 OWNER는 "내 여행", HOST는 "호스트", GUEST는 "게스트"로 표시
 
-**트레이드오프**: 다른 호스트가 여행을 삭제할 수 있다. 개인 프로젝트 특성상 방어하지 않는다.
+### D-007: 초대 방식 — JWT 토큰 기반 (Invitation 테이블 없음)
 
-**확장 포인트**: 추후 오너/잠금이 필요하면 `TripMember`에 `isOwner Boolean @default(false)` 컬럼 추가 + `Trip.createdBy` 기반 백필. 별도 마이그레이션 없이 확장 가능.
+**결정**: 초대 링크를 JWT 토큰으로 생성한다. Invitation 테이블을 두지 않는다.
+
+**배경**: 이메일 입력 없이 링크만으로 합류하는 간소화된 플로우. 모바일에서 이메일을 입력받는 것은 불편하다.
+
+**구조**:
+- JWT payload: `{ tripId, role, exp }` (tripId, 역할, 만료)
+- 서명: AUTH_SECRET (Auth.js와 공유)
+- 만료: 7일 (JWT exp 클레임)
+- 변조 불가: SECRET 없이 유효한 토큰 생성 불가
+- 재사용: 만료 전까지 같은 링크로 여러 명 합류 가능 (이미 멤버이면 바로 이동)
+- 무효화: 불가 (만료까지 유효). 개인 프로젝트 초기에 허용
+
+**트레이드오프**: 링크 무효화 불가, 초대 이력 미보존. 필요 시 Invitation 테이블 재도입 가능.
 
 ## Entities
 
@@ -310,7 +313,7 @@ createdAt DateTime @db.Timestamptz(3)
 | image | string | nullable | 프로필 이미지 URL |
 | createdAt | datetime | default now | |
 
-**Relationships**: has TripMember (1:N), created Invitation (1:N)
+**Relationships**: has TripMember (1:N)
 
 ### Trip
 
@@ -328,7 +331,7 @@ createdAt DateTime @db.Timestamptz(3)
 | createdAt | timestamptz(3) | default now | |
 | updatedAt | timestamptz(3) | auto-updated | |
 
-**Relationships**: has Day (1:N), has TripMember (1:N), has Invitation (1:N)
+**Relationships**: has Day (1:N), has TripMember (1:N)
 
 ### Day
 
@@ -359,24 +362,6 @@ createdAt DateTime @db.Timestamptz(3)
 
 **Unique constraint**: (tripId, userId)
 
-### Invitation
-
-팀 초대. 토큰 기반, 7일 만료.
-
-| Field | Type | Constraints | Notes |
-|-------|------|-------------|-------|
-| id | int | PK, autoincrement | |
-| tripId | int | FK -> Trip.id, cascade delete | |
-| invitedById | string | FK -> User.id | 초대자 (HOST만 가능) |
-| email | string | required | 초대 대상 이메일 |
-| token | string | unique, cuid | 불투명 토큰 |
-| role | enum | HOST / GUEST, default GUEST | 합류 시 부여할 역할 |
-| status | enum | PENDING / ACCEPTED / DECLINED / EXPIRED | |
-| expiresAt | timestamptz(3) | required | 생성 시점 + 7일 |
-| createdAt | timestamptz(3) | default now | |
-
-**Index**: (token), (email, status)
-
 ### Auth.js 표준 모델
 
 Auth.js PrismaAdapter가 요구하는 모델. 직접 조작하지 않음.
@@ -387,26 +372,20 @@ Auth.js PrismaAdapter가 요구하는 모델. 직접 조작하지 않음.
 
 ## 권한 모델
 
-| 권한 | HOST | GUEST |
-|------|------|-------|
-| 여행 조회 | O | O |
-| 일정 조회 | O | O |
-| 일정 편집 | O | O |
-| 일정 추가/삭제 | O | O |
-| 개요 편집 | O | O |
-| 동행자 초대 | O | X |
-| 게스트→호스트 승격 | O | X |
-| 여행 삭제 | O | X |
-
-## 상태 전이
-
-### Invitation
-
-```
-PENDING -> ACCEPTED (사용자가 초대 수락)
-PENDING -> EXPIRED (7일 경과 또는 새 초대로 대체)
-PENDING -> DECLINED (사용자가 초대 거절, 현재 UI 미구현)
-```
+| 권한 | OWNER (주인) | HOST (호스트) | GUEST (게스트) |
+|------|-------------|--------------|---------------|
+| 여행 조회 | O | O | O |
+| 일정 조회 | O | O | O |
+| 일정 편집 | O | O | X |
+| 일정 추가/삭제 | O | O | X |
+| 개요 편집 | O | O | X |
+| 동행자 초대 | O | O | X |
+| 게스트→호스트 승격 | O | O | X |
+| 호스트→게스트 강등 | O | X | X |
+| 멤버 제거 (게스트) | O | O | X |
+| 멤버 제거 (호스트) | O | X | X |
+| 주인 양도 | O | X | X |
+| 여행 삭제 | O | X | X |
 
 ## 마이그레이션 매핑
 
