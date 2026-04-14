@@ -46,13 +46,15 @@ export async function POST(request: Request, { params }: Params) {
     return NextResponse.json({ error: "이메일은 필수입니다" }, { status: 400 });
   }
 
+  const normalizedEmail = email.trim().toLowerCase();
+
   if (role && !["HOST", "GUEST"].includes(role)) {
     return NextResponse.json({ error: "역할은 HOST 또는 GUEST만 가능합니다" }, { status: 400 });
   }
 
   // 기존 대기 중 초대 만료 처리
   await prisma.invitation.updateMany({
-    where: { tripId, email, status: "PENDING" },
+    where: { tripId, email: normalizedEmail, status: "PENDING" },
     data: { status: "EXPIRED" },
   });
 
@@ -63,7 +65,7 @@ export async function POST(request: Request, { params }: Params) {
     data: {
       tripId,
       invitedById: session.user.id,
-      email,
+      email: normalizedEmail,
       token,
       role: role || "GUEST",
       expiresAt,
