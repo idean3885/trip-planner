@@ -74,6 +74,7 @@ export default async function DayDetailPage({
         dayId={day.id}
         initialContent={day.content ?? ""}
         initialHtml={contentHtml}
+        canEdit={member.role !== "GUEST"}
       />
     </div>
   );

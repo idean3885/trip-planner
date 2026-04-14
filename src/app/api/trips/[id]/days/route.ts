@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getSession, getTripMember } from "@/lib/auth-helpers";
+import { getSession, getTripMember, canEdit } from "@/lib/auth-helpers";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -35,9 +35,8 @@ export async function POST(request: Request, { params }: Params) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const member = await getTripMember(tripId, session.user.id);
-  if (!member) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!(await canEdit(tripId, session.user.id))) {
+    return NextResponse.json({ error: "편집 권한이 없습니다" }, { status: 403 });
   }
 
   const body = await request.json();

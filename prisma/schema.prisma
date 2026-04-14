@@ -107,6 +107,7 @@ model Day {
 }
 
 enum TripRole {
+  OWNER
   HOST
   GUEST
 }

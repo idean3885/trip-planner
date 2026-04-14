@@ -7,6 +7,7 @@ interface DayEditorProps {
   dayId: number;
   initialContent: string;
   initialHtml: string;
+  canEdit: boolean;
 }
 
 export default function DayEditor({
@@ -14,6 +15,7 @@ export default function DayEditor({
   dayId,
   initialContent,
   initialHtml,
+  canEdit: canEditProp,
 }: DayEditorProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [content, setContent] = useState(initialContent);
@@ -77,14 +79,16 @@ export default function DayEditor({
 
   return (
     <div className="space-y-3">
-      <div className="flex justify-end">
-        <button
-          onClick={() => setIsEditing(true)}
-          className="rounded-md px-3 py-1.5 text-body-sm text-surface-500 hover:bg-surface-100 hover:text-surface-700"
-        >
-          편집
-        </button>
-      </div>
+      {canEditProp && (
+        <div className="flex justify-end">
+          <button
+            onClick={() => setIsEditing(true)}
+            className="rounded-md px-3 py-1.5 text-body-sm text-surface-500 hover:bg-surface-100 hover:text-surface-700"
+          >
+            편집
+          </button>
+        </div>
+      )}
       <div
         className="prose prose-sm max-w-none"
         dangerouslySetInnerHTML={{ __html: html }}
