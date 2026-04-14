@@ -83,6 +83,8 @@ trip-planner/
 - macOS Keychain (GitHub PAT 저장) (003-companion-feedback-channel)
 - TypeScript 5.x, Node.js 20+ + Next.js 15 (App Router), Auth.js v5 (next-auth@5.x), Prisma 7.x (@prisma/adapter-pg TCP), @auth/prisma-adapter (004-fullstack-transition)
 - Neon Postgres (Vercel Marketplace 통합, 무료 티어 0.5GB) (004-fullstack-transition)
+- TypeScript 5.x (Next.js 웹앱) + Python 3.10+ (MCP 서버) (005-ax-api-mcp)
+- Neon Postgres (Vercel Marketplace, Prisma ORM) (005-ax-api-mcp)
 
 ## Recent Changes
 - 001-ax-travel-planning: Added Python 3.14 + FastMCP, httpx, python-dotenv, pytes
