@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { formatCalendarDateFull, formatCalendarDate } from "@/lib/date-utils";
+import InviteButton from "@/components/InviteButton";
 import { remark } from "remark";
 import remarkGfm from "remark-gfm";
 import html from "remark-html";
@@ -62,6 +63,11 @@ export default async function TripDetailPage({
             {formatCalendarDateFull(trip.startDate)} ~{" "}
             {formatCalendarDateFull(trip.endDate)}
           </p>
+        )}
+        {member.role !== "GUEST" && (
+          <div className="mt-3">
+            <InviteButton tripId={tripId} />
+          </div>
         )}
       </div>
 
