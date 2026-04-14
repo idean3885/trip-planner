@@ -28,11 +28,12 @@ function toKoreanTitle(slug: string): string {
     .join(" · ");
 }
 
+const connectionString = process.env.DATABASE_URL!.replace(
+  "sslmode=require",
+  "sslmode=verify-full",
+);
 const prisma = new PrismaClient({
-  adapter: new PrismaPg({
-    connectionString: process.env.DATABASE_URL!,
-    ssl: { rejectUnauthorized: true },
-  }),
+  adapter: new PrismaPg({ connectionString }),
 });
 
 const TRIPS_DIR = path.join(process.cwd(), "trips");
