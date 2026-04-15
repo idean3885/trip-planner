@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getSession, getTripMember, canEdit, isOwner } from "@/lib/auth-helpers";
+import { getAuthUserId, getTripMember, canEdit, isOwner } from "@/lib/auth-helpers";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -8,13 +8,13 @@ type Params = { params: Promise<{ id: string }> };
 export async function GET(request: Request, { params }: Params) {
   const { id } = await params;
   const tripId = parseInt(id);
-  const session = await getSession();
-  if (!session?.user?.id) {
+  const userId = await getAuthUserId();
+  if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const [member, trip] = await Promise.all([
-    getTripMember(tripId, session.user.id),
+    getTripMember(tripId, userId),
     prisma.trip.findUnique({
       where: { id: tripId },
       include: {
@@ -40,12 +40,12 @@ export async function GET(request: Request, { params }: Params) {
 export async function PUT(request: Request, { params }: Params) {
   const { id } = await params;
   const tripId = parseInt(id);
-  const session = await getSession();
-  if (!session?.user?.id) {
+  const userId = await getAuthUserId();
+  if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  if (!(await canEdit(tripId, session.user.id))) {
+  if (!(await canEdit(tripId, userId))) {
     return NextResponse.json({ error: "편집 권한이 없습니다" }, { status: 403 });
   }
 
@@ -59,7 +59,7 @@ export async function PUT(request: Request, { params }: Params) {
       ...(description !== undefined && { description }),
       ...(startDate !== undefined && { startDate: startDate ? new Date(startDate) : null }),
       ...(endDate !== undefined && { endDate: endDate ? new Date(endDate) : null }),
-      updatedBy: session.user.id,
+      updatedBy: userId,
     },
   });
 
@@ -70,12 +70,12 @@ export async function PUT(request: Request, { params }: Params) {
 export async function DELETE(request: Request, { params }: Params) {
   const { id } = await params;
   const tripId = parseInt(id);
-  const session = await getSession();
-  if (!session?.user?.id) {
+  const userId = await getAuthUserId();
+  if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  if (!(await isOwner(tripId, session.user.id))) {
+  if (!(await isOwner(tripId, userId))) {
     return NextResponse.json({ error: "주인만 삭제할 수 있습니다" }, { status: 403 });
   }
 
