@@ -182,6 +182,38 @@ describe("ActivityForm", () => {
     expect(screen.getByDisplayValue("12:00")).toBeInTheDocument();
   });
 
+  it("auto-sets time with minutes < 30 (rounds to :30)", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 5, 7, 14, 15)); // 14:15 → start 14:30, end 15:30
+    render(<ActivityForm onSubmit={onSubmit} onCancel={onCancel} />);
+    vi.useRealTimers();
+
+    await waitFor(() => {
+      expect(screen.getByDisplayValue("14:30")).toBeInTheDocument();
+      expect(screen.getByDisplayValue("15:30")).toBeInTheDocument();
+    });
+  });
+
+  it("auto-sets time with minutes >= 30 (rounds to next hour)", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 5, 7, 14, 45)); // 14:45 → start 15:00, end 16:00
+    render(<ActivityForm onSubmit={onSubmit} onCancel={onCancel} />);
+    vi.useRealTimers();
+
+    await waitFor(() => {
+      expect(screen.getByDisplayValue("15:00")).toBeInTheDocument();
+      expect(screen.getByDisplayValue("16:00")).toBeInTheDocument();
+    });
+  });
+
+  it("skips auto-set when initial startTime provided", async () => {
+    render(
+      <ActivityForm onSubmit={onSubmit} onCancel={onCancel} initial={{ startTime: "08:00", endTime: "09:00" }} />
+    );
+    expect(screen.getByDisplayValue("08:00")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("09:00")).toBeInTheDocument();
+  });
+
   it("shows saving state during submit", async () => {
     let resolveSubmit: () => void;
     const slowSubmit = vi.fn(() => new Promise<void>((r) => { resolveSubmit = r; }));

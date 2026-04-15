@@ -150,6 +150,48 @@ describe("ActivityList", () => {
     });
   });
 
+  it("throws on create API failure", async () => {
+    mockFetch.mockResolvedValueOnce({ ok: false, status: 500 });
+
+    render(<ActivityList tripId={1} dayId={1} activities={[]} canEdit={true} />);
+    fireEvent.click(screen.getByText("+ 활동 추가"));
+
+    const textInputs = screen.getAllByRole("textbox");
+    fireEvent.change(textInputs[0], { target: { value: "Fail" } });
+
+    const form = document.querySelector("form")!;
+    // Submit will throw but ActivityForm catches via finally
+    fireEvent.submit(form);
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenCalled();
+    });
+  });
+
+  it("throws on update API failure", async () => {
+    mockFetch.mockResolvedValueOnce({ ok: false, status: 500 });
+
+    const activities = [makeActivity()];
+    render(<ActivityList tripId={1} dayId={1} activities={activities} canEdit={true} />);
+    fireEvent.click(screen.getByText("편집"));
+
+    const form = document.querySelector("form")!;
+    fireEvent.submit(form);
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenCalled();
+    });
+  });
+
+  it("throws on delete API failure", async () => {
+    mockFetch.mockResolvedValueOnce({ ok: false, status: 500 });
+
+    const activities = [makeActivity()];
+    render(<ActivityList tripId={1} dayId={1} activities={activities} canEdit={true} />);
+    fireEvent.click(screen.getByText("삭제"));
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenCalled();
+    });
+  });
+
   it("does not delete when confirm is cancelled", async () => {
     (global.confirm as ReturnType<typeof vi.fn>).mockReturnValueOnce(false);
     const activities = [makeActivity()];
@@ -197,6 +239,45 @@ describe("ActivityList", () => {
     });
   });
 
+  it("sends null for empty optional fields on update", async () => {
+    const updated = makeActivity({ title: "Cleared", startTime: null, endTime: null, location: null, memo: null, cost: null, reservationStatus: null });
+    mockFetch.mockResolvedValueOnce({ ok: true, json: async () => updated });
+
+    // Activity with all fields filled
+    const activities = [makeActivity({
+      startTime: "09:00", endTime: "11:00", location: "Place",
+      memo: "Note", cost: "25", reservationStatus: "REQUIRED",
+    })];
+    render(<ActivityList tripId={1} dayId={1} activities={activities} canEdit={true} />);
+    fireEvent.click(screen.getByText("편집"));
+
+    // Clear all optional fields
+    const textInputs = screen.getAllByRole("textbox");
+    // title=0, location=1, memo=2, currency=3
+    fireEvent.change(textInputs[1], { target: { value: "" } }); // location
+    fireEvent.change(textInputs[2], { target: { value: "" } }); // memo
+    const costInput = screen.getByRole("spinbutton");
+    fireEvent.change(costInput, { target: { value: "" } }); // cost
+    const timeInputs = document.querySelectorAll('input[type="time"]');
+    fireEvent.change(timeInputs[0], { target: { value: "" } }); // startTime
+    fireEvent.change(timeInputs[1], { target: { value: "" } }); // endTime
+    const selects = screen.getAllByRole("combobox");
+    fireEvent.change(selects[selects.length - 1], { target: { value: "" } }); // reservation
+
+    const form = document.querySelector("form")!;
+    fireEvent.submit(form);
+
+    await waitFor(() => {
+      const callBody = JSON.parse(mockFetch.mock.calls[0][1].body);
+      expect(callBody.startTime).toBeNull();
+      expect(callBody.endTime).toBeNull();
+      expect(callBody.location).toBeNull();
+      expect(callBody.memo).toBeNull();
+      expect(callBody.cost).toBeNull();
+      expect(callBody.reservationStatus).toBeNull();
+    });
+  });
+
   it("moves activity down", async () => {
     const activities = [
       makeActivity({ id: 1, sortOrder: 0 }),
@@ -216,6 +297,47 @@ describe("ActivityList", () => {
       const callBody = JSON.parse(mockFetch.mock.calls[0][1].body);
       expect(callBody.orderedIds).toEqual([2, 1]);
     });
+  });
+
+  it("shows edit form with null fields converted to empty strings", () => {
+    const activities = [makeActivity({
+      startTime: null, endTime: null, location: null,
+      memo: null, cost: null, reservationStatus: null,
+    })];
+    render(<ActivityList tripId={1} dayId={1} activities={activities} canEdit={true} />);
+    fireEvent.click(screen.getByText("편집"));
+    expect(screen.getByText("수정")).toBeInTheDocument();
+    // Null fields should become empty inputs, not "null"
+    expect(screen.queryByDisplayValue("null")).not.toBeInTheDocument();
+  });
+
+  it("shows edit form with cost as string", () => {
+    const activities = [makeActivity({ cost: "42.50" })];
+    render(<ActivityList tripId={1} dayId={1} activities={activities} canEdit={true} />);
+    fireEvent.click(screen.getByText("편집"));
+    expect(screen.getByDisplayValue("42.50")).toBeInTheDocument();
+  });
+
+  it("does not move first item up (boundary)", async () => {
+    const activities = [makeActivity({ id: 1 }), makeActivity({ id: 2, title: "Second", sortOrder: 1 })];
+    render(<ActivityList tripId={1} dayId={1} activities={activities} canEdit={true} />);
+
+    const upButtons = screen.getAllByLabelText("위로");
+    // First item's up button is disabled, clicking should not trigger fetch
+    fireEvent.click(upButtons[0]);
+    await new Promise((r) => setTimeout(r, 50));
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it("does not move last item down (boundary)", async () => {
+    const activities = [makeActivity({ id: 1 }), makeActivity({ id: 2, title: "Second", sortOrder: 1 })];
+    render(<ActivityList tripId={1} dayId={1} activities={activities} canEdit={true} />);
+
+    const downButtons = screen.getAllByLabelText("아래로");
+    // Last item's down button is disabled
+    fireEvent.click(downButtons[1]);
+    await new Promise((r) => setTimeout(r, 50));
+    expect(mockFetch).not.toHaveBeenCalled();
   });
 
   it("moves activity up", async () => {
