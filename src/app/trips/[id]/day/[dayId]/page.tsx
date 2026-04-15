@@ -8,8 +8,7 @@ import remarkGfm from "remark-gfm";
 import html from "remark-html";
 import fs from "fs";
 import path from "path";
-import DayEditor from "@/components/DayEditor";
-import ActivityCard from "@/components/ActivityCard";
+import ActivityList from "@/components/ActivityList";
 import {
   getAllTripSlugs,
   getAllDays,
@@ -109,35 +108,21 @@ async function DbDayPage({ tripId, dayIdNum }: { tripId: number; dayIdNum: numbe
         </p>
       </div>
 
-      {day.activities.length > 0 && (
-        <div className="space-y-2">
-          <h2 className="text-heading-sm font-semibold text-surface-700">
-            활동 ({day.activities.length})
-          </h2>
-          {day.activities.map((activity) => (
-            <ActivityCard key={activity.id} activity={activity} />
-          ))}
-        </div>
-      )}
+      <ActivityList
+        tripId={tripId}
+        dayId={day.id}
+        activities={day.activities}
+        canEdit={member.role !== "GUEST"}
+      />
 
       {day.content && (
-        <DayEditor
-          tripId={tripId}
-          dayId={day.id}
-          initialContent={day.content}
-          initialHtml={contentHtml}
-          canEdit={member.role !== "GUEST"}
-        />
-      )}
-
-      {!day.activities.length && !day.content && (
-        <DayEditor
-          tripId={tripId}
-          dayId={day.id}
-          initialContent=""
-          initialHtml=""
-          canEdit={member.role !== "GUEST"}
-        />
+        <div className="space-y-2">
+          <h2 className="text-heading-sm font-semibold text-surface-700">메모</h2>
+          <div
+            className="prose prose-sm max-w-none rounded-card border border-surface-200 p-4"
+            dangerouslySetInnerHTML={{ __html: contentHtml }}
+          />
+        </div>
       )}
     </div>
   );

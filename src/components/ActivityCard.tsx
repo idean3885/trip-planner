@@ -1,5 +1,30 @@
 import type { ActivityCategory, ReservationStatus, Prisma } from "@prisma/client";
 
+const URL_RE = /(https?:\/\/[^\s]+)/g;
+
+function Linkify({ text }: { text: string }) {
+  const parts = text.split(URL_RE);
+  return (
+    <>
+      {parts.map((part, i) =>
+        URL_RE.test(part) ? (
+          <a
+            key={i}
+            href={part}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary-600 underline hover:text-primary-800"
+          >
+            {part}
+          </a>
+        ) : (
+          part
+        )
+      )}
+    </>
+  );
+}
+
 const CATEGORY_LABEL: Record<ActivityCategory, string> = {
   SIGHTSEEING: "관광",
   DINING: "식사",
@@ -38,9 +63,25 @@ interface ActivityCardProps {
     currency: string;
     reservationStatus: ReservationStatus | null;
   };
+  canEdit?: boolean;
+  isFirst?: boolean;
+  isLast?: boolean;
+  onEdit?: () => void;
+  onDelete?: () => void;
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
 }
 
-export default function ActivityCard({ activity }: ActivityCardProps) {
+export default function ActivityCard({
+  activity,
+  canEdit = false,
+  isFirst = false,
+  isLast = false,
+  onEdit,
+  onDelete,
+  onMoveUp,
+  onMoveDown,
+}: ActivityCardProps) {
   const timeRange =
     activity.startTime && activity.endTime
       ? `${activity.startTime}–${activity.endTime}`
@@ -49,7 +90,7 @@ export default function ActivityCard({ activity }: ActivityCardProps) {
   const cost = activity.cost ? Number(activity.cost) : null;
 
   return (
-    <div className="rounded-card border border-surface-200 p-3 transition-shadow hover:shadow-card">
+    <div className="group rounded-card border border-surface-200 p-3 transition-shadow hover:shadow-card">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
@@ -71,7 +112,9 @@ export default function ActivityCard({ activity }: ActivityCardProps) {
             </p>
           )}
           {activity.memo && (
-            <p className="mt-1 text-body-sm text-surface-400">{activity.memo}</p>
+            <p className="mt-1 text-body-sm text-surface-400">
+              <Linkify text={activity.memo} />
+            </p>
           )}
         </div>
         <div className="flex flex-col items-end gap-1 text-right">
@@ -87,6 +130,43 @@ export default function ActivityCard({ activity }: ActivityCardProps) {
           )}
         </div>
       </div>
+
+      {canEdit && (
+        <div className="mt-2 flex items-center justify-between border-t border-surface-100 pt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="flex gap-1">
+            <button
+              onClick={onMoveUp}
+              disabled={isFirst}
+              className="rounded px-1.5 py-0.5 text-[11px] text-surface-400 hover:bg-surface-100 hover:text-surface-600 disabled:opacity-30 disabled:cursor-default"
+              aria-label="위로"
+            >
+              ▲
+            </button>
+            <button
+              onClick={onMoveDown}
+              disabled={isLast}
+              className="rounded px-1.5 py-0.5 text-[11px] text-surface-400 hover:bg-surface-100 hover:text-surface-600 disabled:opacity-30 disabled:cursor-default"
+              aria-label="아래로"
+            >
+              ▼
+            </button>
+          </div>
+          <div className="flex gap-1">
+            <button
+              onClick={onEdit}
+              className="rounded px-2 py-0.5 text-[11px] text-surface-400 hover:bg-surface-100 hover:text-surface-600"
+            >
+              편집
+            </button>
+            <button
+              onClick={onDelete}
+              className="rounded px-2 py-0.5 text-[11px] text-red-400 hover:bg-red-50 hover:text-red-600"
+            >
+              삭제
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
