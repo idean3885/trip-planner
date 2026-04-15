@@ -1,10 +1,11 @@
 # Trip Planner
 
-여행 서포터/플래너 — MCP 검색 + 일정 관리 + Next.js 웹앱 + Neon Postgres
+여행 서포터/플래너 — MCP 검색 + 구조화 일정 관리 + Next.js 웹앱 + Neon Postgres
 
 ## 주요 기능
 
-- **MCP 플러그인**: Claude Desktop/Code에서 숙소, 항공편, 관광지 검색 및 일정 CRUD
+- **구조화 활동 관리**: 카테고리/시간/장소/비용/예약상태를 개별 필드로 관리
+- **MCP 플러그인**: Claude Desktop/Code에서 숙소, 항공편, 관광지 검색 및 활동 CRUD
 - **API 인증**: PAT(Personal Access Token) 기반 외부 클라이언트 인증
 - **API 문서**: OpenAPI 3.0 스펙 + Scalar 인터랙티브 뷰어 (/docs)
 - **캘린더 연동**: 여행 일정을 Apple 캘린더에 자동 등록 (iCloud 공유 지원)
@@ -17,28 +18,32 @@
 trip-planner/
 ├── src/                      # Next.js 웹앱 (Vercel 배포)
 │   ├── app/
+│   │   ├── api/trips/        # 여행/일자/활동/멤버 API
 │   │   ├── api/tokens/       # PAT CRUD API
-│   │   ├── api/trips/        # 여행/일자/멤버 API
 │   │   ├── api/openapi/      # OpenAPI JSON
 │   │   ├── settings/         # PAT 관리 UI
 │   │   └── docs/             # API 문서 뷰어
+│   ├── components/
+│   │   ├── ActivityCard.tsx   # 활동 카드 (카테고리/시간/비용)
+│   │   ├── ActivityForm.tsx   # 활동 입력 폼 (현지 시각 자동)
+│   │   └── ActivityList.tsx   # 활동 목록 + CRUD 관리
 │   └── lib/
 │       ├── auth-helpers.ts   # 세션 + PAT 인증
 │       ├── openapi.ts        # OpenAPI 스펙
 │       └── prisma.ts         # Prisma 클라이언트
 ├── mcp/                      # MCP 서버 (PyPI 배포, 로컬 실행)
 │   └── trip_mcp/
-│       ├── server.py         # 통합 엔트리포인트 (14개 도구)
+│       ├── server.py         # 통합 엔트리포인트 (20개 도구)
 │       ├── search.py         # 검색 도구 8개 (RapidAPI)
-│       ├── planner.py        # 일정 관리 도구 6개 (웹 API)
+│       ├── planner.py        # 일정 관리 도구 12개 (웹 API)
 │       ├── rapidapi.py       # RapidAPI 클라이언트
 │       └── web_client.py     # 웹 API 클라이언트 (PAT 인증)
 ├── prisma/
-│   ├── schema.prisma         # DB 스키마 (Auth.js + App + PAT)
+│   ├── schema.prisma         # DB 스키마 (Auth.js + App + Activity + PAT)
 │   └── migrations/
+├── e2e/                      # Playwright E2E 테스트
+├── tests/                    # 단위 테스트 (Vitest + pytest)
 ├── trips/                    # 여행 일정 데이터 (레거시 마크다운)
-├── scripts/                  # 설치 스크립트
-├── tests/                    # Python 테스트
 ├── specs/                    # 설계 문서 (스펙, 플랜, 태스크)
 └── pyproject.toml            # MCP 서버 (PyPI)
 ```
@@ -69,10 +74,10 @@ Claude Desktop 또는 Claude Code에서:
 "바르셀로나 6월 16일~20일 4박 숙소 추천해줘"
 "포르투에서 리스본 가는 6월 10일 항공편 찾아줘"
 
-# 일정 관리 (PAT 설정 필요)
+# 활동 관리 (PAT 설정 필요)
 "내 여행 목록 보여줘"
-"3일차에 벨렘탑 추가해줘"
-"1일차 숙소 정보 업데이트해줘"
+"3일차에 벨렘탑 관광 추가해줘 (09:00~11:00)"
+"1일차 마크다운을 활동으로 변환해줘"
 ```
 
 ### Claude Code 등록
@@ -81,7 +86,7 @@ Claude Desktop 또는 Claude Code에서:
 claude mcp add trip -s user -- ~/.trip-planner/.venv/bin/python -m trip_mcp.server
 ```
 
-## MCP 도구 (14개)
+## MCP 도구 (20개)
 
 | 카테고리 | 도구 | 설명 |
 |---------|------|------|
@@ -94,11 +99,17 @@ claude mcp add trip -s user -- ~/.trip-planner/.venv/bin/python -m trip_mcp.serv
 | | search_attractions | 관광지 목록 (입장료, 리뷰) |
 | | get_attraction_details | 관광지 상세 (주소, 포함 사항) |
 | 일정 | list_trips | 내 여행 목록 |
-| | get_trip | 여행 상세 + 일자 목록 |
+| | get_trip | 여행 상세 + 일자별 활동 수 |
 | | create_day | 일자 추가 |
 | | update_day | 일자 수정 |
 | | delete_day | 일자 삭제 |
 | | list_members | 멤버 목록 |
+| 활동 | create_activity | 활동 추가 (카테고리/시간/장소/비용) |
+| | update_activity | 활동 수정 |
+| | delete_activity | 활동 삭제 |
+| | reorder_activities | 활동 순서 변경 |
+| 변환 | get_day_content | 일자 마크다운 전체 조회 |
+| | clear_day_content | 변환 후 마크다운 정리 |
 
 ## API 문서
 
@@ -112,26 +123,21 @@ claude mcp add trip -s user -- ~/.trip-planner/.venv/bin/python -m trip_mcp.serv
 npm install
 npm run dev                    # http://localhost:3000
 
+# 테스트
+npm test                       # Vitest (API + 컴포넌트)
+npm run test:coverage          # 커버리지 리포트
+npx playwright test            # E2E 테스트
+
 # MCP 서버 개발
 cd mcp/
 python3 -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
-pytest tests/unit/ -v
+pytest tests/ -v
 
 # PAT 생성 (MCP 테스트용)
 # 1) http://localhost:3000/settings 에서 토큰 생성
 # 2) TRIP_PLANNER_PAT=<token> python -m trip_mcp.server
 ```
-
-## 로드맵
-
-| 마일스톤 | 목표 | 상태 |
-|----------|------|------|
-| [v2.1: 일정 구조화](https://github.com/idean3885/trip-planner/milestone/7) | Activity 스키마 + 구조화 폼 + 컴포넌트 렌더링 | 예정 |
-| [v2.2: 원클릭 인증](https://github.com/idean3885/trip-planner/milestone/8) | OAuth CLI 자동 로그인 + 만료 시 자동 재인증 | 예정 |
-| [v2.x: UX 폴리싱](https://github.com/idean3885/trip-planner/milestone/9) | 네비게이션 IA, 모바일 터치, 접근성 | 상시 |
-
-각 마일스톤은 독립적으로 진행 가능합니다. 이슈 단위로 관리하며, 마일스톤 간 순서 의존은 없습니다.
 
 ## 기술 스택
 
@@ -139,4 +145,5 @@ pytest tests/unit/ -v
 - **웹앱**: Next.js 15 (App Router, SSR), Auth.js v5, Tailwind CSS v3
 - **DB**: Neon Postgres, Prisma 7 (@prisma/adapter-pg TCP)
 - **인증**: Google OAuth (웹), PAT (외부 클라이언트)
+- **테스트**: Vitest, React Testing Library, Playwright, pytest
 - **배포**: Vercel (웹앱), PyPI (MCP)
