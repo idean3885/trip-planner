@@ -6,10 +6,10 @@ const { auth } = NextAuth(authConfig);
 export default auth((req) => {
   const isLoggedIn = !!req.auth;
   const isAuthRoute = req.nextUrl.pathname.startsWith("/auth");
-  const isApiAuthRoute = req.nextUrl.pathname.startsWith("/api/auth");
+  const isApiRoute = req.nextUrl.pathname.startsWith("/api/");
 
-  // Auth API 라우트는 항상 허용
-  if (isApiAuthRoute) return;
+  // API 라우트는 자체 인증 처리 (PAT Bearer 토큰 + 세션 병행, auth-helpers.ts)
+  if (isApiRoute) return;
 
   // 로그인 페이지는 항상 허용
   if (isAuthRoute) return;

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getSession, isOwner } from "@/lib/auth-helpers";
+import { getAuthUserId, isOwner } from "@/lib/auth-helpers";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -8,12 +8,12 @@ type Params = { params: Promise<{ id: string }> };
 export async function POST(request: Request, { params }: Params) {
   const { id } = await params;
   const tripId = parseInt(id);
-  const session = await getSession();
-  if (!session?.user?.id) {
+  const userId = await getAuthUserId();
+  if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  if (!(await isOwner(tripId, session.user.id))) {
+  if (!(await isOwner(tripId, userId))) {
     return NextResponse.json({ error: "주인만 양도할 수 있습니다" }, { status: 403 });
   }
 
@@ -31,7 +31,7 @@ export async function POST(request: Request, { params }: Params) {
 
   // 트랜잭션: 대상 → OWNER, 기존 주인 → HOST
   const currentOwner = await prisma.tripMember.findFirst({
-    where: { tripId, userId: session.user.id, role: "OWNER" },
+    where: { tripId, userId, role: "OWNER" },
   });
 
   if (!currentOwner) {

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getSession, getTripMember } from "@/lib/auth-helpers";
+import { getAuthUserId, getTripMember } from "@/lib/auth-helpers";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -8,12 +8,12 @@ type Params = { params: Promise<{ id: string }> };
 export async function POST(request: Request, { params }: Params) {
   const { id } = await params;
   const tripId = parseInt(id);
-  const session = await getSession();
-  if (!session?.user?.id) {
+  const userId = await getAuthUserId();
+  if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const member = await getTripMember(tripId, session.user.id);
+  const member = await getTripMember(tripId, userId);
   if (!member) {
     return NextResponse.json({ error: "멤버가 아닙니다" }, { status: 400 });
   }

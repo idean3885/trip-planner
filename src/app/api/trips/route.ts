@@ -1,17 +1,17 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getSession } from "@/lib/auth-helpers";
+import { getAuthUserId } from "@/lib/auth-helpers";
 
 // T024: 여행 목록 (TripMember 기반 필터)
 export async function GET() {
-  const session = await getSession();
-  if (!session?.user?.id) {
+  const userId = await getAuthUserId();
+  if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const trips = await prisma.trip.findMany({
     where: {
-      tripMembers: { some: { userId: session.user.id } },
+      tripMembers: { some: { userId } },
     },
     include: {
       tripMembers: { select: { role: true, userId: true } },
@@ -25,8 +25,8 @@ export async function GET() {
 
 // T025: 여행 생성 (생성자를 HOST로 등록)
 export async function POST(request: Request) {
-  const session = await getSession();
-  if (!session?.user?.id) {
+  const userId = await getAuthUserId();
+  if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -43,10 +43,10 @@ export async function POST(request: Request) {
       description,
       startDate: startDate ? new Date(startDate) : null,
       endDate: endDate ? new Date(endDate) : null,
-      createdBy: session.user.id,
-      updatedBy: session.user.id,
+      createdBy: userId,
+      updatedBy: userId,
       tripMembers: {
-        create: { userId: session.user.id, role: "HOST" },
+        create: { userId, role: "HOST" },
       },
     },
   });

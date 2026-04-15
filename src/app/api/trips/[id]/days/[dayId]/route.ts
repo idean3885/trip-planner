@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getSession, canEdit } from "@/lib/auth-helpers";
+import { getAuthUserId, canEdit } from "@/lib/auth-helpers";
 
 type Params = { params: Promise<{ id: string; dayId: string }> };
 
@@ -8,12 +8,12 @@ type Params = { params: Promise<{ id: string; dayId: string }> };
 export async function PUT(request: Request, { params }: Params) {
   const { id, dayId } = await params;
   const tripId = parseInt(id);
-  const session = await getSession();
-  if (!session?.user?.id) {
+  const userId = await getAuthUserId();
+  if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  if (!(await canEdit(tripId, session.user.id))) {
+  if (!(await canEdit(tripId, userId))) {
     return NextResponse.json({ error: "편집 권한이 없습니다" }, { status: 403 });
   }
 
@@ -37,12 +37,12 @@ export async function PUT(request: Request, { params }: Params) {
 export async function DELETE(request: Request, { params }: Params) {
   const { id, dayId } = await params;
   const tripId = parseInt(id);
-  const session = await getSession();
-  if (!session?.user?.id) {
+  const userId = await getAuthUserId();
+  if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  if (!(await canEdit(tripId, session.user.id))) {
+  if (!(await canEdit(tripId, userId))) {
     return NextResponse.json({ error: "편집 권한이 없습니다" }, { status: 403 });
   }
 

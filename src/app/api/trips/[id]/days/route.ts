@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getSession, getTripMember, canEdit } from "@/lib/auth-helpers";
+import { getAuthUserId, getTripMember, canEdit } from "@/lib/auth-helpers";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -8,13 +8,13 @@ type Params = { params: Promise<{ id: string }> };
 export async function GET(request: Request, { params }: Params) {
   const { id } = await params;
   const tripId = parseInt(id);
-  const session = await getSession();
-  if (!session?.user?.id) {
+  const userId = await getAuthUserId();
+  if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const [member, days] = await Promise.all([
-    getTripMember(tripId, session.user.id),
+    getTripMember(tripId, userId),
     prisma.day.findMany({
       where: { tripId },
       orderBy: { sortOrder: "asc" },
@@ -32,12 +32,12 @@ export async function GET(request: Request, { params }: Params) {
 export async function POST(request: Request, { params }: Params) {
   const { id } = await params;
   const tripId = parseInt(id);
-  const session = await getSession();
-  if (!session?.user?.id) {
+  const userId = await getAuthUserId();
+  if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  if (!(await canEdit(tripId, session.user.id))) {
+  if (!(await canEdit(tripId, userId))) {
     return NextResponse.json({ error: "편집 권한이 없습니다" }, { status: 403 });
   }
 

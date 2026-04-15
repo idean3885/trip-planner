@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getSession, getTripMember, isHost, isOwner } from "@/lib/auth-helpers";
+import { getAuthUserId, getTripMember, isHost, isOwner } from "@/lib/auth-helpers";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -8,13 +8,13 @@ type Params = { params: Promise<{ id: string }> };
 export async function GET(request: Request, { params }: Params) {
   const { id } = await params;
   const tripId = parseInt(id);
-  const session = await getSession();
-  if (!session?.user?.id) {
+  const userId = await getAuthUserId();
+  if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const [member, members] = await Promise.all([
-    getTripMember(tripId, session.user.id),
+    getTripMember(tripId, userId),
     prisma.tripMember.findMany({
       where: { tripId },
       include: { user: { select: { id: true, name: true, email: true, image: true } } },
@@ -33,8 +33,8 @@ export async function GET(request: Request, { params }: Params) {
 export async function PATCH(request: Request, { params }: Params) {
   const { id } = await params;
   const tripId = parseInt(id);
-  const session = await getSession();
-  if (!session?.user?.id) {
+  const userId = await getAuthUserId();
+  if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -55,7 +55,7 @@ export async function PATCH(request: Request, { params }: Params) {
     if (target.role !== "GUEST") {
       return NextResponse.json({ error: "게스트만 승격할 수 있습니다" }, { status: 400 });
     }
-    if (!(await isHost(tripId, session.user.id))) {
+    if (!(await isHost(tripId, userId))) {
       return NextResponse.json({ error: "호스트만 승격할 수 있습니다" }, { status: 403 });
     }
     await prisma.tripMember.update({ where: { id: memberId }, data: { role: "HOST" } });
@@ -64,7 +64,7 @@ export async function PATCH(request: Request, { params }: Params) {
     if (target.role !== "HOST") {
       return NextResponse.json({ error: "호스트만 강등할 수 있습니다" }, { status: 400 });
     }
-    if (!(await isOwner(tripId, session.user.id))) {
+    if (!(await isOwner(tripId, userId))) {
       return NextResponse.json({ error: "주인만 강등할 수 있습니다" }, { status: 403 });
     }
     await prisma.tripMember.update({ where: { id: memberId }, data: { role: "GUEST" } });
@@ -77,8 +77,8 @@ export async function PATCH(request: Request, { params }: Params) {
 export async function DELETE(request: Request, { params }: Params) {
   const { id } = await params;
   const tripId = parseInt(id);
-  const session = await getSession();
-  if (!session?.user?.id) {
+  const userId = await getAuthUserId();
+  if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -100,12 +100,12 @@ export async function DELETE(request: Request, { params }: Params) {
   }
 
   // 호스트 제거는 주인만
-  if (target.role === "HOST" && !(await isOwner(tripId, session.user.id))) {
+  if (target.role === "HOST" && !(await isOwner(tripId, userId))) {
     return NextResponse.json({ error: "주인만 호스트를 제거할 수 있습니다" }, { status: 403 });
   }
 
   // 게스트 제거는 호스트면 가능
-  if (target.role === "GUEST" && !(await isHost(tripId, session.user.id))) {
+  if (target.role === "GUEST" && !(await isHost(tripId, userId))) {
     return NextResponse.json({ error: "호스트만 게스트를 제거할 수 있습니다" }, { status: 403 });
   }
 
