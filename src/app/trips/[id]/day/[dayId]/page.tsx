@@ -117,7 +117,21 @@ async function DbDayPage({ tripId, dayIdNum }: { tripId: number; dayIdNum: numbe
 
       {day.content && (
         <div className="space-y-2">
-          <h2 className="text-heading-sm font-semibold text-surface-700">메모</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-heading-sm font-semibold text-surface-700">레거시 메모</h2>
+          </div>
+          {member.role !== "GUEST" && (
+            <div className="flex items-start gap-2 rounded-card border border-sky-200 bg-sky-50 px-3 py-2 text-body-sm text-sky-700">
+              <span className="shrink-0">💡</span>
+              <span>
+                이 메모를 활동으로 변환하려면 Claude Desktop에서{" "}
+                <code className="rounded bg-sky-100 px-1 py-0.5 text-[11px]">
+                  get_day_content → create_activity × N → clear_day_content
+                </code>{" "}
+                순서로 요청하세요.
+              </span>
+            </div>
+          )}
           <div
             className="prose prose-sm max-w-none rounded-card border border-surface-200 p-4"
             dangerouslySetInnerHTML={{ __html: contentHtml }}
