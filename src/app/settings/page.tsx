@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useState, useCallback } from "react";
 
@@ -76,6 +77,11 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-8">
+      <div className="flex items-center gap-2 text-body-sm text-surface-500">
+        <Link href="/" className="hover:text-surface-700">홈</Link>
+        <span>/</span>
+        <span className="text-surface-700">설정</span>
+      </div>
       <h1 className="text-2xl font-bold">설정</h1>
 
       <section className="space-y-4">
