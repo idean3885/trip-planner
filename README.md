@@ -123,6 +123,16 @@ pytest tests/unit/ -v
 # 2) TRIP_PLANNER_PAT=<token> python -m trip_mcp.server
 ```
 
+## 로드맵
+
+| 마일스톤 | 목표 | 상태 |
+|----------|------|------|
+| [v2.1: 일정 구조화](https://github.com/idean3885/trip-planner/milestone/7) | Activity 스키마 + 구조화 폼 + 컴포넌트 렌더링 | 예정 |
+| [v2.2: 원클릭 인증](https://github.com/idean3885/trip-planner/milestone/8) | OAuth CLI 자동 로그인 + 만료 시 자동 재인증 | 예정 |
+| [v2.x: UX 폴리싱](https://github.com/idean3885/trip-planner/milestone/9) | 네비게이션 IA, 모바일 터치, 접근성 | 상시 |
+
+각 마일스톤은 독립적으로 진행 가능합니다. 이슈 단위로 관리하며, 마일스톤 간 순서 의존은 없습니다.
+
 ## 기술 스택
 
 - **MCP 서버**: Python 3.10+, FastMCP, httpx, macOS Keychain
