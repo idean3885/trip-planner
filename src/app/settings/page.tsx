@@ -1,7 +1,7 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import { useEffect, useState, useCallback } from "react";
+import { useState, useCallback } from "react";
 
 interface Token {
   id: number;
@@ -14,21 +14,23 @@ interface Token {
 }
 
 export default function SettingsPage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const [tokens, setTokens] = useState<Token[]>([]);
   const [newTokenName, setNewTokenName] = useState("");
   const [createdToken, setCreatedToken] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [initialized, setInitialized] = useState(false);
 
   const fetchTokens = useCallback(async () => {
     const res = await fetch("/api/tokens");
     if (res.ok) setTokens(await res.json());
   }, []);
 
-  useEffect(() => {
-    if (status === "authenticated") fetchTokens();
-  }, [status, fetchTokens]);
+  if (status === "authenticated" && !initialized) {
+    setInitialized(true);
+    fetchTokens();
+  }
 
   if (status === "loading") return <p>로딩 중...</p>;
   if (status === "unauthenticated") return <p>로그인이 필요합니다.</p>;
