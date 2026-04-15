@@ -1,6 +1,6 @@
 import type { ActivityCategory, ReservationStatus, Prisma } from "@prisma/client";
 
-const URL_RE = /(https?:\/\/[^\s]+)/g;
+const URL_RE = /(https?:\/\/[^\s]+)/;
 
 function Linkify({ text }: { text: string }) {
   const parts = text.split(URL_RE);

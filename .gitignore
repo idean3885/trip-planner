@@ -28,6 +28,11 @@ Thumbs.db
 # Build artifacts
 dist/
 build/
+tsconfig.tsbuildinfo
+
+# Test artifacts
+coverage/
+test-results/
 
 # Claude Code (로컬 설정)
 .claude/settings.local.json
@@ -42,3 +47,4 @@ node_modules/
 next-env.d.ts
 out/
 .vercel
+.env*.local

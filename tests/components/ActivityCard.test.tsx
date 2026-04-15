@@ -110,6 +110,12 @@ describe("ActivityCard", () => {
     expect(onDelete).toHaveBeenCalledOnce();
   });
 
+  it("renders null when no startTime and no endTime", () => {
+    render(<ActivityCard activity={makeActivity({ startTime: null, endTime: null })} />);
+    // No time range should be displayed
+    expect(screen.queryByText(/\d{2}:\d{2}/)).not.toBeInTheDocument();
+  });
+
   it("renders all category types", () => {
     const categories: ActivityCategory[] = [
       "SIGHTSEEING", "DINING", "TRANSPORT", "ACCOMMODATION", "SHOPPING", "OTHER",
