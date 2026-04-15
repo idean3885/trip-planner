@@ -43,17 +43,22 @@ trip-planner/
 └── pyproject.toml            # MCP 서버 (PyPI)
 ```
 
-## 설치 (맥북, 1줄)
+## 설치 / 업데이트 (맥북, 1줄)
+
+신규 설치와 기존 v1 업데이트 모두 동일한 명령입니다:
 
 ```bash
 curl -sSL https://raw.githubusercontent.com/idean3885/trip-planner/main/scripts/install.sh | bash
 ```
 
-- RapidAPI 키 → 키체인 저장 (검색용)
+실행 후 **Claude Desktop을 재시작**하면 바로 사용 가능합니다.
+
+자동 처리 항목:
+- RapidAPI 키 → 키체인 저장 (검색용, 이미 있으면 스킵)
 - Trip Planner PAT → 키체인 저장 (일정 관리용, 선택)
-- Claude Desktop 자동 설정
+- Claude Desktop MCP 설정 자동 등록/업데이트
 - Apple 캘린더 MCP 자동 설치 (macOS 전용)
-- v1 → v2 자동 마이그레이션
+- v1 → v2 자동 마이그레이션 (구 서버 설정 제거, GitHub PAT 정리)
 
 ## 사용법
 
