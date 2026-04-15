@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
+import Link from "next/link";
 import ScrollToTop from "@/components/ScrollToTop";
 import SessionProvider from "@/components/SessionProvider";
 import AuthButton from "@/components/AuthButton";
@@ -27,7 +28,10 @@ export default function RootLayout({
     <html lang="ko">
       <body className={`${inter.className} bg-white text-surface-900 min-h-screen`}>
         <SessionProvider>
-          <header className="max-w-content mx-auto w-full px-4 pt-4 flex justify-end">
+          <header className="max-w-content mx-auto w-full px-4 pt-4 flex items-center justify-between">
+            <Link href="/" className="text-body-sm font-semibold text-surface-700 hover:text-surface-900">
+              우리의 여행
+            </Link>
             <AuthButton />
           </header>
           <main className="max-w-content mx-auto w-full px-4 py-6 pb-16">
