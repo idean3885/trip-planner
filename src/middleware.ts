@@ -11,7 +11,12 @@ export default auth((req) => {
   // API 라우트는 자체 인증 처리 (PAT Bearer 토큰 + 세션 병행, auth-helpers.ts)
   if (isApiRoute) return;
 
-  // 로그인 페이지는 항상 허용
+  // 로그인 상태에서 auth 페이지 접근 → 홈으로
+  if (isAuthRoute && isLoggedIn) {
+    return Response.redirect(new URL("/", req.nextUrl));
+  }
+
+  // 비로그인 사용자의 auth 페이지 접근은 허용
   if (isAuthRoute) return;
 
   // 비로그인 사용자 → 로그인 페이지로 리다이렉트
