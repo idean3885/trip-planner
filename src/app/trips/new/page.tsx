@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -40,7 +41,7 @@ export default function NewTripPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2 text-body-sm text-surface-500">
-        <a href="/" className="hover:text-surface-700">홈</a>
+        <Link href="/" className="hover:text-surface-700">홈</Link>
         <span>/</span>
         <span className="text-surface-700">새 여행</span>
       </div>
