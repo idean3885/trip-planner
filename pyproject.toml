@@ -11,9 +11,9 @@ requires-python = ">=3.10"
 license = "MIT"
 readme = "README.md"
 authors = [{ name = "idean3885" }]
-keywords = ["travel", "booking", "mcp", "claude-code", "hotels", "flights", "attractions"]
+keywords = ["travel", "booking", "mcp", "claude-code", "hotels", "flights", "attractions", "itinerary", "planner"]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
 ]
