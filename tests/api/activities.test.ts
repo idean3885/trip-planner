@@ -129,10 +129,30 @@ describe("POST /activities", () => {
 describe("PATCH /activities (reorder)", () => {
   beforeEach(() => vi.clearAllMocks());
 
+  it("returns 401 when not authenticated", async () => {
+    mockAuth.mockResolvedValue(null);
+    const res = await PATCH(makeRequest({ orderedIds: [1] }, "PATCH"), params());
+    expect(res.status).toBe(401);
+  });
+
+  it("returns 403 when cannot edit", async () => {
+    mockAuth.mockResolvedValue("user1");
+    mockCanEdit.mockResolvedValue(false);
+    const res = await PATCH(makeRequest({ orderedIds: [1] }, "PATCH"), params());
+    expect(res.status).toBe(403);
+  });
+
   it("returns 400 when orderedIds missing", async () => {
     mockAuth.mockResolvedValue("user1");
     mockCanEdit.mockResolvedValue(true);
     const res = await PATCH(makeRequest({}, "PATCH"), params());
+    expect(res.status).toBe(400);
+  });
+
+  it("returns 400 when orderedIds empty", async () => {
+    mockAuth.mockResolvedValue("user1");
+    mockCanEdit.mockResolvedValue(true);
+    const res = await PATCH(makeRequest({ orderedIds: [] }, "PATCH"), params());
     expect(res.status).toBe(400);
   });
 
@@ -157,13 +177,27 @@ describe("PUT /activities/{id}", () => {
     expect(res.status).toBe(401);
   });
 
-  it("updates activity", async () => {
+  it("returns 403 when cannot edit", async () => {
+    mockAuth.mockResolvedValue("user1");
+    mockCanEdit.mockResolvedValue(false);
+    const res = await PUT(makeRequest({ title: "Updated" }, "PUT"), activityParams());
+    expect(res.status).toBe(403);
+  });
+
+  it("updates activity with all fields", async () => {
     mockAuth.mockResolvedValue("user1");
     mockCanEdit.mockResolvedValue(true);
     const updated = { id: 10, title: "Updated", category: "DINING" };
     mockPrisma.activity.update.mockResolvedValue(updated);
 
-    const res = await PUT(makeRequest({ title: "Updated" }, "PUT"), activityParams());
+    const res = await PUT(
+      makeRequest({
+        category: "DINING", title: "Updated", startTime: "12:00", endTime: "13:00",
+        location: "Place", memo: "Note", cost: 10, currency: "USD",
+        reservationStatus: "REQUIRED", sortOrder: 1,
+      }, "PUT"),
+      activityParams()
+    );
     expect(res.status).toBe(200);
     const data = await res.json();
     expect(data.title).toBe("Updated");
@@ -172,6 +206,12 @@ describe("PUT /activities/{id}", () => {
 
 describe("DELETE /activities/{id}", () => {
   beforeEach(() => vi.clearAllMocks());
+
+  it("returns 401 when not authenticated", async () => {
+    mockAuth.mockResolvedValue(null);
+    const res = await DELETE(makeRequest(undefined, "DELETE"), activityParams());
+    expect(res.status).toBe(401);
+  });
 
   it("returns 403 when cannot edit", async () => {
     mockAuth.mockResolvedValue("user1");
