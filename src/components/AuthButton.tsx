@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 
 export default function AuthButton() {
@@ -14,6 +15,12 @@ export default function AuthButton() {
       <span className="text-body-sm text-surface-500">
         {displayName}
       </span>
+      <Link
+        href="/settings"
+        className="rounded-md px-3 py-1.5 text-body-sm text-surface-500 transition-colors hover:bg-surface-100 hover:text-surface-700"
+      >
+        설정
+      </Link>
       <button
         onClick={() => signOut()}
         className="rounded-md px-3 py-1.5 text-body-sm text-surface-500 transition-colors hover:bg-surface-100 hover:text-surface-700"
