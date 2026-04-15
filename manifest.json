@@ -20,6 +20,13 @@
       "description": "RapidAPI에서 발급받은 API Key (booking-com15 구독 필요, https://rapidapi.com/DataCrawler/api/booking-com15)",
       "sensitive": true,
       "required": true
+    },
+    "trip_planner_pat": {
+      "type": "string",
+      "title": "Trip Planner PAT",
+      "description": "trip.idean.me 설정 페이지에서 생성한 API 토큰 (일정 관리용)",
+      "sensitive": true,
+      "required": false
     }
   },
   "server": {
@@ -30,7 +37,8 @@
       "args": ["run", "trip-planner-mcp"],
       "env": {
         "RAPIDAPI_KEY": "${user_config.rapidapi_key}",
-        "RAPIDAPI_HOST": "booking-com15.p.rapidapi.com"
+        "RAPIDAPI_HOST": "booking-com15.p.rapidapi.com",
+        "TRIP_PLANNER_PAT": "${user_config.trip_planner_pat}"
       }
     }
   }

@@ -5,7 +5,8 @@
       "args": ["trip-planner-mcp"],
       "env": {
         "RAPIDAPI_KEY": "${RAPIDAPI_KEY}",
-        "RAPIDAPI_HOST": "booking-com15.p.rapidapi.com"
+        "RAPIDAPI_HOST": "booking-com15.p.rapidapi.com",
+        "TRIP_PLANNER_PAT": "${TRIP_PLANNER_PAT}"
       }
     },
     "che-ical-mcp": {
