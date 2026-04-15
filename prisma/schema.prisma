@@ -99,10 +99,54 @@ model Day {
   content   String?  @db.Text
   sortOrder Int      @default(0) @map("sort_order")
 
-  trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  trip       Trip       @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  activities Activity[]
 
   @@index([tripId, date])
   @@map("days")
+}
+
+// ============================================================
+// Activity (일정 내 구조화된 활동)
+// ============================================================
+
+enum ActivityCategory {
+  SIGHTSEEING
+  DINING
+  TRANSPORT
+  ACCOMMODATION
+  SHOPPING
+  OTHER
+}
+
+enum ReservationStatus {
+  REQUIRED
+  RECOMMENDED
+  ON_SITE
+  NOT_NEEDED
+}
+
+model Activity {
+  id                Int                @id @default(autoincrement())
+  dayId             Int                @map("day_id")
+  category          ActivityCategory
+  title             String
+  startTime         String?            @map("start_time") @db.VarChar(5)
+  endTime           String?            @map("end_time") @db.VarChar(5)
+  location          String?
+  memo              String?            @db.Text
+  cost              Decimal?           @db.Decimal(10, 2)
+  currency          String             @default("EUR") @db.VarChar(3)
+  reservationStatus ReservationStatus? @map("reservation_status")
+  sortOrder         Int                @default(0) @map("sort_order")
+  createdAt         DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt         DateTime           @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  day Day @relation(fields: [dayId], references: [id], onDelete: Cascade)
+
+  @@index([dayId, startTime])
+  @@index([dayId, sortOrder])
+  @@map("activities")
 }
 
 enum TripRole {
