@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface DayEditorProps {
   tripId: number;
@@ -21,6 +23,7 @@ export default function DayEditor({
   const [content, setContent] = useState(initialContent);
   const [html] = useState(initialHtml);
   const [saving, setSaving] = useState(false);
+  const [tab, setTab] = useState<"edit" | "preview">("edit");
 
   async function handleSave() {
     setSaving(true);
@@ -46,14 +49,34 @@ export default function DayEditor({
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <span className="text-body-sm font-medium text-surface-500">
-            마크다운 편집
-          </span>
+          <div className="flex gap-1">
+            <button
+              onClick={() => setTab("edit")}
+              className={`rounded-md px-3 py-1.5 text-body-sm font-medium transition-colors ${
+                tab === "edit"
+                  ? "bg-surface-100 text-surface-900"
+                  : "text-surface-400 hover:text-surface-600"
+              }`}
+            >
+              편집
+            </button>
+            <button
+              onClick={() => setTab("preview")}
+              className={`rounded-md px-3 py-1.5 text-body-sm font-medium transition-colors ${
+                tab === "preview"
+                  ? "bg-surface-100 text-surface-900"
+                  : "text-surface-400 hover:text-surface-600"
+              }`}
+            >
+              미리보기
+            </button>
+          </div>
           <div className="flex gap-2">
             <button
               onClick={() => {
                 setContent(initialContent);
                 setIsEditing(false);
+                setTab("edit");
               }}
               className="rounded-md px-3 py-1.5 text-body-sm text-surface-500 hover:bg-surface-100"
             >
@@ -68,11 +91,22 @@ export default function DayEditor({
             </button>
           </div>
         </div>
-        <textarea
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          className="w-full min-h-[400px] rounded-card border border-surface-200 p-4 text-body-sm font-mono leading-relaxed focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
-        />
+
+        {tab === "edit" ? (
+          <textarea
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            className="w-full min-h-[400px] rounded-card border border-surface-200 p-4 text-body-sm font-mono leading-relaxed focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+          />
+        ) : (
+          <div className="min-h-[400px] rounded-card border border-surface-200 p-4">
+            <div className="prose prose-sm max-w-none">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {content}
+              </ReactMarkdown>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
