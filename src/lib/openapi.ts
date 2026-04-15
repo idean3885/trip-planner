@@ -6,7 +6,7 @@ export const openApiSpec = {
   openapi: "3.0.3",
   info: {
     title: "Trip Planner API",
-    version: "2.0.0",
+    version: "2.1.0",
     description:
       "여행 일정 관리 API. 세션 인증(웹 브라우저) 또는 PAT 인증(외부 클라이언트)을 지원합니다.",
   },
@@ -79,6 +79,25 @@ export const openApiSpec = {
           expiresAt: { type: "string", format: "date-time", nullable: true },
           lastUsedAt: { type: "string", format: "date-time", nullable: true },
           createdAt: { type: "string", format: "date-time" },
+        },
+      },
+      Activity: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          dayId: { type: "integer" },
+          category: { type: "string", enum: ["SIGHTSEEING", "DINING", "TRANSPORT", "ACCOMMODATION", "SHOPPING", "OTHER"] },
+          title: { type: "string" },
+          startTime: { type: "string", nullable: true, description: "HH:mm" },
+          endTime: { type: "string", nullable: true, description: "HH:mm" },
+          location: { type: "string", nullable: true },
+          memo: { type: "string", nullable: true },
+          cost: { type: "number", nullable: true },
+          currency: { type: "string", default: "EUR" },
+          reservationStatus: { type: "string", nullable: true, enum: ["REQUIRED", "RECOMMENDED", "ON_SITE", "NOT_NEEDED"] },
+          sortOrder: { type: "integer" },
+          createdAt: { type: "string", format: "date-time" },
+          updatedAt: { type: "string", format: "date-time" },
         },
       },
       Error: {
@@ -244,6 +263,126 @@ export const openApiSpec = {
       delete: {
         tags: ["Days"],
         summary: "일자 삭제",
+        description: "HOST 이상 권한 필요.",
+        responses: {
+          "200": { description: "삭제 완료" },
+          "403": { description: "권한 부족" },
+        },
+      },
+    },
+    "/api/trips/{id}/days/{dayId}/activities": {
+      parameters: [
+        { name: "id", in: "path", required: true, schema: { type: "integer" } },
+        { name: "dayId", in: "path", required: true, schema: { type: "integer" } },
+      ],
+      get: {
+        tags: ["Activities"],
+        summary: "활동 목록 조회",
+        description: "일자의 활동 목록을 시간순/정렬순으로 반환한다.",
+        responses: {
+          "200": { description: "활동 목록", content: { "application/json": { schema: { type: "array", items: { $ref: "#/components/schemas/Activity" } } } } },
+          "401": { description: "미인증" },
+          "403": { description: "멤버가 아님" },
+        },
+      },
+      post: {
+        tags: ["Activities"],
+        summary: "활동 추가",
+        description: "HOST 이상 권한 필요.",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["category", "title"],
+                properties: {
+                  category: { type: "string", enum: ["SIGHTSEEING", "DINING", "TRANSPORT", "ACCOMMODATION", "SHOPPING", "OTHER"] },
+                  title: { type: "string" },
+                  startTime: { type: "string", description: "HH:mm" },
+                  endTime: { type: "string", description: "HH:mm" },
+                  location: { type: "string" },
+                  memo: { type: "string" },
+                  cost: { type: "number" },
+                  currency: { type: "string" },
+                  reservationStatus: { type: "string", enum: ["REQUIRED", "RECOMMENDED", "ON_SITE", "NOT_NEEDED"] },
+                  sortOrder: { type: "integer" },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          "201": { description: "생성된 활동", content: { "application/json": { schema: { $ref: "#/components/schemas/Activity" } } } },
+          "400": { description: "필수 필드 누락" },
+          "403": { description: "권한 부족" },
+          "404": { description: "일자 없음" },
+        },
+      },
+      patch: {
+        tags: ["Activities"],
+        summary: "활동 순서 변경",
+        description: "HOST 이상 권한 필요.",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["orderedIds"],
+                properties: {
+                  orderedIds: { type: "array", items: { type: "integer" }, description: "새 순서의 활동 ID 배열" },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          "200": { description: "순서 변경 완료" },
+          "400": { description: "orderedIds 누락" },
+          "403": { description: "권한 부족" },
+        },
+      },
+    },
+    "/api/trips/{id}/days/{dayId}/activities/{activityId}": {
+      parameters: [
+        { name: "id", in: "path", required: true, schema: { type: "integer" } },
+        { name: "dayId", in: "path", required: true, schema: { type: "integer" } },
+        { name: "activityId", in: "path", required: true, schema: { type: "integer" } },
+      ],
+      put: {
+        tags: ["Activities"],
+        summary: "활동 수정",
+        description: "HOST 이상 권한 필요. 전달된 필드만 업데이트.",
+        requestBody: {
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  category: { type: "string", enum: ["SIGHTSEEING", "DINING", "TRANSPORT", "ACCOMMODATION", "SHOPPING", "OTHER"] },
+                  title: { type: "string" },
+                  startTime: { type: "string" },
+                  endTime: { type: "string" },
+                  location: { type: "string" },
+                  memo: { type: "string" },
+                  cost: { type: "number" },
+                  currency: { type: "string" },
+                  reservationStatus: { type: "string", enum: ["REQUIRED", "RECOMMENDED", "ON_SITE", "NOT_NEEDED"] },
+                  sortOrder: { type: "integer" },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          "200": { description: "수정된 활동", content: { "application/json": { schema: { $ref: "#/components/schemas/Activity" } } } },
+          "403": { description: "권한 부족" },
+        },
+      },
+      delete: {
+        tags: ["Activities"],
+        summary: "활동 삭제",
         description: "HOST 이상 권한 필요.",
         responses: {
           "200": { description: "삭제 완료" },
