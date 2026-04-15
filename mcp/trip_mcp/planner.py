@@ -1,4 +1,4 @@
-"""일정 관리 도구 — 여행/일자 CRUD (웹 API 기반)."""
+"""일정 관리 도구 — 여행/일자/활동 CRUD (웹 API 기반)."""
 
 import logging
 from mcp.server.fastmcp import FastMCP
@@ -8,7 +8,7 @@ logger = logging.getLogger("trip-mcp-server")
 
 
 def register_planner_tools(mcp: FastMCP) -> None:
-    """일정 관리 도구 6개를 FastMCP 서버에 등록한다."""
+    """일정 관리 도구 10개를 FastMCP 서버에 등록한다."""
 
     @mcp.tool()
     async def list_trips() -> str:
@@ -63,10 +63,16 @@ def register_planner_tools(mcp: FastMCP) -> None:
                 if day.get("title"):
                     day_info += f" — {day['title']}"
                 day_info += f"\n  ID: {day['id']}"
+                activity_count = day.get("_count", {}).get("activities", 0)
+                if activity_count:
+                    day_info += f"\n  활동: {activity_count}개"
                 content = day.get("content", "")
-                if content:
+                has_content = bool(content)
+                if has_content:
                     preview = content[:200].replace("\n", " ")
                     day_info += f"\n  내용: {preview}{'...' if len(content) > 200 else ''}"
+                elif not activity_count:
+                    day_info += "\n  (내용 없음)"
                 parts.append(day_info)
 
         members = result.get("tripMembers", [])
@@ -164,3 +170,172 @@ def register_planner_tools(mcp: FastMCP) -> None:
                 f"  역할: {m.get('role', 'N/A')} | 참여: {m.get('joinedAt', 'N/A')}"
             )
         return "\n---\n".join(formatted)
+
+    # ── Activity CRUD ──────────────────────────────────────
+
+    @mcp.tool()
+    async def create_activity(
+        trip_id: int,
+        day_id: int,
+        category: str,
+        title: str,
+        start_time: str = "",
+        end_time: str = "",
+        location: str = "",
+        memo: str = "",
+        cost: float = 0,
+        currency: str = "EUR",
+        reservation_status: str = "",
+    ) -> str:
+        """일자에 활동을 추가한다.
+
+        Args:
+            trip_id: 여행 ID
+            day_id: 일자 ID (get_trip에서 확인)
+            category: 활동 유형 (SIGHTSEEING, DINING, TRANSPORT, ACCOMMODATION, SHOPPING, OTHER)
+            title: 활동 제목 (예: "벨렝 탑 방문")
+            start_time: 시작 시간 HH:mm (예: "09:30", 선택)
+            end_time: 종료 시간 HH:mm (예: "11:00", 선택)
+            location: 장소명 (예: "Torre de Belém", 선택)
+            memo: 메모 (선택)
+            cost: 예상 비용 (0이면 미입력, 선택)
+            currency: 통화 코드 (기본 EUR)
+            reservation_status: 예약 상태 (REQUIRED, RECOMMENDED, ON_SITE, NOT_NEEDED, 선택)
+        """
+        body: dict = {"category": category, "title": title, "currency": currency}
+        if start_time:
+            body["startTime"] = start_time
+        if end_time:
+            body["endTime"] = end_time
+        if location:
+            body["location"] = location
+        if memo:
+            body["memo"] = memo
+        if cost:
+            body["cost"] = cost
+        if reservation_status:
+            body["reservationStatus"] = reservation_status
+
+        result = await api_request(
+            "POST", f"/api/trips/{trip_id}/days/{day_id}/activities", json=body
+        )
+
+        if "error" in result:
+            return f"오류: {result['error']}"
+
+        time_info = ""
+        if result.get("startTime"):
+            time_info = f" {result['startTime']}"
+            if result.get("endTime"):
+                time_info += f"~{result['endTime']}"
+
+        return (
+            f"활동 추가 완료: [{result.get('category', category)}]{time_info} "
+            f"{result.get('title', title)} (ID: {result.get('id', 'N/A')})"
+        )
+
+    @mcp.tool()
+    async def update_activity(
+        trip_id: int,
+        day_id: int,
+        activity_id: int,
+        title: str = "",
+        start_time: str = "",
+        end_time: str = "",
+        location: str = "",
+        memo: str = "",
+        cost: float = 0,
+        currency: str = "",
+        category: str = "",
+        reservation_status: str = "",
+    ) -> str:
+        """활동을 수정한다.
+
+        Args:
+            trip_id: 여행 ID
+            day_id: 일자 ID
+            activity_id: 활동 ID
+            title: 변경할 제목 (빈 문자열이면 변경하지 않음)
+            start_time: 변경할 시작 시간 HH:mm
+            end_time: 변경할 종료 시간 HH:mm
+            location: 변경할 장소명
+            memo: 변경할 메모
+            cost: 변경할 비용 (0이면 변경하지 않음)
+            currency: 변경할 통화 코드
+            category: 변경할 유형 (SIGHTSEEING, DINING, TRANSPORT, ACCOMMODATION, SHOPPING, OTHER)
+            reservation_status: 변경할 예약 상태 (REQUIRED, RECOMMENDED, ON_SITE, NOT_NEEDED)
+        """
+        body: dict = {}
+        if title:
+            body["title"] = title
+        if start_time:
+            body["startTime"] = start_time
+        if end_time:
+            body["endTime"] = end_time
+        if location:
+            body["location"] = location
+        if memo:
+            body["memo"] = memo
+        if cost:
+            body["cost"] = cost
+        if currency:
+            body["currency"] = currency
+        if category:
+            body["category"] = category
+        if reservation_status:
+            body["reservationStatus"] = reservation_status
+
+        if not body:
+            return "변경할 내용이 없습니다. 수정할 필드를 지정하세요."
+
+        result = await api_request(
+            "PUT",
+            f"/api/trips/{trip_id}/days/{day_id}/activities/{activity_id}",
+            json=body,
+        )
+
+        if "error" in result:
+            return f"오류: {result['error']}"
+
+        return f"활동 수정 완료: {result.get('title', 'N/A')} (ID: {activity_id})"
+
+    @mcp.tool()
+    async def delete_activity(trip_id: int, day_id: int, activity_id: int) -> str:
+        """활동을 삭제한다.
+
+        Args:
+            trip_id: 여행 ID
+            day_id: 일자 ID
+            activity_id: 삭제할 활동 ID
+        """
+        result = await api_request(
+            "DELETE",
+            f"/api/trips/{trip_id}/days/{day_id}/activities/{activity_id}",
+        )
+
+        if "error" in result:
+            return f"오류: {result['error']}"
+
+        return f"활동 삭제 완료 (ID: {activity_id})"
+
+    @mcp.tool()
+    async def reorder_activities(
+        trip_id: int, day_id: int, activity_ids: list[int]
+    ) -> str:
+        """일자 내 활동 순서를 변경한다.
+
+        Args:
+            trip_id: 여행 ID
+            day_id: 일자 ID
+            activity_ids: 새 순서의 활동 ID 목록 (예: [3, 1, 2])
+        """
+        result = await api_request(
+            "PATCH",
+            f"/api/trips/{trip_id}/days/{day_id}/activities",
+            json={"orderedIds": activity_ids},
+        )
+
+        if "error" in result:
+            return f"오류: {result['error']}"
+
+        return f"활동 순서 변경 완료 ({len(activity_ids)}개)"

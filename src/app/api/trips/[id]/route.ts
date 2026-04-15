@@ -18,7 +18,10 @@ export async function GET(request: Request, { params }: Params) {
     prisma.trip.findUnique({
       where: { id: tripId },
       include: {
-        days: { orderBy: { sortOrder: "asc" } },
+        days: {
+          orderBy: { sortOrder: "asc" },
+          include: { _count: { select: { activities: true } } },
+        },
         tripMembers: {
           include: { user: { select: { id: true, name: true, image: true } } },
         },
