@@ -19,7 +19,7 @@ logger = logging.getLogger("trip-mcp-server")
 
 mcp = FastMCP("trip")
 
-# 도구 등록: 검색 8개 + CRUD 10개 = 18개
+# 도구 등록: 검색 8개 + CRUD 12개 = 20개
 register_search_tools(mcp)
 register_planner_tools(mcp)
 

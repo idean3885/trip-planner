@@ -8,7 +8,7 @@ logger = logging.getLogger("trip-mcp-server")
 
 
 def register_planner_tools(mcp: FastMCP) -> None:
-    """일정 관리 도구 10개를 FastMCP 서버에 등록한다."""
+    """일정 관리 도구 12개를 FastMCP 서버에 등록한다."""
 
     @mcp.tool()
     async def list_trips() -> str:
@@ -339,3 +339,60 @@ def register_planner_tools(mcp: FastMCP) -> None:
             return f"오류: {result['error']}"
 
         return f"활동 순서 변경 완료 ({len(activity_ids)}개)"
+
+    # ── 마크다운 변환 지원 ─────────────────────────────
+
+    @mcp.tool()
+    async def get_day_content(trip_id: int, day_id: int) -> str:
+        """일자의 전체 마크다운 콘텐츠를 조회한다. 활동 변환 시 원본 확인용.
+
+        Args:
+            trip_id: 여행 ID
+            day_id: 일자 ID (get_trip에서 확인)
+        """
+        result = await api_request("GET", f"/api/trips/{trip_id}/days/{day_id}")
+
+        if "error" in result:
+            return f"오류: {result['error']}"
+
+        content = result.get("content", "")
+        if not content:
+            return f"일자 ID {day_id}에 마크다운 콘텐츠가 없습니다."
+
+        activities = result.get("activities", [])
+        header = f"[Day ID: {day_id}] 활동: {len(activities)}개 | 마크다운: {len(content)}자\n"
+        return header + "---\n" + content
+
+    @mcp.tool()
+    async def clear_day_content(trip_id: int, day_id: int) -> str:
+        """일자의 마크다운 콘텐츠를 비운다. 활동 변환 완료 후 정리용.
+
+        주의: 활동이 0개인 상태에서는 실행할 수 없다 (데이터 유실 방지).
+
+        Args:
+            trip_id: 여행 ID
+            day_id: 일자 ID
+        """
+        # 먼저 활동 수 확인
+        day = await api_request("GET", f"/api/trips/{trip_id}/days/{day_id}")
+        if "error" in day:
+            return f"오류: {day['error']}"
+
+        activities = day.get("activities", [])
+        if not activities:
+            return "활동이 0개입니다. 먼저 create_activity로 활동을 추가한 뒤 실행하세요."
+
+        content = day.get("content", "")
+        if not content:
+            return "이미 마크다운 콘텐츠가 비어 있습니다."
+
+        result = await api_request(
+            "PUT",
+            f"/api/trips/{trip_id}/days/{day_id}",
+            json={"content": ""},
+        )
+
+        if "error" in result:
+            return f"오류: {result['error']}"
+
+        return f"마크다운 콘텐츠 삭제 완료 (일자 ID: {day_id}, 활동 {len(activities)}개 유지)"
