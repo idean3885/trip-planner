@@ -91,8 +91,7 @@ develop ──●──●──●───●──●──●──●──
 - **feature** (`NNN-short-name`): speckit(`/speckit.specify`) 실행 시 자동 생성. spec → plan → tasks 후 구현. (예: `007-oauth-cli-reauth`)
 - **hotfix** (`hotfix/설명`): speckit 미경유. develop에서 분기. (예: `hotfix/v2.2.2-gitflow-harness`)
 - **feature/hotfix → develop PR**: dev 환경에서 통합 테스트.
-- **develop → main PR**: 마일스톤 완료 또는 핫픽스 시 릴리즈. main 직접 머지 금지.
-- **develop → main PR**: 마일스톤 완료 또는 핫픽스 시 릴리즈. CI가 자동으로 태그 + Release + PyPI.
+- **develop → main PR**: 마일스톤 완료 또는 핫픽스 시 릴리즈. CI가 자동으로 태그 + Release + PyPI. main 직접 머지 금지.
 
 ## 릴리즈 프로세스
 
