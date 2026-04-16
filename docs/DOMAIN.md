@@ -34,17 +34,9 @@ graph TB
 - **여행 컨텍스트**: Trip이 루트. Day, Activity, TripMember 포함. 기획 도메인 1~4를 구현
 - **인증 컨텍스트**: Auth.js v5 관리 영역. userId로만 여행 컨텍스트와 연결
 
-## 용어 사전 (specs/004 기준)
+## 용어 사전
 
-| 한글 | 영문 | 정의 |
-|------|------|------|
-| 여행 | Trip | 최상위 단위. 제목, 기간, 일정 포함 |
-| 일정 | Day | 일별 일정. 여행에 속하며 날짜, 활동 포함 |
-| 활동 | Activity | 일정 내 구조화된 항목 (관광, 식사, 이동 등) |
-| 멤버 | TripMember | 여행 참여자. 역할(주인/호스트/게스트) 포함 |
-| 주인 | OWNER | 여행 생성자. 여행당 1명. 양도 가능. 전체 권한 |
-| 호스트 | HOST | 함께 기획하는 동행자. 편집 + 초대 가능 |
-| 게스트 | GUEST | 조회만 가능한 동행자 |
+[specs/collaboration/004-fullstack-transition/spec.md — Glossary](../specs/collaboration/004-fullstack-transition/spec.md#glossary) 참조.
 
 ## 애그리거트
 
