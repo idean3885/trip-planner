@@ -133,6 +133,8 @@ model Activity {
   title             String
   startTime         String?            @map("start_time") @db.VarChar(12)
   endTime           String?            @map("end_time") @db.VarChar(12)
+  startTimeTs       DateTime?          @map("start_time_ts") @db.Timestamptz(3)
+  endTimeTs         DateTime?          @map("end_time_ts") @db.Timestamptz(3)
   location          String?
   memo              String?            @db.Text
   cost              Decimal?           @db.Decimal(10, 2)

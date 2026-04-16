@@ -6,12 +6,23 @@ import type { ActivityCategory, ReservationStatus, Prisma } from "@prisma/client
 import ActivityCard from "./ActivityCard";
 import ActivityForm, { type ActivityFormData } from "./ActivityForm";
 
+function formatTime(value: string | null | undefined): string {
+  if (!value) return "";
+  if (value.includes("T")) {
+    const d = new Date(value);
+    return `${String(d.getUTCHours()).padStart(2, "0")}:${String(d.getUTCMinutes()).padStart(2, "0")}`;
+  }
+  return value;
+}
+
 interface Activity {
   id: number;
   category: ActivityCategory;
   title: string;
   startTime: string | null;
   endTime: string | null;
+  startTimeTs?: string | null;
+  endTimeTs?: string | null;
   location: string | null;
   memo: string | null;
   cost: Prisma.Decimal | string | number | null;
@@ -135,8 +146,8 @@ export default function ActivityList({
             initial={{
               category: activity.category,
               title: activity.title,
-              startTime: activity.startTime ?? "",
-              endTime: activity.endTime ?? "",
+              startTime: formatTime(activity.startTimeTs ?? activity.startTime),
+              endTime: formatTime(activity.endTimeTs ?? activity.endTime),
               location: activity.location ?? "",
               memo: activity.memo ?? "",
               cost: activity.cost ? String(activity.cost) : "",

@@ -43,6 +43,16 @@ const CATEGORY_COLOR: Record<ActivityCategory, string> = {
   OTHER: "bg-surface-100 text-surface-600",
 };
 
+/** ISO datetime → "HH:mm", 레거시 HH:mm 문자열은 그대로 반환 */
+function formatTime(value: string | null): string | null {
+  if (!value) return null;
+  if (value.includes("T")) {
+    const d = new Date(value);
+    return `${String(d.getUTCHours()).padStart(2, "0")}:${String(d.getUTCMinutes()).padStart(2, "0")}`;
+  }
+  return value;
+}
+
 const RESERVATION_LABEL: Record<ReservationStatus, string> = {
   REQUIRED: "사전 예약 필수",
   RECOMMENDED: "사전 예약 권장",
@@ -57,6 +67,8 @@ interface ActivityCardProps {
     title: string;
     startTime: string | null;
     endTime: string | null;
+    startTimeTs?: string | null;
+    endTimeTs?: string | null;
     location: string | null;
     memo: string | null;
     cost: Prisma.Decimal | string | number | null;
@@ -82,10 +94,12 @@ export default function ActivityCard({
   onMoveUp,
   onMoveDown,
 }: ActivityCardProps) {
+  const startFmt = formatTime(activity.startTimeTs ?? activity.startTime);
+  const endFmt = formatTime(activity.endTimeTs ?? activity.endTime);
   const timeRange =
-    activity.startTime && activity.endTime
-      ? `${activity.startTime}–${activity.endTime}`
-      : activity.startTime ?? null;
+    startFmt && endFmt
+      ? `${startFmt}–${endFmt}`
+      : startFmt ?? null;
 
   const cost = activity.cost ? Number(activity.cost) : null;
 
