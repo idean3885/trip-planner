@@ -22,28 +22,20 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: CHANGELOG에서 릴리즈 노트 추출
-        id: notes
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           # CHANGELOG.md에서 해당 버전 섹션 추출
           # ## [X.Y.Z] 부터 다음 ## [ 까지
-          NOTES=$(awk "/^## \\[${VERSION}\\]/{found=1; next} /^## \\[/{if(found) exit} found" CHANGELOG.md)
+          awk "/^## \\[${VERSION}\\]/{found=1; next} /^## \\[/{if(found) exit} found" CHANGELOG.md > /tmp/release-notes.md
 
-          if [ -z "$NOTES" ]; then
-            NOTES="릴리즈 노트가 CHANGELOG.md에 없습니다. 커밋 로그를 확인하세요."
+          if [ ! -s /tmp/release-notes.md ]; then
+            echo "릴리즈 노트가 CHANGELOG.md에 없습니다. 커밋 로그를 확인하세요." > /tmp/release-notes.md
           fi
-
-          # GitHub Actions 멀티라인 출력
-          {
-            echo "notes<<NOTES_EOF"
-            echo "$NOTES"
-            echo "NOTES_EOF"
-          } >> "$GITHUB_OUTPUT"
 
       - name: GitHub Release 생성
         run: |
           gh release create "${{ steps.version.outputs.tag }}" \
             --title "${{ steps.version.outputs.tag }}" \
-            --notes "${{ steps.notes.outputs.notes }}"
+            --notes-file /tmp/release-notes.md
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
