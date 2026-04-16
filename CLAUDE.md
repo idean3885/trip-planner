@@ -44,13 +44,13 @@ trip-planner/
 ```
 main ────────────●───────────────●──── (production: trip.idean.me)
                  ↑               ↑
-develop ──●──●──●───●──●──●──●──● ── (alpha: alpha.trip.idean.me)
+develop ──●──●──●───●──●──●──●──● ── (alpha: dev.trip.idean.me)
           ↑  ↑  ↑   ↑  ↑  ↑  ↑
         feat feat feat feat feat feat  (NNN-short-name)
 ```
 
 - **main**: 프로덕션 브랜치. trip.idean.me 배포. 버전 태그가 붙는 유일한 브랜치.
-- **develop**: 통합 브랜치. alpha.trip.idean.me 배포. feature 브랜치가 여기로 머지.
+- **develop**: 통합 브랜치. dev.trip.idean.me 배포. feature 브랜치가 여기로 머지.
 - **feature**: `NNN-short-name` 형식 (speckit 자동 생성). develop으로 PR 머지.
 - 머지된 feature 브랜치는 GitHub가 자동 삭제 (`deleteBranchOnMerge: true`).
 - hotfix/release 브랜치는 사용하지 않음 (1인 개발).
@@ -60,14 +60,14 @@ develop ──●──●──●───●──●──●──●──
 | 브랜치 | 도메인 | 용도 |
 |--------|--------|------|
 | main | trip.idean.me | 프로덕션 릴리즈 |
-| develop | alpha.trip.idean.me | 마일스톤 통합 테스트 |
+| develop | dev.trip.idean.me | 마일스톤 통합 테스트 |
 | feature/* | PR 프리뷰 URL | 피처 단위 프리뷰 |
 
 ### 릴리즈 프로세스
 
 **개발 (마일스톤 진행 중)**:
 1. feature 브랜치에서 작업 → develop PR → 머지
-2. develop에 머지되면 alpha.trip.idean.me에 자동 배포
+2. develop에 머지되면 dev.trip.idean.me에 자동 배포
 3. 마일스톤의 모든 이슈가 develop에 머지될 때까지 반복
 
 **릴리즈 (마일스톤 완료 시)**:
