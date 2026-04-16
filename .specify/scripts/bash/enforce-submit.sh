@@ -36,9 +36,9 @@ fi
 # 브랜치 확인
 BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")
 
-# main에서의 커밋은 speckit-gate가 소스 편집을 이미 차단하므로,
+# main/develop에서의 커밋은 speckit-gate가 소스 편집을 이미 차단하므로,
 # 여기서는 config/spec 파일 커밋을 허용
-if [[ "$BRANCH" == "main" || "$BRANCH" == "master" ]]; then
+if [[ "$BRANCH" == "main" || "$BRANCH" == "master" || "$BRANCH" == "develop" ]]; then
   exit 0
 fi
 
