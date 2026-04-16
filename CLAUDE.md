@@ -85,6 +85,8 @@ trip-planner/
 - Neon Postgres (Vercel Marketplace 통합, 무료 티어 0.5GB) (004-fullstack-transition)
 - TypeScript 5.x (Next.js 웹앱) + Python 3.10+ (MCP 서버) (005-ax-api-mcp)
 - Neon Postgres (Vercel Marketplace, Prisma ORM) (005-ax-api-mcp)
+- TypeScript 5.x (Next.js 15), Python 3.10+ (MCP 서버) + Next.js App Router, Auth.js v5, Prisma 7.x, FastMCP, httpx (007-oauth-cli-reauth)
+- Neon Postgres (Prisma ORM), macOS Keychain (로컬 토큰 저장) (007-oauth-cli-reauth)
 
 ## Recent Changes
 - 001-ax-travel-planning: Added Python 3.14 + FastMCP, httpx, python-dotenv, pytes

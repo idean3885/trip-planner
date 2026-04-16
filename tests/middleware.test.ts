@@ -72,4 +72,11 @@ describe("Middleware auth logic", () => {
     // Should pass through (no redirect)
     expect(!isApiRoute && !isAuthRoute && isLoggedIn).toBe(true);
   });
+
+  it("treats /api/auth/cli as API route (pass-through)", () => {
+    const pathname = "/api/auth/cli";
+    const isApiRoute = pathname.startsWith("/api/");
+    expect(isApiRoute).toBe(true);
+    // API routes return early in middleware — no auth redirect
+  });
 });
