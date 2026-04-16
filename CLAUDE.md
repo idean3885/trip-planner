@@ -29,15 +29,61 @@ trip-planner/
 
 ## Git 워크플로우 규칙
 
-### 필수: `/devex:flow` 사용
-- 모든 코드 변경은 반드시 `/devex:flow`를 통해 진행한다
-- main 브랜치에 직접 push 금지 (어드민 포함, `enforce_admins: true`)
-- feature 브랜치 → PR → 리뷰 → 머지 순서를 반드시 따른다
+### 필수: feature → develop PR
+- 모든 코드 변경은 feature 브랜치 → develop PR로 진행한다
+- main, develop 브랜치에 직접 push 금지 (`enforce_admins: true`)
+- feature 브랜치 → develop PR → 머지 → 마일스톤 완료 시 develop → main PR
 
 ### 브랜치 최신화
-- feature 브랜치 작업 전 반드시 `git pull origin main`으로 최신화
-- PR 생성 전 base 브랜치와 충돌 여부 확인
+- feature 브랜치 작업 전 반드시 `git pull origin develop`으로 최신화
+- PR 생성 전 base 브랜치(develop)와 충돌 여부 확인
 - 충돌 발생 시 rebase로 해결 후 PR 생성
+
+### 브랜치 전략: Git Flow Lite
+
+```
+main ────────────●───────────────●──── (production: trip.idean.me)
+                 ↑               ↑
+develop ──●──●──●───●──●──●──●──● ── (alpha: dev.trip.idean.me)
+          ↑  ↑  ↑   ↑  ↑  ↑  ↑
+        feat feat feat feat feat feat  (NNN-short-name)
+```
+
+- **main**: 프로덕션 브랜치. trip.idean.me 배포. 버전 태그가 붙는 유일한 브랜치.
+- **develop**: 통합 브랜치. dev.trip.idean.me 배포. feature 브랜치가 여기로 머지.
+- **feature**: `NNN-short-name` 형식 (speckit 자동 생성). develop으로 PR 머지.
+- 머지된 feature 브랜치는 GitHub가 자동 삭제 (`deleteBranchOnMerge: true`).
+- hotfix/release 브랜치는 사용하지 않음 (1인 개발).
+
+### 배포 환경 매핑
+
+| 브랜치 | 도메인 | 용도 |
+|--------|--------|------|
+| main | trip.idean.me | 프로덕션 릴리즈 |
+| develop | dev.trip.idean.me | 마일스톤 통합 테스트 |
+| feature/* | PR 프리뷰 URL | 피처 단위 프리뷰 |
+
+### 릴리즈 프로세스
+
+**개발 (마일스톤 진행 중)**:
+1. feature 브랜치에서 작업 → develop PR → 머지
+2. develop에 머지되면 dev.trip.idean.me에 자동 배포
+3. 마일스톤의 모든 이슈가 develop에 머지될 때까지 반복
+
+**릴리즈 (마일스톤 완료 시)**:
+1. `CHANGELOG.md`에 새 버전 섹션 추가 (Keep a Changelog 형식)
+2. `pyproject.toml`의 `version` 필드 범프
+3. develop → main PR 생성 → 머지
+
+**CI 자동 (main 머지 후)**:
+4. `auto-tag.yml`: pyproject.toml 변경 감지 → annotated 태그 생성
+5. `auto-release.yml`: 태그 push → CHANGELOG 추출 → GitHub Release 생성
+6. `pypi-publish.yml`: 태그 push → 테스트 → PyPI 배포
+
+**버전 범프 기준 (SemVer)**:
+- MAJOR: 호환성 깨지는 변경 (API 스키마 변경, MCP 도구 삭제 등)
+- MINOR: 기능 추가 (새 API, 새 MCP 도구, 새 페이지 등)
+- PATCH: 버그 수정, 성능 개선, 문서 수정
 
 ## 작업 규칙
 

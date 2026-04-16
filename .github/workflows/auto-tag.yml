@@ -32,11 +32,11 @@ jobs:
             echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: 태그 생성 및 push
+      - name: Annotated 태그 생성 및 push
         if: steps.check.outputs.exists == 'false'
         run: |
           TAG="${{ steps.version.outputs.tag }}"
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag "$TAG"
+          git tag -a "$TAG" -m "Release $TAG"
           git push origin "$TAG"
