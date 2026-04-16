@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] - 2026-04-16
+
+### Added
+- **OAuth CLI 인증**: install.sh에서 브라우저 Google 로그인 1회로 PAT 자동 발급·저장 (#128)
+- **MCP 런타임 재인증**: 토큰 만료(401) 시 브라우저 자동 재인증 + 요청 재시도 (#129)
+- **PAT 미설정 초기 인증**: MCP 첫 호출 시 토큰 없어도 브라우저 인증으로 자동 발급
+- **auto-release.yml**: 태그 push 시 CHANGELOG 기반 GitHub Release 자동 생성
+- **Git Flow Lite 전략**: main(production) + develop(dev) + feature 브랜치 전략 도입 (#148)
+- **dev.trip.idean.me**: develop 브랜치 전용 알파 배포 도메인
+
+### Changed
+- **auto-tag.yml**: lightweight → annotated 태그 전환
+- **install.sh**: 수동 PAT 입력 → 브라우저 OAuth 우선 (수동은 폴백)
+- **token-helpers.ts**: createPAT 공유 헬퍼 추출, /api/tokens 리팩터
+- **web_client.py**: asyncio.Lock 기반 동시 재인증 방지, 키체인 자동 갱신
+
 ## [2.1.0] - 2026-04-16
 
 ### Added
