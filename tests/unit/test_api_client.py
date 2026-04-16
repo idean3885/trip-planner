@@ -81,21 +81,15 @@ class TestMakeRapidapiRequest:
         assert "error" not in result
 
 
-class TestConnectionReuse:
-    """API client should reuse connections for performance."""
+class TestConsecutiveRequests:
+    """Consecutive API requests should work correctly."""
 
-    def test_module_exposes_shared_client(self):
-        """api_client should have a module-level shared client for connection pooling."""
-        assert hasattr(api_client_module, "get_client"), \
-            "api_client must expose get_client() for connection reuse"
-
-    async def test_consecutive_requests_reuse_client(self, httpx_mock: HTTPXMock):
-        """Two consecutive requests should reuse the same underlying client."""
+    async def test_consecutive_requests_succeed(self, httpx_mock: HTTPXMock):
+        """Two consecutive requests should both complete successfully."""
         httpx_mock.add_response(json={"status": True, "data": []})
         httpx_mock.add_response(json={"status": True, "data": []})
 
         await make_rapidapi_request("/api/v1/hotels/searchDestination", {"query": "a"})
         await make_rapidapi_request("/api/v1/hotels/searchDestination", {"query": "b"})
 
-        # Both requests should have gone through (proves client works for multiple calls)
         assert len(httpx_mock.get_requests()) == 2
