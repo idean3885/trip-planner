@@ -85,11 +85,13 @@ main ────────────●────────────
                  ↑               ↑
 develop ──●──●──●───●──●──●──●──● ── (dev 통합 배포)
           ↑  ↑  ↑   ↑  ↑  ↑  ↑
-        feature branches (NNN-short-name)
+        feat feat hotfix feat feat
 ```
 
-- **feature → develop PR**: 피처 개발. dev 환경에서 통합 테스트.
-- **develop → main PR**: 마일스톤 완료 시 릴리즈. CI가 자동으로 태그 + Release + PyPI.
+- **feature** (`NNN-short-name`): speckit(`/speckit.specify`) 실행 시 자동 생성. spec → plan → tasks 후 구현. (예: `007-oauth-cli-reauth`)
+- **hotfix** (`hotfix/설명`): speckit 미경유. develop에서 분기. (예: `hotfix/v2.2.2-gitflow-harness`)
+- **feature/hotfix → develop PR**: dev 환경에서 통합 테스트.
+- **develop → main PR**: 마일스톤 완료 또는 핫픽스 시 릴리즈. CI가 자동으로 태그 + Release + PyPI. main 직접 머지 금지.
 
 ## 릴리즈 프로세스
 
@@ -107,6 +109,12 @@ develop ──●──●──●───●──●──●──●──
 - MAJOR: 호환성 깨지는 변경
 - MINOR: 기능 추가
 - PATCH: 버그 수정, 문서 수정
+
+**핫픽스 프로세스**:
+1. develop에서 `hotfix/*` 브랜치 생성
+2. 수정 + CHANGELOG + 버전 PATCH 범프
+3. hotfix → develop PR → dev 환경 확인
+4. develop → main PR → CI 자동 릴리즈
 
 ## API 문서
 

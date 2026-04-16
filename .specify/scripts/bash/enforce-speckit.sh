@@ -55,10 +55,10 @@ esac
 # 4) 브랜치 확인
 BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")
 
-# main/master에서 소스 편집 차단
-if [[ "$BRANCH" == "main" || "$BRANCH" == "master" ]]; then
-  echo "BLOCKED: main 브랜치에서 소스 파일 편집은 허용되지 않습니다." >&2
-  echo "→ /devex:flow 로 피처 브랜치를 생성한 후 작업하세요." >&2
+# main/master/develop에서 소스 편집 차단
+if [[ "$BRANCH" == "main" || "$BRANCH" == "master" || "$BRANCH" == "develop" ]]; then
+  echo "BLOCKED: ${BRANCH} 브랜치에서 소스 파일 편집은 허용되지 않습니다." >&2
+  echo "→ 피처 브랜치를 생성한 후 작업하세요." >&2
   exit 2
 fi
 

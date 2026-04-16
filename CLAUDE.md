@@ -44,16 +44,16 @@ trip-planner/
 ```
 main ────────────●───────────────●──── (production: trip.idean.me)
                  ↑               ↑
-develop ──●──●──●───●──●──●──●──● ── (alpha: dev.trip.idean.me)
+develop ──●──●──●───●──●──●──●──● ── (dev: dev.trip.idean.me)
           ↑  ↑  ↑   ↑  ↑  ↑  ↑
-        feat feat feat feat feat feat  (NNN-short-name)
+        feat feat hotfix feat feat
 ```
 
 - **main**: 프로덕션 브랜치. trip.idean.me 배포. 버전 태그가 붙는 유일한 브랜치.
-- **develop**: 통합 브랜치. dev.trip.idean.me 배포. feature 브랜치가 여기로 머지.
-- **feature**: `NNN-short-name` 형식 (speckit 자동 생성). develop으로 PR 머지.
-- 머지된 feature 브랜치는 GitHub가 자동 삭제 (`deleteBranchOnMerge: true`).
-- hotfix/release 브랜치는 사용하지 않음 (1인 개발).
+- **develop**: 통합 브랜치. dev.trip.idean.me 배포. feature/hotfix가 여기로 머지.
+- **feature**: `NNN-short-name` 형식. speckit(`/speckit.specify`) 실행 시 3자리 일련번호를 자동 부여. speckit 프로세스(spec → plan → tasks)를 거친 후 구현 시작. (예: `007-oauth-cli-reauth`)
+- **hotfix**: `hotfix/설명` 형식. speckit 미경유. (예: `hotfix/v2.2.2-gitflow-harness`)
+- 머지된 feature/hotfix 브랜치는 GitHub가 자동 삭제 (`deleteBranchOnMerge: true`).
 
 ### 배포 환경 매핑
 
@@ -84,6 +84,13 @@ develop ──●──●──●───●──●──●──●──
 - MAJOR: 호환성 깨지는 변경 (API 스키마 변경, MCP 도구 삭제 등)
 - MINOR: 기능 추가 (새 API, 새 MCP 도구, 새 페이지 등)
 - PATCH: 버그 수정, 성능 개선, 문서 수정
+
+**핫픽스 프로세스**:
+1. develop에서 `hotfix/*` 브랜치 생성
+2. 수정 + CHANGELOG + 버전 PATCH 범프
+3. hotfix → develop PR → 머지 → dev 환경 확인
+4. develop → main PR → 머지 → CI 자동 릴리즈
+5. main 직접 머지 금지 — dev 환경 검증 필수
 
 ## 작업 규칙
 
