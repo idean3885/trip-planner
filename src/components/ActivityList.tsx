@@ -21,8 +21,6 @@ interface Activity {
   title: string;
   startTime: string | null;
   endTime: string | null;
-  startTimeTs?: string | null;
-  endTimeTs?: string | null;
   location: string | null;
   memo: string | null;
   cost: Prisma.Decimal | string | number | null;
@@ -146,8 +144,8 @@ export default function ActivityList({
             initial={{
               category: activity.category,
               title: activity.title,
-              startTime: formatTime(activity.startTimeTs ?? activity.startTime),
-              endTime: formatTime(activity.endTimeTs ?? activity.endTime),
+              startTime: formatTime(activity.startTime),
+              endTime: formatTime(activity.endTime),
               location: activity.location ?? "",
               memo: activity.memo ?? "",
               cost: activity.cost ? String(activity.cost) : "",

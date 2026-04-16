@@ -102,8 +102,8 @@ describe("POST /activities", () => {
   it("creates activity with all fields", async () => {
     mockAuth.mockResolvedValue("user1");
     mockCanEdit.mockResolvedValue(true);
-    mockPrisma.day.findUnique.mockResolvedValue({ id: 1 });
-    const created = { id: 10, category: "DINING", title: "Lunch", startTime: "12:00" };
+    mockPrisma.day.findUnique.mockResolvedValue({ id: 1, date: new Date("2026-06-07T00:00:00Z") });
+    const created = { id: 10, category: "DINING", title: "Lunch", startTime: "2026-06-07T12:00:00.000Z" };
     mockPrisma.activity.create.mockResolvedValue(created);
 
     const res = await POST(
@@ -187,6 +187,7 @@ describe("PUT /activities/{id}", () => {
   it("updates activity with all fields", async () => {
     mockAuth.mockResolvedValue("user1");
     mockCanEdit.mockResolvedValue(true);
+    mockPrisma.day.findUnique.mockResolvedValue({ id: 1, date: new Date("2026-06-07T00:00:00Z") });
     const updated = { id: 10, title: "Updated", category: "DINING" };
     mockPrisma.activity.update.mockResolvedValue(updated);
 

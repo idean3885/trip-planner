@@ -41,10 +41,8 @@ export async function PUT(request: Request, { params }: Params) {
     data: {
       ...(category !== undefined && { category }),
       ...(title !== undefined && { title }),
-      ...(startTime !== undefined && { startTime }),
-      ...(endTime !== undefined && { endTime }),
-      ...(startTime !== undefined && { startTimeTs: toTimestamp(startTime, day.date) }),
-      ...(endTime !== undefined && { endTimeTs: toTimestamp(endTime, day.date) }),
+      ...(startTime !== undefined && { startTime: toTimestamp(startTime, day.date) }),
+      ...(endTime !== undefined && { endTime: toTimestamp(endTime, day.date) }),
       ...(location !== undefined && { location }),
       ...(memo !== undefined && { memo }),
       ...(cost !== undefined && { cost }),

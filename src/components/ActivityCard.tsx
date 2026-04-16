@@ -67,8 +67,6 @@ interface ActivityCardProps {
     title: string;
     startTime: string | null;
     endTime: string | null;
-    startTimeTs?: string | null;
-    endTimeTs?: string | null;
     location: string | null;
     memo: string | null;
     cost: Prisma.Decimal | string | number | null;
@@ -94,8 +92,8 @@ export default function ActivityCard({
   onMoveUp,
   onMoveDown,
 }: ActivityCardProps) {
-  const startFmt = formatTime(activity.startTimeTs ?? activity.startTime);
-  const endFmt = formatTime(activity.endTimeTs ?? activity.endTime);
+  const startFmt = formatTime(activity.startTime);
+  const endFmt = formatTime(activity.endTime);
   const timeRange =
     startFmt && endFmt
       ? `${startFmt}–${endFmt}`
