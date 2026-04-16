@@ -1,0 +1,190 @@
+# 기술 도메인
+
+DDD + 이벤트 드리븐 관점의 기술 설계. 기획 도메인은 [specs/README.md](../specs/README.md) 참조.
+
+## 바운디드 컨텍스트
+
+```mermaid
+graph TB
+    subgraph "여행 컨텍스트 (Trip Context)"
+        TA[Trip Aggregate Root]
+        DA[Day Entity]
+        AA[Activity Entity]
+        TM[TripMember Entity]
+    end
+
+    subgraph "인증 컨텍스트 (Auth Context)"
+        UA[User Aggregate]
+        AC[Account]
+        SE[Session]
+        PA[PersonalAccessToken]
+    end
+
+    TA -->|contains| DA
+    DA -->|contains| AA
+    TA -->|contains| TM
+    TM -.->|references userId| UA
+    PA -.->|references userId| UA
+
+    style TA fill:#f9f,stroke:#333
+    style UA fill:#ff9,stroke:#333
+```
+
+**2개 컨텍스트:**
+- **여행 컨텍스트**: Trip이 루트. Day, Activity, TripMember 포함. 기획 도메인 1~4를 구현
+- **인증 컨텍스트**: Auth.js v5 관리 영역. userId로만 여행 컨텍스트와 연결
+
+## 용어 사전
+
+[specs/collaboration/004-fullstack-transition/spec.md — Glossary](../specs/collaboration/004-fullstack-transition/spec.md#glossary) 참조.
+
+## 애그리거트
+
+```mermaid
+classDiagram
+    class Trip {
+        +int id
+        +string title
+        +string description
+        +Date startDate
+        +Date endDate
+        +createDay(date, title)
+        +removeDay(dayId)
+        +addMember(userId, role)
+        +removeMember(memberId)
+        +transferOwnership(toMemberId)
+    }
+
+    class Day {
+        +int id
+        +Date date
+        +string title
+        +int sortOrder
+        +addActivity(activity)
+        +removeActivity(activityId)
+        +reorderActivities(ids)
+    }
+
+    class Activity {
+        +int id
+        +ActivityCategory category
+        +string title
+        +TimeWithZone startTime
+        +TimeWithZone endTime
+        +string location
+        +string memo
+        +Money cost
+        +ReservationStatus reservationStatus
+    }
+
+    class TripMember {
+        +int id
+        +string userId
+        +TripRole role
+        +Date joinedAt
+        +promote()
+        +demote()
+    }
+
+    class TimeWithZone {
+        <<Value Object>>
+        +DateTime instant
+        +string timezone
+        +formatLocal() string
+    }
+
+    class Money {
+        <<Value Object>>
+        +Decimal amount
+        +string currency
+    }
+
+    Trip "1" *-- "0..*" Day : contains
+    Trip "1" *-- "1..*" TripMember : has
+    Day "1" *-- "0..*" Activity : contains
+    Activity *-- TimeWithZone : startTime
+    Activity *-- TimeWithZone : endTime
+    Activity *-- Money : cost
+```
+
+## 권한 매트릭스
+
+[헌법 VI. Role-Based Access Control](../.specify/memory/constitution.md) 참조.
+
+## 밸류 오브젝트
+
+| VO | 구성 | 설명 |
+|----|------|------|
+| **TimeWithZone** | instant (Timestamptz) + timezone (IANA) | 시각 + 표시 시간대. timezone NULL이면 Day 도시 기준 |
+| **Money** | amount (Decimal) + currency (VARCHAR) | 비용 + ISO 4217 통화 코드 |
+| **ActivityCategory** | enum | SIGHTSEEING, DINING, TRANSPORT, ACCOMMODATION, SHOPPING, OTHER |
+| **ReservationStatus** | enum | REQUIRED, RECOMMENDED, ON_SITE, NOT_NEEDED |
+| **TripRole** | enum | OWNER, HOST, GUEST |
+
+## 도메인 이벤트
+
+```mermaid
+graph LR
+    subgraph "여행 이벤트"
+        TC[TripCreated]
+        TD[TripDeleted]
+        DC[DayCreated]
+        DD[DayDeleted]
+        AC[ActivityCreated]
+        AU[ActivityUpdated]
+        AD[ActivityDeleted]
+        AR[ActivitiesReordered]
+    end
+
+    subgraph "멤버 이벤트"
+        MJ[MemberJoined]
+        ML[MemberLeft]
+        MR[MemberRoleChanged]
+        OT[OwnershipTransferred]
+    end
+
+    subgraph "이벤트 핸들러 (예시)"
+        H1[캘린더 동기화]
+        H2[알림 발송]
+        H3[활동 로그]
+        H4[캐시 무효화]
+    end
+
+    AC & AU & AD --> H1
+    AC & MJ --> H2
+    TC & TD & AC & AU & AD & MJ & ML --> H3
+    AC & AU & AD & AR --> H4
+```
+
+## 현재 → 목표
+
+| 항목 | 현재 | 목표 (DDD + 이벤트 드리븐) |
+|------|------|--------------------------|
+| **비즈니스 로직** | API Route에 혼재 | Service 계층 분리 |
+| **데이터 접근** | Route → Prisma 직접 | Service → Repository → Prisma |
+| **도메인 행위** | 없음 (CRUD만) | 애그리거트 메서드 |
+| **삭제 전파** | DB FK Cascade | 도메인 이벤트 → 핸들러 |
+| **부가 작업** | 불가 | 이벤트 핸들러로 확장 |
+
+### 목표 레이어
+
+```
+src/
+├── domain/              # 도메인 모델 (순수 TypeScript)
+│   └── trip/
+│       ├── trip.ts            # Trip 애그리거트
+│       ├── day.ts             # Day 엔티티
+│       ├── activity.ts        # Activity 엔티티
+│       ├── trip-member.ts     # TripMember 엔티티
+│       ├── value-objects.ts   # TimeWithZone, Money
+│       └── events.ts          # 도메인 이벤트
+├── application/         # 유스케이스 (서비스)
+│   ├── trip-service.ts
+│   ├── activity-service.ts
+│   └── member-service.ts
+├── infrastructure/      # 인프라 (Prisma, 이벤트 버스)
+│   ├── repositories/
+│   └── events/
+└── app/                 # Next.js (프레젠테이션)
+    └── api/             # 얇은 라우트 핸들러
+```

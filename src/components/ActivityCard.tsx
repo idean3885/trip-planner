@@ -43,6 +43,26 @@ const CATEGORY_COLOR: Record<ActivityCategory, string> = {
   OTHER: "bg-surface-100 text-surface-600",
 };
 
+/** IANA timezone → 약어 (e.g. "Asia/Seoul" → "KST") */
+function tzAbbr(iana: string): string {
+  try {
+    const parts = new Intl.DateTimeFormat("en", { timeZone: iana, timeZoneName: "short" })
+      .formatToParts(new Date("2026-06-07T12:00:00Z"));
+    return parts.find((p) => p.type === "timeZoneName")?.value ?? iana;
+  } catch { return iana; }
+}
+
+/** ISO datetime → "HH:mm" 또는 "HH:mm TZ" */
+function formatTime(value: string | null, tz?: string | null): string | null {
+  if (!value) return null;
+  if (value.includes("T")) {
+    const d = new Date(value);
+    const hhmm = `${String(d.getUTCHours()).padStart(2, "0")}:${String(d.getUTCMinutes()).padStart(2, "0")}`;
+    return tz ? `${hhmm} ${tzAbbr(tz)}` : hhmm;
+  }
+  return value;
+}
+
 const RESERVATION_LABEL: Record<ReservationStatus, string> = {
   REQUIRED: "사전 예약 필수",
   RECOMMENDED: "사전 예약 권장",
@@ -56,7 +76,9 @@ interface ActivityCardProps {
     category: ActivityCategory;
     title: string;
     startTime: string | null;
+    startTimezone?: string | null;
     endTime: string | null;
+    endTimezone?: string | null;
     location: string | null;
     memo: string | null;
     cost: Prisma.Decimal | string | number | null;
@@ -82,10 +104,12 @@ export default function ActivityCard({
   onMoveUp,
   onMoveDown,
 }: ActivityCardProps) {
+  const startFmt = formatTime(activity.startTime, activity.startTimezone);
+  const endFmt = formatTime(activity.endTime, activity.endTimezone);
   const timeRange =
-    activity.startTime && activity.endTime
-      ? `${activity.startTime}–${activity.endTime}`
-      : activity.startTime ?? null;
+    startFmt && endFmt
+      ? `${startFmt}–${endFmt}`
+      : startFmt ?? null;
 
   const cost = activity.cost ? Number(activity.cost) : null;
 
