@@ -164,29 +164,100 @@ else
     echo -e "${YELLOW}▶ Trip Planner API 토큰 설정 (선택사항)${NC}"
     echo ""
     echo "  AI 에이전트로 여행 일정을 직접 수정하려면 API 토큰이 필요합니다."
-    echo "  건너뛰려면 Enter를 누르세요. (검색 기능만 사용 가능)"
-    echo ""
-    echo -e "  ${CYAN}토큰 생성 방법:${NC}"
-    echo "    1) https://trip.idean.me/settings 접속"
-    echo "    2) Google 계정으로 로그인"
-    echo "    3) '토큰 생성' 클릭 후 토큰 복사"
     echo ""
 
-    if [ -t 0 ]; then INPUT_DEV="/dev/stdin"; else INPUT_DEV="/dev/tty"; fi
+    # ── 6a. 브라우저 OAuth 인증 시도 ──
+    BROWSER_AUTH_OK=false
+    if [ -t 0 ] || [ -t 1 ]; then
+        STATE=$(openssl rand -hex 16 2>/dev/null || true)
+        if [ -n "${STATE}" ]; then
+            echo -e "  ${CYAN}브라우저에서 Google 로그인으로 자동 인증합니다...${NC}"
+            echo "  브라우저가 열립니다. Google 로그인을 완료해 주세요."
+            echo -e "  ${YELLOW}(최대 120초 대기)${NC}"
+            echo ""
 
-    printf "  Trip Planner 토큰을 입력하세요 (Enter로 건너뛰기): "
-    read -r PAT_VALUE < "${INPUT_DEV}"
+            # Python이 서버 기동 + 브라우저 열기 + 콜백 수신을 모두 처리
+            BROWSER_TOKEN=$("${PYTHON_BIN}" -c "
+import http.server, urllib.parse, sys, socketserver, webbrowser
 
-    if [ -n "${PAT_VALUE}" ]; then
-        security delete-generic-password -s "${KEYCHAIN_SERVICE}" -a "${KEYCHAIN_PAT}" &>/dev/null || true
-        if security add-generic-password -s "${KEYCHAIN_SERVICE}" -a "${KEYCHAIN_PAT}" -w "${PAT_VALUE}" &>/dev/null; then
-            echo -e "  ${GREEN}macOS 키체인에 토큰 저장 완료${NC}"
-            PAT_INSTALLED=true
-        else
-            echo -e "  ${YELLOW}키체인 저장 실패. 일정 관리 기능 없이 계속합니다.${NC}"
+state = sys.argv[1]
+base_url = sys.argv[2]
+
+class H(http.server.BaseHTTPRequestHandler):
+    token = None
+    def do_GET(self):
+        p = urllib.parse.urlparse(self.path)
+        q = urllib.parse.parse_qs(p.query)
+        if p.path == '/callback':
+            if q.get('state', [''])[0] != state:
+                self.send_response(400)
+                self.end_headers()
+                self.wfile.write(b'State mismatch')
+                return
+            H.token = q.get('token', [''])[0]
+            self.send_response(200)
+            self.send_header('Content-Type', 'text/html; charset=utf-8')
+            self.end_headers()
+            html = '<html><body style=\"font-family:system-ui;text-align:center;padding:60px\">'
+            html += '<h1>인증 완료!</h1><p>이 창을 닫고 터미널로 돌아가세요.</p></body></html>'
+            self.wfile.write(html.encode())
+        else:
+            self.send_response(404)
+            self.end_headers()
+    def log_message(self, *a): pass
+
+with socketserver.TCPServer(('127.0.0.1', 0), H) as s:
+    port = s.server_address[1]
+    url = f'{base_url}/api/auth/cli?port={port}&state={state}'
+    webbrowser.open(url)
+    s.timeout = 120
+    s.handle_request()
+    if H.token:
+        print(H.token, end='')
+" "${STATE}" "https://trip.idean.me" 2>/dev/null || true)
+
+            if [ -n "${BROWSER_TOKEN}" ]; then
+                PAT_VALUE="${BROWSER_TOKEN}"
+                security delete-generic-password -s "${KEYCHAIN_SERVICE}" -a "${KEYCHAIN_PAT}" &>/dev/null || true
+                if security add-generic-password -s "${KEYCHAIN_SERVICE}" -a "${KEYCHAIN_PAT}" -w "${PAT_VALUE}" &>/dev/null; then
+                    echo -e "  ${GREEN}브라우저 인증 성공! 토큰이 키체인에 저장되었습니다.${NC}"
+                    PAT_INSTALLED=true
+                    BROWSER_AUTH_OK=true
+                fi
+            fi
         fi
-    else
-        echo "  토큰을 건너뛰었습니다. (검색만 사용 가능)"
+    fi
+
+    # ── 6b. 브라우저 인증 실패 시 수동 입력 폴백 ──
+    if [ "${BROWSER_AUTH_OK}" = false ]; then
+        if [ "${CALLBACK_PORT:-}" != "" ]; then
+            echo -e "  ${YELLOW}브라우저 인증이 완료되지 않았습니다.${NC}"
+            echo ""
+        fi
+        echo "  건너뛰려면 Enter를 누르세요. (검색 기능만 사용 가능)"
+        echo ""
+        echo -e "  ${CYAN}수동 토큰 생성 방법:${NC}"
+        echo "    1) https://trip.idean.me/settings 접속"
+        echo "    2) Google 계정으로 로그인"
+        echo "    3) '토큰 생성' 클릭 후 토큰 복사"
+        echo ""
+
+        if [ -t 0 ]; then INPUT_DEV="/dev/stdin"; else INPUT_DEV="/dev/tty"; fi
+
+        printf "  Trip Planner 토큰을 입력하세요 (Enter로 건너뛰기): "
+        read -r PAT_VALUE < "${INPUT_DEV}"
+
+        if [ -n "${PAT_VALUE}" ]; then
+            security delete-generic-password -s "${KEYCHAIN_SERVICE}" -a "${KEYCHAIN_PAT}" &>/dev/null || true
+            if security add-generic-password -s "${KEYCHAIN_SERVICE}" -a "${KEYCHAIN_PAT}" -w "${PAT_VALUE}" &>/dev/null; then
+                echo -e "  ${GREEN}macOS 키체인에 토큰 저장 완료${NC}"
+                PAT_INSTALLED=true
+            else
+                echo -e "  ${YELLOW}키체인 저장 실패. 일정 관리 기능 없이 계속합니다.${NC}"
+            fi
+        else
+            echo "  토큰을 건너뛰었습니다. (검색만 사용 가능)"
+        fi
     fi
 fi
 
