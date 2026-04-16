@@ -109,15 +109,7 @@ classDiagram
 
 ## 권한 매트릭스
 
-| 행위 | OWNER | HOST | GUEST |
-|------|-------|------|-------|
-| 여행 조회 | O | O | O |
-| 일정/활동 편집 | O | O | X |
-| 멤버 초대 | O | O | X |
-| 멤버 제거 | O (호스트 포함) | O (게스트만) | X |
-| 호스트 승격/강등 | O | X | X |
-| 여행 삭제 | O | X | X |
-| 주인 양도 | O (→HOST) | X | X |
+[헌법 VI. Role-Based Access Control](../.specify/memory/constitution.md) 참조.
 
 ## 밸류 오브젝트
 
