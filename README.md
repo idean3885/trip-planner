@@ -11,6 +11,8 @@
 - **캘린더 연동**: 여행 일정을 Apple 캘린더에 자동 등록 (iCloud 공유 지원)
 - **일정 웹앱**: DB 기반 일정을 모바일 친화적 웹페이지로 공유
 - **macOS 키체인**: API 키, PAT를 안전하게 관리
+- **OAuth CLI 인증**: install.sh에서 브라우저 로그인 1회로 PAT 자동 발급 (수동 복사 불필요)
+- **MCP 자동 재인증**: 토큰 만료 시 브라우저 재인증 → 키체인 갱신 → 요청 자동 재시도
 
 ## 프로젝트 구조
 
@@ -60,7 +62,7 @@ curl -sSL https://raw.githubusercontent.com/idean3885/trip-planner/main/scripts/
 
 자동 처리 항목:
 - RapidAPI 키 → 키체인 저장 (검색용, 이미 있으면 스킵)
-- Trip Planner PAT → 키체인 저장 (일정 관리용, 선택)
+- Trip Planner PAT → **브라우저 OAuth 자동 발급** (키체인 저장, 수동 입력 폴백)
 - Claude Desktop MCP 설정 자동 등록/업데이트
 - Apple 캘린더 MCP 자동 설치 (macOS 전용)
 - v1 → v2 자동 마이그레이션 (구 서버 설정 제거, GitHub PAT 정리)
@@ -147,3 +149,29 @@ pytest tests/ -v
 - **인증**: Google OAuth (웹), PAT (외부 클라이언트)
 - **테스트**: Vitest, React Testing Library, Playwright, pytest
 - **배포**: Vercel (웹앱), PyPI (MCP)
+
+## 배포 환경
+
+| 환경 | 도메인 | 브랜치 | 용도 |
+|------|--------|--------|------|
+| Production | [trip.idean.me](https://trip.idean.me) | main | 정식 릴리즈 |
+| Dev | [dev.trip.idean.me](https://dev.trip.idean.me) | develop | 마일스톤 통합 테스트 |
+| Preview | PR별 자동 생성 | feature/* | 피처 단위 프리뷰 |
+
+### Git 전략: Git Flow Lite
+
+```
+main ────────●───────────────●──── (production 릴리즈 + 버전 태그)
+             ↑               ↑
+develop ──●──●──●──●──●──●──●──── (dev 통합 배포)
+          ↑  ↑  ↑  ↑  ↑  ↑
+        feature branches (NNN-short-name)
+```
+
+- **feature → develop**: 피처 개발 PR. dev 환경에서 통합 테스트.
+- **develop → main**: 마일스톤 완료 시 릴리즈 PR. CI가 자동으로 태그 + GitHub Release + PyPI 배포.
+
+### 릴리즈 자동화
+
+1. `pyproject.toml` 버전 범프 → develop → main PR 머지
+2. CI: annotated 태그 자동 생성 → CHANGELOG 기반 GitHub Release → PyPI 배포
