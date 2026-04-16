@@ -46,13 +46,13 @@ main ────────────●────────────
                  ↑               ↑
 develop ──●──●──●───●──●──●──●──● ── (dev: dev.trip.idean.me)
           ↑  ↑  ↑   ↑  ↑  ↑  ↑
-        feat feat hotfix feat feat     (NNN-short-name / hotfix/*)
+        feat feat hotfix feat feat
 ```
 
 - **main**: 프로덕션 브랜치. trip.idean.me 배포. 버전 태그가 붙는 유일한 브랜치.
-- **develop**: 통합 브랜치. dev.trip.idean.me 배포. feature 브랜치가 여기로 머지.
-- **feature**: `NNN-short-name` 형식 (speckit 자동 생성). develop으로 PR 머지.
-- **hotfix**: `hotfix/*` 형식. develop에서 분기 → develop PR → dev 환경 확인 → develop → main PR로 릴리즈. main 직접 머지 금지.
+- **develop**: 통합 브랜치. dev.trip.idean.me 배포. feature/hotfix가 여기로 머지.
+- **feature**: `NNN-short-name` 형식. speckit(`/speckit.specify`) 실행 시 3자리 일련번호를 자동 부여. speckit 프로세스(spec → plan → tasks)를 거친 후 구현 시작. (예: `007-oauth-cli-reauth`)
+- **hotfix**: `hotfix/설명` 형식. speckit 미경유. (예: `hotfix/v2.2.2-gitflow-harness`)
 - 머지된 feature/hotfix 브랜치는 GitHub가 자동 삭제 (`deleteBranchOnMerge: true`).
 
 ### 배포 환경 매핑
