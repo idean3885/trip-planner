@@ -32,7 +32,7 @@ class TestCreateActivity:
     @pytest.mark.asyncio
     @patch("trip_mcp.planner.api_request")
     async def test_success(self, mock_api, mcp):
-        mock_api.return_value = {"id": 1, "category": "SIGHTSEEING", "title": "벨렝 탑", "startTime": "09:00", "endTime": "11:00"}
+        mock_api.return_value = {"id": 1, "category": "SIGHTSEEING", "title": "벨렝 탑", "startTime": "2026-06-07T09:00:00.000Z", "endTime": "2026-06-07T11:00:00.000Z"}
         fn = get_tool_fn(mcp, "create_activity")
         result = await fn(trip_id=1, day_id=1, category="SIGHTSEEING", title="벨렝 탑", start_time="09:00", end_time="11:00")
         assert "활동 추가 완료" in result

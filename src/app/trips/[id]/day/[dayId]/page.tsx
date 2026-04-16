@@ -111,7 +111,11 @@ async function DbDayPage({ tripId, dayIdNum }: { tripId: number; dayIdNum: numbe
       <ActivityList
         tripId={tripId}
         dayId={day.id}
-        activities={day.activities}
+        activities={day.activities.map((a) => ({
+          ...a,
+          startTime: a.startTime?.toISOString() ?? null,
+          endTime: a.endTime?.toISOString() ?? null,
+        }))}
         canEdit={member.role !== "GUEST"}
       />
 

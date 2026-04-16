@@ -16,8 +16,8 @@ function makeActivity(overrides = {}) {
     id: 1,
     category: "SIGHTSEEING" as ActivityCategory,
     title: "벨렝 탑",
-    startTime: "09:00",
-    endTime: "11:00",
+    startTime: "2026-06-07T09:00:00.000Z",
+    endTime: "2026-06-07T11:00:00.000Z",
     location: "Lisbon",
     memo: null,
     cost: null,
@@ -73,7 +73,7 @@ describe("ActivityList", () => {
 
   it("creates activity with all optional fields", async () => {
     const created = makeActivity({
-      id: 99, title: "New", startTime: "10:00", endTime: "12:00",
+      id: 99, title: "New", startTime: "2026-06-07T10:00:00.000Z", endTime: "2026-06-07T12:00:00.000Z",
       location: "Place", memo: "Note", cost: 25, currency: "USD",
       reservationStatus: "REQUIRED",
     });
@@ -245,7 +245,7 @@ describe("ActivityList", () => {
 
     // Activity with all fields filled
     const activities = [makeActivity({
-      startTime: "09:00", endTime: "11:00", location: "Place",
+      startTime: "2026-06-07T09:00:00.000Z", endTime: "2026-06-07T11:00:00.000Z", location: "Place",
       memo: "Note", cost: "25", reservationStatus: "REQUIRED",
     })];
     render(<ActivityList tripId={1} dayId={1} activities={activities} canEdit={true} />);
