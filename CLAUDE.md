@@ -39,6 +39,30 @@ trip-planner/
 - PR 생성 전 base 브랜치와 충돌 여부 확인
 - 충돌 발생 시 rebase로 해결 후 PR 생성
 
+### 브랜치 전략: GitHub Flow
+- **main**: 유일한 장기 브랜치. 항상 배포 가능 상태.
+- **feature**: `NNN-short-name` 형식 (speckit 자동 생성). PR로만 머지.
+- release/develop 브랜치 불필요 (1인 개발).
+- 머지된 feature 브랜치는 GitHub가 자동 삭제 (`deleteBranchOnMerge: true`).
+
+### 릴리즈 프로세스
+릴리즈는 아래 3단계 수동 + CI 자동으로 진행한다.
+
+**수동 (PR로 진행)**:
+1. `CHANGELOG.md`에 새 버전 섹션 추가 (Keep a Changelog 형식)
+2. `pyproject.toml`의 `version` 필드 범프
+3. PR 생성 → 머지
+
+**CI 자동 (머지 후)**:
+4. `auto-tag.yml`: pyproject.toml 변경 감지 → annotated 태그 생성
+5. `auto-release.yml`: 태그 push → CHANGELOG 추출 → GitHub Release 생성
+6. `pypi-publish.yml`: 태그 push → 테스트 → PyPI 배포
+
+**버전 범프 기준 (SemVer)**:
+- MAJOR: 호환성 깨지는 변경 (API 스키마 변경, MCP 도구 삭제 등)
+- MINOR: 기능 추가 (새 API, 새 MCP 도구, 새 페이지 등)
+- PATCH: 버그 수정, 성능 개선, 문서 수정
+
 ## 작업 규칙
 
 ### 데일리 파일 포맷
