@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.3] - 2026-04-16
+
+### Fixed
+- **PR 머지 전략**: develop → main은 merge commit 필수 (squash 시 역머지 충돌 문제 해결)
+
+### Changed
+- **CLAUDE.md + DEVELOPMENT.md**: PR 머지 전략 테이블 추가 (squash vs merge commit 사용 구분)
+
 ## [2.2.2] - 2026-04-16
 
 ### Fixed

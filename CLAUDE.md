@@ -55,6 +55,15 @@ develop ──●──●──●───●──●──●──●──
 - **hotfix**: `hotfix/설명` 형식. speckit 미경유. (예: `hotfix/v2.2.2-gitflow-harness`)
 - 머지된 feature/hotfix 브랜치는 GitHub가 자동 삭제 (`deleteBranchOnMerge: true`).
 
+### PR 머지 전략
+
+| PR 방향 | 머지 방식 | 이유 |
+|---------|----------|------|
+| feature/hotfix → develop | **Squash and merge** | 커밋 정리, 깔끔한 develop 히스토리 |
+| develop → main | **Create a merge commit** | 커밋 해시 보존, 역머지 시 충돌 방지 |
+
+> develop → main을 squash하면 커밋 해시가 달라져 main → develop 동기화 시 매번 충돌 발생.
+
 ### 배포 환경 매핑
 
 | 브랜치 | 도메인 | 용도 |

@@ -93,6 +93,13 @@ develop ──●──●──●───●──●──●──●──
 - **feature/hotfix → develop PR**: dev 환경에서 통합 테스트.
 - **develop → main PR**: 마일스톤 완료 또는 핫픽스 시 릴리즈. CI가 자동으로 태그 + Release + PyPI. main 직접 머지 금지.
 
+### PR 머지 전략
+
+| PR 방향 | 머지 방식 | 이유 |
+|---------|----------|------|
+| feature/hotfix → develop | **Squash and merge** | 커밋 정리, 깔끔한 develop 히스토리 |
+| develop → main | **Create a merge commit** | 커밋 해시 보존, 역머지 시 충돌 방지 |
+
 ## 릴리즈 프로세스
 
 **수동 (develop에서)**:
