@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.4] - 2026-04-16
+
+### Fixed
+- **MCP memo 줄바꿈**: CLI에서 `\n` 리터럴이 그대로 저장되던 문제 수정 (#169)
+- **예약상태 라벨**: "불필요" → "예약 불필요"로 문구 보완 (#169)
+
+### Changed
+- **시간대 표기 지원**: Activity startTime/endTime VarChar(5→12) 확장, `13:00 KST` 형식 가능 (#169)
+- **vitest SWC 전환**: `@vitejs/plugin-react` → `@vitejs/plugin-react-swc` (transform 12% 개선) (#170)
+- **vitest vmThreads**: `pool: "vmThreads"` 적용으로 environment 18% 개선 (#170)
+
 ## [2.2.3] - 2026-04-16
 
 ### Fixed
