@@ -132,7 +132,9 @@ model Activity {
   category          ActivityCategory
   title             String
   startTime         DateTime?          @map("start_time") @db.Timestamptz(3)
+  startTimezone     String?            @map("start_timezone") @db.VarChar(40)
   endTime           DateTime?          @map("end_time") @db.Timestamptz(3)
+  endTimezone       String?            @map("end_timezone") @db.VarChar(40)
   location          String?
   memo              String?            @db.Text
   cost              Decimal?           @db.Decimal(10, 2)

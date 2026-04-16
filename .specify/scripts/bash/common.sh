@@ -81,7 +81,12 @@ check_feature_branch() {
     return 0
 }
 
-get_feature_dir() { echo "$1/specs/$2"; }
+# specs/ 하위 도메인 디렉토리에서 feature 경로를 탐색
+get_feature_dir() {
+    local result
+    result=$(find "$1/specs" -maxdepth 2 -type d -name "$2" 2>/dev/null | head -1)
+    echo "${result:-$1/specs/$2}"
+}
 
 # Find feature directory by numeric prefix instead of exact branch match
 # This allows multiple branches to work on the same spec (e.g., 004-fix-bug, 004-add-feature)
@@ -99,14 +104,12 @@ find_feature_dir_by_prefix() {
 
     local prefix="${BASH_REMATCH[1]}"
 
-    # Search for directories in specs/ that start with this prefix
+    # Search for directories in specs/ (including subdirectories) that start with this prefix
     local matches=()
     if [[ -d "$specs_dir" ]]; then
-        for dir in "$specs_dir"/"$prefix"-*; do
-            if [[ -d "$dir" ]]; then
-                matches+=("$(basename "$dir")")
-            fi
-        done
+        while IFS= read -r dir; do
+            [[ -d "$dir" ]] && matches+=("$dir")
+        done < <(find "$specs_dir" -maxdepth 2 -type d -name "$prefix-*" 2>/dev/null)
     fi
 
     # Handle results
@@ -114,8 +117,8 @@ find_feature_dir_by_prefix() {
         # No match found - return the branch name path (will fail later with clear error)
         echo "$specs_dir/$branch_name"
     elif [[ ${#matches[@]} -eq 1 ]]; then
-        # Exactly one match - perfect!
-        echo "$specs_dir/${matches[0]}"
+        # Exactly one match - return full path
+        echo "${matches[0]}"
     else
         # Multiple matches - this shouldn't happen with proper naming convention
         echo "ERROR: Multiple spec directories found with prefix '$prefix': ${matches[*]}" >&2
