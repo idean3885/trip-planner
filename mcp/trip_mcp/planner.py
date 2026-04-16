@@ -194,8 +194,8 @@ def register_planner_tools(mcp: FastMCP) -> None:
             day_id: 일자 ID (get_trip에서 확인)
             category: 활동 유형 (SIGHTSEEING, DINING, TRANSPORT, ACCOMMODATION, SHOPPING, OTHER)
             title: 활동 제목 (예: "벨렝 탑 방문")
-            start_time: 시작 시간 HH:mm (예: "09:30", 선택)
-            end_time: 종료 시간 HH:mm (예: "11:00", 선택)
+            start_time: 시작 시간 HH:mm 또는 HH:mm TZ (예: "09:30", "13:00 KST", 선택)
+            end_time: 종료 시간 HH:mm 또는 HH:mm TZ (예: "11:00", "20:15 WET", 선택)
             location: 장소명 (예: "Torre de Belém", 선택)
             memo: 메모 (선택)
             cost: 예상 비용 (0이면 미입력, 선택)
@@ -210,7 +210,7 @@ def register_planner_tools(mcp: FastMCP) -> None:
         if location:
             body["location"] = location
         if memo:
-            body["memo"] = memo
+            body["memo"] = memo.replace("\\n", "\n")
         if cost:
             body["cost"] = cost
         if reservation_status:
@@ -256,8 +256,8 @@ def register_planner_tools(mcp: FastMCP) -> None:
             day_id: 일자 ID
             activity_id: 활동 ID
             title: 변경할 제목 (빈 문자열이면 변경하지 않음)
-            start_time: 변경할 시작 시간 HH:mm
-            end_time: 변경할 종료 시간 HH:mm
+            start_time: 변경할 시작 시간 HH:mm 또는 HH:mm TZ (예: "13:00 KST")
+            end_time: 변경할 종료 시간 HH:mm 또는 HH:mm TZ (예: "20:15 WET")
             location: 변경할 장소명
             memo: 변경할 메모
             cost: 변경할 비용 (0이면 변경하지 않음)
@@ -275,7 +275,7 @@ def register_planner_tools(mcp: FastMCP) -> None:
         if location:
             body["location"] = location
         if memo:
-            body["memo"] = memo
+            body["memo"] = memo.replace("\\n", "\n")
         if cost:
             body["cost"] = cost
         if currency:
