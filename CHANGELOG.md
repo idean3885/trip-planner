@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.5] - 2026-04-17
+
+### Fixed
+- **Activity 시간 필드**: VarChar → Timestamptz 전환, 프로덕션 DB 정합성 수습 (#178)
+- **auto-release**: CHANGELOG 특수문자 셸 확장 오류 수정 (--notes-file 방식)
+
+### Added
+- **IANA timezone 컬럼**: start_timezone, end_timezone으로 시간대 표시 지원 (#178)
+- **docs/ARCHITECTURE.md**: 시스템 구조, 인증 흐름, 도메인 결합도 문서
+- **docs/DOMAIN.md**: DDD 기술 도메인, 애그리거트, 이벤트 설계
+- **docs/ERD.md**: 전체 DB 스키마 Mermaid ERD + 컬럼 코멘트
+- **docs/README.md**: 기술 문서 허브 (포트폴리오/개발자용)
+- **specs/README.md**: 기획 도메인 5개 정의 + 크로스 도메인 규칙
+- **헌법 v1.2.0**: Cross-Domain Integrity(V) + Role-Based Access Control(VI) 원칙 추가
+
+### Changed
+- **specs/ 재구성**: 기획 도메인 기준 디렉토리 (travel-search, itinerary, collaboration, export)
+- **기획/기술 영역 분리**: specs/ = 기획 원천, docs/ = 기술 원천, 헌법 = 원칙 원천
+
 ## [2.2.4] - 2026-04-16
 
 ### Fixed
