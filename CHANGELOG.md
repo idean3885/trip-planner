@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.2] - 2026-04-16
+
+### Fixed
+- **핫픽스 프로세스**: main 직접 머지 금지, develop 경유 필수로 규칙 정립
+- **speckit 하네스**: develop 브랜치 소스 편집 차단 추가 (enforce-speckit.sh, enforce-submit.sh)
+
+### Changed
+- **CLAUDE.md**: 핫픽스 규칙 + 브랜치 다이어그램에 hotfix 반영
+- **docs/DEVELOPMENT.md**: 핫픽스 프로세스 섹션 추가
+
 ## [2.2.1] - 2026-04-16
 
 ### Fixed
