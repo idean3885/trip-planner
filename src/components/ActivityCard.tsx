@@ -43,12 +43,22 @@ const CATEGORY_COLOR: Record<ActivityCategory, string> = {
   OTHER: "bg-surface-100 text-surface-600",
 };
 
-/** ISO datetime → "HH:mm", 레거시 HH:mm 문자열은 그대로 반환 */
-function formatTime(value: string | null): string | null {
+/** IANA timezone → 약어 (e.g. "Asia/Seoul" → "KST") */
+function tzAbbr(iana: string): string {
+  try {
+    const parts = new Intl.DateTimeFormat("en", { timeZone: iana, timeZoneName: "short" })
+      .formatToParts(new Date("2026-06-07T12:00:00Z"));
+    return parts.find((p) => p.type === "timeZoneName")?.value ?? iana;
+  } catch { return iana; }
+}
+
+/** ISO datetime → "HH:mm" 또는 "HH:mm TZ" */
+function formatTime(value: string | null, tz?: string | null): string | null {
   if (!value) return null;
   if (value.includes("T")) {
     const d = new Date(value);
-    return `${String(d.getUTCHours()).padStart(2, "0")}:${String(d.getUTCMinutes()).padStart(2, "0")}`;
+    const hhmm = `${String(d.getUTCHours()).padStart(2, "0")}:${String(d.getUTCMinutes()).padStart(2, "0")}`;
+    return tz ? `${hhmm} ${tzAbbr(tz)}` : hhmm;
   }
   return value;
 }
@@ -66,7 +76,9 @@ interface ActivityCardProps {
     category: ActivityCategory;
     title: string;
     startTime: string | null;
+    startTimezone?: string | null;
     endTime: string | null;
+    endTimezone?: string | null;
     location: string | null;
     memo: string | null;
     cost: Prisma.Decimal | string | number | null;
@@ -92,8 +104,8 @@ export default function ActivityCard({
   onMoveUp,
   onMoveDown,
 }: ActivityCardProps) {
-  const startFmt = formatTime(activity.startTime);
-  const endFmt = formatTime(activity.endTime);
+  const startFmt = formatTime(activity.startTime, activity.startTimezone);
+  const endFmt = formatTime(activity.endTime, activity.endTimezone);
   const timeRange =
     startFmt && endFmt
       ? `${startFmt}–${endFmt}`

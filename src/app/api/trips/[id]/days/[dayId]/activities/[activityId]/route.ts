@@ -34,7 +34,7 @@ export async function PUT(request: Request, { params }: Params) {
   }
 
   const body = await request.json();
-  const { category, title, startTime, endTime, location, memo, cost, currency, reservationStatus, sortOrder } = body;
+  const { category, title, startTime, startTimezone, endTime, endTimezone, location, memo, cost, currency, reservationStatus, sortOrder } = body;
 
   const activity = await prisma.activity.update({
     where: { id: parseInt(activityId), dayId: dayIdNum, day: { tripId } },
@@ -42,7 +42,9 @@ export async function PUT(request: Request, { params }: Params) {
       ...(category !== undefined && { category }),
       ...(title !== undefined && { title }),
       ...(startTime !== undefined && { startTime: toTimestamp(startTime, day.date) }),
+      ...(startTimezone !== undefined && { startTimezone }),
       ...(endTime !== undefined && { endTime: toTimestamp(endTime, day.date) }),
+      ...(endTimezone !== undefined && { endTimezone }),
       ...(location !== undefined && { location }),
       ...(memo !== undefined && { memo }),
       ...(cost !== undefined && { cost }),

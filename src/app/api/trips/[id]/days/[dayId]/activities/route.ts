@@ -58,7 +58,7 @@ export async function POST(request: Request, { params }: Params) {
   }
 
   const body = await request.json();
-  const { category, title, startTime, endTime, location, memo, cost, currency, reservationStatus, sortOrder } = body;
+  const { category, title, startTime, startTimezone, endTime, endTimezone, location, memo, cost, currency, reservationStatus, sortOrder } = body;
 
   if (!category || !title) {
     return NextResponse.json({ error: "category와 title은 필수입니다" }, { status: 400 });
@@ -70,7 +70,9 @@ export async function POST(request: Request, { params }: Params) {
       category,
       title,
       ...(startTime !== undefined && { startTime: toTimestamp(startTime, day.date) ?? null }),
+      ...(startTimezone !== undefined && { startTimezone }),
       ...(endTime !== undefined && { endTime: toTimestamp(endTime, day.date) ?? null }),
+      ...(endTimezone !== undefined && { endTimezone }),
       ...(location !== undefined && { location }),
       ...(memo !== undefined && { memo }),
       ...(cost !== undefined && { cost }),

@@ -20,7 +20,9 @@ interface Activity {
   category: ActivityCategory;
   title: string;
   startTime: string | null;
+  startTimezone?: string | null;
   endTime: string | null;
+  endTimezone?: string | null;
   location: string | null;
   memo: string | null;
   cost: Prisma.Decimal | string | number | null;
