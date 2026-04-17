@@ -5,6 +5,27 @@
 **Status**: Draft  
 **Input**: User description: "$ARGUMENTS"
 
+## Clarifications *(optional, add when drafting raises ambiguity)*
+
+<!--
+  초안 작성 중 드러난 모호 지점을 결정으로 봉합한다. 각 항목은 WHAT/WHY 수준이며,
+  구체 구현 수단은 plan 단계에서 결정한다. 이후 FR·SC·Key Entities에 결정을 반영한다.
+-->
+
+1. [결정 1 제목] — [WHAT/WHY 수준의 결정 요약]
+2. [결정 2 제목] — [...]
+
+## Metatag Conventions *(normative, inherited from PR #204)*
+
+본 피처의 tasks.md·plan.md는 네 종 메타태그를 통해 후속 자동 검증과 연결된다:
+
+- `[artifact: <path>|<path>::<symbol>]` — 산출 파일 식별자(drift 감사 기준)
+- `[why: <short-tag>]` — 추적 그룹 키(plan↔tasks 커버리지·이슈 합산)
+- `[multi-step: N]` — plan bullet이 다단 작업일 때 최소 매핑 태스크 수(N ≥ 2)
+- `[migration-type: schema-only | data-migration]` — 마이그레이션 산출물 구분
+
+형식 검증은 `.specify/scripts/bash/validate-metatag-format.sh`가 수행한다. 의미 검증은 각 US의 validator가 담당한다.
+
 ## User Scenarios & Testing *(mandatory)*
 
 <!--

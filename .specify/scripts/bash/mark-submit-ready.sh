@@ -24,7 +24,7 @@ fi
 
 # speckit 산출물 존재 확인 (마커 생성 전 최종 확인)
 PREFIX="${BRANCH:0:3}"
-FEATURE_DIR=$(find "$REPO_ROOT/specs" -maxdepth 1 -name "${PREFIX}-*" -type d 2>/dev/null | head -1)
+FEATURE_DIR=$(find "$REPO_ROOT/specs" -mindepth 1 -maxdepth 2 -type d -name "${PREFIX}-*" 2>/dev/null | head -1)
 
 if [[ -z "$FEATURE_DIR" ]]; then
   echo "ERROR: specs/ 디렉토리에 피처 스펙이 없습니다." >&2

@@ -1,0 +1,90 @@
+name: Speckit Gate
+
+# PR 머지 전 speckit 산출물 정합성 검증.
+# 현재 활성화된 단계: metatag-format, plan-tasks-coverage, drift.
+# 이후 #209(quickstart-ev), #210(migration-meta) 추가 예정.
+#
+# spec 010 FR-003/005/006/007/008, PR #204, 이슈 #208.
+
+on:
+  pull_request:
+    paths:
+      - "specs/**"
+      - ".specify/**"
+      - ".github/workflows/speckit-gate.yml"
+
+jobs:
+  speckit-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 활성 피처 디렉토리 스캔
+        id: features
+        run: |
+          # 현재 PR에서 변경된 피처 디렉토리만 검증 대상
+          # git diff base..HEAD로 변경 파일 추출
+          git fetch origin "${{ github.base_ref }}" --depth=1
+          CHANGED=$(git diff --name-only "origin/${{ github.base_ref }}..HEAD" | grep '^specs/' || true)
+          FEATURES=$(printf '%s\n' "$CHANGED" | awk -F/ '
+            /^specs\/[0-9]{3}-/ { print "specs/" $2 }
+            /^specs\/[^\/]+\/[0-9]{3}-/ { print "specs/" $2 "/" $3 }
+          ' | sort -u)
+          if [[ -z "$FEATURES" ]]; then
+            echo "변경된 피처 디렉토리 없음 — 게이트 스킵"
+            echo "features=" >> "$GITHUB_OUTPUT"
+          else
+            echo "대상 피처:"
+            echo "$FEATURES"
+            # shell-friendly: newlines → spaces
+            echo "features=$(echo "$FEATURES" | tr '\n' ' ')" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: metatag-format 검증
+        if: steps.features.outputs.features != ''
+        run: |
+          set -e
+          for f in ${{ steps.features.outputs.features }}; do
+            for md in "$f"/*.md; do
+              [[ -f "$md" ]] || continue
+              bash .specify/scripts/bash/validate-metatag-format.sh "$md"
+            done
+          done
+
+      - name: plan-tasks-coverage 검증
+        if: steps.features.outputs.features != ''
+        run: |
+          set -e
+          for f in ${{ steps.features.outputs.features }}; do
+            if [[ -f "$f/plan.md" && -f "$f/tasks.md" ]]; then
+              bash .specify/scripts/bash/validate-plan-tasks-cov.sh --feature "$f"
+            fi
+          done
+
+      - name: drift 검증 (errors만 차단, warnings는 리포트)
+        if: steps.features.outputs.features != ''
+        run: |
+          set -e
+          for f in ${{ steps.features.outputs.features }}; do
+            if [[ -f "$f/tasks.md" ]]; then
+              bash .specify/scripts/bash/validate-drift.sh --feature "$f"
+            fi
+          done
+
+      - name: quickstart evidence 검증 (phase=expand이면 경고만)
+        if: steps.features.outputs.features != ''
+        run: |
+          set -e
+          for f in ${{ steps.features.outputs.features }}; do
+            if [[ -f "$f/quickstart.md" ]]; then
+              bash .specify/scripts/bash/validate-quickstart-ev.sh --feature "$f"
+            fi
+          done
+
+      - name: migration-meta 검증 (phase-aware)
+        if: steps.features.outputs.features != ''
+        run: |
+          set -e
+          for f in ${{ steps.features.outputs.features }}; do
+            bash .specify/scripts/bash/validate-migration-meta.sh --feature "$f"
+          done

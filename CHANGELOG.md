@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.0] - 2026-04-17
+
+### Added
+- **speckit 하네스 도입**: 이슈 #181 + 12개 하위 이슈(#205~#216). 스펙 산출물 간 정합성 자동 검증으로 #191 유형(plan 항목 tasks 미매핑 → 데이터 마이그레이션 누락)의 재발을 구조적으로 차단.
+  - 4종 메타태그(`[artifact]`, `[why]`, `[multi-step]`, `[migration-type]`)를 검증 근간으로 고정
+  - 검증기 7종 + CI 워크플로우 2종 추가: `validate-metatag-format.sh`, `validate-plan-tasks-cov.sh`, `validate-drift.sh`, `validate-quickstart-ev.sh`, `validate-migration-meta.sh`, `validate-constitution.sh`, `merge-tasks-to-issues.sh` + `speckit-gate.yml`, `drift-audit.yml`
+  - 신규 템플릿 2종(`implement-template.md`, `quickstart-template.md`) + 기존 템플릿(`spec-template.md`, `plan-template.md`, `tasks-template.md`) 메타태그 가이드 추가
+  - 기존 `enforce-speckit.sh`의 `-maxdepth 1` 버그 수정(카테고리 하위 구조 탐색 정상화)
+  - **3단계 롤아웃 완료**: `expand` → `migrate` → `contract`. 현재 `contract` 모드에서 speckit-gate CI가 실제 차단 역할 수행.
+  - **migration-type 사이드카 방식**: `prisma/migrations/<dir>/migration-type` 파일로 레거시 마이그레이션을 Prisma checksum 손상 없이 분류 (10개 소급 적용).
+
+### Changed
+- **PR 머지 정책**: 전 방향 `Create a merge commit` 고정(#218). Squash and merge off.
+- **CLAUDE.md**: "작업 규칙"에 speckit 하네스 메타태그·검증기·rollout phase 섹션 추가
+
 ## [2.2.7] - 2026-04-17
 
 ### Changed
