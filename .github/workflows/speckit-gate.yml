@@ -70,3 +70,13 @@ jobs:
               bash .specify/scripts/bash/validate-drift.sh --feature "$f"
             fi
           done
+
+      - name: quickstart evidence 검증 (phase=expand이면 경고만)
+        if: steps.features.outputs.features != ''
+        run: |
+          set -e
+          for f in ${{ steps.features.outputs.features }}; do
+            if [[ -f "$f/quickstart.md" ]]; then
+              bash .specify/scripts/bash/validate-quickstart-ev.sh --feature "$f"
+            fi
+          done

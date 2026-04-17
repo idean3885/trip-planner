@@ -160,17 +160,30 @@ tasks.md에 `- [ ] T003 [artifact: existing/other.ts]`, 해당 파일 존재.
 
 기대: exit ≠ 0, 누락 시나리오명 출력.
 
-### Scenario US3-3: 수동 경로 불완전 — 차단
+### Scenario US3-3: 수동 체크리스트 미체크 — 차단
 
-Evidence에 체크리스트는 있으나 스크린샷 경로가 없음.
+Evidence에 `- [ ]` 체크리스트만 있고 `- [x]`가 없고 자동 테스트 경로도 없음.
 
-기대: exit ≠ 0.
+기대: exit ≠ 0 (또는 phase=expand인 경우 경고, exit 0).
+
+### Scenario US3-4: phase-aware 동작
+
+`.specify/config/harness.json`의 `rollout.phase`가 `expand`/`migrate`이면 위반 발견 시 경고만 출력(exit 0). `contract`이면 차단(exit 1).
+
+기대:
+- `expand`: `⚠ quickstart evidence 경고: N건 (phase=expand, 비차단)`
+- `contract`: `✗ quickstart evidence 위반: N건 (phase=contract, 차단)`
 
 ### Evidence
 
-- 자동 테스트: `.specify/scripts/bash/validate-quickstart-ev.sh --self-test`
-- 본 quickstart.md 자체가 US3의 positive 케이스로 기능(dogfood).
-- 스크린샷: `docs/evidence/010-speckit-harness/us3-*.png`
+- 자동 테스트: `.specify/scripts/bash/validate-quickstart-ev.sh --self-test` (5 케이스 내장)
+- 010 dogfood: `validate-quickstart-ev.sh --feature specs/_infra/010-speckit-harness` → phase=expand 기준 경고 수 확인(미구현 US 섹션의 자연스러운 경고 포함)
+- 수동 체크리스트:
+  - [x] US3-1 자동/수동 통과 확인 (#209 PR)
+  - [x] US3-2 Evidence 부재 차단 (#209 PR self-test)
+  - [x] US3-3 Evidence 증거 없음 (체크리스트만) 판정 (#209 PR self-test)
+  - [x] US3-4 phase-aware 동작 확인 (#209 PR — `harness.json` 수정 후 재실행)
+- 스크린샷: 해당없음(CLI 로그 재현 가능)
 
 ---
 
