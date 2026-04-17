@@ -206,7 +206,13 @@ validate_plan_tasks_mapping() {
     done <<< "$plan_entries"
 }
 
-# Part B: 마이그레이션 SQL 헤더 검증
+# Part B: 마이그레이션 타입 선언 검증
+#   선언 방식 2가지 (우선순위):
+#     1) 사이드카 파일 `prisma/migrations/<dir>/migration-type` (한 줄: schema-only|data-migration)
+#        - **권장**. Prisma checksum 영향 없음 (기존 마이그레이션 소급 적용 가능).
+#     2) SQL 파일 상단 10줄 내 `-- [migration-type: <type>]` 주석
+#        - 신규 마이그레이션을 처음부터 이 방식으로 작성한 경우에만 권장.
+#          이미 적용된 마이그레이션 파일은 수정 금지(Prisma drift).
 validate_migration_headers() {
     local root="$1"
     local migrations_dir="$root/prisma/migrations"
@@ -214,12 +220,35 @@ validate_migration_headers() {
 
     while IFS= read -r sql; do
         [[ -z "$sql" ]] && continue
-        local first10
-        first10=$(head -10 "$sql" 2>/dev/null || echo "")
-        if ! echo "$first10" | grep -qE '^--[[:space:]]*\[migration-type:[[:space:]]+(schema-only|data-migration)\]'; then
-            # harness_config에서 허용값 확인
+        local dir
+        dir=$(dirname "$sql")
+        local sidecar="$dir/migration-type"
+        local type_value=""
+
+        # 1) 사이드카 우선
+        if [[ -f "$sidecar" ]]; then
+            type_value=$(head -1 "$sidecar" | tr -d '[:space:]')
+        fi
+        # 2) SQL 헤더 fallback
+        if [[ -z "$type_value" ]]; then
+            local first10
+            first10=$(head -10 "$sql" 2>/dev/null || echo "")
+            if [[ "$first10" =~ \[migration-type:[[:space:]]+([a-z-]+)\] ]]; then
+                type_value="${BASH_REMATCH[1]}"
+            fi
+        fi
+
+        # 유효성 확인
+        local valid=0
+        if [[ -n "$type_value" ]]; then
+            IFS=',' read -r -a types <<< "$MIGRATION_TYPES_CSV"
+            for t in "${types[@]}"; do
+                [[ "$t" == "$type_value" ]] && valid=1 && break
+            done
+        fi
+        if [[ "$valid" -eq 0 ]]; then
             WARNINGS=$((WARNINGS + 1))
-            printf '⚠ %s: migration.sql 상단 `-- [migration-type: %s]` 헤더 없음\n' \
+            printf '⚠ %s: migration-type 선언 없음/부정확 (사이드카 `migration-type` 또는 SQL 상단 주석 필요; 허용값: %s)\n' \
                 "${sql#"$root"/}" "$MIGRATION_TYPES_CSV" >&2
         fi
     done < <(find "$migrations_dir" -type f -name "migration.sql" 2>/dev/null | sort)

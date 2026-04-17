@@ -9,12 +9,21 @@
     }
   },
   "metatag": {
-    "required": ["artifact", "why"],
-    "optional": ["multi-step", "migration-type"],
-    "migrationTypes": ["schema-only", "data-migration"]
+    "required": [
+      "artifact",
+      "why"
+    ],
+    "optional": [
+      "multi-step",
+      "migration-type"
+    ],
+    "migrationTypes": [
+      "schema-only",
+      "data-migration"
+    ]
   },
   "rollout": {
-    "phase": "expand"
+    "phase": "contract"
   },
   "categoryDirs": [
     "_infra",
