@@ -57,12 +57,14 @@ develop ──●──●──●───●──●──●──●──
 
 ### PR 머지 전략
 
+**전 방향 `Create a merge commit`**. Squash and merge는 off(repo 설정으로 고정).
+
 | PR 방향 | 머지 방식 | 이유 |
 |---------|----------|------|
-| feature/hotfix → develop | **Squash and merge** | 커밋 정리, 깔끔한 develop 히스토리 |
+| feature/hotfix → develop | **Create a merge commit** | 커밋 조절은 개발자가 feature 브랜치에서 직접(push 전 `git rebase -i` 등). AI 하네스로 커밋을 관리하는 상황에서 웹의 수동 squash는 단순 합치기일 뿐 메시지가 의미에 맞게 재구성되지 않음 |
 | develop → main | **Create a merge commit** | 커밋 해시 보존, 역머지 시 충돌 방지 |
 
-> develop → main을 squash하면 커밋 해시가 달라져 main → develop 동기화 시 매번 충돌 발생.
+> 커밋 수가 많아 정리가 필요하면 feature 브랜치에서 rebase/amend로 직접 정돈한 뒤 push한다. 웹 UI의 squash는 사용하지 않는다.
 
 ### 배포 환경 매핑
 
