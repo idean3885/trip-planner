@@ -1,14 +1,33 @@
-# Migration Header Guide
+# Migration Type Guide
 
-모든 `prisma/migrations/*/migration.sql` 파일 **첫 10줄 안에** 아래 헤더 주석을 둔다. `validate-migration-meta.sh`가 이 헤더 존재를 자동 검증한다.
+모든 `prisma/migrations/*/` 디렉토리는 마이그레이션 타입을 선언해야 한다. `validate-migration-meta.sh`가 두 방식을 순차 확인한다.
 
-## 형식
+## 선언 방식 (우선순위)
+
+### 1) 사이드카 파일 (권장)
+
+디렉토리 내부에 `migration-type` 파일을 두고 한 줄 값만 기록.
+
+```
+prisma/migrations/20260417_backfill_trip_owner/
+├── migration.sql
+└── migration-type        ← "schema-only" 또는 "data-migration" 한 줄
+```
+
+**장점**: `migration.sql` 파일을 건드리지 않으므로 Prisma checksum 영향 없음. 이미 프로덕션에 적용된 레거시 마이그레이션에도 소급 가능.
+
+### 2) SQL 주석 (fallback)
+
+새 마이그레이션을 처음 작성할 때 상단 10줄 안에 주석으로 기록해도 된다.
 
 ```sql
 -- [migration-type: schema-only]
--- 또는
--- [migration-type: data-migration]
+CREATE TYPE "Status" AS ENUM ('A','B');
 ```
+
+⚠️ 이미 `prisma migrate deploy`로 적용된 마이그레이션 SQL은 수정 금지 (Prisma drift 감지로 배포 차단).
+
+## 값 정의
 
 - `schema-only` — 스키마 구조만 변경(ADD/DROP COLUMN, ENUM 추가 등). 기존 데이터 재해석 필요 없는 마이그레이션.
 - `data-migration` — 기존 데이터 보정/백필(UPDATE 구문, enum 값 소급 반영 등)을 포함. 보통 `schema-only` 마이그레이션에 뒤따르는 2단계 짝.
