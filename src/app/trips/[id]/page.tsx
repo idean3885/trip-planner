@@ -60,7 +60,7 @@ async function DbTripPage({ tripId }: { tripId: number }) {
     prisma.trip.findUnique({
       where: { id: tripId },
       include: {
-        days: { orderBy: { sortOrder: "asc" } },
+        days: { orderBy: { date: "asc" } },
       },
     }),
   ]);
