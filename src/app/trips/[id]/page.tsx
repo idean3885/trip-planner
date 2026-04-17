@@ -6,6 +6,7 @@ import { formatCalendarDateFull, formatCalendarDate } from "@/lib/date-utils";
 import InviteButton from "@/components/InviteButton";
 import DeleteTripButton from "@/components/DeleteTripButton";
 import LeaveTripButton from "@/components/LeaveTripButton";
+import MemberList from "@/components/MemberList";
 import { remark } from "remark";
 import remarkGfm from "remark-gfm";
 import html from "remark-html";
@@ -110,6 +111,8 @@ async function DbTripPage({ tripId }: { tripId: number }) {
           />
         </details>
       )}
+
+      <MemberList tripId={tripId} />
 
       <div className="space-y-3">
         <h2 className="text-heading-sm font-semibold">일정</h2>
