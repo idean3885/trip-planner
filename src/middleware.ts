@@ -19,9 +19,14 @@ export default auth((req) => {
   // 비로그인 사용자의 auth 페이지 접근은 허용
   if (isAuthRoute) return;
 
-  // 비로그인 사용자 → 로그인 페이지로 리다이렉트
+  // 비로그인 사용자 → 로그인 페이지로 리다이렉트 (callbackUrl 보존)
   if (!isLoggedIn) {
-    return Response.redirect(new URL("/auth/signin", req.nextUrl));
+    const signInUrl = new URL("/auth/signin", req.nextUrl);
+    const { pathname, search } = req.nextUrl;
+    if (pathname !== "/") {
+      signInUrl.searchParams.set("callbackUrl", `${pathname}${search}`);
+    }
+    return Response.redirect(signInUrl);
   }
 });
 

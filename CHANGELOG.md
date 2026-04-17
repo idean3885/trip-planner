@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.6] - 2026-04-17
+
+### Fixed
+- **초대 링크 비로그인 플로우**: 비로그인 유저가 `/invite/{token}` 접근 시 middleware가 `callbackUrl`을 보존하지 않아 로그인 후 홈으로 이탈하던 문제 수정. 이제 로그인 완료 후 원래 초대 링크로 복귀하여 TripMember가 정상 생성됨. (#189, 디스커션 #185)
+
 ## [2.2.5] - 2026-04-17
 
 ### Fixed
