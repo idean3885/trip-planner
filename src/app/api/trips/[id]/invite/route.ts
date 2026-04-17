@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAuthUserId, isHost } from "@/lib/auth-helpers";
 import { createInviteToken } from "@/lib/invite-token";
+import { getAppOrigin } from "@/lib/app-url";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -25,8 +26,7 @@ export async function POST(request: Request, { params }: Params) {
   }
 
   const token = await createInviteToken({ tripId, role });
-  const baseUrl = process.env.AUTH_URL || process.env.NEXTAUTH_URL || "";
-  const inviteUrl = `${baseUrl}/invite/${token}`;
+  const inviteUrl = `${getAppOrigin(request)}/invite/${token}`;
 
   return NextResponse.json({ inviteUrl }, { status: 201 });
 }
