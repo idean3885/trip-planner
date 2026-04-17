@@ -12,11 +12,27 @@ description: "Task list template for feature implementation"
 
 **Organization**: Tasks are grouped by user story to enable independent implementation and testing of each story.
 
-## Format: `[ID] [P?] [Story] Description`
+## Format: `[ID] [P?] [Story] Description [artifact: ...] [why: ...]`
 
 - **[P]**: Can run in parallel (different files, no dependencies)
 - **[Story]**: Which user story this task belongs to (e.g., US1, US2, US3)
 - Include exact file paths in descriptions
+- **[artifact]**: 산출 파일 상대 경로 또는 `path::symbol` — drift 감사 대상 (필수)
+- **[why]**: plan의 Coverage Target과 일치하는 그룹 태그 — 이슈 합산·plan-tasks 커버리지 검증 대상 (필수)
+- **[multi-step: N]**: plan bullet의 [multi-step] 요구를 만족하는 태스크 그룹에 동일 `[why]`로 묶어 기재
+
+올바른 예:
+```
+- [ ] T042 데이터 보정 마이그레이션 [artifact: prisma/migrations/20260418_backfill/migration.sql] [why: owner-role-backfill] [migration-type: data-migration]
+```
+
+위반 예(validate-metatag-format.sh가 차단):
+```
+- [ ] T001 작업                                        # [artifact], [why] 둘 다 누락
+- [ ] T002 작업 [artifact: ] [why: x]                  # empty artifact value
+- [ ] T003 작업 [artifact:x] [why: y]                  # missing space after colon
+- [ ] T004 작업 [multi-step: 1]                        # must be >= 2
+```
 
 ## Path Conventions
 

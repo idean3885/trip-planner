@@ -7,6 +7,23 @@
 
 17개 FR을 7개 영역의 검증기·템플릿·훅·CI로 구현한다. 기존 `.specify/scripts/bash/enforce-speckit.sh`와 템플릿을 확장하고, 검증 규약의 근간을 네 개 메타태그(`[artifact]`, `[why]`, `[multi-step]`, `[migration-type]`)로 고정한다. 기존 활성 피처(004·006·009 등)에 메타태그를 역적용한 뒤 블로킹 모드로 전환하는 3단계(expand → migrate → contract) 롤아웃으로 도입한다.
 
+## Coverage Targets
+
+`validate-plan-tasks-cov.sh`가 이 목록의 각 `[why]` 태그별 최소 태스크 수를 `tasks.md`에서 검증한다. 추적 대상 bullet만 기재한다(Summary 설명 등 정보성 bullet은 제외).
+
+- 설정 스카폴드 [why: config-scaffold] [multi-step: 3]
+- 메타태그 파서 + 회귀 케이스 [why: metatag-parser] [multi-step: 3]
+- plan ↔ tasks 커버리지 검증 [why: plan-tasks-coverage] [multi-step: 5]
+- tasks ↔ artifact drift 감사 [why: drift-audit] [multi-step: 5]
+- quickstart 실행 증명 게이트 [why: quickstart-evidence] [multi-step: 5]
+- expand-and-contract 데이터 보정 강제 [why: expand-contract-schema] [multi-step: 5]
+- 파이프라인 순서 강제 + 카테고리 탐색 버그 수정 [why: order-enforcement] [multi-step: 4]
+- implement 커스텀 템플릿 [why: implement-template] [multi-step: 3]
+- tasks → 이슈 합산 + 마일스톤 자동화 [why: tasks-to-issues] [multi-step: 4]
+- 헌법 V·VI 휴리스틱 스캐너 [why: constitution-scanner] [multi-step: 3]
+- 롤아웃 마이그레이션(Phase B·C 전환) [why: rollout-migration] [multi-step: 4]
+- 문서 동기화(CLAUDE.md + CHANGELOG) [why: docs-update] [multi-step: 2]
+
 ## Technical Context
 
 **Language/Version**: Bash 3.2+ (macOS 기본), jq, grep/sed (POSIX)
