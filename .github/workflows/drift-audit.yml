@@ -1,0 +1,43 @@
+name: Drift Audit
+
+# speckit 하네스의 tasks ↔ artifact drift 감사 주기 실행.
+# spec 010 FR-004, PR #204. 설정: .specify/config/harness.json .driftAudit
+
+on:
+  schedule:
+    # harness.json .driftAudit.cron 기본값 "0 0 * * 1" (UTC = KST 월 09:00)
+    - cron: "0 0 * * 1"
+  workflow_dispatch:
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: jq 설치 확인
+        run: jq --version
+
+      - name: drift audit 실행
+        id: audit
+        run: |
+          bash .specify/scripts/bash/validate-drift.sh --audit
+          # 파일 경로 추출 (stdout 마지막 blob)
+          REPORT=$(ls -t docs/audits/drift/*.md | head -1)
+          echo "report=$REPORT" >> "$GITHUB_OUTPUT"
+
+      - name: 리포트 커밋 (변경 있을 때만)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/audits/drift/
+          if git diff --cached --quiet; then
+            echo "변경 없음 — 커밋 스킵"
+          else
+            git commit -m "chore(audit): drift 리포트 $(date +%Y-%m-%d) (자동)"
+            git push
+          fi
