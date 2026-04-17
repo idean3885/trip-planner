@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.7] - 2026-04-17
+
+### Fixed
+- **여행 삭제/양도 전면 불가 상태 복구**: `POST /api/trips`가 생성자를 `HOST`로 기록해 OWNER가 존재하지 않던 문제 수정. 생성자는 이제 OWNER로 등록되며, 기존 여행은 마이그레이션으로 `tripMember.userId == trip.createdBy` 조건에서 OWNER로 승격됨. 홈 목록의 "호스트" 표시도 정상적으로 "내 여행"으로 복구됨. (#191, 디스커션 #188)
+- **여행 삭제 UI 노출**: 여행 상세 페이지에 OWNER 전용 "여행 삭제" 버튼 추가. 확인 다이얼로그 포함. (#191)
+- **여행 나가기 UI 노출**: HOST/GUEST 대상 "여행 나가기" 버튼 추가 — 초대 → 합류 → 나가기 플로우 완결. OWNER는 양도 후 탈퇴 필요 (API가 차단). (#191)
+
 ## [2.2.6] - 2026-04-17
 
 ### Fixed

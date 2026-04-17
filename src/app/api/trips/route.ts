@@ -46,7 +46,7 @@ export async function POST(request: Request) {
       createdBy: userId,
       updatedBy: userId,
       tripMembers: {
-        create: { userId, role: "HOST" },
+        create: { userId, role: "OWNER" },
       },
     },
   });
