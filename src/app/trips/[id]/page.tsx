@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { formatCalendarDateFull, formatCalendarDate } from "@/lib/date-utils";
 import InviteButton from "@/components/InviteButton";
 import DeleteTripButton from "@/components/DeleteTripButton";
+import LeaveTripButton from "@/components/LeaveTripButton";
 import { remark } from "remark";
 import remarkGfm from "remark-gfm";
 import html from "remark-html";
@@ -87,14 +88,15 @@ async function DbTripPage({ tripId }: { tripId: number }) {
             {formatCalendarDateFull(trip.endDate)}
           </p>
         )}
-        {member.role !== "GUEST" && (
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <InviteButton tripId={tripId} />
-            {member.role === "OWNER" && (
-              <DeleteTripButton tripId={tripId} tripTitle={trip.title} />
-            )}
-          </div>
-        )}
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          {member.role !== "GUEST" && <InviteButton tripId={tripId} />}
+          {member.role === "OWNER" && (
+            <DeleteTripButton tripId={tripId} tripTitle={trip.title} />
+          )}
+          {member.role !== "OWNER" && (
+            <LeaveTripButton tripId={tripId} tripTitle={trip.title} />
+          )}
+        </div>
       </div>
 
       {descriptionHtml && (
