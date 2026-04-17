@@ -491,9 +491,8 @@ export const openApiSpec = {
       },
       post: {
         tags: ["Tokens"],
-        summary: "토큰 생성 (deprecated)",
-        deprecated: true,
-        description: "세션 인증 필수. 생성된 토큰 원문은 이 응답에서만 노출된다. **비권장**: 장치별 PAT는 `install.sh`의 OAuth CLI 플로우가 자동 발급합니다. 본 엔드포인트는 하위 호환을 위해 유지되며 이후 릴리즈에서 제거될 수 있음.",
+        summary: "토큰 수동 생성",
+        description: "세션 인증 필수. 생성된 토큰 원문은 이 응답에서만 노출된다. 권장 경로는 `install.sh`의 OAuth CLI 자동 발급이며, 본 엔드포인트는 웹 전용 사용자의 수동 발급용으로 유지된다.",
         security: [{ SessionAuth: [] }],
         requestBody: {
           required: true,

@@ -10,8 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - **URL 도출 전략 재설계**: 환경별 외부 env(AUTH_URL 등) 의존 제거. `src/lib/app-url.ts` 헬퍼 + Auth.js `trustHost: true`로 각 환경이 자기 요청 origin만 보고 동작. "dev가 prod 참조, local이 dev 참조" 교차 참조를 구조적으로 차단. 문서: `docs/ENVIRONMENTS.md`. (#194)
 
-### Removed
-- **설정 페이지 API 토큰 수동 생성 폼 제거**: v2.2.0의 OAuth CLI 자동 발급과 중복. 설정 페이지는 "발급된 API 토큰" 목록 + 폐기만 제공. `POST /api/tokens`는 OpenAPI에 deprecated 표기 후 하위 호환 유지. (#197, 디스커션 #187)
+### Changed
+- **설정 페이지 PAT 발급 UX 재정비**: 자동 발급(install.sh)을 기본 시각으로 설명하고 수동 발급 폼은 `<details>` 접힘 "수동 발급 (고급)" 영역으로 이동. 설치 가이드·API 문서 링크 추가. 웹 전용 유저도 self-serve 가능하게 유지. `POST /api/tokens` deprecated 표기 해제(공식 경로로 유지). (#199, 디스커션 #187 후속)
 
 ### Fixed
 - **여행 삭제/양도 전면 불가 상태 복구**: `POST /api/trips`가 생성자를 `HOST`로 기록해 OWNER가 존재하지 않던 문제 수정. 생성자는 이제 OWNER로 등록되며, 기존 여행은 마이그레이션으로 `tripMember.userId == trip.createdBy` 조건에서 OWNER로 승격됨. 홈 목록의 "호스트" 표시도 정상적으로 "내 여행"으로 복구됨. (#191, 디스커션 #188)
