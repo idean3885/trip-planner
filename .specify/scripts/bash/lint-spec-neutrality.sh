@@ -28,7 +28,7 @@ if [[ -z "$SPEC_FILE" ]]; then
   BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "main")
   if [[ "$BRANCH" =~ ^([0-9]{3})- ]]; then
     PREFIX="${BASH_REMATCH[1]}"
-    FEATURE_DIR=$(find "$REPO_ROOT/specs" -maxdepth 1 -name "${PREFIX}-*" -type d 2>/dev/null | head -1)
+    FEATURE_DIR=$(find "$REPO_ROOT/specs" -mindepth 1 -maxdepth 2 -type d -name "${PREFIX}-*" 2>/dev/null | head -1)
     if [[ -n "$FEATURE_DIR" ]]; then
       SPEC_FILE="$FEATURE_DIR/spec.md"
     fi

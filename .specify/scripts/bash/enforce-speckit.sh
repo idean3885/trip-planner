@@ -67,15 +67,28 @@ if [[ ! "$BRANCH" =~ ^[0-9]{3}- ]]; then
   exit 0  # 피처 브랜치 규칙 밖 → 패스 (임시 브랜치 등)
 fi
 
-# 6) speckit 산출물 확인
+# 6) speckit 산출물 확인 — 평면(`specs/NNN-*`) + 카테고리 하위(`specs/<cat>/NNN-*`)
+#    모두 탐색. 여러 개 발견되면 피처명이 모호하므로 안내 후 차단.
 PREFIX="${BRANCH:0:3}"
-FEATURE_DIR=$(find "$REPO_ROOT/specs" -maxdepth 1 -name "${PREFIX}-*" -type d 2>/dev/null | head -1)
+# macOS 기본 bash 3.2는 mapfile이 없어 호환 패턴 사용
+MATCHES=()
+while IFS= read -r _m; do
+  [[ -n "$_m" ]] && MATCHES+=("$_m")
+done < <(find "$REPO_ROOT/specs" -mindepth 1 -maxdepth 2 -type d -name "${PREFIX}-*" 2>/dev/null)
 
-if [[ -z "$FEATURE_DIR" ]]; then
+if [[ ${#MATCHES[@]} -eq 0 ]]; then
   echo "BLOCKED: specs/ 디렉토리에 피처 ${BRANCH}의 스펙이 없습니다." >&2
   echo "→ /speckit.specify 를 실행하여 스펙을 생성하세요." >&2
   exit 2
+elif [[ ${#MATCHES[@]} -gt 1 ]]; then
+  echo "BLOCKED: 피처 prefix ${PREFIX}-*가 여러 디렉토리에 존재합니다:" >&2
+  for m in "${MATCHES[@]}"; do
+    echo "  - ${m#"$REPO_ROOT"/}" >&2
+  done
+  echo "→ 하나만 남기도록 정리하세요." >&2
+  exit 2
 fi
+FEATURE_DIR="${MATCHES[0]}"
 
 MISSING=()
 [[ ! -f "$FEATURE_DIR/spec.md" ]]  && MISSING+=("spec.md  → /speckit.specify")
@@ -83,11 +96,12 @@ MISSING=()
 [[ ! -f "$FEATURE_DIR/tasks.md" ]] && MISSING+=("tasks.md → /speckit.tasks")
 
 if [[ ${#MISSING[@]} -gt 0 ]]; then
-  echo "BLOCKED: speckit 산출물이 완성되지 않았습니다. (${BRANCH})" >&2
+  echo "BLOCKED: speckit 산출물이 완성되지 않았습니다. (${BRANCH}, ${FEATURE_DIR#"$REPO_ROOT"/})" >&2
   for m in "${MISSING[@]}"; do
     echo "  ✗ $m" >&2
   done
-  echo "→ 위 단계를 완료한 후 구현을 시작하세요." >&2
+  echo "→ 선행 단계 산출물을 먼저 완성한 후 다음 단계를 진행하세요." >&2
+  echo "  (순서: specify → clarify → plan → tasks → implement)" >&2
   exit 2
 fi
 

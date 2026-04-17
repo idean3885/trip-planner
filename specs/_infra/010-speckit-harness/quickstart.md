@@ -249,9 +249,15 @@ tasks.md 없이 `.ts` 파일 Edit.
 
 ### Evidence
 
-- 자동 테스트: `.specify/scripts/bash/enforce-speckit.sh --self-test`
-- develop 기준으로 기존 훅 동작 회귀(카테고리 하위 피처에서 오작동하지 않음) 확인
-- 스크린샷: `docs/evidence/010-speckit-harness/us5-*.png`
+- 자동 테스트 경로: 해당없음 — PreToolUse 훅은 stdin JSON으로만 호출되므로 수동 시나리오 재현이 기준
+- 수동 재현(#211 PR 본문에 명령 기록):
+  - [x] 시나리오 A: 소스 파일 아님 → exit 0 (패스)
+  - [x] 시나리오 B: `.specify/*` 경로 → exit 0 (패스)
+  - [x] 시나리오 C: NNN-* 아닌 브랜치(`chore/211`) → exit 0 (패스)
+  - [x] 시나리오 D: `010-*` 브랜치 + 카테고리 하위 spec 존재 → exit 0 (카테고리 하위 탐색 성공, **버그 수정 핵심**)
+  - [x] 시나리오 E: `999-*` 브랜치 + spec 없음 → exit 2 (차단 + specify 안내)
+- bash 3.2 호환성 확인: macOS 기본 bash에서 `mapfile` 대체 while-read 루프 동작 (Linux bash 5.x도 호환).
+- 스크린샷: 해당없음(CLI 로그 재현 가능, `.specify/scripts/bash/enforce-speckit.sh` stdin 테스트)
 
 ---
 
