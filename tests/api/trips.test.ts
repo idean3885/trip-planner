@@ -1,0 +1,90 @@
+import { describe, it, expect, vi, beforeEach } from "vitest";
+
+const { mockPrisma, mockAuthHelpers } = vi.hoisted(() => ({
+  mockPrisma: {
+    trip: { create: vi.fn(), delete: vi.fn() },
+  },
+  mockAuthHelpers: {
+    getAuthUserId: vi.fn(),
+    isOwner: vi.fn(),
+  },
+}));
+
+vi.mock("@/lib/prisma", () => ({ prisma: mockPrisma }));
+vi.mock("@/lib/auth-helpers", () => mockAuthHelpers);
+
+import { POST } from "@/app/api/trips/route";
+import { DELETE } from "@/app/api/trips/[id]/route";
+
+const mockAuth = mockAuthHelpers.getAuthUserId;
+const mockIsOwner = mockAuthHelpers.isOwner;
+
+function tripParams(id = "1") {
+  return { params: Promise.resolve({ id }) };
+}
+
+function jsonRequest(url: string, body: unknown, method = "POST") {
+  return new Request(url, {
+    method,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+}
+
+describe("POST /api/trips — 생성 (#191)", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("returns 401 when unauthenticated", async () => {
+    mockAuth.mockResolvedValue(null);
+    const res = await POST(jsonRequest("http://localhost/api/trips", { title: "x" }));
+    expect(res.status).toBe(401);
+  });
+
+  it("returns 400 when title missing", async () => {
+    mockAuth.mockResolvedValue("user1");
+    const res = await POST(jsonRequest("http://localhost/api/trips", {}));
+    expect(res.status).toBe(400);
+  });
+
+  it("creates trip with creator as OWNER (regression: was HOST, caused delete 403)", async () => {
+    mockAuth.mockResolvedValue("user1");
+    mockPrisma.trip.create.mockResolvedValue({ id: 42, title: "Test" });
+
+    const res = await POST(
+      jsonRequest("http://localhost/api/trips", { title: "Test" }),
+    );
+
+    expect(res.status).toBe(201);
+    const callArg = mockPrisma.trip.create.mock.calls[0][0];
+    expect(callArg.data.tripMembers.create).toEqual({ userId: "user1", role: "OWNER" });
+    expect(callArg.data.createdBy).toBe("user1");
+  });
+});
+
+describe("DELETE /api/trips/{id} — 삭제 (#191)", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("returns 401 when unauthenticated", async () => {
+    mockAuth.mockResolvedValue(null);
+    const res = await DELETE(new Request("http://localhost/api/trips/1", { method: "DELETE" }), tripParams());
+    expect(res.status).toBe(401);
+  });
+
+  it("returns 403 when not OWNER", async () => {
+    mockAuth.mockResolvedValue("user1");
+    mockIsOwner.mockResolvedValue(false);
+    const res = await DELETE(new Request("http://localhost/api/trips/1", { method: "DELETE" }), tripParams());
+    expect(res.status).toBe(403);
+  });
+
+  it("deletes trip when OWNER", async () => {
+    mockAuth.mockResolvedValue("user1");
+    mockIsOwner.mockResolvedValue(true);
+    mockPrisma.trip.delete.mockResolvedValue({ id: 1 });
+
+    const res = await DELETE(new Request("http://localhost/api/trips/1", { method: "DELETE" }), tripParams());
+
+    expect(res.status).toBe(200);
+    expect(mockPrisma.trip.delete).toHaveBeenCalledWith({ where: { id: 1 } });
+  });
+});
