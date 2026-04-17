@@ -201,17 +201,29 @@ plan bullet + tasks.md에 `[migration-type: data-migration]` 또는 `[why: *-bac
 
 기대: exit 0.
 
-### Scenario US4-3: 마이그레이션 헤더 누락 — 차단
+### Scenario US4-3: 마이그레이션 헤더 누락 — 경고
 
 마이그레이션 SQL 파일 상단에 `-- [migration-type: ...]` 헤더 없음.
 
-기대: exit ≠ 0.
+기대: phase=expand 기준 경고(exit 0). phase=contract 전환 후는 차단 대상 후보(정책 재확인 필요).
+
+### Scenario US4-4: -backfill 접미사 매핑
+
+plan bullet `[why: owner-role]`에 대해 tasks.md에 `[why: owner-role-backfill]` 태스크가 있으면 매핑으로 인정.
+
+기대: validator가 접미사 매칭으로 통과 판정.
 
 ### Evidence
 
-- 자동 테스트: `.specify/scripts/bash/validate-migration-meta.sh --self-test`
-- 004의 `20260414053446_add_owner_role`에 대해 Scenario US4-1이 예상대로 차단되는지 확인
-- 스크린샷: `docs/evidence/010-speckit-harness/us4-*.png`
+- 자동 테스트: `.specify/scripts/bash/validate-migration-meta.sh --self-test` (4 케이스 내장)
+- 010 dogfood: `validate-migration-meta.sh --feature specs/_infra/010-speckit-harness` → 스키마 bullet 0건, 마이그레이션 헤더 경고 10건(Phase B 소급 대상)
+- #191 재현 근거: 004 plan의 "OWNER 역할 추가" bullet은 현재 `[why]` 태그가 없어 자동 감지 범위 밖. #215 Phase B에서 004 plan에 태그 소급 시 해당 bullet이 차단/경고 대상이 된다.
+- 수동 체크리스트:
+  - [x] US4-1 data-migration 매핑 통과 (#210 self-test Case A)
+  - [x] US4-2 backfill 누락 차단 (#210 self-test Case B)
+  - [x] US4-3 헤더 없음 경고 (#210 --all-migrations 10건)
+  - [x] US4-4 접미사 매핑 (#210 self-test Case C)
+- 스크린샷: 해당없음(CLI 로그 재현 가능)
 
 ---
 
