@@ -1,0 +1,305 @@
+# Quickstart: speckit 하네스 회귀 시나리오
+
+**Feature**: `010-speckit-harness` | **Spec**: [spec.md](./spec.md) | **Plan**: [plan.md](./plan.md)
+
+본 문서는 각 User Story의 수동/자동 회귀 케이스를 정의한다. 각 시나리오는 `### Evidence` 서브섹션으로 실행 증거를 기록하며, PR 머지 게이트가 이 증거 존재 여부를 자동 검증한다(FR-005).
+
+## Index
+
+- [Foundational — 메타태그 파서](#foundational--메타태그-파서)
+- [US1 — plan ↔ tasks 커버리지](#us1--plan--tasks-커버리지)
+- [US2 — tasks ↔ artifact drift 감사](#us2--tasks--artifact-drift-감사)
+- [US3 — quickstart 실행 증명](#us3--quickstart-실행-증명)
+- [US4 — expand-and-contract 데이터 보정](#us4--expand-and-contract-데이터-보정)
+- [US5 — 파이프라인 순서 강제](#us5--파이프라인-순서-강제)
+- [US6 — implement 커스텀 템플릿](#us6--implement-커스텀-템플릿)
+- [US7 — tasks → 이슈 합산](#us7--tasks--이슈-합산)
+- [US8 — 헌법 V/VI 검증](#us8--헌법-vvi-검증)
+
+---
+
+## Foundational — 메타태그 파서
+
+### Scenario F1: 허용 형식 10건 통과
+
+입력:
+
+```
+- [ ] T001 설정 로드 [artifact: .specify/config/harness.json] [why: config-scaffold]
+- [ ] T002 파서 [artifact: .specify/scripts/bash/validate-metatag-format.sh::skip_fenced] [why: metatag-parser]
+- [ ] T003 다단 [multi-step: 2] [why: plan-tasks-coverage]
+- [ ] T004 마이그레이션 [migration-type: data-migration] [why: expand-contract-schema]
+```
+
+기대: `validate-metatag-format.sh` exit 0, "위반 0건" 출력.
+
+### Scenario F2: 거부 형식 10건 차단
+
+입력 예시:
+
+```
+- [ ] T010 [artifact: ]                            # 빈 값
+- [ ] T011 [artifact: path [why: x]                # 괄호 unmatched
+- [ ] T012 [migration-type: unknown]               # 허용 외 값
+- [ ] T013 [why :x]                                # 공백 오류
+```
+
+기대: 각 줄 번호 + 위반 사유가 stderr에 명시되며 exit ≠ 0.
+
+### Scenario F3: 코드 블록/주석 스킵
+
+입력: 마크다운 코드 펜스 내부에 `[artifact: fake]`가 있는 경우.
+
+기대: 파서가 스킵하여 통과. 주석 블록(`<!-- ... -->`)도 동일.
+
+### Evidence
+
+- 자동 테스트: `.specify/scripts/bash/validate-metatag-format.sh --self-test`
+- 수동 체크리스트 (필요 시):
+  - [ ] F1 — 10건 허용 형식 통과 확인
+  - [ ] F2 — 10건 거부 형식 차단 확인
+  - [ ] F3 — 코드/주석 스킵 확인
+- 스크린샷: `docs/evidence/010-speckit-harness/foundational-*.png`
+
+---
+
+## US1 — plan ↔ tasks 커버리지
+
+### Scenario US1-1: 전체 매핑 통과
+
+plan.md에 3개 bullet, tasks.md에 3개 이상 대응 태스크.
+
+기대: `validate-plan-tasks-cov.sh` exit 0.
+
+### Scenario US1-2: 부분 누락 차단
+
+plan.md 3개 bullet 중 2개만 tasks.md에 매핑.
+
+기대: exit ≠ 0, 누락된 3번째 bullet 원문 + 줄 번호 stderr 출력.
+
+### Scenario US1-3: multi-step 부족 차단
+
+plan.md bullet에 `[multi-step: 2]` 태그, tasks.md에 해당 bullet 참조 태스크 1개만 존재.
+
+기대: exit ≠ 0, "multi-step N=2 요구, 매핑 1건" 메시지.
+
+### Evidence
+
+- 자동 테스트: `.specify/scripts/bash/validate-plan-tasks-cov.sh --self-test`
+- 수동 체크리스트:
+  - [ ] US1-1 통과
+  - [ ] US1-2 차단 + 누락 리포트 확인
+  - [ ] US1-3 차단 + multi-step 메시지 확인
+- 스크린샷: `docs/evidence/010-speckit-harness/us1-*.png`
+
+---
+
+## US2 — tasks ↔ artifact drift 감사
+
+### Scenario US2-1: 체크된 태스크의 아티팩트 존재 — 통과
+
+tasks.md에 `- [x] T001 [artifact: existing/file.ts]`, 해당 파일 존재.
+
+기대: drift 리포트에 위반 없음.
+
+### Scenario US2-2: 체크됐으나 파일 부재 — 에러
+
+tasks.md에 `- [x] T002 [artifact: missing/file.ts]`, 해당 파일 없음.
+
+기대: drift 리포트의 `Errors` 섹션에 T002 등장.
+
+### Scenario US2-3: 미체크인데 파일 존재 — 경고
+
+tasks.md에 `- [ ] T003 [artifact: existing/other.ts]`, 해당 파일 존재.
+
+기대: drift 리포트의 `Warnings` 섹션에 T003 등장.
+
+### Scenario US2-4: 주간 감사 실행
+
+`validate-drift.sh --audit`를 cron 시뮬레이션으로 실행.
+
+기대: `docs/audits/drift/YYYY-MM-DD.md`가 생성되며 활성 피처 전체 요약 포함.
+
+### Evidence
+
+- 자동 테스트: `.specify/scripts/bash/validate-drift.sh --self-test`
+- 004 tasks.md 스냅샷 실행: #191에서 지적된 49/53 미체크 항목이 리포트되는지 확인
+- 스크린샷: `docs/evidence/010-speckit-harness/us2-*.png`
+
+---
+
+## US3 — quickstart 실행 증명
+
+### Scenario US3-1: Evidence 서브섹션 모두 존재 — 통과
+
+모든 시나리오 섹션에 `### Evidence` 존재 + 최소 하나의 증거 줄.
+
+기대: `validate-quickstart-ev.sh` exit 0.
+
+### Scenario US3-2: Evidence 누락 — 차단
+
+한 시나리오 섹션에 Evidence 서브섹션 부재.
+
+기대: exit ≠ 0, 누락 시나리오명 출력.
+
+### Scenario US3-3: 수동 경로 불완전 — 차단
+
+Evidence에 체크리스트는 있으나 스크린샷 경로가 없음.
+
+기대: exit ≠ 0.
+
+### Evidence
+
+- 자동 테스트: `.specify/scripts/bash/validate-quickstart-ev.sh --self-test`
+- 본 quickstart.md 자체가 US3의 positive 케이스로 기능(dogfood).
+- 스크린샷: `docs/evidence/010-speckit-harness/us3-*.png`
+
+---
+
+## US4 — expand-and-contract 데이터 보정
+
+### Scenario US4-1: #191 재현 — enum 추가 + 보정 태스크 부재
+
+plan.md에 "OWNER 역할 추가" bullet, tasks.md에 schema-only 마이그레이션 태스크만 존재.
+
+기대: `validate-migration-meta.sh` exit ≠ 0, "data-migration 태스크 필요" 메시지.
+
+### Scenario US4-2: 보정 태스크 포함 — 통과
+
+plan bullet + tasks.md에 `[migration-type: data-migration]` 또는 `[why: *-backfill]` 태스크 존재.
+
+기대: exit 0.
+
+### Scenario US4-3: 마이그레이션 헤더 누락 — 차단
+
+마이그레이션 SQL 파일 상단에 `-- [migration-type: ...]` 헤더 없음.
+
+기대: exit ≠ 0.
+
+### Evidence
+
+- 자동 테스트: `.specify/scripts/bash/validate-migration-meta.sh --self-test`
+- 004의 `20260414053446_add_owner_role`에 대해 Scenario US4-1이 예상대로 차단되는지 확인
+- 스크린샷: `docs/evidence/010-speckit-harness/us4-*.png`
+
+---
+
+## US5 — 파이프라인 순서 강제
+
+### Scenario US5-1: 카테고리 하위 구조 탐색
+
+현재 브랜치 `010-speckit-harness`, spec이 `specs/_infra/010-speckit-harness/`에 존재.
+
+기대: `enforce-speckit.sh` exit 0 (maxdepth 2 적용 후).
+
+### Scenario US5-2: spec 없이 plan 시도
+
+plan.md 없이 plan 명령 모사.
+
+기대: 차단 + specify 안내.
+
+### Scenario US5-3: tasks 없이 소스 편집 시도
+
+tasks.md 없이 `.ts` 파일 Edit.
+
+기대: PreToolUse 차단 + tasks 생성 안내.
+
+### Evidence
+
+- 자동 테스트: `.specify/scripts/bash/enforce-speckit.sh --self-test`
+- develop 기준으로 기존 훅 동작 회귀(카테고리 하위 피처에서 오작동하지 않음) 확인
+- 스크린샷: `docs/evidence/010-speckit-harness/us5-*.png`
+
+---
+
+## US6 — implement 커스텀 템플릿
+
+### Scenario US6-1: 레이어 체크리스트 노출
+
+`/speckit.implement` 시 템플릿이 도메인/애플리케이션/인프라/표현 레이어 체크를 제시.
+
+기대: 사용자가 확인 후 구현 진행.
+
+### Scenario US6-2: DB 스키마 변경 감지 시 expand-and-contract 질의
+
+plan에 스키마 변경 bullet이 있으면 implement 템플릿이 재확인 질의를 포함.
+
+기대: 해당 질의가 프롬프트에 포함됨.
+
+### Evidence
+
+- 수동 체크리스트:
+  - [ ] US6-1 — 체크리스트 노출 확인
+  - [ ] US6-2 — 질의 포함 확인
+- 스크린샷: `docs/evidence/010-speckit-harness/us6-*.png`
+
+---
+
+## US7 — tasks → 이슈 합산
+
+### Scenario US7-1: 동일 why 합산
+
+`[why: plan-tasks-coverage]`를 가진 태스크 5개 → 단일 이슈 초안.
+
+기대: `merge-tasks-to-issues.sh --dry-run`이 1건 출력.
+
+### Scenario US7-2: 8h 초과 분할
+
+합산 추정 12h → 2개 이슈로 분할.
+
+기대: 분할 이슈 2건, 각 ≤ 8h.
+
+### Scenario US7-3: 단일 이슈 — 마일스톤 미생성
+
+why 그룹이 하나뿐.
+
+기대: 이슈만 생성, 마일스톤 호출 없음.
+
+### Scenario US7-4: 2건 이상 — 마일스톤 자동 생성
+
+why 그룹이 2개 이상.
+
+기대: 피처 명칭 마일스톤 자동 생성 + 이슈 연결.
+
+### Evidence
+
+- 자동 테스트: `.specify/scripts/bash/merge-tasks-to-issues.sh --dry-run --self-test`
+- 본 tasks.md를 입력으로 한 dry-run 출력 캡처 (11~12 이슈 + 마일스톤 예상)
+- 스크린샷: `docs/evidence/010-speckit-harness/us7-*.png`
+
+---
+
+## US8 — 헌법 V/VI 검증
+
+### Scenario US8-1: 도메인 위반 감지
+
+spec 본문에 "동행 협업 서비스가 Activity를 직접 수정" 표현.
+
+기대: `validate-constitution.sh` 경고 출력(차단 아님).
+
+### Scenario US8-2: 권한 매트릭스 미등록 행위
+
+FR에 "게스트가 여행을 삭제" 같은 매트릭스 미정의 행위.
+
+기대: 경고 출력.
+
+### Scenario US8-3: 통과 케이스
+
+본 spec.md 자체를 입력.
+
+기대: 경고 0건(본 피처가 도메인·권한을 건드리지 않음).
+
+### Evidence
+
+- 자동 테스트: `.specify/scripts/bash/validate-constitution.sh --self-test`
+- 본 spec.md를 입력으로 한 실행 결과 — 경고 0건 예상
+- 스크린샷: `docs/evidence/010-speckit-harness/us8-*.png`
+
+---
+
+## 실행 규약
+
+1. 각 시나리오의 `### Evidence`에 기록되는 파일은 **자동 테스트 경로** 또는 **체크리스트 + 스크린샷 경로** 중 최소 하나가 충족되어야 한다.
+2. 스크린샷 디렉토리는 `docs/evidence/010-speckit-harness/`로 고정한다. 다른 피처는 `docs/evidence/<feature-dir>/`.
+3. 자동 테스트 경로는 `--self-test` 모드를 제공하는 스크립트만 허용한다(재현성 보장).
+4. 본 파일 자체가 US3의 positive 케이스로 기능하므로, PR 머지 전 `### Evidence` 서브섹션을 실제 증거로 업데이트해야 한다.
