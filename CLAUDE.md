@@ -105,6 +105,48 @@ develop ──●──●──●───●──●──●──●──
 
 ## 작업 규칙
 
+### speckit 하네스 (spec 010, 이슈 #181)
+
+모든 피처 작업 산출물은 아래 4종 메타태그로 자동 검증된다. 형식 위반은 `validate-metatag-format.sh`가 차단.
+
+| 태그 | 의미 | 사용 위치 |
+|------|------|-----------|
+| `[artifact: <path>|<path>::<symbol>]` | 산출 파일 경로(또는 심볼). drift 감사 기준 | `tasks.md` 체크박스 라인 |
+| `[why: <short-tag>]` | 추적 그룹 키. plan↔tasks 커버리지·이슈 합산 | `tasks.md`, `plan.md` Coverage Targets bullet |
+| `[multi-step: N]` | plan bullet이 다단 작업일 때 최소 매핑 태스크 수(N ≥ 2) | `plan.md` Coverage Targets bullet |
+| `[migration-type: schema-only \| data-migration]` | 마이그레이션 SQL 상단 헤더 | `prisma/migrations/*/migration.sql` 첫 10줄 |
+
+스펙 본문에서 `[est: Nh]`는 선택적 태그(이슈 합산 시 추정 사용). 위 4종 외는 자유.
+
+#### 검증기 스택
+
+- `validate-metatag-format.sh` — 4종 형식 정합성
+- `validate-plan-tasks-cov.sh` — plan Coverage Targets ↔ tasks `[why]` 매핑 수
+- `validate-drift.sh` — tasks `[x]` ↔ 실제 아티팩트 일치 (audit 모드 주간 실행)
+- `validate-quickstart-ev.sh` — quickstart.md `### Evidence` 존재 + 자동/수동 증거
+- `validate-migration-meta.sh` — expand-and-contract (플랜 스키마 bullet ↔ 보정 태스크, 마이그레이션 헤더)
+- `validate-constitution.sh` — 헌법 V/VI 휴리스틱 경고 (차단 없음)
+- `merge-tasks-to-issues.sh` — tasks.md → 하위 이슈 초안(`[why]` 그룹 + 8h 분할 + 마일스톤, dry-run)
+- `enforce-speckit.sh` — Edit/Write PreToolUse 훅. 피처 브랜치(NNN-*)에서 산출물 존재 강제
+- `.github/workflows/speckit-gate.yml` — PR 단계 자동 검증
+- `.github/workflows/drift-audit.yml` — 주간 drift 리포트 생성·자동 커밋
+
+#### rollout phase
+
+`.specify/config/harness.json`의 `rollout.phase`가 `expand`/`migrate`/`contract` 세 단계 중 하나. 각 단계 동작:
+
+- **expand** (현재): validator 경고만, 머지 차단 없음. 신규 피처 도입기.
+- **migrate**: 기존 활성 피처(004/006/007 등) 메타태그 소급 적용. 경고 여전히 비차단.
+- **contract**: quickstart-evidence / migration-meta / drift error가 머지 차단. Phase B 완료 + 1주 관찰 후 전환.
+
+전환 조건·스냅샷은 `docs/audits/drift/2026-04-migration.md` 참조.
+
+#### 참고 문서
+
+- `.specify/templates/implement-template.md` — 레이어·테스트·커밋 가이드
+- `.specify/templates/quickstart-template.md` — Evidence 규약
+- `.specify/templates/migration-header-guide.md` — SQL 헤더 규약
+
 ### 데일리 파일 포맷
 각 daily/*.md 파일은 다음 섹션을 포함해야 합니다:
 1. **오늘의 요약** — 도시, 숙소, 이동, 예상 경비
