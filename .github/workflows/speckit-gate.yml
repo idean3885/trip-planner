@@ -80,3 +80,11 @@ jobs:
               bash .specify/scripts/bash/validate-quickstart-ev.sh --feature "$f"
             fi
           done
+
+      - name: migration-meta 검증 (phase-aware)
+        if: steps.features.outputs.features != ''
+        run: |
+          set -e
+          for f in ${{ steps.features.outputs.features }}; do
+            bash .specify/scripts/bash/validate-migration-meta.sh --feature "$f"
+          done
