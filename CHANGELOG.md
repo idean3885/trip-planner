@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.7] - 2026-04-17
+
+### Changed
+- **URL 도출 전략 재설계**: 환경별 외부 env(AUTH_URL 등) 의존 제거. `src/lib/app-url.ts` 헬퍼 + Auth.js `trustHost: true`로 각 환경이 자기 요청 origin만 보고 동작. "dev가 prod 참조, local이 dev 참조" 교차 참조를 구조적으로 차단. 문서: `docs/ENVIRONMENTS.md`. (#194)
+- **설정 페이지 PAT 발급 UX 재정비**: 자동 발급(install.sh)을 기본 시각으로 설명하고 수동 발급 폼은 `<details>` 접힘 "수동 발급 (고급)" 영역으로 이동. 설치 가이드·API 문서 링크 추가. 웹 전용 유저도 self-serve 가능하게 유지. `POST /api/tokens` deprecated 표기 해제(공식 경로로 유지). (#199, 디스커션 #187 후속)
+
+### Added
+- **여행 멤버 목록 UI**: 여행 상세 페이지에 동행자 섹션 추가 — 아바타/이름/역할 배지(주인·호스트·게스트). OWNER → HOST → GUEST 순 정렬 후 joined_at 오름차순. (#193, 디스커션 #186)
+
+### Fixed
+- **여행 삭제/양도 전면 불가 상태 복구**: `POST /api/trips`가 생성자를 `HOST`로 기록해 OWNER가 존재하지 않던 문제 수정. 생성자는 이제 OWNER로 등록되며, 기존 여행은 마이그레이션으로 `tripMember.userId == trip.createdBy` 조건에서 OWNER로 승격됨. 홈 목록의 "호스트" 표시도 정상적으로 "내 여행"으로 복구됨. (#191, 디스커션 #188)
+- **여행 삭제 UI 노출**: 여행 상세 페이지에 OWNER 전용 "여행 삭제" 버튼 추가. 확인 다이얼로그 포함. (#191)
+- **여행 나가기 UI 노출**: HOST/GUEST 대상 "여행 나가기" 버튼 추가 — 초대 → 합류 → 나가기 플로우 완결. OWNER는 양도 후 탈퇴 필요 (API가 차단). (#191)
+- **초대 링크 상대경로 생성**: dev 환경에서 invite URL이 `/invite/...` 상대경로로 생성되어 외부 앱 붙여넣기 시 `file://`로 해석되던 문제 수정. 위 URL 도출 재설계로 재발 불가. (#194, 디스커션 #185 Case 1 실제 원인)
+
+## [2.2.6] - 2026-04-17
+
+### Fixed
+- **초대 링크 비로그인 플로우**: 비로그인 유저가 `/invite/{token}` 접근 시 middleware가 `callbackUrl`을 보존하지 않아 로그인 후 홈으로 이탈하던 문제 수정. 이제 로그인 완료 후 원래 초대 링크로 복귀하여 TripMember가 정상 생성됨. (#189, 디스커션 #185)
+
 ## [2.2.5] - 2026-04-17
 
 ### Fixed

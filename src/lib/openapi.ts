@@ -491,8 +491,8 @@ export const openApiSpec = {
       },
       post: {
         tags: ["Tokens"],
-        summary: "토큰 생성",
-        description: "세션 인증 필수. 생성된 토큰 원문은 이 응답에서만 노출된다.",
+        summary: "토큰 수동 생성",
+        description: "세션 인증 필수. 생성된 토큰 원문은 이 응답에서만 노출된다. 권장 경로는 `install.sh`의 OAuth CLI 자동 발급이며, 본 엔드포인트는 웹 전용 사용자의 수동 발급용으로 유지된다.",
         security: [{ SessionAuth: [] }],
         requestBody: {
           required: true,

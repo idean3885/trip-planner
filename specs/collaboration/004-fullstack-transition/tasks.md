@@ -65,9 +65,9 @@
 
 ### 여행 CRUD
 
-- [ ] T024 [US2] src/app/api/trips/route.ts 여행 목록 조회 + 생성 API
-- [ ] T025 [US2] src/app/api/trips/[tripId]/route.ts 여행 상세 조회 + 수정 + 삭제 API
-- [ ] T026 [US2] API에 권한 검증 추가 (소유자/편집자만 수정, 소유자만 삭제)
+- [x] T024 [US2] src/app/api/trips/route.ts 여행 목록 조회 + 생성 API (생성자 OWNER 등록: #191 에서 HOST 회귀 수정)
+- [x] T025 [US2] src/app/api/trips/[tripId]/route.ts 여행 상세 조회 + 수정 + 삭제 API (삭제 UI: #191)
+- [x] T026 [US2] API에 권한 검증 추가 (소유자/편집자만 수정, 소유자만 삭제) (#191: OWNER 권한 분기 테스트)
 - [ ] T027 [P] [US2] src/components/TripForm.tsx 여행 생성/편집 폼 컴포넌트
 - [ ] T028 [US2] src/app/page.tsx를 DB 조회로 전환 (기존 마크다운 읽기 → Prisma 쿼리)
 
@@ -107,7 +107,7 @@
 ### Edge Cases
 
 - [ ] T045 [US3] 초대 만료/중복 처리: 기존 PENDING 초대 EXPIRED 전환 후 재발급
-- [ ] T046 [US3] 소유자 자기 제거 방지 로직 추가
+- [x] T046 [US3] 소유자 자기 제거 방지 로직 추가 (leave API + 테스트: #191)
 - [ ] T047 [US3] QS3 검증: 초대~합류~권한 변경~제거 전체 플로우
 
 **Checkpoint**: 팀 초대/합류/권한 변경/제거 전체 동작

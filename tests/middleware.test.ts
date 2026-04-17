@@ -1,82 +1,64 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 
-// middleware.ts uses NextAuth which re-exports auth as a function wrapper.
-// We test the middleware logic by mocking the NextAuth export.
+vi.mock("@/auth.config", () => ({ default: { providers: [], pages: { signIn: "/auth/signin" } } }));
 
-const { mockAuthConfig } = vi.hoisted(() => ({
-  mockAuthConfig: {
-    providers: [],
-    pages: { signIn: "/auth/signin" },
-  },
-}));
-
-// Mock the auth config
-vi.mock("@/auth.config", () => ({ default: mockAuthConfig }));
-
-// Mock next-auth to return a middleware function
+// next-auth wrapper: make `auth(handler)` return the handler as-is so we can invoke it directly.
 vi.mock("next-auth", () => ({
-  default: (config: unknown) => {
-    // Return a function that creates a middleware
-    return (handler: (req: unknown) => unknown) => handler;
-  },
+  default: () => ({
+    auth: (handler: (req: unknown) => unknown) => handler,
+  }),
 }));
 
-// Since middleware uses NextAuth wrapper which is complex to mock entirely,
-// test the logic directly by simulating the middleware behavior
-describe("Middleware auth logic", () => {
-  it("allows API routes without redirect", () => {
-    const pathname = "/api/trips";
-    const isApiRoute = pathname.startsWith("/api/");
-    expect(isApiRoute).toBe(true);
-    // API routes should be passed through
+import middleware from "@/middleware";
+
+type FakeReq = { auth: unknown; nextUrl: URL };
+
+function makeReq(url: string, loggedIn: boolean): FakeReq {
+  return { auth: loggedIn ? { user: { id: "u1" } } : null, nextUrl: new URL(url) };
+}
+
+describe("middleware", () => {
+  it("passes API routes through (no redirect)", () => {
+    const res = middleware(makeReq("https://x.test/api/trips", false) as never, {} as never);
+    expect(res).toBeUndefined();
   });
 
-  it("redirects logged-in users from auth routes to home", () => {
-    const pathname = "/auth/signin";
-    const isLoggedIn = true;
-    const isAuthRoute = pathname.startsWith("/auth");
-
-    if (isAuthRoute && isLoggedIn) {
-      // Should redirect to "/"
-      expect(true).toBe(true);
-    }
+  it("redirects logged-in users away from /auth pages to /", () => {
+    const res = middleware(makeReq("https://x.test/auth/signin", true) as never, {} as never) as Response;
+    expect(res.status).toBe(302);
+    expect(res.headers.get("location")).toBe("https://x.test/");
   });
 
-  it("allows non-logged-in users to access auth routes", () => {
-    const pathname = "/auth/signin";
-    const isLoggedIn = false;
-    const isAuthRoute = pathname.startsWith("/auth");
-
-    // Should not redirect
-    expect(isAuthRoute && !isLoggedIn).toBe(true);
+  it("allows non-logged-in users on /auth pages", () => {
+    const res = middleware(makeReq("https://x.test/auth/signin", false) as never, {} as never);
+    expect(res).toBeUndefined();
   });
 
-  it("redirects non-logged-in users from protected routes to signin", () => {
-    const pathname = "/trips/1";
-    const isLoggedIn = false;
-    const isAuthRoute = pathname.startsWith("/auth");
-    const isApiRoute = pathname.startsWith("/api/");
-
-    if (!isApiRoute && !isAuthRoute && !isLoggedIn) {
-      // Should redirect to "/auth/signin"
-      expect(true).toBe(true);
-    }
+  it("redirects non-logged-in users from invite link with callbackUrl preserved (#189)", () => {
+    const res = middleware(
+      makeReq("https://x.test/invite/abc.def.ghi?ref=email", false) as never,
+      {} as never,
+    ) as Response;
+    expect(res.status).toBe(302);
+    const loc = new URL(res.headers.get("location") ?? "");
+    expect(loc.pathname).toBe("/auth/signin");
+    expect(loc.searchParams.get("callbackUrl")).toBe("/invite/abc.def.ghi?ref=email");
   });
 
-  it("allows logged-in users to access protected routes", () => {
-    const pathname = "/trips/1";
-    const isLoggedIn = true;
-    const isAuthRoute = pathname.startsWith("/auth");
-    const isApiRoute = pathname.startsWith("/api/");
-
-    // Should pass through (no redirect)
-    expect(!isApiRoute && !isAuthRoute && isLoggedIn).toBe(true);
+  it("redirects non-logged-in users from protected routes with callbackUrl", () => {
+    const res = middleware(
+      makeReq("https://x.test/trips/42", false) as never,
+      {} as never,
+    ) as Response;
+    const loc = new URL(res.headers.get("location") ?? "");
+    expect(loc.pathname).toBe("/auth/signin");
+    expect(loc.searchParams.get("callbackUrl")).toBe("/trips/42");
   });
 
-  it("treats /api/auth/cli as API route (pass-through)", () => {
-    const pathname = "/api/auth/cli";
-    const isApiRoute = pathname.startsWith("/api/");
-    expect(isApiRoute).toBe(true);
-    // API routes return early in middleware — no auth redirect
+  it("omits callbackUrl when redirecting from root", () => {
+    const res = middleware(makeReq("https://x.test/", false) as never, {} as never) as Response;
+    const loc = new URL(res.headers.get("location") ?? "");
+    expect(loc.pathname).toBe("/auth/signin");
+    expect(loc.searchParams.has("callbackUrl")).toBe(false);
   });
 });
