@@ -134,9 +134,15 @@ tasks.md에 `- [ ] T003 [artifact: existing/other.ts]`, 해당 파일 존재.
 
 ### Evidence
 
-- 자동 테스트: `.specify/scripts/bash/validate-drift.sh --self-test`
-- 004 tasks.md 스냅샷 실행: #191에서 지적된 49/53 미체크 항목이 리포트되는지 확인
-- 스크린샷: `docs/evidence/010-speckit-harness/us2-*.png`
+- 자동 테스트: `.specify/scripts/bash/validate-drift.sh --self-test` (4분면 모의)
+- audit 모드 재현: `validate-drift.sh --audit --out /tmp/drift.md` → `_infra/010-speckit-harness` drift(errors=0, warnings=16) 리포트 생성 확인 (#208 PR)
+- CI 연동: `.github/workflows/drift-audit.yml` 주간 스케줄 + `speckit-gate.yml`의 drift 단계
+- 수동 체크리스트:
+  - [x] US2-1 체크+존재 통과 확인 (#208 PR)
+  - [x] US2-2 체크+부재 에러 확인 (#208 PR)
+  - [x] US2-3 미체크+존재 경고 확인 (#208 PR)
+  - [x] US2-4 audit 모드 리포트 생성 확인 (#208 PR)
+- 스크린샷: 해당없음(audit 리포트 마크다운이 기록)
 
 ---
 
