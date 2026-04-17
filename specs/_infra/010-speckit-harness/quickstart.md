@@ -35,31 +35,42 @@
 
 ### Scenario F2: 거부 형식 10건 차단
 
-입력 예시:
+다음 10건은 `--self-test` 거부 fixture에 그대로 매핑된다. 각 줄에서 기대되는 위반 유형을 표기.
 
-```
-- [ ] T010 [artifact: ]                            # 빈 값
-- [ ] T011 [artifact: path [why: x]                # 괄호 unmatched
-- [ ] T012 [migration-type: unknown]               # 허용 외 값
-- [ ] T013 [why :x]                                # 공백 오류
-```
+| # | 입력 | 기대 위반 |
+|---|------|----------|
+| R1 | `- [ ] R1 빈 값 [artifact: ] [why: x]` | `empty value for [artifact]` |
+| R2 | `- [ ] R2 콜론 뒤 공백 없음 [artifact:x] [why: y]` | `missing space after colon in [artifact:x]` |
+| R3 | `- [ ] R3 공백 오류 [why :x]` | `whitespace before colon in [why :x]` |
+| R4 | `- [ ] R4 multi-step 0 [multi-step: 0] [why: x]` | `value must be integer ≥ 2 (got: '0')` |
+| R5 | `- [ ] R5 multi-step 비숫자 [multi-step: two] [why: x]` | `value must be integer ≥ 2 (got: 'two')` |
+| R6 | `- [ ] R6 multi-step 1 [multi-step: 1] [why: x]` | `value must be integer ≥ 2 (got: '1')` |
+| R7 | `- [ ] R7 migration-type 미허용 [migration-type: hybrid] [why: x]` | `not in allowed list: schema-only,data-migration` |
+| R8 | `- [ ] R8 unmatched bracket [artifact: x [why: y]` | `nested '[' inside metatag value` |
+| R9 | `- [ ] R9 중첩 [artifact: [nested]] [why: y]` | `nested '[' inside metatag value` |
+| R10 | `- [ ] R10 빈 why [artifact: x] [why: ]` | `empty value for [why]` |
 
-기대: 각 줄 번호 + 위반 사유가 stderr에 명시되며 exit ≠ 0.
+기대: 각 줄 번호 + 위반 사유가 stderr에 명시되며 총 위반 10건, exit ≠ 0.
 
-### Scenario F3: 코드 블록/주석 스킵
+### Scenario F3: 코드 블록·주석·인라인 코드 스킵
 
-입력: 마크다운 코드 펜스 내부에 `[artifact: fake]`가 있는 경우.
+다음 세 형태는 모두 파서가 스킵해야 한다 (`--self-test` allow fixture에 포함).
 
-기대: 파서가 스킵하여 통과. 주석 블록(`<!-- ... -->`)도 동일.
+- **코드 펜스**: 3개 이상 백틱으로 감싼 블록. 닫는 펜스는 여는 펜스 이상 길이여야 닫힌다(CommonMark). 내부의 `- [ ] NOT_CHECKED [artifact: ] [why: ]` 같은 형식 불량 예시가 있어도 전체 스킵.
+- **HTML 주석**: `<!-- ... -->` 단일·다중 줄. 주석 내부의 체크박스·메타태그 표기 무시.
+- **인라인 코드 스팬**: 단일 백틱 `` ` ` ``으로 감싼 부분. 태스크 설명 중 `` `[multi-step: N]` ``처럼 예시 표기가 섞여도 태그로 오인되지 않음. 같은 라인의 밖에 있는 실제 메타태그는 정상 검증.
+
+기대: 세 형태 모두 내부의 `[...]`는 무시되고, 외부의 실제 메타태그만 검증 대상.
 
 ### Evidence
 
-- 자동 테스트: `.specify/scripts/bash/validate-metatag-format.sh --self-test`
-- 수동 체크리스트 (필요 시):
-  - [ ] F1 — 10건 허용 형식 통과 확인
-  - [ ] F2 — 10건 거부 형식 차단 확인
-  - [ ] F3 — 코드/주석 스킵 확인
-- 스크린샷: `docs/evidence/010-speckit-harness/foundational-*.png`
+- 자동 테스트: `.specify/scripts/bash/validate-metatag-format.sh --self-test` (허용 10건 + 거부 10건 내장 fixture)
+- 010 dogfood: `validate-metatag-format.sh specs/_infra/010-speckit-harness/{tasks,quickstart}.md` → 위반 0건
+- 수동 체크리스트:
+  - [x] F1 — 10건 허용 형식 통과 확인 (#206 PR)
+  - [x] F2 — 10건 거부 형식 차단 확인 (#206 PR)
+  - [x] F3 — 코드/주석/인라인 코드 스킵 확인 (#206 PR)
+- 스크린샷: 해당없음(CLI 출력 로그로 대체, `--self-test` 재현 가능)
 
 ---
 
