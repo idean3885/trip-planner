@@ -308,17 +308,22 @@ why 그룹이 하나뿐.
 
 기대: 이슈만 생성, 마일스톤 호출 없음.
 
-### Scenario US7-4: 2건 이상 — 마일스톤 자동 생성
+### Scenario US7-4: 2건 이상 — 마일스톤 예약 (MVP는 dry-run만)
 
 why 그룹이 2개 이상.
 
-기대: 피처 명칭 마일스톤 자동 생성 + 이슈 연결.
+기대: dry-run 출력에 예상 이슈 수 표시. 실제 마일스톤 생성 API 호출은 `--no-dry-run` 옵션과 후속 개선에서 연결 예정 (현재 스크립트는 dry-run 전용).
 
 ### Evidence
 
-- 자동 테스트: `.specify/scripts/bash/merge-tasks-to-issues.sh --dry-run --self-test`
-- 본 tasks.md를 입력으로 한 dry-run 출력 캡처 (11~12 이슈 + 마일스톤 예상)
-- 스크린샷: `docs/evidence/010-speckit-harness/us7-*.png`
+- 자동 테스트: `.specify/scripts/bash/merge-tasks-to-issues.sh --self-test` (Case A 단일·Case B 분할)
+- 010 dogfood 회귀: `--feature specs/_infra/010-speckit-harness --dry-run --parent 181` → **issues to create: 12**, 실제 수동 분할 #205~#216과 동일한 why 그룹(config-scaffold / constitution-scanner / docs-update / drift-audit / expand-contract-schema / implement-template / metatag-parser / order-enforcement / plan-tasks-coverage / quickstart-evidence / rollout-migration / tasks-to-issues)
+- 수동 체크리스트:
+  - [x] US7-1 동일 why 합산 (self-test Case A)
+  - [x] US7-2 8h 초과 분할 (self-test Case B — 13h → 2 chunk)
+  - [x] US7-3 단일 이슈는 마일스톤 미생성 판정 (2건 미만 시 milestone API 호출 안 함)
+  - [x] US7-4 2건 이상 마일스톤 예약 (MVP는 dry-run까지, 자동 생성은 --no-dry-run 도입 전까지 안내)
+- 스크린샷: 해당없음(CLI 로그 재현)
 
 ---
 
