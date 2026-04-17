@@ -9,6 +9,24 @@
 
 [Extract from feature spec: primary requirement + technical approach from research]
 
+## Coverage Targets
+
+<!--
+  ACTION REQUIRED: 본 피처의 "추적 대상" 구현 항목을 최상위 bullet으로 나열한다.
+  각 bullet은 반드시 `[why: <short-tag>]`를 부착하고, 다단 작업이면 `[multi-step: N]`을
+  추가한다(N = 최소 필요 태스크 수). Summary 설명처럼 정보성 bullet은 제외한다.
+
+  `validate-plan-tasks-cov.sh`가 각 [why] 태그에 대해 tasks.md의 매핑 태스크 수를
+  자동 검증한다. [multi-step]이 없으면 기본 최소치는 1.
+
+  예시:
+    - 로그인 플로우 구현 [why: auth-login] [multi-step: 3]
+    - 세션 만료 처리 [why: auth-session]
+    - 비밀번호 재설정 [why: auth-reset] [multi-step: 2]
+-->
+
+- [항목 설명] [why: <tag>] [multi-step: N?]
+
 ## Technical Context
 
 <!--

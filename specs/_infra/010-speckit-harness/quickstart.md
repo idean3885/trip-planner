@@ -96,12 +96,13 @@ plan.md bullet에 `[multi-step: 2]` 태그, tasks.md에 해당 bullet 참조 태
 
 ### Evidence
 
-- 자동 테스트: `.specify/scripts/bash/validate-plan-tasks-cov.sh --self-test`
+- 자동 테스트: `.specify/scripts/bash/validate-plan-tasks-cov.sh --self-test` (3 케이스 내장)
+- 010 dogfood: `validate-plan-tasks-cov.sh --feature specs/_infra/010-speckit-harness` → 통과 (Coverage Targets 12개 모두 tasks 매핑 확인)
 - 수동 체크리스트:
-  - [ ] US1-1 통과
-  - [ ] US1-2 차단 + 누락 리포트 확인
-  - [ ] US1-3 차단 + multi-step 메시지 확인
-- 스크린샷: `docs/evidence/010-speckit-harness/us1-*.png`
+  - [x] US1-1 통과 확인 (#207 PR)
+  - [x] US1-2 차단 + plan.md:N [why: X] requires >=1 tasks, found 0 출력 (#207 PR)
+  - [x] US1-3 차단 + plan.md:N [why: X] requires >=2 tasks, found 1 출력 (#207 PR)
+- 스크린샷: 해당없음(CLI 로그 재현 가능)
 
 ---
 
