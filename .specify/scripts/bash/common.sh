@@ -276,3 +276,57 @@ except Exception:
     return 1
 }
 
+# harness.json 값 조회. 설정·jq 부재 시 default 반환.
+# usage: harness_config_get <jq-path> [default]
+harness_config_get() {
+    local key="$1"
+    local default="${2:-}"
+    local repo_root
+    repo_root=$(get_repo_root)
+    local config="$repo_root/.specify/config/harness.json"
+
+    [[ -f "$config" ]] || { echo "$default"; return 0; }
+    has_jq || { echo "$default"; return 0; }
+
+    local value
+    value=$(jq -r "$key // empty" "$config" 2>/dev/null)
+    if [[ -z "$value" || "$value" == "null" ]]; then
+        echo "$default"
+    else
+        echo "$value"
+    fi
+}
+
+# 활성 피처 디렉토리 목록(평면 + 카테고리 재귀). 절대 경로 newline 분리.
+# 카테고리 목록은 harness.json .categoryDirs, 없으면 NNN-* 자식을 가진 서브디렉토리로 폴백.
+feature_dirs() {
+    local repo_root
+    repo_root=$(get_repo_root)
+    local specs_dir="$repo_root/specs"
+    [[ -d "$specs_dir" ]] || return 0
+
+    # 1) 평면 구조: specs/NNN-*
+    find "$specs_dir" -mindepth 1 -maxdepth 1 -type d -name "[0-9][0-9][0-9]-*" 2>/dev/null | sort
+
+    # 2) 카테고리 구조: specs/<category>/NNN-*
+    local categories=""
+    if has_jq && [[ -f "$repo_root/.specify/config/harness.json" ]]; then
+        categories=$(jq -r '.categoryDirs // [] | .[]' "$repo_root/.specify/config/harness.json" 2>/dev/null)
+    fi
+
+    if [[ -z "$categories" ]]; then
+        # 폴백: NNN-* 자식을 가진 서브디렉토리 자동 감지
+        while IFS= read -r d; do
+            [[ -n "$d" ]] || continue
+            if ls -d "$d"/[0-9][0-9][0-9]-* >/dev/null 2>&1; then
+                basename "$d"
+            fi
+        done < <(find "$specs_dir" -mindepth 1 -maxdepth 1 -type d ! -name "[0-9][0-9][0-9]-*" 2>/dev/null)
+    fi
+
+    while IFS= read -r cat; do
+        [[ -n "$cat" ]] || continue
+        [[ -d "$specs_dir/$cat" ]] || continue
+        find "$specs_dir/$cat" -mindepth 1 -maxdepth 1 -type d -name "[0-9][0-9][0-9]-*" 2>/dev/null | sort
+    done <<< "$categories"
+}

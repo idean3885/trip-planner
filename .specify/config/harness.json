@@ -1,0 +1,27 @@
+{
+  "_comment": "speckit 하네스 설정. spec 010 / PR #204 / 이슈 #205 기준. 값 변경 전 spec FR-015 참조.",
+  "driftAudit": {
+    "cron": "0 0 * * 1",
+    "reportDir": "docs/audits/drift",
+    "severity": {
+      "checkedMissingArtifact": "error",
+      "uncheckedHasArtifact": "warning"
+    }
+  },
+  "metatag": {
+    "required": ["artifact", "why"],
+    "optional": ["multi-step", "migration-type"],
+    "migrationTypes": ["schema-only", "data-migration"]
+  },
+  "rollout": {
+    "phase": "expand"
+  },
+  "categoryDirs": [
+    "_infra",
+    "_retired",
+    "travel-search",
+    "itinerary",
+    "collaboration",
+    "export"
+  ]
+}
