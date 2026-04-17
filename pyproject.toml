@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "trip-planner-mcp"
-version = "2.2.7"
+version = "2.3.0"
 description = "여행 숙소, 항공편, 관광지 검색 + 구조화 활동 관리 MCP 서버 (20개 도구)"
 requires-python = ">=3.10"
 license = "MIT"
