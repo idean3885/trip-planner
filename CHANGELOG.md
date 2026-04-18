@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.1] - 2026-04-18
+
+### Fixed
+- **Activity 시각 저장 IANA timezone 무시**: `toTimestamp`가 `setUTCHours`로 HH:mm을 UTC 가정하여 기록하고 프론트는 `getUTCHours()`로 표시해 "floating-time" 관행이 되어 있었다. `src/lib/activity-time.ts` 공통 유틸로 HH:mm + dayDate + IANA timezone → 실제 UTC 변환(DST 경계 보정 포함), 표시는 `Intl.DateTimeFormat({ timeZone })` 기반으로 수정. 기존 데이터는 `data-migration` SQL로 `AT TIME ZONE` 연산 재계산. (#232)
+- **여행 상세 일정 목록 정렬**: Day 목록이 `sortOrder` 기준으로 정렬되어 늦게 추가된 Day(예: 귀국일 `sortOrder=0`)가 최상단에 노출. 정렬 키를 `date ASC`로 변경. DAY 라벨(번호)은 표시용으로만 유지. (#238)
+
+### Removed
+- **레거시 마크다운 트립 데이터 및 관련 스크립트·템플릿**: v2.0.0 AX 방향 이후 DB가 단일 정본이 되어 `trips/*.md` 마크다운은 drift 원인이 된 이중장부. 구 일정 마크다운 vs 신 일정 DB 불일치 확인. `trips/2026-honeymoon-portugal-spain/`, `templates/`, `scripts/` 레거시 5개(`generate-pdf.sh`, `parse-daily-to-events.py`, `validate-daily.py`, `validate-budget.py`, `migrate-markdown.ts`) 제거. CLAUDE.md는 DB 정본 기반으로 재작성. (#239)
+
 ## [2.3.0] - 2026-04-17
 
 ### Added
