@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.2] - 2026-04-19
+
+### Fixed
+- **Hotfix: Day 상세 페이지 500 (DYNAMIC_SERVER_USAGE)**: v2.3.1의 `trips/` 디렉토리 제거(#239)로 `generateStaticParams`가 빈 배열을 반환하면서, `auth()`를 호출하는 동일 페이지가 Next.js의 SSG 플래그와 충돌해 런타임 500이 발생. `src/app/trips/[id]/page.tsx`, `src/app/trips/[id]/day/[dayId]/page.tsx`, `src/app/day/[num]/page.tsx`에서 `generateStaticParams` 제거 + `export const dynamic = "force-dynamic"` 명시로 세션 기반 동적 렌더 고정. 레거시 `/day/[num]`는 홈으로 리다이렉트.
+
 ## [2.3.1] - 2026-04-18
 
 ### Fixed
