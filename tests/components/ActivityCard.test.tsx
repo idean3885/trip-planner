@@ -116,6 +116,36 @@ describe("ActivityCard", () => {
     expect(screen.queryByText(/\d{2}:\d{2}/)).not.toBeInTheDocument();
   });
 
+  it("renders time in the activity's IANA timezone (#232)", () => {
+    // 04:00 UTC → Asia/Seoul 13:00
+    render(
+      <ActivityCard
+        activity={makeActivity({
+          startTime: "2026-06-07T04:00:00.000Z",
+          endTime: "2026-06-07T06:00:00.000Z",
+          startTimezone: "Asia/Seoul",
+          endTimezone: "Asia/Seoul",
+        })}
+      />
+    );
+    // "13:00 GMT+9"(또는 "13:00 KST" 등 — 실제 abbr은 ICU 의존) 형태 검증
+    expect(screen.getByText(/^13:00 .+–15:00 .+$/)).toBeInTheDocument();
+  });
+
+  it("renders time in Europe/Lisbon DST (WEST, UTC+1)", () => {
+    // 19:15 UTC + Europe/Lisbon 여름 = 20:15
+    render(
+      <ActivityCard
+        activity={makeActivity({
+          startTime: "2026-06-07T19:15:00.000Z",
+          endTime: null,
+          startTimezone: "Europe/Lisbon",
+        })}
+      />
+    );
+    expect(screen.getByText(/^20:15 .+$/)).toBeInTheDocument();
+  });
+
   it("renders all category types", () => {
     const categories: ActivityCategory[] = [
       "SIGHTSEEING", "DINING", "TRANSPORT", "ACCOMMODATION", "SHOPPING", "OTHER",

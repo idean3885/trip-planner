@@ -1,17 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthUserId, getTripMember, canEdit } from "@/lib/auth-helpers";
-
-/** HH:mm → Day.date 기반 Timestamptz. ISO datetime은 그대로 파싱. */
-function toTimestamp(value: string | undefined | null, dayDate: Date): Date | undefined {
-  if (!value) return undefined;
-  if (value.includes("T")) return new Date(value);
-  const match = value.match(/^(\d{2}):(\d{2})/);
-  if (!match) return undefined;
-  const dt = new Date(dayDate);
-  dt.setUTCHours(parseInt(match[1]), parseInt(match[2]), 0, 0);
-  return dt;
-}
+import { toTimestamp } from "@/lib/activity-time";
 
 type Params = { params: Promise<{ id: string; dayId: string }> };
 
@@ -69,9 +59,9 @@ export async function POST(request: Request, { params }: Params) {
       dayId: dayIdNum,
       category,
       title,
-      ...(startTime !== undefined && { startTime: toTimestamp(startTime, day.date) ?? null }),
+      ...(startTime !== undefined && { startTime: toTimestamp(startTime, day.date, startTimezone) ?? null }),
       ...(startTimezone !== undefined && { startTimezone }),
-      ...(endTime !== undefined && { endTime: toTimestamp(endTime, day.date) ?? null }),
+      ...(endTime !== undefined && { endTime: toTimestamp(endTime, day.date, endTimezone ?? startTimezone) ?? null }),
       ...(endTimezone !== undefined && { endTimezone }),
       ...(location !== undefined && { location }),
       ...(memo !== undefined && { memo }),
