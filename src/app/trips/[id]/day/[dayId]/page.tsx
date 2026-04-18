@@ -28,17 +28,10 @@ async function markdownToHtml(md: string): Promise<string> {
   return result.toString();
 }
 
-export async function generateStaticParams() {
-  const slugs = getAllTripSlugs();
-  const params: { id: string; dayId: string }[] = [];
-  for (const slug of slugs) {
-    const days = await getAllDays(slug);
-    for (const day of days) {
-      params.push({ id: slug, dayId: day.slug });
-    }
-  }
-  return params;
-}
+// DB-정본 전환(#239) 후 이 페이지는 항상 세션 기반 동적 렌더. generateStaticParams
+// 제거 + force-dynamic. 남은 MarkdownDayPage 브랜치는 trips/ 파일 부재로 항상
+// notFound()로 귀결된다.
+export const dynamic = "force-dynamic";
 
 export default async function DayDetailPage({
   params,

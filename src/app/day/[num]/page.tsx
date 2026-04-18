@@ -1,30 +1,8 @@
 import { redirect } from "next/navigation";
-import { getAllTripSlugs, getAllDays } from "@/lib/trips";
 
-export async function generateStaticParams() {
-  const slugs = getAllTripSlugs();
-  const params: { num: string }[] = [];
+// 레거시 마크다운 경로 (#239로 소스 제거). 남은 외부 링크는 홈으로 리다이렉트.
+export const dynamic = "force-dynamic";
 
-  for (const slug of slugs) {
-    const days = await getAllDays(slug);
-    for (const day of days) {
-      params.push({ num: day.slug });
-    }
-  }
-  return params;
-}
-
-export default async function LegacyDayPage({
-  params,
-}: {
-  params: Promise<{ num: string }>;
-}) {
-  const { num } = await params;
-  const slugs = getAllTripSlugs();
-
-  if (slugs.length > 0) {
-    redirect(`/trips/${slugs[0]}/day/${num}`);
-  }
-
+export default async function LegacyDayPage() {
   redirect("/");
 }
