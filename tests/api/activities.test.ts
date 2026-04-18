@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const { mockPrisma, mockAuthHelpers } = vi.hoisted(() => ({
   mockPrisma: {
-    activity: { findMany: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn() },
+    activity: { findMany: vi.fn(), findUnique: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn() },
     day: { findUnique: vi.fn() },
     $transaction: vi.fn(),
   },
@@ -124,6 +124,30 @@ describe("POST /activities", () => {
     const data = await res.json();
     expect(data.id).toBe(10);
   });
+
+  it("POST converts HH:mm using IANA timezone (#232)", async () => {
+    mockAuth.mockResolvedValue("user1");
+    mockCanEdit.mockResolvedValue(true);
+    mockPrisma.day.findUnique.mockResolvedValue({ id: 1, date: new Date("2026-06-07T00:00:00Z") });
+    mockPrisma.activity.create.mockResolvedValue({ id: 11, category: "DINING", title: "Dinner" });
+
+    await POST(
+      makeRequest({
+        category: "DINING",
+        title: "Dinner",
+        startTime: "20:15",
+        startTimezone: "Europe/Lisbon",
+        endTime: "21:30",
+      }, "POST"),
+      params()
+    );
+
+    const createArgs = mockPrisma.activity.create.mock.calls[0]?.[0] as { data: { startTime: Date; endTime: Date } };
+    expect(createArgs.data.startTime).toBeInstanceOf(Date);
+    // Lisbon 여름(UTC+1): 20:15 = 19:15 UTC, 21:30 = 20:30 UTC (endTimezone 미지정 시 startTimezone 사용)
+    expect(createArgs.data.startTime.toISOString()).toBe("2026-06-07T19:15:00.000Z");
+    expect(createArgs.data.endTime.toISOString()).toBe("2026-06-07T20:30:00.000Z");
+  });
 });
 
 describe("PATCH /activities (reorder)", () => {
@@ -188,6 +212,7 @@ describe("PUT /activities/{id}", () => {
     mockAuth.mockResolvedValue("user1");
     mockCanEdit.mockResolvedValue(true);
     mockPrisma.day.findUnique.mockResolvedValue({ id: 1, date: new Date("2026-06-07T00:00:00Z") });
+    mockPrisma.activity.findUnique.mockResolvedValue({ startTimezone: null, endTimezone: null });
     const updated = { id: 10, title: "Updated", category: "DINING" };
     mockPrisma.activity.update.mockResolvedValue(updated);
 
@@ -202,6 +227,43 @@ describe("PUT /activities/{id}", () => {
     expect(res.status).toBe(200);
     const data = await res.json();
     expect(data.title).toBe("Updated");
+  });
+
+  it("PUT with startTimezone uses IANA tz for HH:mm → UTC", async () => {
+    mockAuth.mockResolvedValue("user1");
+    mockCanEdit.mockResolvedValue(true);
+    mockPrisma.day.findUnique.mockResolvedValue({ id: 1, date: new Date("2026-06-07T00:00:00Z") });
+    mockPrisma.activity.update.mockResolvedValue({ id: 10, title: "X", category: "DINING" });
+
+    await PUT(
+      makeRequest({ startTime: "13:00", startTimezone: "Asia/Seoul" }, "PUT"),
+      activityParams()
+    );
+
+    // findUnique는 호출되지 않아야 한다 (startTimezone이 요청에 있으므로)
+    expect(mockPrisma.activity.findUnique).not.toHaveBeenCalled();
+    // update의 startTime은 Seoul 13:00 = 04:00Z
+    const updateArgs = mockPrisma.activity.update.mock.calls[0]?.[0] as { data: { startTime: Date } };
+    expect(updateArgs.data.startTime).toBeInstanceOf(Date);
+    expect(updateArgs.data.startTime.toISOString()).toBe("2026-06-07T04:00:00.000Z");
+  });
+
+  it("PUT with only startTime (no tz in body) falls back to stored timezone", async () => {
+    mockAuth.mockResolvedValue("user1");
+    mockCanEdit.mockResolvedValue(true);
+    mockPrisma.day.findUnique.mockResolvedValue({ id: 1, date: new Date("2026-06-07T00:00:00Z") });
+    mockPrisma.activity.findUnique.mockResolvedValue({ startTimezone: "Europe/Lisbon", endTimezone: "Europe/Lisbon" });
+    mockPrisma.activity.update.mockResolvedValue({ id: 10, title: "X", category: "DINING" });
+
+    await PUT(
+      makeRequest({ startTime: "20:15" }, "PUT"),
+      activityParams()
+    );
+
+    expect(mockPrisma.activity.findUnique).toHaveBeenCalled();
+    const updateArgs = mockPrisma.activity.update.mock.calls[0]?.[0] as { data: { startTime: Date } };
+    // Lisbon 여름(WEST, UTC+1) 20:15 = 19:15 UTC
+    expect(updateArgs.data.startTime.toISOString()).toBe("2026-06-07T19:15:00.000Z");
   });
 });
 

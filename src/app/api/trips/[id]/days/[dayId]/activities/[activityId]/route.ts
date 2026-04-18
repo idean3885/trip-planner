@@ -1,17 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthUserId, canEdit } from "@/lib/auth-helpers";
-
-function toTimestamp(value: string | undefined | null, dayDate: Date): Date | null | undefined {
-  if (value === undefined) return undefined;
-  if (value === null || value === "") return null;
-  if (value.includes("T")) return new Date(value);
-  const match = value.match(/^(\d{2}):(\d{2})/);
-  if (!match) return null;
-  const dt = new Date(dayDate);
-  dt.setUTCHours(parseInt(match[1]), parseInt(match[2]), 0, 0);
-  return dt;
-}
+import { toTimestamp } from "@/lib/activity-time";
 
 type Params = { params: Promise<{ id: string; dayId: string; activityId: string }> };
 
@@ -36,14 +26,32 @@ export async function PUT(request: Request, { params }: Params) {
   const body = await request.json();
   const { category, title, startTime, startTimezone, endTime, endTimezone, location, memo, cost, currency, reservationStatus, sortOrder } = body;
 
+  // HH:mm을 IANA timezone 기준으로 UTC 변환하려면 기존 timezone이 필요하다 (#232).
+  // 요청에 timezone이 없으면 DB에 저장된 값을 fallback으로 사용한다.
+  const needsExistingTz =
+    (startTime !== undefined && startTimezone === undefined && typeof startTime === "string" && !startTime.includes("T")) ||
+    (endTime !== undefined && endTimezone === undefined && typeof endTime === "string" && !endTime.includes("T"));
+  let existingStartTz: string | null | undefined;
+  let existingEndTz: string | null | undefined;
+  if (needsExistingTz) {
+    const existing = await prisma.activity.findUnique({
+      where: { id: parseInt(activityId), dayId: dayIdNum, day: { tripId } },
+      select: { startTimezone: true, endTimezone: true },
+    });
+    existingStartTz = existing?.startTimezone;
+    existingEndTz = existing?.endTimezone;
+  }
+  const effStartTz = startTimezone !== undefined ? startTimezone : existingStartTz;
+  const effEndTz = endTimezone !== undefined ? endTimezone : (existingEndTz ?? effStartTz);
+
   const activity = await prisma.activity.update({
     where: { id: parseInt(activityId), dayId: dayIdNum, day: { tripId } },
     data: {
       ...(category !== undefined && { category }),
       ...(title !== undefined && { title }),
-      ...(startTime !== undefined && { startTime: toTimestamp(startTime, day.date) }),
+      ...(startTime !== undefined && { startTime: toTimestamp(startTime, day.date, effStartTz) }),
       ...(startTimezone !== undefined && { startTimezone }),
-      ...(endTime !== undefined && { endTime: toTimestamp(endTime, day.date) }),
+      ...(endTime !== undefined && { endTime: toTimestamp(endTime, day.date, effEndTz) }),
       ...(endTimezone !== undefined && { endTimezone }),
       ...(location !== undefined && { location }),
       ...(memo !== undefined && { memo }),
