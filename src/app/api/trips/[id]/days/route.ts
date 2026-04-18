@@ -17,7 +17,7 @@ export async function GET(request: Request, { params }: Params) {
     getTripMember(tripId, userId),
     prisma.day.findMany({
       where: { tripId },
-      orderBy: { sortOrder: "asc" },
+      orderBy: { date: "asc" },
     }),
   ]);
 

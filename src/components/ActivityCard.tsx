@@ -52,12 +52,23 @@ function tzAbbr(iana: string): string {
   } catch { return iana; }
 }
 
-/** ISO datetime → "HH:mm" 또는 "HH:mm TZ" */
+/**
+ * ISO datetime → "HH:mm" 또는 "HH:mm TZ".
+ *
+ * DB의 start_time/end_time은 UTC(Timestamptz)이다(#232). IANA timezone이 주어지면
+ * 해당 시간대의 벽시각으로 렌더하고, 없으면 UTC로 렌더한다.
+ */
 function formatTime(value: string | null, tz?: string | null): string | null {
   if (!value) return null;
   if (value.includes("T")) {
     const d = new Date(value);
-    const hhmm = `${String(d.getUTCHours()).padStart(2, "0")}:${String(d.getUTCMinutes()).padStart(2, "0")}`;
+    const timeZone = tz || "UTC";
+    const hhmm = new Intl.DateTimeFormat("ko-KR", {
+      timeZone,
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    }).format(d);
     return tz ? `${hhmm} ${tzAbbr(tz)}` : hhmm;
   }
   return value;

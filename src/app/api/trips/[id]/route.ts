@@ -19,7 +19,7 @@ export async function GET(request: Request, { params }: Params) {
       where: { id: tripId },
       include: {
         days: {
-          orderBy: { sortOrder: "asc" },
+          orderBy: { date: "asc" },
           include: { _count: { select: { activities: true } } },
         },
         tripMembers: {
