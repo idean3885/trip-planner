@@ -27,10 +27,8 @@ async function markdownToHtml(md: string): Promise<string> {
   return result.toString();
 }
 
-export async function generateStaticParams() {
-  const slugs = getAllTripSlugs();
-  return slugs.map((slug) => ({ id: slug }));
-}
+// DB-정본 전환(#239) 후 이 페이지는 항상 세션 기반 동적 렌더. (#255+ 핫픽스)
+export const dynamic = "force-dynamic";
 
 export default async function TripDetailPage({
   params,

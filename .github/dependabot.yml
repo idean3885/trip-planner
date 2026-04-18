@@ -4,29 +4,26 @@ updates:
     directory: "/"
     schedule:
       interval: "monthly"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 10
     groups:
       npm-minor-patch:
         update-types:
           - "minor"
           - "patch"
-      npm-major:
-        update-types:
-          - "major"
+    # major는 그룹화하지 않는다. 패키지별 개별 PR로 breaking change 영향을
+    # 독립 평가·머지할 수 있도록 유지. (#248 참조)
 
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
       interval: "monthly"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 10
     groups:
       pip-minor-patch:
         update-types:
           - "minor"
           - "patch"
-      pip-major:
-        update-types:
-          - "major"
+    # major는 그룹화하지 않는다. (#248 참조)
 
   - package-ecosystem: "github-actions"
     directory: "/"
