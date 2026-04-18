@@ -48,3 +48,4 @@ next-env.d.ts
 out/
 .vercel
 .env*.local
+.claude/scheduled_tasks.lock
