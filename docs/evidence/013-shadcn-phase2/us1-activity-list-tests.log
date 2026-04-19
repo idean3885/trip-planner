@@ -1,0 +1,13 @@
+
+> trip-planner@0.1.0 test
+> vitest run tests/components/ActivityList.test.tsx --run
+
+
+ RUN  v4.1.4 /Users/nhn/git-project/idean3885/trip-planner
+
+
+ Test Files  1 passed (1)
+      Tests  29 passed (29)
+   Start at  00:19:41
+   Duration  1.47s (transform 84ms, setup 59ms, import 192ms, tests 672ms, environment 470ms)
+

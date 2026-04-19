@@ -11,7 +11,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "tokens:build": "tsx scripts/build-tokens.ts"
+    "tokens:build": "tsx scripts/build-tokens.ts",
+    "audit:tokens": "tsx scripts/audit-tokens.ts",
+    "check:legacy-utilities": "bash scripts/check-legacy-utilities.sh"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",

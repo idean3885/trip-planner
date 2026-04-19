@@ -172,6 +172,8 @@ develop ──●──●──●───●──●──●──●──
 - TypeScript 5.x, Node.js 20+ + Next.js 15 (App Router), React 19, Tailwind CSS. 신규 의존성 없음. (011-project-identity-surface)
 - TypeScript 5.x, Node.js 20+. CSS는 Tailwind v4 CSS-first 구성(`@theme`). + Next.js 15 (App Router), React 19, Tailwind CSS v4(`tailwindcss@^4`, `@tailwindcss/postcss`), shadcn/ui(vendored), Radix UI primitives(필요분만), `class-variance-authority`, `tailwind-merge`, `clsx`, `lucide-react`, `tailwindcss-animate`, Style Dictionary(`style-dictionary@^4`). (012-shadcn-design-system)
 - N/A (정적 토큰 + 컴파일된 CSS) (012-shadcn-design-system)
+- TypeScript 5.x, Node.js 20+. CSS는 Tailwind v4 CSS-first(`@theme`) 그대로 승계. + Next.js 16 (App Router · Turbopack), React 19, Tailwind CSS v4, shadcn/ui(vendored), Radix UI primitives(필요분), `class-variance-authority`, `tailwind-merge`, `clsx`, `lucide-react`, `tailwindcss-animate`, Style Dictionary v4 (토큰 빌드). v2.4.3 대비 신규 패키지 도입 없음. (013-shadcn-phase2)
+- N/A (UI 전용 피처, 데이터 스키마 변경 없음). (013-shadcn-phase2)
 
 ## Recent Changes
 - 001-ax-travel-planning: Added Python 3.14 + FastMCP, httpx, python-dotenv, pytes

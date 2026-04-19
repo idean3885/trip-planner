@@ -23,10 +23,10 @@ export default async function InvitePage({
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <div className="text-center space-y-2">
-          <h1 className="text-heading-lg font-bold text-surface-900">
+          <h1 className="text-xl font-semibold tracking-tight text-foreground">
             초대가 만료되었거나 유효하지 않습니다
           </h1>
-          <p className="text-body-md text-surface-500">
+          <p className="text-base text-muted-foreground">
             호스트에게 새 초대 링크를 요청하세요.
           </p>
         </div>
@@ -44,7 +44,7 @@ export default async function InvitePage({
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <div className="text-center space-y-2">
-          <h1 className="text-heading-lg font-bold text-surface-900">
+          <h1 className="text-xl font-semibold tracking-tight text-foreground">
             여행을 찾을 수 없습니다
           </h1>
         </div>

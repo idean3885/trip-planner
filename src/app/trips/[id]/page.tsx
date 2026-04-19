@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { formatCalendarDateFull, formatCalendarDate } from "@/lib/date-utils";
@@ -7,6 +8,7 @@ import InviteButton from "@/components/InviteButton";
 import DeleteTripButton from "@/components/DeleteTripButton";
 import LeaveTripButton from "@/components/LeaveTripButton";
 import MemberList from "@/components/MemberList";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { remark } from "remark";
 import remarkGfm from "remark-gfm";
 import html from "remark-html";
@@ -62,16 +64,17 @@ async function DbTripPage({ tripId }: { tripId: number }) {
       <div>
         <Link
           href="/"
-          className="text-body-sm text-surface-500 hover:text-surface-700"
+          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
         >
-          &larr; 여행 목록
+          <ArrowLeft className="size-3.5" aria-hidden />
+          여행 목록
         </Link>
       </div>
 
       <div>
-        <h1 className="text-heading-lg font-bold">{trip.title}</h1>
+        <h1 className="text-xl font-semibold tracking-tight">{trip.title}</h1>
         {trip.startDate && trip.endDate && (
-          <p className="mt-1 text-body-md text-surface-500">
+          <p className="mt-1 text-sm text-muted-foreground tabular-nums">
             {formatCalendarDateFull(trip.startDate)} ~{" "}
             {formatCalendarDateFull(trip.endDate)}
           </p>
@@ -88,51 +91,57 @@ async function DbTripPage({ tripId }: { tripId: number }) {
       </div>
 
       {descriptionHtml && (
-        <details className="rounded-card shadow-card p-5">
-          <summary className="cursor-pointer font-semibold text-surface-700">
-            여행 개요
-          </summary>
-          <div
-            className="prose prose-sm mt-3 max-w-none"
-            dangerouslySetInnerHTML={{ __html: descriptionHtml }}
-          />
-        </details>
+        <Card>
+          <CardHeader>
+            <CardTitle>여행 개요</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div
+              className="prose prose-sm max-w-none"
+              dangerouslySetInnerHTML={{ __html: descriptionHtml }}
+            />
+          </CardContent>
+        </Card>
       )}
 
       <MemberList tripId={tripId} />
 
-      <div className="space-y-3">
-        <h2 className="text-heading-sm font-semibold">일정</h2>
-        {trip.days.map((day) => (
-          <Link
-            key={day.id}
-            href={`/trips/${trip.id}/day/${day.id}`}
-            className="block rounded-card shadow-card p-4 hover:shadow-card-hover transition-shadow"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <span className="text-body-sm font-semibold text-primary-600">
-                  DAY {day.sortOrder}
-                </span>
-                {day.title && (
-                  <span className="ml-2 text-body-md text-surface-700">
-                    {day.title}
+      <section className="space-y-3">
+        <h2 className="text-base font-semibold tracking-tight">일정</h2>
+        <div className="space-y-2">
+          {trip.days.map((day) => (
+            <Link
+              key={day.id}
+              href={`/trips/${trip.id}/day/${day.id}`}
+              className="group block"
+            >
+              <Card size="sm" className="transition-all group-hover:ring-foreground/20 group-hover:-translate-y-px">
+                <CardContent className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="inline-flex items-center rounded-md bg-foreground px-2 py-0.5 text-xs font-medium text-background shrink-0 tabular-nums">
+                      DAY {day.sortOrder}
+                    </span>
+                    {day.title && (
+                      <span className="text-sm text-foreground truncate">
+                        {day.title}
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-xs text-muted-foreground tabular-nums shrink-0">
+                    {formatCalendarDate(day.date)}
                   </span>
-                )}
-              </div>
-              <span className="text-body-sm text-surface-400">
-                {formatCalendarDate(day.date)}
-              </span>
-            </div>
-          </Link>
-        ))}
+                </CardContent>
+              </Card>
+            </Link>
+          ))}
 
-        {trip.days.length === 0 && (
-          <p className="text-center py-8 text-surface-400">
-            일정이 없습니다.
-          </p>
-        )}
-      </div>
+          {trip.days.length === 0 && (
+            <p className="py-8 text-center text-sm text-muted-foreground">
+              일정이 없습니다.
+            </p>
+          )}
+        </div>
+      </section>
     </div>
   );
 }

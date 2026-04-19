@@ -1,4 +1,6 @@
 import type { ActivityCategory, ReservationStatus, Prisma } from "@prisma/client";
+import { ArrowUp, ArrowDown, Pencil, Trash2 } from "lucide-react";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 
 const URL_RE = /(https?:\/\/[^\s]+)/;
 
@@ -13,7 +15,7 @@ function Linkify({ text }: { text: string }) {
             href={part}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-primary-600 underline hover:text-primary-800"
+            className="text-foreground underline underline-offset-2 hover:opacity-80"
           >
             {part}
           </a>
@@ -40,7 +42,7 @@ const CATEGORY_COLOR: Record<ActivityCategory, string> = {
   TRANSPORT: "bg-violet-100 text-violet-700",
   ACCOMMODATION: "bg-emerald-100 text-emerald-700",
   SHOPPING: "bg-pink-100 text-pink-700",
-  OTHER: "bg-surface-100 text-surface-600",
+  OTHER: "bg-muted text-muted-foreground",
 };
 
 /** IANA timezone → 약어 (e.g. "Asia/Seoul" → "KST") */
@@ -130,8 +132,8 @@ export default function ActivityCard({
   const cost = activity.cost ? Number(activity.cost) : null;
 
   return (
-    <div className="group rounded-card border border-surface-200 p-3 transition-shadow hover:shadow-card">
-      <div className="flex items-start justify-between gap-2">
+    <Card size="sm" className="group gap-2">
+      <CardContent className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <span
@@ -140,73 +142,77 @@ export default function ActivityCard({
               {CATEGORY_LABEL[activity.category]}
             </span>
             {timeRange && (
-              <span className="text-body-sm text-surface-500">{timeRange}</span>
+              <span className="text-xs text-muted-foreground tabular-nums">
+                {timeRange}
+              </span>
             )}
           </div>
-          <p className="mt-1 text-body-sm font-medium text-surface-900">
+          <p className="mt-1 text-sm font-medium text-foreground">
             {activity.title}
           </p>
           {activity.location && (
-            <p className="mt-0.5 text-body-sm text-surface-500">
+            <p className="mt-0.5 text-xs text-muted-foreground">
               {activity.location}
             </p>
           )}
           {activity.memo && (
-            <p className="mt-1 text-body-sm text-surface-400">
+            <p className="mt-1 text-xs text-muted-foreground">
               <Linkify text={activity.memo} />
             </p>
           )}
         </div>
         <div className="flex flex-col items-end gap-1 text-right">
           {cost !== null && cost > 0 && (
-            <span className="text-body-sm font-medium text-surface-700">
+            <span className="text-sm font-medium text-foreground tabular-nums">
               {cost.toLocaleString()} {activity.currency}
             </span>
           )}
           {activity.reservationStatus && (
-            <span className="text-[11px] text-surface-400">
+            <span className="text-[11px] text-muted-foreground">
               {RESERVATION_LABEL[activity.reservationStatus]}
             </span>
           )}
         </div>
-      </div>
+      </CardContent>
 
       {canEdit && (
-        <div className="mt-2 flex items-center justify-between border-t border-surface-100 pt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+        <CardFooter className="flex items-center justify-between opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
           <div className="flex gap-1">
             <button
               onClick={onMoveUp}
               disabled={isFirst}
-              className="rounded px-1.5 py-0.5 text-[11px] text-surface-400 hover:bg-surface-100 hover:text-surface-600 disabled:opacity-30 disabled:cursor-default"
+              className="inline-flex size-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
               aria-label="위로"
             >
-              ▲
+              <ArrowUp className="size-3.5" aria-hidden />
             </button>
             <button
               onClick={onMoveDown}
               disabled={isLast}
-              className="rounded px-1.5 py-0.5 text-[11px] text-surface-400 hover:bg-surface-100 hover:text-surface-600 disabled:opacity-30 disabled:cursor-default"
+              className="inline-flex size-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
               aria-label="아래로"
             >
-              ▼
+              <ArrowDown className="size-3.5" aria-hidden />
             </button>
           </div>
           <div className="flex gap-1">
             <button
               onClick={onEdit}
-              className="rounded px-2 py-0.5 text-[11px] text-surface-400 hover:bg-surface-100 hover:text-surface-600"
+              className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             >
+              <Pencil className="size-3" aria-hidden />
               편집
             </button>
             <button
               onClick={onDelete}
-              className="rounded px-2 py-0.5 text-[11px] text-red-400 hover:bg-red-50 hover:text-red-600"
+              className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs text-destructive transition-colors hover:bg-destructive/10"
             >
+              <Trash2 className="size-3" aria-hidden />
               삭제
             </button>
           </div>
-        </div>
+        </CardFooter>
       )}
-    </div>
+    </Card>
   );
 }
