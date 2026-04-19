@@ -41,10 +41,11 @@
   - `pnpm test`
   - `pnpm run tokens:build && git diff --exit-code src/app/globals.css`
 - 수동 체크리스트:
-  - [ ] US1-1: 주요 페이지 12장 전·후 스크린샷 저장 `docs/evidence/012-shadcn-design-system/us1-1-*.png`
-  - [ ] US1-2: 멱등성 실측(재실행 시 diff 0바이트)
-  - [ ] US1-3: `shadcn@latest add accordion` 로컬 실행 성공
-  - [ ] US1-4: `rg "dark:" src/`·`rg "prefers-color-scheme"` 결과 0건 스크린샷 또는 로그
+  - [ ] US1-1: 주요 페이지 12장 전·후 스크린샷 저장 `docs/evidence/012-shadcn-design-system/us1-1-*.png` (PR1 머지 후 dev 환경에서 수집 예정)
+  - [ ] US1-2: 멱등성 실측(재실행 시 diff 0바이트) — PR4(토큰 파이프라인) 도입 후 적용 가능
+  - [ ] US1-3: `shadcn@latest add accordion` 로컬 실행 성공 — PR2(shadcn 초기화) 도입 후
+  - [x] US1-4: `rg "dark:|prefers-color-scheme" src/` 결과 0건 확인 — PR1 베이스라인에서 이미 0건
+  - [x] US1-5: PR1 빌드·타입·테스트·린트 통과 — `DATABASE_URL=placeholder npx next build` 성공, `npx tsc --noEmit` 0 에러, `npm test` 157/157, `npx eslint src` 기존 1 error(ActivityForm.tsx, v2.4.2 residual) + 3 warnings(기존). PR1 변경 라인 기준 신규 에러·경고 0건.
 - 스크린샷: `docs/evidence/012-shadcn-design-system/us1-*.png`
 
 ## US2 — 폼 컴포넌트 Phase 1 마이그레이션
