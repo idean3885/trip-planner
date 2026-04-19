@@ -1,56 +1,43 @@
-# Technical Documentation
+# 개발 문서 (docs)
 
-Trip Planner 기술 문서 허브. 제품 소개는 [루트 README](../README.md) 참조.
+이 디렉터리는 프로젝트의 심화 문서를 담습니다. 외부 방문자는 루트 [README.md](../README.md)와 [랜딩](https://trip.idean.me)을 먼저 보세요.
 
-## 아키텍처
+문서는 **독자 그룹 3층**으로 묶여 있습니다. 각 문서 상단에도 "대상 독자"가 명시돼 있으므로 필요한 섹션만 골라 읽으면 됩니다.
 
-| 문서 | 내용 |
-|------|------|
-| [ARCHITECTURE.md](ARCHITECTURE.md) | 시스템 구조, 인증 흐름, 데이터 접근 패턴, 도메인 결합도 |
-| [DOMAIN.md](DOMAIN.md) | DDD 기술 도메인, 애그리거트, 이벤트 |
-| [ERD.md](ERD.md) | DB 스키마 (Mermaid), 컬럼 코멘트, 설계 결정 |
+## 기여자·개발자 — 코드·아키텍처·도메인을 이해하려는 분
 
-## 운영·환경
+- [ARCHITECTURE.md](./ARCHITECTURE.md) — 시스템 전반 구성요소(웹/MCP/DB/배포)와 흐름
+- [DEVELOPMENT.md](./DEVELOPMENT.md) — 로컬 세팅, 기술 스택, 개발 실행 절차
+- [DOMAIN.md](./DOMAIN.md) — DDD 바운디드 컨텍스트 · 데이터 소유권
+- [ERD.md](./ERD.md) — 데이터 모델 다이어그램(Prisma 기준)
+- [design-handoff.md](./design-handoff.md) — 디자이너 ↔ 개발자 핸드오프 절차
 
-| 문서 | 내용 |
-|------|------|
-| [ENVIRONMENTS.md](ENVIRONMENTS.md) | prod/dev/preview/local 3-layer URL 도출, 환경 변수 의존 최소화 원칙 |
+## 운영·감사 — 배포·감사·증적을 확인하려는 분
 
-## 개발
+- [ENVIRONMENTS.md](./ENVIRONMENTS.md) — 환경 격리 원칙과 URL 도출 규칙(prod/dev/preview/local)
+- [audits/](./audits/) — 감사 기록(drift 리포트, 릴리즈 스냅샷 등)
+- [evidence/](./evidence/) — speckit Evidence(수동 검증 증적)
+- [research/](./research/) — 리서치 스냅샷(기술 비교·조사 원자료)
 
-| 문서 | 내용 |
-|------|------|
-| [DEVELOPMENT.md](DEVELOPMENT.md) | 기술 스택, 프로젝트 구조, 로컬 개발, 테스트, 배포 |
+## 공통 — 양쪽 모두 참조
 
-## 협업·프로세스
+- [WORKFLOW.md](./WORKFLOW.md) — 이슈·브랜치·릴리즈·마일스톤·디자이너 협업 업무 프로세스 정본
 
-AI 에이전트 1차 참조 가이드. 사람·에이전트가 같은 흐름으로 동작하도록 정본을 집중했다.
-
-| 문서 | 내용 |
-|------|------|
-| [WORKFLOW.md](WORKFLOW.md) | 업무 프로세스 단일 정본 — 팀 구성·이슈 흐름·릴리즈·디자이너 협업·AI 에이전트·마일스톤·핫픽스 |
-| [design-handoff.md](design-handoff.md) | 디자이너 핸드오프 상세 — 도구 셋업·산출물 형식·개발자 처리 절차·검토 체크포인트 |
-
-## 스펙 (기획 도메인)
-
-현재 유효한 스펙 정본은 [specs/README.md](../specs/README.md). 본 디렉토리의 [spec.md](spec.md)는 v1 오리지널 기획(2025년 마크다운 딜리버리 시절)으로, 맥락 보존 목적의 역사 문서다.
-
-## 감사·증거·연구
-
-| 디렉토리 | 내용 |
-|----------|------|
-| [audits/](audits/README.md) | speckit drift·마이그레이션·정합성 감사 리포트 |
-| [evidence/](evidence/README.md) | 피처별 quickstart Evidence — 스크린샷·로그·비교표 |
-| [research/](research/README.md) | 스펙·플랜 결정의 근거 원자료(벤더 비교·벤치마크 등) |
-
-## 기술 스택
+## 기술 스택 한눈에
 
 | 계층 | 기술 |
 |------|------|
-| 프론트엔드 | Next.js 16 (App Router, Turbopack), React 19, Tailwind CSS v4 (CSS-first `@theme`), shadcn/ui (vendored) |
-| 백엔드 | Next.js Route Handlers, Auth.js v5 |
+| 프론트엔드 | Next.js 16 (App Router · Turbopack), React 19, Tailwind CSS v4, shadcn/ui |
+| 백엔드 | Next.js Server Components · Route Handlers, Auth.js v5 |
 | DB | Neon Postgres, Prisma 7 (TCP via `@prisma/adapter-pg`) |
 | MCP 서버 | Python 3.10+, FastMCP, httpx |
-| 테스트 | Vitest (SWC + vmThreads), @testing-library/react, pytest |
-| 배포 | Vercel (웹), PyPI (MCP) |
-| CI/CD | GitHub Actions (lint/typecheck/test 게이트, auto-tag, auto-release, PyPI publish, drift 주간 감사) |
+| 테스트 | Vitest, Playwright, pytest |
+| 배포·CI/CD | Vercel (웹), PyPI (MCP), GitHub Actions |
+
+---
+
+## 참고
+
+- 스펙(피처별 spec/plan/tasks)은 이 디렉터리가 아닌 저장소 루트의 [`specs/`](../specs/) 아래에 있습니다.
+- v1 시절의 통합 스펙 스냅샷은 [audits/2026-04-v1-spec-snapshot.md](./audits/2026-04-v1-spec-snapshot.md)에 역사적 기록으로 보존됩니다.
+- 변경 이력은 루트 [CHANGELOG.md](../CHANGELOG.md)에서 확인할 수 있습니다.

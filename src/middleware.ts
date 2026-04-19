@@ -8,17 +8,21 @@ export default auth((req) => {
   const pathname = req.nextUrl.pathname;
   const isAuthRoute = pathname.startsWith("/auth");
   const isApiRoute = pathname.startsWith("/api/");
-  const isPublicRoute = pathname === "/about" || pathname.startsWith("/docs");
+  const isPublicRoute =
+    pathname === "/" ||
+    pathname === "/about" ||
+    pathname.startsWith("/docs");
 
   // API 라우트는 자체 인증 처리 (PAT Bearer 토큰 + 세션 병행, auth-helpers.ts)
   if (isApiRoute) return;
 
-  // 공개 라우트(About, API 문서)는 인증 불요
+  // 공개 라우트(랜딩 "/", About, API 문서)는 인증 불요
+  // 로그인 사용자의 "/" 접근은 page.tsx 내부에서 /trips 리다이렉트 처리
   if (isPublicRoute) return;
 
-  // 로그인 상태에서 auth 페이지 접근 → 홈으로
+  // 로그인 상태에서 auth 페이지 접근 → /trips(여행 목록)로
   if (isAuthRoute && isLoggedIn) {
-    return Response.redirect(new URL("/", req.nextUrl));
+    return Response.redirect(new URL("/trips", req.nextUrl));
   }
 
   // 비로그인 사용자의 auth 페이지 접근은 허용

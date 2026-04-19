@@ -1,5 +1,7 @@
 # ERD (Entity-Relationship Diagram)
 
+> **대상 독자**: 기여자·개발자 — 데이터 모델·관계·인덱스를 확인하려는 분.
+
 Prisma 스키마 기준. `prisma/schema.prisma` 참조.
 
 ```mermaid

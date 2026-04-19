@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [2.6.0] - 2026-04-20
+
+### Added
+
+- 공개 랜딩 페이지(`/`)를 신설하고 README·`docs/`를 외부 방문자 친화적으로 재정돈합니다. 비로그인 방문자가 프로젝트 정체성·핵심 가치·기능·기술 스택·실제 UI 미리보기·시작 CTA를 한 페이지로 훑을 수 있고, 루트 README는 독자 3층(외부 방문자·기여자·운영) 진입점으로 개편됐습니다. 기존 대시보드(여행 목록)는 `/trips`로 이관됐습니다. (#313) ([#313](https://github.com/idean3885/trip-planner/issues/313))
+
+
 ## [2.5.0] - 2026-04-20
 
 ### Added
