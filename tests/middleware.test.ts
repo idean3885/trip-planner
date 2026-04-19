@@ -23,10 +23,10 @@ describe("middleware", () => {
     expect(res).toBeUndefined();
   });
 
-  it("redirects logged-in users away from /auth pages to /", () => {
+  it("redirects logged-in users away from /auth pages to /trips", () => {
     const res = middleware(makeReq("https://x.test/auth/signin", true) as never, {} as never) as Response;
     expect(res.status).toBe(302);
-    expect(res.headers.get("location")).toBe("https://x.test/");
+    expect(res.headers.get("location")).toBe("https://x.test/trips");
   });
 
   it("allows non-logged-in users on /auth pages", () => {
@@ -55,10 +55,18 @@ describe("middleware", () => {
     expect(loc.searchParams.get("callbackUrl")).toBe("/trips/42");
   });
 
-  it("omits callbackUrl when redirecting from root", () => {
-    const res = middleware(makeReq("https://x.test/", false) as never, {} as never) as Response;
-    const loc = new URL(res.headers.get("location") ?? "");
-    expect(loc.pathname).toBe("/auth/signin");
-    expect(loc.searchParams.has("callbackUrl")).toBe(false);
+  it("allows non-logged-in users on root (landing is public)", () => {
+    const res = middleware(makeReq("https://x.test/", false) as never, {} as never);
+    expect(res).toBeUndefined();
+  });
+
+  it("allows logged-in users on root (page.tsx handles /trips redirect)", () => {
+    const res = middleware(makeReq("https://x.test/", true) as never, {} as never);
+    expect(res).toBeUndefined();
+  });
+
+  it("allows /about and /docs as public routes", () => {
+    expect(middleware(makeReq("https://x.test/about", false) as never, {} as never)).toBeUndefined();
+    expect(middleware(makeReq("https://x.test/docs/api", false) as never, {} as never)).toBeUndefined();
   });
 });
