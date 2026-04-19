@@ -9,6 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [2.4.4] - 2026-04-19
+
+### Fixed
+
+- **DAY 0 노출 해소 — sortOrder 데이터 보정 + API 자동 채번**: 기존 DB의 `Day.sort_order = 0` 레코드들을 1회성 마이그레이션(`20260419140000_backfill_day_sortorder_285`)으로 각 Trip별 `date ASC` 순 1~N 재번호. POST/PUT/DELETE `/api/trips/:id/days`는 이제 `sortOrder`를 서버가 자동 관리하며 클라이언트 값은 무시. `src/lib/day-order.ts`의 `resortDaysByDate(tx, tripId)`가 transaction 내에서 전체 재정렬을 수행하여 중간 삽입·날짜 변경·삭제 후에도 DAY 1부터 순서 보장. Day.sortOrder 컬럼 폐기 등 구조적 재설계는 별도 [#296](https://github.com/idean3885/trip-planner/issues/296) (v2.5)에서 무중단으로 진행. ([#285](https://github.com/idean3885/trip-planner/issues/285))
+- **활동 생성/수정/삭제 실패 시 에러 토스트 표시**: 이전엔 API 실패가 async throw로 unhandled rejection 발생(Vitest 4 + GitHub Actions reporter에서 `##[error]` 집계로 CI test step을 fail시키는 2차 피해). 이제 `ActivityList`의 3종 handler가 `try/catch`로 감싸 `sonner` 토스트(`toast.error("활동 … 에 실패했습니다")`)로 사용자에게 알리고 조용히 복귀. 테스트도 throw 기대 → toast 호출 관찰로 재설계. `.github/workflows/ci.yml`의 test step은 `continue-on-error`를 제거하여 blocking 게이트로 전환. ([#294](https://github.com/idean3885/trip-planner/issues/294))
+
+### Chore
+
+- **마크다운 trips fallback dead code 전면 제거**: DB가 여행 데이터 정본(#239 이후)이라 `trips/` 디렉토리는 이미 삭제된 상태였고, `src/lib/trips.ts`와 여행/일자 페이지의 `MarkdownTripPage`/`MarkdownDayPage` 분기는 실행되지 않는 dead code로 남아 있었다. 파일·분기·`gray-matter` 의존성 전체 제거. DB path의 `remark` 기반 마크다운 렌더는 유지. 페이지 라우트는 이제 `isNaN(id)` 시 `notFound()`로만 처리. ([#269](https://github.com/idean3885/trip-planner/issues/269))
+- **speckit tasks.md artifact 태그 포스트 릴리즈 정합성 개선**: v2.4.3 릴리즈 시 towncrier가 `changes/*.md` 단편을 `CHANGELOG.md`로 합산·삭제한 뒤 drift validator가 "체크됐으나 artifact 부재" 에러를 냄. T035의 `[artifact]` 태그를 `CHANGELOG.md::v2.4.3`으로 갱신해 릴리즈 후에도 drift audit 통과. ([#270](https://github.com/idean3885/trip-planner/issues/270))
+- **Coverage threshold 100/95 복원 + CI blocking 전환**: develop baseline(Lines 99.09% / Branches 91.2% / Statements 99.09%) 대비 12건의 신규·보강 테스트 추가(POST/PUT/DELETE 분기 조합, ActivityList 네트워크 reject 토스트, 다수 activity 중 단일 업데이트, 비용 parseFloat truthy 분기 등). UI에서 렌더된 activity id만 `handleMove`에 전달되고 `ActivityCard.isFirst/isLast`가 경계 버튼을 숨기는 등 도달 불가능한 방어 경로 2건은 `c8 ignore` 주석으로 근거 명시. 최종 커버리지 Lines/Statements/Functions 100% · Branches 96.51%. `.github/workflows/ci.yml`의 `test:coverage` step은 `continue-on-error` 제거하여 blocking 게이트로 전환, 앞으로 threshold 미달 PR은 CI 차단. ([#282](https://github.com/idean3885/trip-planner/issues/282))
+- **CI에 lint/typecheck/test 게이트 추가**: `.github/workflows/ci.yml` 신설. PR과 develop push 단계에서 `npm run lint`(blocking) / `npx tsc --noEmit`(blocking)는 즉시 차단 게이트로, `npm test`와 `npm run test:coverage`는 기존 tech debt(각각 #294 unhandled rejection, #282 coverage threshold) 때문에 우선 non-blocking(`continue-on-error`)으로 둔다. 해당 추적 이슈 해결 후 차례대로 blocking 전환. Node 20 matrix. 이전에 누적된 baseline lint error(`tailwind.config.ts` `require()`)는 v2.4.3 shadcn 도입으로 config 파일 자체가 사라지면서 자연 해소됨. ([#286](https://github.com/idean3885/trip-planner/issues/286))
+
+
 ## [2.4.3] - 2026-04-19
 
 ### Added
