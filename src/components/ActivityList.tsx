@@ -12,6 +12,8 @@ function formatTime(value: string | null | undefined): string {
     const d = new Date(value);
     return `${String(d.getUTCHours()).padStart(2, "0")}:${String(d.getUTCMinutes()).padStart(2, "0")}`;
   }
+  /* c8 ignore next -- defensive passthrough: DB는 ISO(Timestamptz)만 저장하므로
+     T 미포함 값은 도달 불가. 타입 폭(string)을 방어적으로 대응한 코드. */
   return value;
 }
 

@@ -16,8 +16,6 @@ updates:
     # 아래는 codemod·마이그레이션이 필요한 메이저 버전업이다. 각 추적 이슈에서
     # 개별 업그레이드 작업을 진행하고, 완료 후 해당 ignore 블록을 제거한다.
     ignore:
-      - dependency-name: "next"
-        update-types: ["version-update:semver-major"]  # #249
       - dependency-name: "tailwindcss"
         update-types: ["version-update:semver-major"]  # #250
       - dependency-name: "eslint"
