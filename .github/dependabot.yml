@@ -13,6 +13,23 @@ updates:
           - "patch"
     # major는 그룹화하지 않는다. 패키지별 개별 PR로 breaking change 영향을
     # 독립 평가·머지할 수 있도록 유지. (#248 참조)
+    # 아래는 codemod·마이그레이션이 필요한 메이저 버전업이다. 각 추적 이슈에서
+    # 개별 업그레이드 작업을 진행하고, 완료 후 해당 ignore 블록을 제거한다.
+    ignore:
+      - dependency-name: "next"
+        update-types: ["version-update:semver-major"]  # #249
+      - dependency-name: "tailwindcss"
+        update-types: ["version-update:semver-major"]  # #250
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]  # #251
+      - dependency-name: "vitest"
+        update-types: ["version-update:semver-major"]  # #252
+      - dependency-name: "@vitest/coverage-v8"
+        update-types: ["version-update:semver-major"]  # #252
+      - dependency-name: "eslint"
+        update-types: ["version-update:semver-major"]  # #253
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]  # #254
 
   - package-ecosystem: "pip"
     directory: "/"
