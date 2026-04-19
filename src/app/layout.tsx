@@ -4,6 +4,7 @@ import Link from "next/link";
 import ScrollToTop from "@/components/ScrollToTop";
 import SessionProvider from "@/components/SessionProvider";
 import AuthButton from "@/components/AuthButton";
+import Footer from "@/components/Footer";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -26,7 +27,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko">
-      <body className={`${inter.className} bg-white text-surface-900 min-h-screen`}>
+      <body className={`${inter.className} bg-white text-surface-900 min-h-screen flex flex-col`}>
         <SessionProvider>
           <header className="max-w-content mx-auto w-full px-4 pt-4 flex items-center justify-between">
             <Link href="/" className="text-body-sm font-semibold text-surface-700 hover:text-surface-900">
@@ -34,10 +35,11 @@ export default function RootLayout({
             </Link>
             <AuthButton />
           </header>
-          <main className="max-w-content mx-auto w-full px-4 py-6 pb-16">
+          <main className="max-w-content mx-auto w-full px-4 py-6 pb-16 flex-1">
             {children}
           </main>
           <ScrollToTop />
+          <Footer />
         </SessionProvider>
       </body>
     </html>
