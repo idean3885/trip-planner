@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
+import { Button } from "@/components/ui/button";
 
 export default function AuthButton() {
   const { data: session } = useSession();
@@ -12,21 +13,13 @@ export default function AuthButton() {
 
   return (
     <div className="flex items-center gap-3">
-      <span className="text-body-sm text-surface-500">
-        {displayName}
-      </span>
-      <Link
-        href="/settings"
-        className="rounded-md px-3 py-1.5 text-body-sm text-surface-500 transition-colors hover:bg-surface-100 hover:text-surface-700"
-      >
+      <span className="text-sm text-muted-foreground">{displayName}</span>
+      <Button variant="ghost" size="sm" render={<Link href="/settings" />}>
         설정
-      </Link>
-      <button
-        onClick={() => signOut()}
-        className="rounded-md px-3 py-1.5 text-body-sm text-surface-500 transition-colors hover:bg-surface-100 hover:text-surface-700"
-      >
+      </Button>
+      <Button variant="ghost" size="sm" onClick={() => signOut()}>
         로그아웃
-      </button>
+      </Button>
     </div>
   );
 }

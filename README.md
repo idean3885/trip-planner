@@ -4,6 +4,8 @@ AI 에이전트가 숙소, 항공편, 관광지를 검색하고 일정을 관리
 
 **[trip.idean.me](https://trip.idean.me)** 에서 바로 사용할 수 있습니다.
 
+협업 모델: 1인 BE + 디자이너 + AI 에이전트 하이브리드. 상세 — [docs/WORKFLOW.md](docs/WORKFLOW.md).
+
 ## 이렇게 쓰세요
 
 ### 1. 웹에서 일정 관리
