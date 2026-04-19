@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.0] - 2026-04-19
+
+### Added
+- **프로젝트 아이덴티티 표면 구축**: 앱을 공유받은 방문자가 프로젝트 출처·API 접근 경로를 즉시 파악할 수 있도록 3종 표면 추가. (#200)
+  - **전역 풋터** — 모든 페이지 하단에 `Made by idean3885`, `GitHub ↗`, `About`, `API Docs ↗` 노출. flex-wrap 단일 레이아웃(브레이크포인트 분기 없음), sticky footer(짧은 콘텐츠 페이지에서도 뷰포트 하단 고정).
+  - **About 페이지** — `/about` 공개 라우트 신설. 프로젝트 배경·저작자·라이선스·기술 스택 요약 표시. 로그인 없이 접근 가능.
+  - **설정 페이지 API 문서 진입점** — 설정 페이지 제목 옆에 "API 문서 →" 링크 추가.
+  - **단일 메타 소스** — `src/lib/project-meta.ts`에 `ProjectMeta` 타입과 `projectMeta` 상수를 `as const satisfies`로 정의. 풋터·About 모두 동일 소스 참조로 drift 구조적 방지.
+  - **공개 라우트 확장** — 미들웨어에 `/about`과 `/docs`를 공개 경로로 추가. 비로그인 방문자도 프로젝트 정체성·API 문서에 도달 가능.
+  - 신규 npm 의존성 0건(아이콘은 유니코드 `↗` 인라인).
+
+## [2.3.4] - 2026-04-19
+
+### Fixed
+- **speckit `create-new-feature.sh` 워크트리 분기 충돌**: 호출자(devex:flow 등)가 `NNN-*` 브랜치를 선행 생성한 상태에서 `/speckit.specify` 호출 시 스크립트가 `git checkout -b`를 다시 시도하며 충돌. 현재 브랜치가 `NNN-<suffix>` 패턴이고 `specs/<branch>/`가 아직 없으면 해당 브랜치를 재사용하도록 감지 블록 추가. 동시에 `git branch -a` 파싱 시 워크트리 체크아웃 마커(`+`)를 sed 필터에 반영하여 타 워크트리에서 체크아웃된 브랜치가 자동 채번에서 누락되던 부수 버그도 수정.
+
 ## [2.3.3] - 2026-04-19
 
 ### Changed

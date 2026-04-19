@@ -85,7 +85,15 @@ export default function SettingsPage() {
         <span>/</span>
         <span className="text-surface-700">설정</span>
       </div>
-      <h1 className="text-2xl font-bold">설정</h1>
+      <div className="flex items-baseline justify-between gap-4 flex-wrap">
+        <h1 className="text-2xl font-bold">설정</h1>
+        <Link
+          href="/docs"
+          className="text-body-sm text-primary-600 hover:underline"
+        >
+          API 문서 →
+        </Link>
+      </div>
 
       <section className="space-y-4">
         <h2 className="text-lg font-semibold">API 토큰</h2>

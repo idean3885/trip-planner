@@ -154,6 +154,7 @@ develop ──●──●──●───●──●──●──●──
 - Neon Postgres (Vercel Marketplace, Prisma ORM) (005-ax-api-mcp)
 - TypeScript 5.x (Next.js 15), Python 3.10+ (MCP 서버) + Next.js App Router, Auth.js v5, Prisma 7.x, FastMCP, httpx (007-oauth-cli-reauth)
 - Neon Postgres (Prisma ORM), macOS Keychain (로컬 토큰 저장) (007-oauth-cli-reauth)
+- TypeScript 5.x, Node.js 20+ + Next.js 15 (App Router), React 19, Tailwind CSS. 신규 의존성 없음. (011-project-identity-surface)
 
 ## Recent Changes
 - 001-ax-travel-planning: Added Python 3.14 + FastMCP, httpx, python-dotenv, pytes
