@@ -1,0 +1,10 @@
+
+> trip-planner@0.1.0 audit:tokens
+> tsx scripts/audit-tokens.ts
+
+=== 토큰 3계층 감사 ===
+- 정본 토큰: 0개
+- @theme 블록 토큰: 0개
+- 사용처 참조 이름: 71개 (--name: 또는 var(--name))
+✓ 정본 ↔ @theme 결정적 일치 (양방향 diff 0)
+  ℹ 정본이 비어 있음 — Phase 2 중성 상태(디자이너 합류 전). 예상된 상태.
