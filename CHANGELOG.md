@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+릴리즈 노트는 [towncrier](https://github.com/twisted/towncrier)가 `changes/` 단편 파일을 모아 자동 생성합니다. 단편 작성 가이드는 [`changes/README.md`](changes/README.md) 참조.
+
+<!-- towncrier release notes start -->
+
+## [2.4.1] - 2026-04-19
+
+### Chore
+
+- **towncrier 도입으로 CHANGELOG 충돌 해소**: PR마다 `changes/<이슈>.<타입>.md` 단편 파일 1개를 추가하고, 릴리즈 PR에서 `towncrier build`로 자동 집계해 `CHANGELOG.md`에 합친다. 단일 파일 동시 편집 충돌이 구조적으로 차단되어 워크트리 분기 + AI 보조 병렬 작업이 안전해진다. 기존 `auto-tag.yml` / `auto-release.yml` / `pypi-publish.yml` 자동화 체인은 그대로 유지. ([#272](https://github.com/idean3885/trip-planner/issues/272))
+
+
 ## [2.4.0] - 2026-04-19
 
 ### Added
