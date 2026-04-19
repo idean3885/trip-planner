@@ -125,6 +125,24 @@ describe("POST /activities", () => {
     expect(data.id).toBe(10);
   });
 
+  it("creates activity without startTime/endTime (conditional spread false branch)", async () => {
+    mockAuth.mockResolvedValue("user1");
+    mockCanEdit.mockResolvedValue(true);
+    mockPrisma.day.findUnique.mockResolvedValue({ id: 1, date: new Date("2026-06-07T00:00:00Z") });
+    mockPrisma.activity.create.mockResolvedValue({ id: 12, category: "OTHER", title: "Walk" });
+
+    const res = await POST(
+      makeRequest({ category: "OTHER", title: "Walk" }, "POST"),
+      params()
+    );
+    expect(res.status).toBe(201);
+    const createArgs = mockPrisma.activity.create.mock.calls[0]?.[0] as { data: Record<string, unknown> };
+    expect(createArgs.data.startTime).toBeUndefined();
+    expect(createArgs.data.endTime).toBeUndefined();
+    expect(createArgs.data.startTimezone).toBeUndefined();
+    expect(createArgs.data.endTimezone).toBeUndefined();
+  });
+
   it("POST converts HH:mm using IANA timezone (#232)", async () => {
     mockAuth.mockResolvedValue("user1");
     mockCanEdit.mockResolvedValue(true);
@@ -206,6 +224,14 @@ describe("PUT /activities/{id}", () => {
     mockCanEdit.mockResolvedValue(false);
     const res = await PUT(makeRequest({ title: "Updated" }, "PUT"), activityParams());
     expect(res.status).toBe(403);
+  });
+
+  it("returns 404 when day not found", async () => {
+    mockAuth.mockResolvedValue("user1");
+    mockCanEdit.mockResolvedValue(true);
+    mockPrisma.day.findUnique.mockResolvedValue(null);
+    const res = await PUT(makeRequest({ title: "Updated" }, "PUT"), activityParams());
+    expect(res.status).toBe(404);
   });
 
   it("updates activity with all fields", async () => {
