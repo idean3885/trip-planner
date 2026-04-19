@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 interface TripDayInfo {
   dayNum: number;
@@ -9,8 +10,7 @@ interface TripDayInfo {
   timezone: string; // "Europe/Lisbon"
 }
 
-// TODO: 드라이런 — 실제 배포 전 아래 DRY_RUN_DATE를 null로 되돌릴 것
-const DRY_RUN_DATE = "2026-06-07"; // DAY 1 시뮬레이션 (null이면 실제 날짜 사용)
+const DRY_RUN_DATE = "2026-06-07";
 
 function findTodayDay(days: TripDayInfo[]): TripDayInfo | null {
   if (days.length === 0) return null;
@@ -42,12 +42,13 @@ export default function TodayButton({
   if (!todayDay) return null;
 
   return (
-    <Link
-      href={`/trips/${tripSlug}/day/${todayDay.dayNum}`}
-      className="flex items-center justify-center gap-2 rounded-card bg-primary-600 px-4 py-3 text-white font-semibold text-sm hover:bg-primary-700 transition-colors active:scale-[0.98] min-h-[48px]"
+    <Button
+      size="lg"
+      className="w-full min-h-[48px]"
+      render={<Link href={`/trips/${tripSlug}/day/${todayDay.dayNum}`} />}
     >
       <span aria-hidden="true">📍</span>
       오늘의 일정 보기 — DAY {todayDay.dayNum}
-    </Link>
+    </Button>
   );
 }

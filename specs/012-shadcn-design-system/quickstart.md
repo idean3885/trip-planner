@@ -75,10 +75,10 @@
   - `pnpm test` (기존 테스트 통과)
   - `pnpm build` (타입·빌드 성공)
 - 수동 체크리스트:
-  - [ ] US2-1: 6종 폼 각 1회 실 플로우 실행 로그
-  - [ ] US2-2: Tab 내비·Esc 트랩 검증 스크린샷 `docs/evidence/012-shadcn-design-system/us2-2-focus.png`
-  - [ ] US2-3: Server Action 시그니처 diff 0건 확인 로그
-  - [ ] US2-4: 375px 6종 폼 스크린샷 `docs/evidence/012-shadcn-design-system/us2-4-mobile-*.png`
+  - [ ] US2-1: 6종 폼 각 1회 실 플로우 실행 — dev 환경 배포 후 수행 예정
+  - [ ] US2-2: Tab 내비·Esc 트랩 검증 스크린샷 `docs/evidence/012-shadcn-design-system/us2-2-focus.png` — dev 환경 배포 후 수행 예정
+  - [x] US2-3: Server Action 시그니처 diff 0건 — 각 컴포넌트의 fetch URL·인자·props 시그니처 보존 확인. `/api/trips/${tripId}`, `/api/trips/${tripId}/leave`, `/api/trips/${tripId}/invite` 엔드포인트 그대로 호출. `ActivityFormData` interface 그대로 유지.
+  - [ ] US2-4: 375px 6종 폼 스크린샷 `docs/evidence/012-shadcn-design-system/us2-4-mobile-*.png` — dev 환경 배포 후 수행 예정
 - 스크린샷: `docs/evidence/012-shadcn-design-system/us2-*.png`
 
 ## US3 — 디자이너 핸드오프 파이프라인

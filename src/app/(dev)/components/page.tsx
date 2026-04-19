@@ -205,6 +205,37 @@ export default function ComponentsPreviewPage() {
           </div>
         </div>
       </PreviewSection>
+
+      <PreviewSection
+        title="Migrated Forms (PR3)"
+        description="v2.4.3에서 shadcn/ui 기반으로 마이그레이션된 기존 폼 6종. 실제 동작 확인은 연결된 도메인 플로우에서 수행."
+      >
+        <ul className="space-y-2 text-sm">
+          <li>
+            <code className="rounded bg-muted px-1.5 py-0.5 text-xs">ActivityForm</code>{" "}
+            — 여행 활동 생성/수정. 경로:{" "}
+            <code className="text-muted-foreground">/trips/[id]/day/[dayId]</code> (활동 목록에서
+            &quot;+ 추가&quot; 클릭)
+          </li>
+          <li>
+            <code className="rounded bg-muted px-1.5 py-0.5 text-xs">AuthButton</code> — 모든 페이지
+            상단 헤더 (설정·로그아웃)
+          </li>
+          <li>
+            <code className="rounded bg-muted px-1.5 py-0.5 text-xs">DeleteTripButton</code> /{" "}
+            <code className="rounded bg-muted px-1.5 py-0.5 text-xs">LeaveTripButton</code> — 여행
+            상세 페이지 하단 (Dialog 사용)
+          </li>
+          <li>
+            <code className="rounded bg-muted px-1.5 py-0.5 text-xs">InviteButton</code> — 여행
+            상세에서 호스트가 노출. toast로 복사 피드백
+          </li>
+          <li>
+            <code className="rounded bg-muted px-1.5 py-0.5 text-xs">TodayButton</code> — 여행
+            상세에서 오늘 일정이 있을 때 표시
+          </li>
+        </ul>
+      </PreviewSection>
     </div>
   );
 }
