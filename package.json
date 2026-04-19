@@ -19,7 +19,7 @@
     "@tailwindcss/typography": "^0.5.19",
     "autoprefixer": "^10.4.27",
     "gray-matter": "^4.0.3",
-    "next": "^15.5.14",
+    "next": "^16.2.4",
     "next-auth": "^5.0.0-beta.30",
     "pg": "^8.20.0",
     "postcss": "^8.5.10",
