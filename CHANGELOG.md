@@ -9,6 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [2.4.3] - 2026-04-19
+
+### Added
+
+- **디자인 시스템 기반(shadcn/ui) + 폼 마이그레이션 + 디자이너 핸드오프 파이프라인**: `src/components/ui/`에 shadcn 12종(button·input·label·field·card·dialog·dropdown-menu·select·separator·skeleton·sonner·tabs) vendoring, 기존 폼 6종(ActivityForm·AuthButton·DeleteTripButton·LeaveTripButton·InviteButton·TodayButton)을 shadcn 기반으로 마이그레이션. `window.confirm` → `Dialog`, `alert()` → `toast` 전환으로 접근성·포커스 트랩·상태 일관성 확보. 서버 API fetch·props 시그니처 1:1 보존(헌법 V). 라이트 단독(shadcn `.dark` 블록 제거, `@custom-variant dark`만 남겨 런타임 inert). 디자이너 핸드오프 파이프라인: `design/tokens.json`(W3C DTCG) + `scripts/build-tokens.ts`(자체 flatten, 멱등) + `npm run tokens:build` + GitHub Issue Forms 템플릿 `🎨 Designer Handoff`(필수 필드 6종). 개발 전용 컴포넌트 카탈로그 `/components` 신설(`(dev)` route group + 프로덕션 `notFound()`). 신규 의존성: `@base-ui/react`, `class-variance-authority`, `tailwind-merge`, `clsx`, `lucide-react`, `tw-animate-css`, `sonner`. ([#270](https://github.com/idean3885/trip-planner/issues/270))
+
+### Documentation
+
+- **업무 프로세스 단일 정본 도입**: `docs/WORKFLOW.md`(팀 구성·이슈 흐름·릴리즈·디자이너 협업·AI 에이전트·마일스톤·핫픽스 7 섹션) + `docs/design-handoff.md`(디자이너 핸드오프 상세 절차) 신설. `docs/README.md`·`CLAUDE.md`·루트 `README.md`에서 1홉 진입 링크 추가. CLAUDE.md는 AI 에이전트 1차 컨텍스트로 역할 축소하고 WORKFLOW.md에 권위 위임. v2.4.3 디자인 시스템 기반(#270) 마일스톤의 PR5(업무 프로세스 문서) 몫. ([#270](https://github.com/idean3885/trip-planner/issues/270))
+
+### Chore
+
+- **Tailwind CSS v3 → v4 CSS-first 전환**: `@tailwind` 3지시어를 `@import "tailwindcss"` + `@theme` 블록으로 교체. `tailwind.config.ts` 삭제, PostCSS 플러그인을 `@tailwindcss/postcss` 단일 구성으로 단순화(autoprefixer 내장). 기존 색상 팔레트·그림자·반경 토큰을 CSS 변수로 1:1 포팅. `.prose` 계열 규칙과 `@apply` 사용처는 그대로 유지. Next 16 빌드에서 tsconfig.json의 `jsx: preserve → react-jsx` 자동 재구성 결과 반영. ([#250](https://github.com/idean3885/trip-planner/issues/250))
+- **speckit hook worktree-aware 개선**: `.specify/scripts/bash/enforce-submit.sh`와 `clear-submit-mark.sh`가 이제 `cd <path> && git commit` 형태의 bash command에서 `cd` 타깃을 추출해 해당 worktree에서 git 판정을 수행한다. 이전엔 hook 실행 cwd(=main worktree)만 기준이라 main worktree가 feature 브랜치 상태면 다른 worktree의 commit까지 차단되던 버그 해소. CLAUDE.md "워크트리 분기 + AI 병렬" 전제가 실제로 작동. ([#287](https://github.com/idean3885/trip-planner/issues/287)) ([#287](https://github.com/idean3885/trip-planner/issues/287))
+
+
 ## [2.4.2] - 2026-04-19
 
 ### Chore
