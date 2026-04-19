@@ -137,12 +137,12 @@
 
 - 자동 테스트:
   - `rg "^## (팀 구성·역할|이슈 흐름|버전·릴리즈 정책|디자이너 협업 흐름|AI 에이전트 활용|마일스톤 운영|핫픽스 흐름)$" docs/WORKFLOW.md | wc -l` → 7
-  - `rg "docs/WORKFLOW.md" docs/README.md CLAUDE.md README.md` → 3건 이상
+  - `rg "WORKFLOW\.md" docs/README.md CLAUDE.md README.md` → 3건 이상 (docs/README.md는 같은 디렉토리이므로 상대 경로 `WORKFLOW.md` 허용)
 - 수동 체크리스트:
-  - [ ] US4-1: 7개 섹션 헤더 확인 로그
-  - [ ] US4-2: 3 지점 링크 존재 확인 로그
-  - [ ] US4-3: WORKFLOW.md → design-handoff.md 링크 확인
-  - [ ] US4-4: CLAUDE.md 권위 위임 문구 확인
+  - [x] US4-1: 7개 섹션 헤더 확인 — `grep -E "^## (팀 구성·역할|이슈 흐름|버전·릴리즈 정책|디자이너 협업 흐름|AI 에이전트 활용|마일스톤 운영|핫픽스 흐름)$" docs/WORKFLOW.md | wc -l` → 7
+  - [x] US4-2: 3 지점 링크 존재 확인 — `grep -l "WORKFLOW\.md" docs/README.md CLAUDE.md README.md` → 3 files
+  - [x] US4-3: WORKFLOW.md → design-handoff.md 링크 확인 — `grep -c "design-handoff.md" docs/WORKFLOW.md` → 3
+  - [x] US4-4: CLAUDE.md 권위 위임 문구 확인 — `grep -c "docs/WORKFLOW.md" CLAUDE.md` → 1 이상, 문구 "단일 정본은" 포함
 - 스크린샷: 해당없음 (문서 존재는 CLI 검증으로 충분)
 
 ## Rollout 순서

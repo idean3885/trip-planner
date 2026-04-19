@@ -3,6 +3,10 @@
 ## 프로젝트 개요
 범용 여행 서포터/플래너. Next.js 웹앱(`src/`) + Python MCP 서버(`mcp/`) 구성. 여행 일정·숙소·활동 데이터는 Postgres(Neon)에 저장되며, 웹 UI(trip.idean.me)와 MCP 도구(trip)로 CRUD 한다. Apple iCloud '여행' 캘린더와 연동.
 
+## 업무 프로세스 단일 정본
+
+업무 프로세스(이슈 흐름·브랜치·릴리즈·디자이너 협업·마일스톤·핫픽스 전 과정)의 단일 정본은 [`docs/WORKFLOW.md`](./docs/WORKFLOW.md)다. 본 CLAUDE.md의 "Git 워크플로우 규칙"·"릴리즈 프로세스"·"마일스톤 정책" 섹션은 AI 에이전트 즉시 참조용 요약이며, 사람·에이전트 모두 **모호하거나 본 문서와 WORKFLOW.md가 상충하는 경우 WORKFLOW.md를 따른다**. 디자이너 핸드오프 상세는 [`docs/design-handoff.md`](./docs/design-handoff.md).
+
 ## Git 워크플로우 규칙
 
 ### 필수: feature → develop PR
