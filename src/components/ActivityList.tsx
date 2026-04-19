@@ -156,7 +156,7 @@ export default function ActivityList({
   return (
     <div className="space-y-2">
       {activities.length > 0 && (
-        <h2 className="text-heading-sm font-semibold text-surface-700">
+        <h2 className="text-sm font-semibold tracking-tight text-foreground">
           활동 ({activities.length})
         </h2>
       )}
@@ -204,7 +204,7 @@ export default function ActivityList({
         canEdit && (
           <button
             onClick={() => setShowForm(true)}
-            className="w-full rounded-card border border-dashed border-surface-300 py-2.5 text-body-sm text-surface-400 hover:border-surface-400 hover:text-surface-600 transition-colors"
+            className="w-full rounded-xl border border-dashed border-border bg-background py-2.5 text-sm text-muted-foreground transition-colors hover:border-foreground/40 hover:text-foreground"
           >
             + 활동 추가
           </button>
