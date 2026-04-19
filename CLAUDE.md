@@ -53,13 +53,18 @@ develop ──●──●──●───●──●──●──●──
 ### 릴리즈 프로세스
 
 **개발 (마일스톤 진행 중)**:
-1. feature 브랜치에서 작업 → develop PR → 머지
+1. feature 브랜치에서 작업 → `changes/<이슈번호>.<타입>.md` 단편 1개 추가 → develop PR → 머지
+   - 단편 타입: `breaking` / `feat` / `fix` / `removed` / `docs` / `chore`
+   - 단편 가이드: [`changes/README.md`](changes/README.md)
+   - CI 게이트: 단편 누락 시 `towncrier-fragment-check` 실패. 면제 시 `chore-no-news` 라벨
 2. develop에 머지되면 dev.trip.idean.me에 자동 배포
 3. 마일스톤의 모든 이슈가 develop에 머지될 때까지 반복
 
 **릴리즈 (마일스톤 완료 시)**:
-1. `CHANGELOG.md`에 새 버전 섹션 추가 (Keep a Changelog 형식)
-2. `pyproject.toml`의 `version` 필드 범프
+1. release 브랜치에서 `uv run towncrier build --version X.Y.Z --yes` 실행
+   - `changes/*.md` 단편이 자동으로 `CHANGELOG.md`에 합쳐지고 단편은 삭제됨
+   - 미리보기는 `--draft` 옵션
+2. `pyproject.toml`의 `version` 필드를 동일 X.Y.Z로 범프
 3. develop → main PR 생성 → 머지
 
 **CI 자동 (main 머지 후)**:
@@ -68,16 +73,22 @@ develop ──●──●──●───●──●──●──●──
 6. `pypi-publish.yml`: 태그 push → 테스트 → PyPI 배포
 
 **버전 범프 기준 (SemVer)**:
-- MAJOR: 호환성 깨지는 변경 (API 스키마 변경, MCP 도구 삭제 등)
-- MINOR: 기능 추가 (새 API, 새 MCP 도구, 새 페이지 등)
-- PATCH: 버그 수정, 성능 개선, 문서 수정
+- MAJOR: 호환성 깨지는 변경 (API 스키마 변경, MCP 도구 삭제 등). 단편 타입 `breaking`
+- MINOR: 기능 추가 (새 API, 새 MCP 도구, 새 페이지 등). 단편 타입 `feat`
+- PATCH: 버그 수정, 성능 개선, 문서 수정. 단편 타입 `fix` / `docs` / `chore`
 
 **핫픽스 프로세스**:
 1. develop에서 `hotfix/*` 브랜치 생성
-2. 수정 + CHANGELOG + 버전 PATCH 범프
+2. 수정 + `changes/<이슈>.fix.md` 단편 추가
 3. hotfix → develop PR → 머지 → dev 환경 확인
-4. develop → main PR → 머지 → CI 자동 릴리즈
-5. main 직접 머지 금지 — dev 환경 검증 필수
+4. release 단계(towncrier build + 버전 PATCH 범프) 수행
+5. develop → main PR → 머지 → CI 자동 릴리즈
+6. main 직접 머지 금지 — dev 환경 검증 필수
+
+**마일스톤 정책**:
+- 모든 이슈는 마일스톤 필수 (마일스톤 = 버전 단위)
+- 마일스톤 신설은 목적이 명확할 때만. 잡다한 작업은 기존 마일스톤에 흡수
+- 1인 개발이지만 워크트리 분기 + AI 보조 병렬을 전제로 충돌은 단편 분리(towncrier)로 차단
 
 ## 작업 규칙
 

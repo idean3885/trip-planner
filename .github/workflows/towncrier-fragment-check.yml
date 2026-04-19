@@ -1,0 +1,56 @@
+name: Towncrier Fragment Check
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - main
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: chore-no-news 라벨 확인
+        id: label
+        run: |
+          if echo '${{ toJSON(github.event.pull_request.labels.*.name) }}' | grep -q '"chore-no-news"'; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: 변경 파일 목록
+        id: diff
+        if: steps.label.outputs.skip == 'false'
+        run: |
+          BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+          git diff --name-only "$BASE_SHA" "$HEAD_SHA" > /tmp/changed-files.txt
+          cat /tmp/changed-files.txt
+
+      - name: changes/ 단편 또는 면제 경로 검증
+        if: steps.label.outputs.skip == 'false'
+        run: |
+          # 새로 추가된 changes/*.md 단편 확인 (README.md, _template.* 제외)
+          if git diff --name-only --diff-filter=A "${{ github.event.pull_request.base.sha }}" "${{ github.event.pull_request.head.sha }}" \
+              | grep -E '^changes/[^/]+\.(breaking|feat|fix|removed|docs|chore)\.md$' > /dev/null; then
+            echo "✅ towncrier 단편 추가 확인됨"
+            exit 0
+          fi
+
+          # 면제 경로만 변경된 PR은 통과
+          # 면제: .github/, .specify/, docs/lessons/, changes/ 자체
+          if ! grep -vE '^(\.github/|\.specify/|docs/lessons/|changes/)' /tmp/changed-files.txt > /dev/null; then
+            echo "✅ 면제 경로만 변경됨 (단편 불필요)"
+            exit 0
+          fi
+
+          echo "::error::changes/<이슈번호>.<타입>.md 단편이 PR에 포함되어야 합니다."
+          echo "::error::예외 시: 'chore-no-news' 라벨을 PR에 부착하세요."
+          echo "::error::가이드: changes/README.md"
+          exit 1
