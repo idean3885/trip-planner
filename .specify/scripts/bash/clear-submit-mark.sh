@@ -26,6 +26,13 @@ if echo "$TOOL_RESPONSE" | grep -qi "error\|fatal\|abort"; then
   exit 0  # 커밋 실패 — 마커 유지
 fi
 
+# Worktree-aware: enforce-submit.sh와 동일한 cd target 추출 로직을 적용해
+# REPO_ROOT가 실제 commit이 일어난 worktree 기준으로 결정되도록 한다. (#287)
+CD_TARGET=$(echo "$COMMAND" | grep -oE 'cd +[^&;]+' | head -1 | sed 's/^cd *//' | tr -d "'\"" | xargs 2>/dev/null || true)
+if [[ -n "$CD_TARGET" && -d "$CD_TARGET" ]]; then
+  cd "$CD_TARGET"
+fi
+
 # 마커 삭제
 REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || echo ".")
 MARKER="$REPO_ROOT/.specify/state/submit-ready.json"
