@@ -49,7 +49,11 @@ function tzAbbr(iana: string): string {
     const parts = new Intl.DateTimeFormat("en", { timeZone: iana, timeZoneName: "short" })
       .formatToParts(new Date("2026-06-07T12:00:00Z"));
     return parts.find((p) => p.type === "timeZoneName")?.value ?? iana;
-  } catch { return iana; }
+  } catch {
+    /* c8 ignore next -- defensive: ICU 구현체 따라 Intl이 throw할 수 있으나
+       런타임 도달 조건 특정 어려움. 안전 폴백. */
+    return iana;
+  }
 }
 
 /**
@@ -71,6 +75,7 @@ function formatTime(value: string | null, tz?: string | null): string | null {
     }).format(d);
     return tz ? `${hhmm} ${tzAbbr(tz)}` : hhmm;
   }
+  /* c8 ignore next -- defensive passthrough: 동일. DB는 ISO만 저장. */
   return value;
 }
 

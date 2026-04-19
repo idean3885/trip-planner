@@ -42,6 +42,13 @@ describe("ActivityList", () => {
     expect(screen.getByText("활동 (2)")).toBeInTheDocument();
   });
 
+  it("renders legacy HH:mm value verbatim in list (no T, no ISO conversion)", () => {
+    const activities = [makeActivity({ startTime: "08:30", endTime: "09:45" })];
+    render(<ActivityList tripId={1} dayId={1} activities={activities} canEdit={false} />);
+    // ActivityList 내부의 formatTime이 T 미포함 값을 그대로 반환 (legacy 방어 경로)
+    expect(screen.getByText(/08:30/)).toBeInTheDocument();
+  });
+
   it("does not show heading when no activities", () => {
     render(<ActivityList tripId={1} dayId={1} activities={[]} canEdit={true} />);
     expect(screen.queryByText(/활동 \(/)).not.toBeInTheDocument();
