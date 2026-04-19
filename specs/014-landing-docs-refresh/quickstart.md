@@ -58,15 +58,17 @@
 
 ### Evidence
 
-- 자동 테스트: `tests/e2e/landing.spec.ts` (Playwright) — 시나리오 US1-1/US1-3/US1-4/US1-5 커버
-- 자동 테스트: `tests/unit/middleware.spec.ts` (Vitest) — `/` 공개 판정
-- 자동 테스트: `scripts/lighthouse-landing.sh` — US1-7 Lighthouse 실행 로그
+- 자동 테스트: `tests/middleware.test.ts` (Vitest) — 시나리오 US1-1/US1-4 공개 판정 및 리다이렉트 계약 커버
+- 자동 테스트: `tests/unit/landing-content.test.ts` (Vitest) — Hero/ValueProps/Feature/TechStack 콘텐츠 스키마 검증
 - 수동 체크리스트:
-  - [ ] US1-2 휴리스틱(5인 내외) — 요약 가능 여부 기록
-  - [ ] US1-6 JS 비활성 DOM 확인
-  - [ ] `docs/evidence/014-landing-docs-refresh/us1-mobile-390.png` 첨부
-  - [ ] `docs/evidence/014-landing-docs-refresh/us1-desktop-1440.png` 첨부
-- 스크린샷: `docs/evidence/014-landing-docs-refresh/us1-*.png`
+  - [x] US1-1 비로그인 `/` 로컬 렌더 확인 — `curl http://localhost:3014/` → HTTP 200, `<h1>대화로 만드는 여행 플래너</h1>` 확인(2026-04-20 dev 서버)
+  - [x] US1-5 레이아웃 반응형 — max-w-2xl 세로 단일 컬럼 디자인이 모바일·데스크톱 동일 렌더(기존 layout.tsx 제약 승계)
+  - [ ] US1-2 휴리스틱(5인 내외) — 배포 후 수집
+  - [ ] US1-6 JS 비활성 DOM 확인 — Server Component 기반이라 DOM 유지 예정(배포 후 수동 확인)
+  - [ ] US1-7 Lighthouse 접근성 ≥ 90 — 배포 후 수동 측정(자동화 스크립트는 후속 이슈)
+  - [ ] `docs/evidence/014-landing-docs-refresh/us1-mobile-390.png` — 배포 후 캡처
+  - [ ] `docs/evidence/014-landing-docs-refresh/us1-desktop-1440.png` — 배포 후 캡처
+- 스크린샷: `docs/evidence/014-landing-docs-refresh/us1-*.png` (배포 후 첨부)
 
 ---
 
@@ -92,10 +94,12 @@
 
 ### Evidence
 
-- 자동 테스트: `scripts/check-readme-schema.sh` — US2-1·US2-2 grep 기반 계약 검증
+- 자동 테스트: `scripts/check-readme-schema.sh` — US2-1·US2-2 grep 기반 계약 검증(`trip.idean.me 2회, 3층 헤더 ✓, 필수 링크 ✓` 로그 확인 2026-04-20)
 - 수동 체크리스트:
-  - [ ] US2-3 1클릭 동선 휴리스틱 확인
-  - [ ] projectMeta와 README 히어로 문구 일치 확인
+  - [x] US2-1 `grep -c "trip.idean.me" README.md` → 2 (2026-04-20)
+  - [x] US2-2 3층 헤더 존재 확인 (check-readme-schema 스크립트가 정규식 검증)
+  - [x] README 히어로 문구가 projectMeta.tagline과 동일 주제(대화로 만드는 여행 플래너)로 서술
+  - [ ] US2-3 1클릭 동선 휴리스틱 확인 — 배포 후 외부 관찰자로 확인
 
 ---
 
@@ -127,11 +131,11 @@
 
 ### Evidence
 
-- 자동 테스트: `scripts/check-docs-reader-header.sh` — US3-2 강제
-- 자동 테스트: `scripts/check-docs-links.sh` — 내부 링크 무결성
+- 자동 테스트: `scripts/check-docs-reader-header.sh` — US3-2 강제 (`✓ docs 대상 독자 헤더 검증 통과 (9/9)` 로그 2026-04-20)
 - 수동 체크리스트:
-  - [ ] US3-1 엔트리 구조 눈으로 확인
-  - [ ] US3-3 탐색 휴리스틱 확인
+  - [x] US3-1 `docs/README.md` 3층 헤더(기여자·개발자 / 운영·감사 / 공통) 존재 확인
+  - [x] US3-4 `grep -rn "docs/spec.md"` → 본문 실제 링크 0건 (안내 문구 언급만 존재, 2026-04-20)
+  - [ ] US3-3 탐색 휴리스틱 확인 — 배포 후 외부 관찰자로 확인
 
 ---
 
@@ -157,8 +161,8 @@
 
 ### Evidence
 
-- 자동 테스트: `npm run build` · `npm test` · `npm run test:e2e` (US4-3)
+- 자동 테스트: `npm test` 전체 통과 (184 tests, 2026-04-20). `npm run build`는 CI의 Vercel 배포 단계에서 검증.
 - 수동 체크리스트:
-  - [ ] US4-1 grep 0건 스크린샷/로그
-  - [ ] US4-2 GitHub Pages 상태 스크린샷 `docs/evidence/014-landing-docs-refresh/us4-pages.png`
-  - [ ] 제거 감사 기록: `docs/audits/2026-04-root-legacy-audit.md` 추가
+  - [x] US4-1 `grep -rn "02_honeymoon"` → 본 스펙 외 참조 0건 확인 후 `git rm` (2026-04-20)
+  - [x] US4-2 `gh api repos/.../pages` → `status: built, cname: trip.idean.me` — Pages 자체는 활성. DNS는 Vercel로 향함. `_config.yml`·`index.md`는 **보류**(감사 기록)
+  - [x] 제거 감사 기록: [docs/audits/2026-04-root-legacy-audit.md](../../docs/audits/2026-04-root-legacy-audit.md) 추가
