@@ -28,15 +28,18 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko">
-      <body className={`${inter.className} bg-white text-surface-900 min-h-screen flex flex-col`}>
+      <body className={`${inter.className} flex min-h-screen flex-col bg-background text-foreground`}>
         <SessionProvider>
-          <header className="max-w-content mx-auto w-full px-4 pt-4 flex items-center justify-between">
-            <Link href="/" className="text-body-sm font-semibold text-surface-700 hover:text-surface-900">
+          <header className="mx-auto flex w-full max-w-2xl items-center justify-between px-4 pt-4">
+            <Link
+              href="/"
+              className="text-sm font-semibold text-foreground/80 hover:text-foreground"
+            >
               우리의 여행
             </Link>
             <AuthButton />
           </header>
-          <main className="max-w-content mx-auto w-full px-4 py-6 pb-16 flex-1">
+          <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-6 pb-16">
             {children}
           </main>
           <ScrollToTop />

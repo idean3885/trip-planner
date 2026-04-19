@@ -80,48 +80,56 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center gap-2 text-body-sm text-surface-500">
-        <Link href="/" className="hover:text-surface-700">홈</Link>
-        <span>/</span>
-        <span className="text-surface-700">설정</span>
-      </div>
-      <div className="flex items-baseline justify-between gap-4 flex-wrap">
-        <h1 className="text-2xl font-bold">설정</h1>
+      <nav className="flex items-center gap-2 text-sm text-muted-foreground">
+        <Link href="/" className="hover:text-foreground">
+          홈
+        </Link>
+        <span aria-hidden>·</span>
+        <span className="text-foreground">설정</span>
+      </nav>
+      <div className="flex flex-wrap items-baseline justify-between gap-4">
+        <h1 className="text-2xl font-semibold tracking-tight">설정</h1>
         <Link
           href="/docs"
-          className="text-body-sm text-primary-600 hover:underline"
+          className="text-sm text-foreground underline-offset-4 hover:underline"
         >
-          API 문서 →
+          API 문서
         </Link>
       </div>
 
       <section className="space-y-4">
         <h2 className="text-lg font-semibold">API 토큰</h2>
-        <p className="text-sm text-surface-600">
+        <p className="text-sm text-foreground/80">
           보통은{" "}
-          <code className="text-xs bg-surface-100 px-1 py-0.5 rounded">install.sh</code>{" "}
+          <code className="rounded bg-muted px-1 py-0.5 text-xs">install.sh</code>{" "}
           설치 시 장치별로 자동 발급됩니다.{" "}
           <a
             href={INSTALL_GUIDE_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-primary-600 hover:underline"
+            className="text-foreground underline-offset-4 hover:underline"
           >
-            설치 가이드 →
+            설치 가이드
           </a>
         </p>
-        <p className="text-xs text-surface-500">
-          API를 직접 호출할 때 사용하는 인증 토큰입니다. 외부 도구(MCP 서버, 스크립트)에서 Bearer로 전달.{" "}
-          <a href="/docs" className="text-primary-600 hover:underline">
-            API 문서 →
+        <p className="text-xs text-muted-foreground">
+          API를 직접 호출할 때 사용하는 인증 토큰입니다. 외부 도구(MCP 서버,
+          스크립트)에서 Bearer로 전달.{" "}
+          <a
+            href="/docs"
+            className="text-foreground underline-offset-4 hover:underline"
+          >
+            API 문서
           </a>
         </p>
 
         {/* 발급된 토큰 목록 */}
         {tokens.length === 0 ? (
-          <p className="text-sm text-surface-500">발급된 토큰이 없습니다.</p>
+          <p className="text-sm text-muted-foreground">
+            발급된 토큰이 없습니다.
+          </p>
         ) : (
-          <div className="border rounded divide-y">
+          <div className="divide-y divide-border rounded-lg border border-border">
             {tokens.map((token) => (
               <div
                 key={token.id}
@@ -129,12 +137,14 @@ export default function SettingsPage() {
               >
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <span className="font-medium text-sm">{token.name}</span>
-                    <code className="text-xs text-surface-500 bg-surface-100 px-1.5 py-0.5 rounded">
+                    <span className="text-sm font-medium text-foreground">
+                      {token.name}
+                    </span>
+                    <code className="rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">
                       {token.tokenPrefix}...
                     </code>
                   </div>
-                  <div className="text-xs text-surface-500">
+                  <div className="text-xs text-muted-foreground">
                     {token.lastUsedAt
                       ? `마지막 사용: ${new Date(token.lastUsedAt).toLocaleDateString("ko-KR")}`
                       : "사용 기록 없음"}
@@ -144,7 +154,7 @@ export default function SettingsPage() {
                 </div>
                 <button
                   onClick={() => handleRevoke(token.id, token.name)}
-                  className="text-red-600 text-sm hover:underline"
+                  className="text-sm text-destructive hover:underline"
                 >
                   폐기
                 </button>
@@ -154,13 +164,14 @@ export default function SettingsPage() {
         )}
 
         {/* 수동 발급 (고급) — 웹 전용 유저용 */}
-        <details className="border rounded-lg">
-          <summary className="cursor-pointer px-4 py-3 text-sm font-medium text-surface-700 hover:bg-surface-50">
+        <details className="rounded-lg border border-border">
+          <summary className="cursor-pointer px-4 py-3 text-sm font-medium text-foreground hover:bg-muted">
             수동 발급 (고급)
           </summary>
-          <div className="px-4 pb-4 space-y-3">
-            <p className="text-xs text-surface-500">
-              CLI 설치 없이 웹에서 직접 토큰이 필요할 때 사용합니다. 생성된 토큰 원문은 한 번만 표시되므로 즉시 복사하세요.
+          <div className="space-y-3 px-4 pb-4">
+            <p className="text-xs text-muted-foreground">
+              CLI 설치 없이 웹에서 직접 토큰이 필요할 때 사용합니다. 생성된 토큰
+              원문은 한 번만 표시되므로 즉시 복사하세요.
             </p>
 
             <form onSubmit={handleCreate} className="flex gap-2">
@@ -170,29 +181,29 @@ export default function SettingsPage() {
                 onChange={(e) => setNewTokenName(e.target.value)}
                 placeholder="토큰 이름 (예: My MacBook)"
                 maxLength={100}
-                className="flex-1 border rounded px-3 py-2 text-sm"
+                className="flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm outline-none ring-1 ring-transparent focus:ring-ring"
               />
               <button
                 type="submit"
                 disabled={loading || !newTokenName.trim()}
-                className="bg-primary-600 text-white px-4 py-2 rounded text-sm font-medium disabled:opacity-50"
+                className="rounded-md bg-foreground px-4 py-2 text-sm font-medium text-background transition-colors hover:bg-foreground/90 disabled:opacity-50"
               >
                 생성
               </button>
             </form>
 
             {createdToken && (
-              <div className="bg-green-50 border border-green-200 rounded p-4 space-y-2">
-                <p className="text-sm font-medium text-green-800">
+              <div className="space-y-2 rounded-md border border-emerald-200 bg-emerald-50 p-4">
+                <p className="text-sm font-medium text-emerald-800">
                   토큰이 생성되었습니다. 이 값은 다시 표시되지 않으니 복사해두세요.
                 </p>
                 <div className="flex items-center gap-2">
-                  <code className="flex-1 bg-white border rounded px-3 py-2 text-xs break-all select-all">
+                  <code className="flex-1 select-all break-all rounded border border-border bg-background px-3 py-2 text-xs">
                     {createdToken}
                   </code>
                   <button
                     onClick={handleCopy}
-                    className="bg-green-600 text-white px-3 py-2 rounded text-xs font-medium shrink-0"
+                    className="shrink-0 rounded-md bg-emerald-600 px-3 py-2 text-xs font-medium text-white"
                   >
                     {copied ? "복사됨" : "복사"}
                   </button>
