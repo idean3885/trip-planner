@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [2.5.0] - 2026-04-20
+
+### Added
+
+- 디자인 시스템 Phase 2. 복합 컴포넌트(`ActivityCard`·`ActivityList`·`DayEditor`) 외곽과 주요 페이지(홈·여행 상세·Day 상세·`MemberList`·설정·새 여행·로그인·초대·API 문서)를 shadcn `<Card>` + `<Button>` + `<Tabs>` + semantic 토큰 기반으로 정식 전환했습니다. 레거시 커스텀 유틸리티(`rounded-card`/`shadow-card*`/`shadow-fab`/`bg-primary-*`·`bg-surface-*`/`text-surface-*`/`text-heading-*`/`text-body-*`/`max-w-content`)를 `src/**`·`styles/**`·`design/tokens.json`·`globals.css` `@theme` 블록에서 전면 제거하고, `scripts/check-legacy-utilities.sh` + `scripts/audit-tokens.ts` + CI design-system job으로 재유입을 구조적으로 차단했습니다. Day 상세에서 Prisma `Decimal` 타입이 Server → Client 경계로 그대로 넘어가 Next 16 strict 검사에 걸리던 문제를 `cost.toString()` 직렬화로 해소했습니다(#300). 브랜드 컬러·Latin 폰트 교체·다크 모드는 도입하지 않았으며, semantic 토큰은 shadcn 기본값(neutral)을 유지하여 디자이너 합류 시 `tokens.json`만으로 반영 가능한 상태로 둡니다. ([#301](https://github.com/idean3885/trip-planner/issues/301))
+- About 페이지(`/about`)를 일반 사용자 관점으로 재작성. 앱 이름을 **우리의 여행**으로 통일(레포 이름 `trip-planner`는 부차 정보), 문장 톤은 합쇼체로 정합. 기술 스택 나열 섹션은 제거하고, 아키텍처·개발 가이드는 GitHub `docs/` 허브와 `ARCHITECTURE.md`로 분리해 내부 카드 링크로 연결. 유니코드 화살표(↗·→)를 lucide 아이콘(`ExternalLink`, `ArrowRight`, `BookOpen`, `Layers`)으로 교체하고, 전체 레이아웃을 shadcn `<Card>` 기반 semantic 토큰 체계에 맞춰 재구성. ([#306](https://github.com/idean3885/trip-planner/issues/306))
+
+### Documentation
+
+- 문서 허브(`docs/README.md`) 네비게이션을 정비. `audits/`·`evidence/`·`research/` 하위 디렉토리 색인 추가, 운영·환경(`ENVIRONMENTS.md`)·v1 역사 스펙(`spec.md`) 섹션 보강. `DEVELOPMENT.md`의 "Squash and merge" 레거시 표기를 현행 정책(`Create a merge commit`)으로 정합화. 기술 스택 표를 Tailwind v4 + shadcn vendored 기준으로 최신화. ([#307](https://github.com/idean3885/trip-planner/issues/307))
+
+
 ## [2.4.4] - 2026-04-19
 
 ### Fixed

@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { prisma } from "@/lib/prisma";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface MemberListProps {
   tripId: number;
@@ -8,14 +9,15 @@ interface MemberListProps {
 const ROLE_ORDER: Record<string, number> = { OWNER: 0, HOST: 1, GUEST: 2 };
 
 function roleBadge(role: string) {
-  const base = "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium";
+  const base =
+    "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ring-1";
   switch (role) {
     case "OWNER":
-      return `${base} bg-primary-100 text-primary-700`;
+      return `${base} bg-foreground text-background ring-transparent`;
     case "HOST":
-      return `${base} bg-surface-200 text-surface-700`;
+      return `${base} bg-secondary text-secondary-foreground ring-foreground/10`;
     default:
-      return `${base} bg-surface-100 text-surface-500`;
+      return `${base} bg-muted text-muted-foreground ring-foreground/5`;
   }
 }
 
@@ -38,41 +40,45 @@ export default async function MemberList({ tripId }: MemberListProps) {
   });
 
   return (
-    <section className="rounded-card shadow-card p-5">
-      <div className="flex items-center justify-between mb-3">
-        <h2 className="text-heading-sm font-semibold">동행자 ({members.length})</h2>
-      </div>
-      <ul className="space-y-2">
-        {sorted.map((m) => {
-          const displayName = m.user.name || m.user.email || "이름 없음";
-          return (
-            <li key={m.id} className="flex items-center gap-3">
-              {m.user.image ? (
-                <Image
-                  src={m.user.image}
-                  alt={displayName}
-                  width={32}
-                  height={32}
-                  className="rounded-full"
-                />
-              ) : (
-                <div className="h-8 w-8 rounded-full bg-surface-200 flex items-center justify-center text-sm text-surface-500">
-                  {displayName[0]?.toUpperCase() ?? "?"}
-                </div>
-              )}
-              <div className="flex-1 min-w-0">
-                <p className="text-body-sm font-medium text-surface-900 truncate">
-                  {displayName}
-                </p>
-                {m.user.email && m.user.name && (
-                  <p className="text-xs text-surface-500 truncate">{m.user.email}</p>
+    <Card>
+      <CardHeader>
+        <CardTitle>동행자 ({members.length})</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <ul className="space-y-3">
+          {sorted.map((m) => {
+            const displayName = m.user.name || m.user.email || "이름 없음";
+            return (
+              <li key={m.id} className="flex items-center gap-3">
+                {m.user.image ? (
+                  <Image
+                    src={m.user.image}
+                    alt={displayName}
+                    width={32}
+                    height={32}
+                    className="rounded-full"
+                  />
+                ) : (
+                  <div className="flex size-8 items-center justify-center rounded-full bg-muted text-sm text-muted-foreground">
+                    {displayName[0]?.toUpperCase() ?? "?"}
+                  </div>
                 )}
-              </div>
-              <span className={roleBadge(m.role)}>{roleLabel(m.role)}</span>
-            </li>
-          );
-        })}
-      </ul>
-    </section>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium text-foreground">
+                    {displayName}
+                  </p>
+                  {m.user.email && m.user.name && (
+                    <p className="truncate text-xs text-muted-foreground">
+                      {m.user.email}
+                    </p>
+                  )}
+                </div>
+                <span className={roleBadge(m.role)}>{roleLabel(m.role)}</span>
+              </li>
+            );
+          })}
+        </ul>
+      </CardContent>
+    </Card>
   );
 }

@@ -50,3 +50,18 @@ jobs:
         run: npm test
       - name: 커버리지 측정 (threshold lines 100 / branches 95 / statements 100 / functions 100)
         run: npm run test:coverage
+
+  design-system:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - name: 의존성 설치
+        run: npm ci
+      - name: 레거시 유틸리티 검사 (스펙 013 FR-002)
+        run: npm run check:legacy-utilities
+      - name: 토큰 3계층 감사 (스펙 013 FR-004)
+        run: npm run audit:tokens
