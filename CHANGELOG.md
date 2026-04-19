@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.3] - 2026-04-19
+
+### Changed
+- **dependabot 플로우 정규화**: `target-branch: develop` 추가(npm, pip, github-actions). dependabot PR이 기본값으로 `main`을 타겟하면서 Git Flow Lite(feature/hotfix → develop PR) 정책을 우회하던 문제 해소. (#258)
+
+### Chore (deps)
+- **GitHub Actions**: `actions/checkout` 4 → 6, `astral-sh/setup-uv` 업데이트. (#245)
+- **npm**: `postcss` 8.5.9 → 8.5.10, `eslint-config-next` 업데이트. (#246)
+
 ## [2.3.2] - 2026-04-19
 
 ### Fixed
