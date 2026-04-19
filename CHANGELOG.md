@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [2.4.2] - 2026-04-19
+
+### Chore
+
+- **Next.js 15 → 16 업그레이드**: 프레임워크 메이저 버전업. 현재 프로젝트가 App Router 기본 패턴만 사용하여 breaking change 대응 코드 변경 없음. `next-auth@5.0.0-beta.31` peer(`next: ^14 || ^15 || ^16`)와 호환. `npx tsc --noEmit`·테스트 152개 전부 통과. `dependabot.yml` next ignore 블록 제거. **런타임 검증은 Vercel Preview 빌드 결과로 확인 필요**. ([#249](https://github.com/idean3885/trip-planner/issues/249))
+- **TypeScript 5.9 → 6.0 업그레이드**: 컴파일러 메이저 버전업. TS 6의 엄격한 side-effect import 검사(TS2882)에 대응해 `src/types/assets.d.ts`를 추가하여 `*.css` 임포트 선언 제공. 타입체크·테스트 전부 통과, `@typescript-eslint/*`와도 peer 호환(`<6.1.0`). `dependabot.yml` typescript ignore 블록 제거. ([#251](https://github.com/idean3885/trip-planner/issues/251))
+- **Vitest 3 → 4 업그레이드**: 테스트 러너와 `@vitest/coverage-v8` 메이저 버전 동반 업그레이드. 기존 테스트 152개 전부 통과, 기능 회귀 없음. `dependabot.yml` vitest ignore 블록 제거. ([#252](https://github.com/idean3885/trip-planner/issues/252))
+
+
 ## [2.4.1] - 2026-04-19
 
 ### Chore
