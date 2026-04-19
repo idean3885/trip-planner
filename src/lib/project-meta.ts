@@ -1,25 +1,26 @@
 export type ProjectMeta = {
   readonly name: string;
+  readonly repoName: string;
   readonly author: string;
   readonly githubUrl: string;
+  readonly docsUrl: string;
+  readonly architectureUrl: string;
   readonly license: string;
+  readonly tagline: string;
   readonly description: string;
-  readonly techStack: readonly string[];
 };
 
 export const projectMeta = {
-  name: "Trip Planner",
+  name: "우리의 여행",
+  repoName: "trip-planner",
   author: "idean3885",
   githubUrl: "https://github.com/idean3885/trip-planner",
+  docsUrl: "https://github.com/idean3885/trip-planner/tree/main/docs",
+  architectureUrl:
+    "https://github.com/idean3885/trip-planner/blob/main/docs/ARCHITECTURE.md",
   license: "MIT",
+  tagline:
+    "여행 계획을 대화로 만들고 동행자와 함께 다듬는 플래너입니다. 일정·숙소·활동을 한곳에 모아 두고, 모바일에서 바로 열어 씁니다.",
   description:
-    "AI 기반 여행 계획 및 동행 협업 플래너. Claude Code·MCP 서버와 Next.js 웹앱을 통합해 일정·숙소·항공편을 자연어로 편성한다.",
-  techStack: [
-    "Next.js 15 (App Router)",
-    "TypeScript",
-    "Prisma + Neon Postgres",
-    "Auth.js v5",
-    "Tailwind CSS",
-    "MCP (Python / FastMCP)",
-  ],
+    "여행 계획을 대화로 만들고 동행자와 함께 다듬는 플래너. 일정·숙소·활동을 한곳에 모아 모바일에서 바로 확인합니다.",
 } as const satisfies ProjectMeta;
