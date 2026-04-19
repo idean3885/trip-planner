@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import type { ActivityCategory, ReservationStatus, Prisma } from "@prisma/client";
 import ActivityCard from "./ActivityCard";
 import ActivityForm, { type ActivityFormData } from "./ActivityForm";
@@ -66,16 +67,22 @@ export default function ActivityList({
     if (data.currency) body.currency = data.currency;
     if (data.reservationStatus) body.reservationStatus = data.reservationStatus;
 
-    const res = await fetch(apiBase, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    if (!res.ok) throw new Error("생성 실패");
-
-    const created = await res.json();
-    setActivities((prev) => [...prev, created]);
-    setShowForm(false);
+    try {
+      const res = await fetch(apiBase, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) {
+        toast.error("활동 생성에 실패했습니다");
+        return;
+      }
+      const created = await res.json();
+      setActivities((prev) => [...prev, created]);
+      setShowForm(false);
+    } catch {
+      toast.error("활동 생성 중 오류가 발생했습니다");
+    }
   }
 
   async function handleUpdate(activityId: number, data: ActivityFormData) {
@@ -91,33 +98,47 @@ export default function ActivityList({
       reservationStatus: data.reservationStatus || null,
     };
 
-    const res = await fetch(`${apiBase}/${activityId}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    if (!res.ok) throw new Error("수정 실패");
-
-    const updated = await res.json();
-    setActivities((prev) =>
-      prev.map((a) => (a.id === activityId ? updated : a))
-    );
-    setEditingId(null);
+    try {
+      const res = await fetch(`${apiBase}/${activityId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) {
+        toast.error("활동 수정에 실패했습니다");
+        return;
+      }
+      const updated = await res.json();
+      setActivities((prev) =>
+        prev.map((a) => (a.id === activityId ? updated : a))
+      );
+      setEditingId(null);
+    } catch {
+      toast.error("활동 수정 중 오류가 발생했습니다");
+    }
   }
 
   async function handleDelete(activityId: number) {
     if (!confirm("이 활동을 삭제하시겠습니까?")) return;
 
-    const res = await fetch(`${apiBase}/${activityId}`, { method: "DELETE" });
-    if (!res.ok) throw new Error("삭제 실패");
-
-    setActivities((prev) => prev.filter((a) => a.id !== activityId));
+    try {
+      const res = await fetch(`${apiBase}/${activityId}`, { method: "DELETE" });
+      if (!res.ok) {
+        toast.error("활동 삭제에 실패했습니다");
+        return;
+      }
+      setActivities((prev) => prev.filter((a) => a.id !== activityId));
+    } catch {
+      toast.error("활동 삭제 중 오류가 발생했습니다");
+    }
   }
 
   async function handleMove(activityId: number, direction: "up" | "down") {
     const idx = activities.findIndex((a) => a.id === activityId);
+    /* c8 ignore next -- defensive: UI는 렌더된 activity의 id만 전달 */
     if (idx < 0) return;
     const swapIdx = direction === "up" ? idx - 1 : idx + 1;
+    /* c8 ignore next -- defensive: ActivityCard의 isFirst/isLast가 경계 버튼을 숨김 */
     if (swapIdx < 0 || swapIdx >= activities.length) return;
 
     const reordered = [...activities];

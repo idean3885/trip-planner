@@ -7,6 +7,12 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ refresh: vi.fn() }),
 }));
 
+const mockToast = vi.hoisted(() => ({
+  error: vi.fn(),
+  success: vi.fn(),
+}));
+vi.mock("sonner", () => ({ toast: mockToast }));
+
 const mockFetch = vi.fn();
 global.fetch = mockFetch;
 global.confirm = vi.fn(() => true);
@@ -157,7 +163,7 @@ describe("ActivityList", () => {
     });
   });
 
-  it("throws on create API failure", async () => {
+  it("shows error toast when create API fails", async () => {
     mockFetch.mockResolvedValueOnce({ ok: false, status: 500 });
 
     render(<ActivityList tripId={1} dayId={1} activities={[]} canEdit={true} />);
@@ -167,14 +173,13 @@ describe("ActivityList", () => {
     fireEvent.change(textInputs[0], { target: { value: "Fail" } });
 
     const form = document.querySelector("form")!;
-    // Submit will throw but ActivityForm catches via finally
     fireEvent.submit(form);
     await waitFor(() => {
-      expect(mockFetch).toHaveBeenCalled();
+      expect(mockToast.error).toHaveBeenCalledWith("활동 생성에 실패했습니다");
     });
   });
 
-  it("throws on update API failure", async () => {
+  it("shows error toast when update API fails", async () => {
     mockFetch.mockResolvedValueOnce({ ok: false, status: 500 });
 
     const activities = [makeActivity()];
@@ -184,18 +189,94 @@ describe("ActivityList", () => {
     const form = document.querySelector("form")!;
     fireEvent.submit(form);
     await waitFor(() => {
-      expect(mockFetch).toHaveBeenCalled();
+      expect(mockToast.error).toHaveBeenCalledWith("활동 수정에 실패했습니다");
     });
   });
 
-  it("throws on delete API failure", async () => {
+  it("shows error toast when delete API fails", async () => {
     mockFetch.mockResolvedValueOnce({ ok: false, status: 500 });
 
     const activities = [makeActivity()];
     render(<ActivityList tripId={1} dayId={1} activities={activities} canEdit={true} />);
     fireEvent.click(screen.getByText("삭제"));
     await waitFor(() => {
-      expect(mockFetch).toHaveBeenCalled();
+      expect(mockToast.error).toHaveBeenCalledWith("활동 삭제에 실패했습니다");
+    });
+  });
+
+  it("shows error toast when create fetch throws (network)", async () => {
+    mockFetch.mockRejectedValueOnce(new Error("network"));
+
+    render(<ActivityList tripId={1} dayId={1} activities={[]} canEdit={true} />);
+    fireEvent.click(screen.getByText("+ 활동 추가"));
+    const textInputs = screen.getAllByRole("textbox");
+    fireEvent.change(textInputs[0], { target: { value: "NetFail" } });
+
+    const form = document.querySelector("form")!;
+    fireEvent.submit(form);
+    await waitFor(() => {
+      expect(mockToast.error).toHaveBeenCalledWith("활동 생성 중 오류가 발생했습니다");
+    });
+  });
+
+  it("shows error toast when update fetch throws (network)", async () => {
+    mockFetch.mockRejectedValueOnce(new Error("network"));
+
+    const activities = [makeActivity()];
+    render(<ActivityList tripId={1} dayId={1} activities={activities} canEdit={true} />);
+    fireEvent.click(screen.getByText("편집"));
+    const form = document.querySelector("form")!;
+    fireEvent.submit(form);
+    await waitFor(() => {
+      expect(mockToast.error).toHaveBeenCalledWith("활동 수정 중 오류가 발생했습니다");
+    });
+  });
+
+  it("shows error toast when delete fetch throws (network)", async () => {
+    mockFetch.mockRejectedValueOnce(new Error("network"));
+
+    const activities = [makeActivity()];
+    render(<ActivityList tripId={1} dayId={1} activities={activities} canEdit={true} />);
+    fireEvent.click(screen.getByText("삭제"));
+    await waitFor(() => {
+      expect(mockToast.error).toHaveBeenCalledWith("활동 삭제 중 오류가 발생했습니다");
+    });
+  });
+
+  it("update keeps other activities unchanged (map false branch)", async () => {
+    const updated = makeActivity({ id: 1, title: "Updated" });
+    mockFetch.mockResolvedValueOnce({ ok: true, json: async () => updated });
+
+    const activities = [
+      makeActivity({ id: 1, title: "First" }),
+      makeActivity({ id: 2, title: "Second" }),
+    ];
+    render(<ActivityList tripId={1} dayId={1} activities={activities} canEdit={true} />);
+    // 첫 activity의 편집 버튼 클릭
+    fireEvent.click(screen.getAllByText("편집")[0]);
+    const form = document.querySelector("form")!;
+    fireEvent.submit(form);
+    await waitFor(() => {
+      expect(screen.getByText("Updated")).toBeInTheDocument();
+    });
+    // 두 번째 activity는 변경 없이 그대로
+    expect(screen.getByText("Second")).toBeInTheDocument();
+  });
+
+  it("update sends cost as parsed float (truthy branch)", async () => {
+    const updated = makeActivity({ id: 1, cost: 42.5 });
+    mockFetch.mockResolvedValueOnce({ ok: true, json: async () => updated });
+
+    const activities = [makeActivity({ id: 1, cost: 10 })];
+    render(<ActivityList tripId={1} dayId={1} activities={activities} canEdit={true} />);
+    fireEvent.click(screen.getByText("편집"));
+    const costInput = screen.getByRole("spinbutton");
+    fireEvent.change(costInput, { target: { value: "42.5" } });
+    const form = document.querySelector("form")!;
+    fireEvent.submit(form);
+    await waitFor(() => {
+      const callBody = JSON.parse(mockFetch.mock.calls[0][1].body as string);
+      expect(callBody.cost).toBe(42.5);
     });
   });
 
