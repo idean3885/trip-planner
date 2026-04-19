@@ -35,6 +35,7 @@ dev = [
     "pytest>=8.0.0",
     "pytest-asyncio>=0.23.0",
     "pytest-httpx>=0.30.0",
+    "towncrier>=24.8.0",
 ]
 
 [tool.pytest.ini_options]
@@ -47,3 +48,44 @@ markers = [
 
 [tool.setuptools.packages.find]
 where = ["mcp"]
+
+[tool.towncrier]
+name = "Trip Planner"
+directory = "changes"
+filename = "CHANGELOG.md"
+title_format = "## [{version}] - {project_date}"
+issue_format = "[#{issue}](https://github.com/idean3885/trip-planner/issues/{issue})"
+start_string = "<!-- towncrier release notes start -->\n"
+underlines = ["", "", ""]
+wrap = false
+all_bullets = true
+
+[[tool.towncrier.type]]
+directory = "breaking"
+name = "Breaking"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "feat"
+name = "Added"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "fix"
+name = "Fixed"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "removed"
+name = "Removed"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "docs"
+name = "Documentation"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "chore"
+name = "Chore"
+showcontent = true
