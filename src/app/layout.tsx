@@ -5,6 +5,7 @@ import ScrollToTop from "@/components/ScrollToTop";
 import SessionProvider from "@/components/SessionProvider";
 import AuthButton from "@/components/AuthButton";
 import Footer from "@/components/Footer";
+import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -40,6 +41,7 @@ export default function RootLayout({
           </main>
           <ScrollToTop />
           <Footer />
+          <Toaster />
         </SessionProvider>
       </body>
     </html>

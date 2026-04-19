@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from "react";
 import type { ActivityCategory, ReservationStatus } from "@prisma/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 const CATEGORY_OPTIONS: { value: ActivityCategory; label: string }[] = [
   { value: "SIGHTSEEING", label: "관광" },
@@ -19,6 +22,11 @@ const RESERVATION_OPTIONS: { value: ReservationStatus | ""; label: string }[] = 
   { value: "ON_SITE", label: "현장 구매" },
   { value: "NOT_NEEDED", label: "불필요" },
 ];
+
+// shadcn Input(src/components/ui/input.tsx)의 핵심 클래스와 동기화.
+// rounded/bg/padding/font/ring 스케일 일치. native <select>는 Base UI Select 교체 시 테스트 호환 이슈로 유지.
+const SELECT_CLASS =
+  "h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm";
 
 export interface ActivityFormData {
   category: ActivityCategory;
@@ -88,7 +96,7 @@ export default function ActivityForm({
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  function update(field: keyof ActivityFormData, value: string) {
+  function update<K extends keyof ActivityFormData>(field: K, value: ActivityFormData[K]) {
     setForm((prev) => ({ ...prev, [field]: value }));
   }
 
@@ -106,17 +114,18 @@ export default function ActivityForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="rounded-card border border-surface-200 bg-surface-50 p-4 space-y-3"
+      className="rounded-lg border border-border bg-muted/30 p-4 space-y-3"
     >
-      <div className="flex items-center gap-2">
-        <div>
-          <label className="block text-[11px] text-surface-400 mb-0.5">
-            유형 <span className="text-red-400">*</span>
-          </label>
+      <div className="flex items-end gap-2">
+        <div className="space-y-1">
+          <Label htmlFor="activity-category" className="text-[11px] text-muted-foreground">
+            유형 <span className="text-destructive">*</span>
+          </Label>
           <select
+            id="activity-category"
             value={form.category}
-            onChange={(e) => update("category", e.target.value)}
-            className="rounded-md border border-surface-200 bg-white px-2 py-1.5 text-body-sm"
+            onChange={(e) => update("category", e.target.value as ActivityCategory)}
+            className={SELECT_CLASS}
           >
             {CATEGORY_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -125,55 +134,58 @@ export default function ActivityForm({
             ))}
           </select>
         </div>
-        <div className="flex-1">
-          <label className="block text-[11px] text-surface-400 mb-0.5">
-            제목 <span className="text-red-400">*</span>
-          </label>
-          <input
+        <div className="flex-1 space-y-1">
+          <Label htmlFor="activity-title" className="text-[11px] text-muted-foreground">
+            제목 <span className="text-destructive">*</span>
+          </Label>
+          <Input
+            id="activity-title"
             type="text"
             value={form.title}
             onChange={(e) => update("title", e.target.value)}
             required
-            className="w-full rounded-md border border-surface-200 px-3 py-1.5 text-body-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+            className="h-8"
           />
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-2">
-        <div>
-          <label className="block text-[11px] text-surface-400 mb-0.5">
-            시작 <span className="text-red-400">*</span>
-            {tzLabel && <span className="ml-1 text-surface-300">({tzLabel})</span>}
-          </label>
-          <input
+        <div className="space-y-1">
+          <Label htmlFor="activity-start" className="text-[11px] text-muted-foreground">
+            시작 <span className="text-destructive">*</span>
+            {tzLabel && <span className="ml-1 text-muted-foreground/60">({tzLabel})</span>}
+          </Label>
+          <Input
+            id="activity-start"
             type="time"
             value={form.startTime}
             onChange={(e) => update("startTime", e.target.value)}
             required
-            className="w-full rounded-md border border-surface-200 px-2 py-1.5 text-body-sm"
+            className="h-8"
           />
         </div>
-        <div>
-          <label className="block text-[11px] text-surface-400 mb-0.5">
-            종료 <span className="text-red-400">*</span>
-            {tzLabel && <span className="ml-1 text-surface-300">({tzLabel})</span>}
-          </label>
-          <input
+        <div className="space-y-1">
+          <Label htmlFor="activity-end" className="text-[11px] text-muted-foreground">
+            종료 <span className="text-destructive">*</span>
+            {tzLabel && <span className="ml-1 text-muted-foreground/60">({tzLabel})</span>}
+          </Label>
+          <Input
+            id="activity-end"
             type="time"
             value={form.endTime}
             onChange={(e) => update("endTime", e.target.value)}
             required
-            className="w-full rounded-md border border-surface-200 px-2 py-1.5 text-body-sm"
+            className="h-8"
           />
         </div>
       </div>
 
-      <input
+      <Input
         type="text"
         placeholder="장소"
         value={form.location}
         onChange={(e) => update("location", e.target.value)}
-        className="w-full rounded-md border border-surface-200 px-3 py-1.5 text-body-sm"
+        className="h-8"
       />
 
       <textarea
@@ -181,38 +193,47 @@ export default function ActivityForm({
         value={form.memo}
         onChange={(e) => update("memo", e.target.value)}
         rows={2}
-        className="w-full rounded-md border border-surface-200 px-3 py-1.5 text-body-sm resize-none"
+        className="w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 resize-none md:text-sm"
       />
 
       <div className="grid grid-cols-3 gap-2">
-        <div>
-          <label className="block text-[11px] text-surface-400 mb-0.5">비용</label>
-          <input
+        <div className="space-y-1">
+          <Label htmlFor="activity-cost" className="text-[11px] text-muted-foreground">
+            비용
+          </Label>
+          <Input
+            id="activity-cost"
             type="number"
             step="0.01"
             min="0"
             placeholder="0"
             value={form.cost}
             onChange={(e) => update("cost", e.target.value)}
-            className="w-full rounded-md border border-surface-200 px-2 py-1.5 text-body-sm"
+            className="h-8"
           />
         </div>
-        <div>
-          <label className="block text-[11px] text-surface-400 mb-0.5">통화</label>
-          <input
+        <div className="space-y-1">
+          <Label htmlFor="activity-currency" className="text-[11px] text-muted-foreground">
+            통화
+          </Label>
+          <Input
+            id="activity-currency"
             type="text"
             maxLength={3}
             value={form.currency}
             onChange={(e) => update("currency", e.target.value.toUpperCase())}
-            className="w-full rounded-md border border-surface-200 px-2 py-1.5 text-body-sm"
+            className="h-8"
           />
         </div>
-        <div>
-          <label className="block text-[11px] text-surface-400 mb-0.5">예약</label>
+        <div className="space-y-1">
+          <Label htmlFor="activity-reservation" className="text-[11px] text-muted-foreground">
+            예약
+          </Label>
           <select
+            id="activity-reservation"
             value={form.reservationStatus}
             onChange={(e) => update("reservationStatus", e.target.value)}
-            className="w-full rounded-md border border-surface-200 bg-white px-2 py-1.5 text-body-sm"
+            className={SELECT_CLASS}
           >
             {RESERVATION_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -224,20 +245,12 @@ export default function ActivityForm({
       </div>
 
       <div className="flex justify-end gap-2 pt-1">
-        <button
-          type="button"
-          onClick={onCancel}
-          className="rounded-md px-3 py-1.5 text-body-sm text-surface-500 hover:bg-surface-100"
-        >
+        <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
           취소
-        </button>
-        <button
-          type="submit"
-          disabled={saving || !form.title.trim()}
-          className="rounded-md bg-surface-900 px-3 py-1.5 text-body-sm text-white hover:bg-surface-700 disabled:opacity-50"
-        >
+        </Button>
+        <Button type="submit" size="sm" disabled={saving || !form.title.trim()}>
           {saving ? "저장 중..." : isEdit ? "수정" : "추가"}
-        </button>
+        </Button>
       </div>
     </form>
   );

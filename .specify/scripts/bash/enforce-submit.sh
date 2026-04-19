@@ -33,6 +33,15 @@ if [[ "$COMMAND" == *"--amend"* || "$COMMAND" == *"merge"* ]]; then
   exit 0
 fi
 
+# Worktree-aware: COMMAND 문자열에서 `cd <path>` 타깃을 추출하여 해당
+# 워크트리에서 git 명령을 수행한다. Claude Code hook의 기본 cwd는 project
+# root(=main worktree)이므로, 다른 worktree에서 `cd <path> && git commit`로
+# 실행되는 커밋이 main worktree 상태에 발목잡히는 것을 막는다. (#287)
+CD_TARGET=$(echo "$COMMAND" | grep -oE 'cd +[^&;]+' | head -1 | sed 's/^cd *//' | tr -d "'\"" | xargs 2>/dev/null || true)
+if [[ -n "$CD_TARGET" && -d "$CD_TARGET" ]]; then
+  cd "$CD_TARGET"
+fi
+
 # 브랜치 확인
 BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")
 

@@ -1,0 +1,78 @@
+name: "🎨 Designer Handoff"
+description: "디자이너 → 개발자 핸드오프 요청. 필수 필드 6종을 모두 채워야 제출 가능합니다."
+title: "[Handoff] "
+labels: ["design-handoff"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 핸드오프 체크리스트
+        이 템플릿은 `docs/design-handoff.md`의 산출물 형식과 1:1 매칭됩니다. 작성 전 한 번 훑어주세요.
+
+  - type: input
+    id: figma-url
+    attributes:
+      label: Figma URL
+      description: 핸드오프 대상 Frame/Component의 Figma 링크 (공유 권한 확인)
+      placeholder: "https://www.figma.com/file/…"
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: 스크린샷
+      description: |
+        최소 다음 상태를 포함: default, hover(적용 시), focus, disabled(적용 시).
+        이미지는 이 영역에 직접 드래그해서 첨부할 수 있습니다.
+      placeholder: "이미지 드래그 앤 드롭"
+    validations:
+      required: true
+
+  - type: textarea
+    id: variants-states
+    attributes:
+      label: Variants & States
+      description: |
+        예: `variant = default / destructive / outline`, `size = sm / md / lg`, `state = idle / loading / success`.
+        사용자가 마주할 조합을 모두 나열해주세요.
+    validations:
+      required: true
+
+  - type: textarea
+    id: interactions
+    attributes:
+      label: 인터랙션
+      description: |
+        클릭·포커스·애니메이션 의도. 예: "Submit 버튼 클릭 시 0.2s fade로 Success toast 노출", "Dialog는 200ms ease-out으로 fade-in, Esc로 닫힘".
+    validations:
+      required: true
+
+  - type: textarea
+    id: data-binding
+    attributes:
+      label: 데이터 바인딩 의도
+      description: |
+        어떤 데이터가 어디에 표시되는가.
+        예: "카드 제목 = Trip.name", "부제 = Trip.destinationCity", "날짜 = Day.date (YYYY-MM-DD)".
+    validations:
+      required: true
+
+  - type: dropdown
+    id: token-changes
+    attributes:
+      label: 토큰 변경 여부
+      description: 신규 색상·간격·타이포 등 토큰이 새로 필요한지 여부
+      options:
+        - "없음 — 기존 토큰만 사용"
+        - "있음 — tokens.json 갱신 첨부 (코멘트에 DTCG JSON 블록 또는 파일)"
+    validations:
+      required: true
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: 참고·비고 (선택)
+      description: 제약 조건, 접근성 요구, 도메인 배경 등 추가 컨텍스트가 있다면 작성해주세요.
+    validations:
+      required: false
