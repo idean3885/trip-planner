@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.4] - 2026-04-19
+
+### Fixed
+- **speckit `create-new-feature.sh` 워크트리 분기 충돌**: 호출자(devex:flow 등)가 `NNN-*` 브랜치를 선행 생성한 상태에서 `/speckit.specify` 호출 시 스크립트가 `git checkout -b`를 다시 시도하며 충돌. 현재 브랜치가 `NNN-<suffix>` 패턴이고 `specs/<branch>/`가 아직 없으면 해당 브랜치를 재사용하도록 감지 블록 추가. 동시에 `git branch -a` 파싱 시 워크트리 체크아웃 마커(`+`)를 sed 필터에 반영하여 타 워크트리에서 체크아웃된 브랜치가 자동 채번에서 누락되던 부수 버그도 수정.
+
 ## [2.3.3] - 2026-04-19
 
 ### Changed

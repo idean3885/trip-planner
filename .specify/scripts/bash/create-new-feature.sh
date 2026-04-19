@@ -116,8 +116,9 @@ get_highest_from_branches() {
     
     if [ -n "$branches" ]; then
         while IFS= read -r branch; do
-            # Clean branch name: remove leading markers and remote prefixes
-            clean_branch=$(echo "$branch" | sed 's/^[* ]*//; s|^remotes/[^/]*/||')
+            # Clean branch name: remove leading markers (* current, + worktree-checked-out)
+            # and remote prefixes
+            clean_branch=$(echo "$branch" | sed 's/^[+* ]*//; s|^remotes/[^/]*/||')
             
             # Extract feature number if branch matches pattern ###-*
             if echo "$clean_branch" | grep -q '^[0-9]\{3\}-'; then
@@ -185,6 +186,21 @@ cd "$REPO_ROOT"
 SPECS_DIR="$REPO_ROOT/specs"
 mkdir -p "$SPECS_DIR"
 
+# Reuse current branch if caller (e.g. devex:flow) already set one up.
+# Conditions: on a NNN-<suffix> branch AND no spec directory exists for it yet.
+# This prevents collisions when the caller creates the worktree/branch before
+# invoking /speckit.specify.
+REUSE_CURRENT_BRANCH=false
+if [ "$HAS_GIT" = true ]; then
+    CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
+    if [[ "$CURRENT_BRANCH" =~ ^[0-9]{3}-.+ ]] && [ ! -d "$SPECS_DIR/$CURRENT_BRANCH" ]; then
+        REUSE_CURRENT_BRANCH=true
+        BRANCH_NAME="$CURRENT_BRANCH"
+        FEATURE_NUM=$(printf "%03d" "$((10#$(echo "$CURRENT_BRANCH" | grep -oE '^[0-9]{3}')))")
+        >&2 echo "[specify] Reusing current branch: $BRANCH_NAME (caller-provided)"
+    fi
+fi
+
 # Function to generate branch name with stop word filtering and length filtering
 generate_branch_name() {
     local description="$1"
@@ -233,65 +249,67 @@ generate_branch_name() {
     fi
 }
 
-# Generate branch name
-if [ -n "$SHORT_NAME" ]; then
-    # Use provided short name, just clean it up
-    BRANCH_SUFFIX=$(clean_branch_name "$SHORT_NAME")
-else
-    # Generate from description with smart filtering
-    BRANCH_SUFFIX=$(generate_branch_name "$FEATURE_DESCRIPTION")
-fi
-
-# Determine branch number
-if [ -z "$BRANCH_NUMBER" ]; then
-    if [ "$HAS_GIT" = true ]; then
-        # Check existing branches on remotes
-        BRANCH_NUMBER=$(check_existing_branches "$SPECS_DIR")
+if [ "$REUSE_CURRENT_BRANCH" = false ]; then
+    # Generate branch name
+    if [ -n "$SHORT_NAME" ]; then
+        # Use provided short name, just clean it up
+        BRANCH_SUFFIX=$(clean_branch_name "$SHORT_NAME")
     else
-        # Fall back to local directory check
-        HIGHEST=$(get_highest_from_specs "$SPECS_DIR")
-        BRANCH_NUMBER=$((HIGHEST + 1))
+        # Generate from description with smart filtering
+        BRANCH_SUFFIX=$(generate_branch_name "$FEATURE_DESCRIPTION")
     fi
-fi
 
-# Force base-10 interpretation to prevent octal conversion (e.g., 010 → 8 in octal, but should be 10 in decimal)
-FEATURE_NUM=$(printf "%03d" "$((10#$BRANCH_NUMBER))")
-BRANCH_NAME="${FEATURE_NUM}-${BRANCH_SUFFIX}"
-
-# GitHub enforces a 244-byte limit on branch names
-# Validate and truncate if necessary
-MAX_BRANCH_LENGTH=244
-if [ ${#BRANCH_NAME} -gt $MAX_BRANCH_LENGTH ]; then
-    # Calculate how much we need to trim from suffix
-    # Account for: feature number (3) + hyphen (1) = 4 chars
-    MAX_SUFFIX_LENGTH=$((MAX_BRANCH_LENGTH - 4))
-    
-    # Truncate suffix at word boundary if possible
-    TRUNCATED_SUFFIX=$(echo "$BRANCH_SUFFIX" | cut -c1-$MAX_SUFFIX_LENGTH)
-    # Remove trailing hyphen if truncation created one
-    TRUNCATED_SUFFIX=$(echo "$TRUNCATED_SUFFIX" | sed 's/-$//')
-    
-    ORIGINAL_BRANCH_NAME="$BRANCH_NAME"
-    BRANCH_NAME="${FEATURE_NUM}-${TRUNCATED_SUFFIX}"
-    
-    >&2 echo "[specify] Warning: Branch name exceeded GitHub's 244-byte limit"
-    >&2 echo "[specify] Original: $ORIGINAL_BRANCH_NAME (${#ORIGINAL_BRANCH_NAME} bytes)"
-    >&2 echo "[specify] Truncated to: $BRANCH_NAME (${#BRANCH_NAME} bytes)"
-fi
-
-if [ "$HAS_GIT" = true ]; then
-    if ! git checkout -b "$BRANCH_NAME" 2>/dev/null; then
-        # Check if branch already exists
-        if git branch --list "$BRANCH_NAME" | grep -q .; then
-            >&2 echo "Error: Branch '$BRANCH_NAME' already exists. Please use a different feature name or specify a different number with --number."
-            exit 1
+    # Determine branch number
+    if [ -z "$BRANCH_NUMBER" ]; then
+        if [ "$HAS_GIT" = true ]; then
+            # Check existing branches on remotes
+            BRANCH_NUMBER=$(check_existing_branches "$SPECS_DIR")
         else
-            >&2 echo "Error: Failed to create git branch '$BRANCH_NAME'. Please check your git configuration and try again."
-            exit 1
+            # Fall back to local directory check
+            HIGHEST=$(get_highest_from_specs "$SPECS_DIR")
+            BRANCH_NUMBER=$((HIGHEST + 1))
         fi
     fi
-else
-    >&2 echo "[specify] Warning: Git repository not detected; skipped branch creation for $BRANCH_NAME"
+
+    # Force base-10 interpretation to prevent octal conversion (e.g., 010 → 8 in octal, but should be 10 in decimal)
+    FEATURE_NUM=$(printf "%03d" "$((10#$BRANCH_NUMBER))")
+    BRANCH_NAME="${FEATURE_NUM}-${BRANCH_SUFFIX}"
+
+    # GitHub enforces a 244-byte limit on branch names
+    # Validate and truncate if necessary
+    MAX_BRANCH_LENGTH=244
+    if [ ${#BRANCH_NAME} -gt $MAX_BRANCH_LENGTH ]; then
+        # Calculate how much we need to trim from suffix
+        # Account for: feature number (3) + hyphen (1) = 4 chars
+        MAX_SUFFIX_LENGTH=$((MAX_BRANCH_LENGTH - 4))
+
+        # Truncate suffix at word boundary if possible
+        TRUNCATED_SUFFIX=$(echo "$BRANCH_SUFFIX" | cut -c1-$MAX_SUFFIX_LENGTH)
+        # Remove trailing hyphen if truncation created one
+        TRUNCATED_SUFFIX=$(echo "$TRUNCATED_SUFFIX" | sed 's/-$//')
+
+        ORIGINAL_BRANCH_NAME="$BRANCH_NAME"
+        BRANCH_NAME="${FEATURE_NUM}-${TRUNCATED_SUFFIX}"
+
+        >&2 echo "[specify] Warning: Branch name exceeded GitHub's 244-byte limit"
+        >&2 echo "[specify] Original: $ORIGINAL_BRANCH_NAME (${#ORIGINAL_BRANCH_NAME} bytes)"
+        >&2 echo "[specify] Truncated to: $BRANCH_NAME (${#BRANCH_NAME} bytes)"
+    fi
+
+    if [ "$HAS_GIT" = true ]; then
+        if ! git checkout -b "$BRANCH_NAME" 2>/dev/null; then
+            # Check if branch already exists
+            if git branch --list "$BRANCH_NAME" | grep -q .; then
+                >&2 echo "Error: Branch '$BRANCH_NAME' already exists. Please use a different feature name or specify a different number with --number."
+                exit 1
+            else
+                >&2 echo "Error: Failed to create git branch '$BRANCH_NAME'. Please check your git configuration and try again."
+                exit 1
+            fi
+        fi
+    else
+        >&2 echo "[specify] Warning: Git repository not detected; skipped branch creation for $BRANCH_NAME"
+    fi
 fi
 
 FEATURE_DIR="$SPECS_DIR/$BRANCH_NAME"
