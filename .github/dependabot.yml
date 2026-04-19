@@ -20,8 +20,6 @@ updates:
         update-types: ["version-update:semver-major"]  # #249
       - dependency-name: "tailwindcss"
         update-types: ["version-update:semver-major"]  # #250
-      - dependency-name: "typescript"
-        update-types: ["version-update:semver-major"]  # #251
       - dependency-name: "eslint"
         update-types: ["version-update:semver-major"]  # #253
       - dependency-name: "@types/node"
