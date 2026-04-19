@@ -2,8 +2,16 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const { mockPrisma, mockAuthHelpers } = vi.hoisted(() => ({
   mockPrisma: {
-    day: { findUnique: vi.fn(), update: vi.fn(), delete: vi.fn() },
+    day: {
+      findUnique: vi.fn(),
+      findUniqueOrThrow: vi.fn(),
+      findMany: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+    },
     tripMember: { findUnique: vi.fn() },
+    // resortDaysByDate는 $transaction 경유라 callback(tx) 스타일로 흉내
+    $transaction: vi.fn(),
   },
   mockAuthHelpers: {
     getAuthUserId: vi.fn(),
@@ -19,6 +27,14 @@ import { PUT, DELETE } from "@/app/api/trips/[id]/days/[dayId]/route";
 
 const mockAuth = mockAuthHelpers.getAuthUserId;
 const mockCanEdit = mockAuthHelpers.canEdit;
+
+beforeEach(() => {
+  // callback 기반 $transaction mock — tx === mockPrisma로 통과
+  mockPrisma.$transaction.mockImplementation(
+    async (cb: (tx: typeof mockPrisma) => unknown) => cb(mockPrisma),
+  );
+  mockPrisma.day.findMany.mockResolvedValue([]);
+});
 
 function makeRequest(body?: object, method = "PUT"): Request {
   return new Request("http://localhost/api/trips/1/days/43", {
@@ -60,17 +76,38 @@ describe("PUT /days/{dayId}", () => {
     expect(data.title).toBe("Updated");
   });
 
-  it("updates day with all fields", async () => {
+  it("updates day with all fields — date 변경 시 resort 트리거", async () => {
     mockAuth.mockResolvedValue("user1");
     mockCanEdit.mockResolvedValue(true);
     const updated = { id: 43, title: "Full", content: "md", date: "2026-06-07", sortOrder: 2 };
     mockPrisma.day.update.mockResolvedValue(updated);
+    mockPrisma.day.findMany.mockResolvedValue([
+      { id: 41 }, { id: 42 }, { id: 43 },
+    ]);
+    mockPrisma.day.findUniqueOrThrow.mockResolvedValue({ ...updated, sortOrder: 3 });
 
     const res = await PUT(
-      makeRequest({ title: "Full", content: "md", date: "2026-06-07", sortOrder: 2 }),
+      makeRequest({ title: "Full", content: "md", date: "2026-06-07" }),
       params()
     );
     expect(res.status).toBe(200);
+    // resortDaysByDate가 각 Day에 대해 update를 호출해야 함
+    expect(mockPrisma.day.findMany).toHaveBeenCalled();
+  });
+
+  it("ignores sortOrder from client body (서버 자동 채번)", async () => {
+    mockAuth.mockResolvedValue("user1");
+    mockCanEdit.mockResolvedValue(true);
+    mockPrisma.day.update.mockResolvedValue({ id: 43, title: "X" });
+
+    await PUT(
+      makeRequest({ title: "X", sortOrder: 999 }),
+      params()
+    );
+    const updateCall = mockPrisma.day.update.mock.calls[0]?.[0] as {
+      data: Record<string, unknown>;
+    };
+    expect(updateCall.data.sortOrder).toBeUndefined();
   });
 });
 
