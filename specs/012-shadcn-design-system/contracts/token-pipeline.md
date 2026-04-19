@@ -6,7 +6,8 @@
 
 - **파일**: `design/tokens.json` (필수). 누락 시 빌드 실패.
 - **형식**: W3C DTCG Community Group spec 호환(`$value` + `$type` 페어).
-- **필수 카테고리**: color(primary·surface·background·foreground 최소), spacing, radius, shadow, fontFamily, fontSize, lineHeight. 누락 시 스크립트가 exit code 1.
+- **필수 카테고리 (현 단계, PR4 v2.4.3)**: `color`(primary·surface 팔레트 최소), `radius`, `shadow`. 누락 시 `scripts/build-tokens.ts`가 exit 1.
+- **후속 확장 카테고리**: `spacing`, `fontFamily`, `fontSize`, `lineHeight`, `color.background`·`color.foreground`·`color.border`·`color.ring` 등 shadcn alias는 디자이너 합류 + 브랜드 타이포 도입 후 별도 PR에서 추가. 추가 시 `REQUIRED_CATEGORIES` 및 본 계약을 함께 갱신.
 - **shadcn 필수 alias**: `color.background`, `color.foreground`, `color.border`, `color.ring`, `color.primary-foreground`, `color.accent`, `color.accent-foreground`, `color.destructive`, `color.destructive-foreground`, `color.muted`, `color.muted-foreground`, `color.popover`, `color.popover-foreground`, `color.card`, `color.card-foreground` — 모두 `{color.*}` alias 또는 명시 값 허용.
 
 ## 2. 변환 계약 (scripts/build-tokens.ts)
@@ -18,10 +19,10 @@
 ### 처리 단계
 
 1. `design/tokens.json` 로드. JSON 파싱 실패 시 exit 1.
-2. Style Dictionary로 CSS 변수 섹션 생성(출력 포맷: `css/variables`).
+2. 자체 DTCG flatten으로 CSS 변수 목록 생성(Style Dictionary 미사용 — 입력이 단순 팔레트/dimension 수준이라 외부 라이브러리 대비 자체 구현이 충분. alias 또는 transform 요구가 생기면 Style Dictionary 도입을 재평가).
 3. `src/app/globals.css`를 읽어 `/* BEGIN:tokens */` ~ `/* END:tokens */` sentinel 사이를 **정확히 교체**. sentinel 부재 시 exit 1(수동 삽입 요구).
 4. sentinel 외부(수동 정의 + `.prose` 규칙 + `@plugin` 등)는 1바이트도 수정하지 않음.
-5. 변환 결과 bytes 수·생성 변수 개수를 stdout에 요약 출력.
+5. 변환 결과 bytes 수·생성 변수 개수를 stdout에 요약 출력. 입력 변화 없으면 `idempotent` 로그 출력 + write 생략.
 
 ### 멱등성
 

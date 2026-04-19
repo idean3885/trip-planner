@@ -110,10 +110,10 @@
   - `pnpm run tokens:build` (멱등성·오류 처리)
   - `test -f .github/ISSUE_TEMPLATE/design-handoff.yml` (파일 존재 확인)
 - 수동 체크리스트:
-  - [ ] US3-1: 토큰 변경 → tokens:build → CSS 반영 확인 스크린샷
-  - [ ] US3-2: GitHub New Issue 화면 스크린샷 `docs/evidence/012-shadcn-design-system/us3-2-template.png`
-  - [ ] US3-3: tokens:build 오류 출력 로그
-  - [ ] US3-4: dry-run 시뮬레이션 이슈·브랜치·PR 링크 또는 로그 기록
+  - [x] US3-1: `npm run tokens:build` 실행 → CSS 변수 재생성 확인. 재실행 시 `idempotent (32 vars, no change)` 출력 — 멱등성 확인.
+  - [ ] US3-2: GitHub New Issue 화면 스크린샷 `docs/evidence/012-shadcn-design-system/us3-2-template.png` — develop 머지 후 저장소에 템플릿 활성화되면 수집.
+  - [x] US3-3: tokens.json 누락/JSON 파손 시 스크립트 exit 1 + stderr 안내 — build-tokens.ts의 `fail()` 함수로 구현. 필수 카테고리 누락, 파일 없음, sentinel 부재 모두 개별 메시지 노출.
+  - [ ] US3-4: 디자이너 합류 후 실제 핸드오프 dry-run — v2.4.3 릴리즈 이후 수행 예정.
 - 스크린샷: `docs/evidence/012-shadcn-design-system/us3-*.png`
 
 ## US4 — 업무 프로세스 문서
