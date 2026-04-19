@@ -39,6 +39,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field";
 import { Separator } from "@/components/ui/separator";
 import { ToastTriggers } from "./ToastTriggers";
+import ActivityCard from "@/components/ActivityCard";
+import { sampleActivity, sampleActivityAlt } from "./_samples";
 
 export const metadata = {
   title: "Components Preview",
@@ -203,6 +205,17 @@ export default function ComponentsPreviewPage() {
             <Separator orientation="vertical" className="h-4" />
             <span className="text-sm">오른쪽</span>
           </div>
+        </div>
+      </PreviewSection>
+
+      <PreviewSection
+        title="ActivityCard (Phase 2)"
+        description="스펙 013 T005로 shadcn <Card> 전환. canEdit true 샘플 + false 샘플."
+      >
+        <div className="space-y-3">
+          <ActivityCard activity={sampleActivity} canEdit />
+          <ActivityCard activity={sampleActivityAlt} canEdit isLast />
+          <ActivityCard activity={sampleActivity} />
         </div>
       </PreviewSection>
 
