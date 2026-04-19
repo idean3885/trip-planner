@@ -135,8 +135,10 @@ export default function ActivityList({
 
   async function handleMove(activityId: number, direction: "up" | "down") {
     const idx = activities.findIndex((a) => a.id === activityId);
+    /* c8 ignore next -- defensive: UI는 렌더된 activity의 id만 전달 */
     if (idx < 0) return;
     const swapIdx = direction === "up" ? idx - 1 : idx + 1;
+    /* c8 ignore next -- defensive: ActivityCard의 isFirst/isLast가 경계 버튼을 숨김 */
     if (swapIdx < 0 || swapIdx >= activities.length) return;
 
     const reordered = [...activities];

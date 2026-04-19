@@ -143,6 +143,43 @@ describe("POST /activities", () => {
     expect(createArgs.data.endTimezone).toBeUndefined();
   });
 
+  it("POST explicit startTime=null persists null (toTimestamp ?? null right branch)", async () => {
+    mockAuth.mockResolvedValue("user1");
+    mockCanEdit.mockResolvedValue(true);
+    mockPrisma.day.findUnique.mockResolvedValue({ id: 1, date: new Date("2026-06-07T00:00:00Z") });
+    mockPrisma.activity.create.mockResolvedValue({ id: 20, category: "OTHER", title: "X" });
+
+    await POST(
+      makeRequest({ category: "OTHER", title: "X", startTime: null, endTime: null }, "POST"),
+      params(),
+    );
+    const args = mockPrisma.activity.create.mock.calls[0]?.[0] as { data: Record<string, unknown> };
+    expect(args.data.startTime).toBeNull();
+    expect(args.data.endTime).toBeNull();
+  });
+
+  it("POST uses explicit endTimezone (not startTimezone fallback)", async () => {
+    mockAuth.mockResolvedValue("user1");
+    mockCanEdit.mockResolvedValue(true);
+    mockPrisma.day.findUnique.mockResolvedValue({ id: 1, date: new Date("2026-06-07T00:00:00Z") });
+    mockPrisma.activity.create.mockResolvedValue({ id: 21, category: "DINING", title: "Cross-tz" });
+
+    await POST(
+      makeRequest({
+        category: "DINING", title: "Cross-tz",
+        startTime: "10:00", startTimezone: "Europe/Lisbon",
+        endTime: "22:00", endTimezone: "Asia/Seoul",
+      }, "POST"),
+      params(),
+    );
+    const args = mockPrisma.activity.create.mock.calls[0]?.[0] as {
+      data: { endTimezone: string; endTime: Date };
+    };
+    expect(args.data.endTimezone).toBe("Asia/Seoul");
+    // Seoul 22:00 = 13:00 UTC
+    expect(args.data.endTime.toISOString()).toBe("2026-06-07T13:00:00.000Z");
+  });
+
   it("POST converts HH:mm using IANA timezone (#232)", async () => {
     mockAuth.mockResolvedValue("user1");
     mockCanEdit.mockResolvedValue(true);
@@ -272,6 +309,42 @@ describe("PUT /activities/{id}", () => {
     const updateArgs = mockPrisma.activity.update.mock.calls[0]?.[0] as { data: { startTime: Date } };
     expect(updateArgs.data.startTime).toBeInstanceOf(Date);
     expect(updateArgs.data.startTime.toISOString()).toBe("2026-06-07T04:00:00.000Z");
+  });
+
+  it("PUT endTime HH:mm w/o tz, stored endTimezone null → effStartTz fallback", async () => {
+    mockAuth.mockResolvedValue("user1");
+    mockCanEdit.mockResolvedValue(true);
+    mockPrisma.day.findUnique.mockResolvedValue({ id: 1, date: new Date("2026-06-07T00:00:00Z") });
+    // stored: endTimezone null — effEndTz는 effStartTz(Asia/Seoul)로 귀결
+    mockPrisma.activity.findUnique.mockResolvedValue({
+      startTimezone: "Asia/Seoul",
+      endTimezone: null,
+    });
+    mockPrisma.activity.update.mockResolvedValue({ id: 10, title: "X", category: "DINING" });
+
+    await PUT(
+      makeRequest({ endTime: "22:00" }, "PUT"),
+      activityParams(),
+    );
+    const updateArgs = mockPrisma.activity.update.mock.calls[0]?.[0] as {
+      data: { endTime: Date };
+    };
+    // Seoul 22:00 = 13:00 UTC
+    expect(updateArgs.data.endTime.toISOString()).toBe("2026-06-07T13:00:00.000Z");
+  });
+
+  it("PUT with ISO startTime (T 포함) does not trigger existing-tz lookup", async () => {
+    mockAuth.mockResolvedValue("user1");
+    mockCanEdit.mockResolvedValue(true);
+    mockPrisma.day.findUnique.mockResolvedValue({ id: 1, date: new Date("2026-06-07T00:00:00Z") });
+    mockPrisma.activity.update.mockResolvedValue({ id: 10, title: "X", category: "DINING" });
+
+    await PUT(
+      makeRequest({ startTime: "2026-06-07T12:00:00.000Z" }, "PUT"),
+      activityParams(),
+    );
+    // ISO 값은 typeof string + includes('T') 검사에서 걸러져 needsExistingTz=false
+    expect(mockPrisma.activity.findUnique).not.toHaveBeenCalled();
   });
 
   it("PUT with only startTime (no tz in body) falls back to stored timezone", async () => {
