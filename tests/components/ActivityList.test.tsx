@@ -7,6 +7,12 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ refresh: vi.fn() }),
 }));
 
+const mockToast = vi.hoisted(() => ({
+  error: vi.fn(),
+  success: vi.fn(),
+}));
+vi.mock("sonner", () => ({ toast: mockToast }));
+
 const mockFetch = vi.fn();
 global.fetch = mockFetch;
 global.confirm = vi.fn(() => true);
@@ -157,7 +163,7 @@ describe("ActivityList", () => {
     });
   });
 
-  it("throws on create API failure", async () => {
+  it("shows error toast when create API fails", async () => {
     mockFetch.mockResolvedValueOnce({ ok: false, status: 500 });
 
     render(<ActivityList tripId={1} dayId={1} activities={[]} canEdit={true} />);
@@ -167,14 +173,13 @@ describe("ActivityList", () => {
     fireEvent.change(textInputs[0], { target: { value: "Fail" } });
 
     const form = document.querySelector("form")!;
-    // Submit will throw but ActivityForm catches via finally
     fireEvent.submit(form);
     await waitFor(() => {
-      expect(mockFetch).toHaveBeenCalled();
+      expect(mockToast.error).toHaveBeenCalledWith("활동 생성에 실패했습니다");
     });
   });
 
-  it("throws on update API failure", async () => {
+  it("shows error toast when update API fails", async () => {
     mockFetch.mockResolvedValueOnce({ ok: false, status: 500 });
 
     const activities = [makeActivity()];
@@ -184,18 +189,18 @@ describe("ActivityList", () => {
     const form = document.querySelector("form")!;
     fireEvent.submit(form);
     await waitFor(() => {
-      expect(mockFetch).toHaveBeenCalled();
+      expect(mockToast.error).toHaveBeenCalledWith("활동 수정에 실패했습니다");
     });
   });
 
-  it("throws on delete API failure", async () => {
+  it("shows error toast when delete API fails", async () => {
     mockFetch.mockResolvedValueOnce({ ok: false, status: 500 });
 
     const activities = [makeActivity()];
     render(<ActivityList tripId={1} dayId={1} activities={activities} canEdit={true} />);
     fireEvent.click(screen.getByText("삭제"));
     await waitFor(() => {
-      expect(mockFetch).toHaveBeenCalled();
+      expect(mockToast.error).toHaveBeenCalledWith("활동 삭제에 실패했습니다");
     });
   });
 
