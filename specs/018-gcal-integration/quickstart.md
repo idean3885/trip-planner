@@ -59,6 +59,10 @@
 
 ### 수동 (Browser)
 
+**검증 환경: `https://dev.trip.idean.me`** (develop 머지 후).
+
+PR Preview URL은 Google OAuth `redirect_uri`에 등록되지 않아 동의 단계에서 `redirect_uri_mismatch`로 실패한다(`docs/ENVIRONMENTS.md` Layer 2 참조). Preview에선 UI 렌더링·버튼 배치·비권한 라우팅까지만 확인 가능하며, 실제 Google OAuth·캘린더 생성·이벤트 CRUD는 dev 환경에서만 재현된다.
+
 각 단계 완료 시 체크.
 
 - [ ] (Step 1) 여행 상세에서 "구글 캘린더에 올리기" 버튼이 스크롤 없이 보인다
