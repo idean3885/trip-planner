@@ -1,1 +1,0 @@
-**#332 scope 동기화가 Google(OIDC)에 적용되지 않던 버그 수정**: Auth.js v5에서 Google provider는 `account.type === "oidc"`로 분류되지만 이전 구현이 `type !== "oauth"` 이면 early return하여 **Google 재동의 시 scope 동기화가 한 번도 실행되지 않았음**. 결과적으로 DB의 `Account.scope`가 갱신되지 않아 #305 GCal consent 루프가 재발했다. `oauth` / `oidc` 둘 다 허용하도록 조건을 교정.

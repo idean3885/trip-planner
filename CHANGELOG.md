@@ -9,6 +9,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [2.8.0] - 2026-04-21
+
+### Added
+
+- Day 모델 구조적 재설계 — `dayNumber`를 `(date - trip.startDate) + 1`로 파생하는 자연키 모델로 전환. `Trip.startDate`/`endDate` NOT NULL + `Day(@@unique([tripId, date]))` 제약 추가. Day POST/PUT 시 Trip 범위 밖 date면 Trip 범위가 자동 확장된다. expand-and-contract 패턴의 expand+migrate 단계, contract(`sortOrder` 컬럼 DROP)는 #317에서 후속 트래킹. ([#296](https://github.com/idean3885/trip-planner/issues/296))
+- API 버저닝 v1 유지 + v2 신설 (`/api/v2/trips/...`). v1 응답 스키마는 무변경(MCP 호환), v2는 `dayNumber` 중심 응답. 웹 UI는 v2로 전환되며 MCP는 v1 그대로 사용. SemVer 관점: 외부 계약 추가만 있으므로 MINOR. ([#304](https://github.com/idean3885/trip-planner/issues/304))
+- **Google Calendar 연동 도입(1차)**: 여행 상세 페이지에서 "구글 캘린더에 올리기" 한 번으로 본인 Google Calendar에 여행 활동을 이벤트로 export/갱신/삭제할 수 있다. 동일 여행 재반영 시 중복 이벤트가 생기지 않고, 사용자가 구글 캘린더에서 직접 수정한 이벤트는 ETag 불일치로 감지해 덮어쓰지 않고 "건너뜀"으로 고지한다. 공유 여행에서는 각 멤버가 본인 계정으로만 실행하며 타 멤버 캘린더를 자동 변경하지 않는다. 기존 iCal 경로(`che-ical-mcp`)는 변경 없이 공존한다. Resolves #150. ([#305](https://github.com/idean3885/trip-planner/issues/305))
+
+### Fixed
+
+- v2.7.0 expand-and-contract 패턴의 contract 단계 — `Day.sortOrder` 컬럼을 DB에서 제거. v1 응답(`/api/trips/...`)의 `sortOrder` 키는 dayNumber 동적 계산으로 그대로 응답되어 MCP 호환 100% 유지. 데이터 손실 없음(컬럼 값은 모두 `(date - trip.startDate) + 1`로 정확히 복원 가능). ([#317](https://github.com/idean3885/trip-planner/issues/317))
+- **활동 시간 표기 개선**: `13:00 GMT+9` 대신 `13:00 KST`, `20:15 WEST`처럼 지역 친화 약어로 표시. 주요 IANA 존 화이트리스트 + DST 반영(여름/겨울 다른 약어). 화이트리스트 밖이거나 ICU가 약어를 못 주는 경우 도시명으로 폴백. ([#325](https://github.com/idean3885/trip-planner/issues/325))
+- **#318 DB 분리 이후 stale JWT 세션으로 인한 여행 생성 실패 수정**: `neondb` / `neondb_dev` 분리 이전에 발급된 쿠키를 가진 사용자는 새 DB에 존재하지 않는 `user.id`를 세션에 담고 있어 `POST /api/trips`에서 `Trip.createdBy` FK 위반(Prisma P2003)으로 실패했다. Auth.js `jwt` 콜백에서 토큰 userId의 DB 실존을 검증하고 없으면 세션을 무효화하여 자동 재로그인 흐름으로 유도한다. 향후 DB 이관·초기화 상황에서도 재발하지 않는 구조적 가드. ([#328](https://github.com/idean3885/trip-planner/issues/328))
+- **Stale Auth.js 쿠키로 인한 OAuth 재시작 꼬임 방어 (#329 후속)**: `#328`의 JWT 가드가 세션을 무효화해도 `pkce.code_verifier` / `state` / `callback-url` 같은 Auth.js 부수 쿠키가 브라우저에 남아, 재로그인 흐름이 Google OAuth 중간 단계에서 꼬이거나 엉뚱한 URL로 리디렉트되는 현상을 확인. middleware가 비로그인 판정 시 해당 쿠키 존재 여부를 확인하고, 남아 있으면 리디렉트 응답에서 `Max-Age=0`으로 즉시 정리한다. `/auth/signin` 진입 시 `?stale=1` 쿼리가 붙으면 "이전 세션이 유효하지 않아 자동으로 정리했습니다" 안내를 노출. 사용자에게 "쿠키를 직접 지우세요"를 요구하지 않아도 되도록 구조적으로 방어한다. ([#330](https://github.com/idean3885/trip-planner/issues/330))
+- **Auth.js 재동의 후 Account.scope 동기화로 GCal consent 루프 해소 (#332)**: `@auth/prisma-adapter`가 기존 Account row가 있을 때 `linkAccount`를 호출하지 않아 재로그인 시 새로 받은 `access_token` / `refresh_token` / `scope` / `expires_at`이 DB에 반영되지 않는 알려진 동작이 있다. GCal `calendar.events` scope 증분 동의 성공 후에도 DB의 `Account.scope`가 옛 값이어서 `hasCalendarScope()`가 계속 false → 다시 consent → 무한 루프. `signIn` 콜백에서 OAuth Account를 직접 updateMany로 upsert해 재동의 결과가 항상 DB에 반영되도록 한다. 보조로 `GCalLinkPanel`의 자동 재시도에 `sessionStorage` 기반 1회 제한을 두어, 혹시 다시 consent_required가 떠도 사용자가 빠져나올 수 있게 한다. ([#332](https://github.com/idean3885/trip-planner/issues/332))
+- **구글 동의 화면 취소 시 "Server error" 대신 친절한 안내 (#334)**: Google OAuth 동의 화면에서 사용자가 "취소"하면 Google이 `iss` 없는 error 응답을 보내고 Auth.js v5가 이를 Configuration 에러로 승격, 기본 `/api/auth/error` 페이지의 "Server error" 문구로 이어지는 UX 회귀가 있었다. `auth.config.ts`에 `pages.error = "/auth/signin"`을 지정해 에러 시점에도 signin 페이지로 라우팅하고, signin 페이지가 `?error=<code>`를 해석해 "로그인을 취소했습니다. 다시 시도해 주세요" 같은 맥락 안내를 노출. 사용자가 취소한 동작이 서버 에러 화면으로 보이지 않는다. ([#334](https://github.com/idean3885/trip-planner/issues/334))
+- **로그아웃 후 stale 오탐 + GCal 자동재시도 플래그 영구 잔존 수정 (#337)**: middleware의 stale 쿠키 감지 대상에서 `callback-url`을 제외하여 정상 로그아웃 흐름에서 "이전 세션이 유효하지 않아 자동으로 정리했습니다" 안내가 오탐되지 않도록 수정. 진짜 stale 신호는 `session-token`만으로 한정하고, session-token이 감지되면 PKCE/state 부수 쿠키도 함께 정리해 OAuth 재시작 꼬임은 그대로 방어. 추가로 `GCalLinkPanel`이 link/sync 성공 시 sessionStorage의 자동재시도 가드 플래그를 제거해, 한 번 consent 루프를 돌고난 뒤에도 이후 시도가 "루프 감지"로 오판되지 않도록 한다. ([#337](https://github.com/idean3885/trip-planner/issues/337))
+- **여행 상세에 '일정 추가' 버튼 복원 (#339)**: Trip 생성 직후 Day가 0개인 상태에서 Day를 추가할 UI가 없어 Activity/GCal 연동 흐름 전체가 막혀 있던 UI 갭을 해소. `AddDayButton` 컴포넌트를 추가하고 여행 상세의 '일정' 섹션 헤더에 OWNER/HOST 한정으로 노출한다. date input에 Trip 범위를 `min`/`max`로 제공하되, 범위 밖 날짜 입력 시에는 서버가 Trip 범위를 자동 확장하는 기존 동작(#296)을 그대로 활용한다. ([#339](https://github.com/idean3885/trip-planner/issues/339))
+- **Activity 저장 시 브라우저 IANA 타임존 자동 주입 (#341)**: `ActivityList`의 handleCreate/handleUpdate가 body에 `startTimezone`/`endTimezone`을 포함하지 않아 DB에 항상 null로 저장되어 `ActivityCard`가 KST 등 타임존 약어를 표시할 수 없었다(#325 표시 포맷 개선의 사각지대). `Intl.DateTimeFormat().resolvedOptions().timeZone`으로 감지한 브라우저 IANA 값을 startTime/endTime과 함께 전송하여 이후 표시 단계에서 약어(KST/WEST 등)가 정상 렌더되도록 한다. ([#341](https://github.com/idean3885/trip-planner/issues/341))
+- **GCal scope를 `calendar.events` → `calendar` 전체로 확장해 DEDICATED 모드 복구 (#343)**: `calendars.insert`(전용 캘린더 자동 생성)는 `calendar` 또는 `calendar.app.created` scope를 요구해 기존 `calendar.events` 단독으론 403으로 실패하던 UX를 해소. Testing 모드에서는 Test users 한정 운영이라 scope 확대가 외부 악용 경로를 넓히지 않는다는 판단(유료 Production 승급 보류 유지). 기존에 `calendar.events`로 동의해 둔 사용자는 `hasCalendarScope`가 legacy 값을 여전히 유효 권한으로 인정해 즉시 재동의를 강요받지 않는다. 다만 DEDICATED를 쓰려면 재동의가 한 번 필요. ([#343](https://github.com/idean3885/trip-planner/issues/343))
+
+### Chore
+
+- Neon DB 환경별 분리 — Production은 `neondb`, Preview/Development는 신설한 `neondb_dev`로 분리. Vercel env 변수 `DATABASE_URL` 등 8종을 스코프별로 분기 설정. 향후 PR preview build의 `prisma migrate deploy`는 `neondb_dev`에만 적용되어 prod 영향 0 (expand-and-contract 패턴의 preview-build-timing 위험 구조적 해소). ([#318](https://github.com/idean3885/trip-planner/issues/318))
+
+
 ## [2.6.0] - 2026-04-20
 
 ### Added
