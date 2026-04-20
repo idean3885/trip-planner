@@ -9,6 +9,7 @@ import InviteButton from "@/components/InviteButton";
 import DeleteTripButton from "@/components/DeleteTripButton";
 import LeaveTripButton from "@/components/LeaveTripButton";
 import MemberList from "@/components/MemberList";
+import GCalLinkPanel from "@/components/GCalLinkPanel";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { remark } from "remark";
 import remarkGfm from "remark-gfm";
@@ -102,6 +103,8 @@ async function DbTripPage({ tripId }: { tripId: number }) {
           </CardContent>
         </Card>
       )}
+
+      <GCalLinkPanel tripId={tripId} />
 
       <MemberList tripId={tripId} />
 

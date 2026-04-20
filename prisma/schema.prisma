@@ -18,12 +18,13 @@ model User {
   image         String?
   createdAt     DateTime  @default(now()) @map("created_at")
 
-  accounts       Account[]
-  sessions       Session[]
-  createdTrips           Trip[]                @relation("TripCreator")
-  updatedTrips           Trip[]                @relation("TripUpdater")
-  tripMembers            TripMember[]
-  personalAccessTokens   PersonalAccessToken[]
+  accounts             Account[]
+  sessions             Session[]
+  createdTrips         Trip[]                @relation("TripCreator")
+  updatedTrips         Trip[]                @relation("TripUpdater")
+  tripMembers          TripMember[]
+  personalAccessTokens PersonalAccessToken[]
+  gcalLinks            GCalLink[]
 
   @@map("users")
 }
@@ -79,14 +80,15 @@ model Trip {
   startDate   DateTime @map("start_date") @db.Timestamptz(3)
   endDate     DateTime @map("end_date") @db.Timestamptz(3)
   createdBy   String   @map("created_by")
-  updatedBy   String    @map("updated_by")
-  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  updatedBy   String   @map("updated_by")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   creator     User         @relation("TripCreator", fields: [createdBy], references: [id])
   updater     User         @relation("TripUpdater", fields: [updatedBy], references: [id])
   days        Day[]
   tripMembers TripMember[]
+  gcalLinks   GCalLink[]
 
   @@map("trips")
 }
@@ -144,7 +146,8 @@ model Activity {
   createdAt         DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt         DateTime           @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  day Day @relation(fields: [dayId], references: [id], onDelete: Cascade)
+  day               Day                @relation(fields: [dayId], references: [id], onDelete: Cascade)
+  gcalEventMappings GCalEventMapping[]
 
   @@index([dayId, startTime])
   @@index([dayId, sortOrder])
@@ -172,6 +175,58 @@ model TripMember {
 }
 
 // Invitation 테이블 삭제 — JWT 토큰 기반 초대로 대체 (D-007)
+
+// ============================================================
+// Personal Access Token (외부 클라이언트 API 인증)
+// ============================================================
+
+// ============================================================
+// Google Calendar 연동 (#305, spec 018)
+// ============================================================
+
+enum GCalCalendarType {
+  DEDICATED
+  PRIMARY
+}
+
+model GCalLink {
+  id           Int              @id @default(autoincrement())
+  userId       String           @map("user_id")
+  tripId       Int              @map("trip_id")
+  calendarId   String           @map("calendar_id")
+  calendarType GCalCalendarType @map("calendar_type")
+  calendarName String?          @map("calendar_name")
+  lastSyncedAt DateTime?        @map("last_synced_at") @db.Timestamptz(3)
+  lastError    String?          @map("last_error")
+  skippedCount Int              @default(0) @map("skipped_count")
+  createdAt    DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime         @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  user          User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  trip          Trip               @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  eventMappings GCalEventMapping[]
+
+  @@unique([userId, tripId])
+  @@index([tripId])
+  @@map("gcal_links")
+}
+
+model GCalEventMapping {
+  id            Int      @id @default(autoincrement())
+  linkId        Int      @map("link_id")
+  activityId    Int      @map("activity_id")
+  googleEventId String   @map("google_event_id")
+  syncedEtag    String   @map("synced_etag")
+  lastSyncedAt  DateTime @map("last_synced_at") @db.Timestamptz(3)
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  link     GCalLink @relation(fields: [linkId], references: [id], onDelete: Cascade)
+  activity Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+
+  @@unique([linkId, activityId])
+  @@map("gcal_event_mappings")
+}
 
 // ============================================================
 // Personal Access Token (외부 클라이언트 API 인증)
