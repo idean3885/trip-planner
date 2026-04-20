@@ -1,6 +1,7 @@
 import type { ActivityCategory, ReservationStatus, Prisma } from "@prisma/client";
 import { ArrowUp, ArrowDown, Pencil, Trash2 } from "lucide-react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { tzLabel } from "@/lib/tz-label";
 
 const URL_RE = /(https?:\/\/[^\s]+)/;
 
@@ -45,24 +46,12 @@ const CATEGORY_COLOR: Record<ActivityCategory, string> = {
   OTHER: "bg-muted text-muted-foreground",
 };
 
-/** IANA timezone → 약어 (e.g. "Asia/Seoul" → "KST") */
-function tzAbbr(iana: string): string {
-  try {
-    const parts = new Intl.DateTimeFormat("en", { timeZone: iana, timeZoneName: "short" })
-      .formatToParts(new Date("2026-06-07T12:00:00Z"));
-    return parts.find((p) => p.type === "timeZoneName")?.value ?? iana;
-  } catch {
-    /* c8 ignore next -- defensive: ICU 구현체 따라 Intl이 throw할 수 있으나
-       런타임 도달 조건 특정 어려움. 안전 폴백. */
-    return iana;
-  }
-}
-
 /**
  * ISO datetime → "HH:mm" 또는 "HH:mm TZ".
  *
  * DB의 start_time/end_time은 UTC(Timestamptz)이다(#232). IANA timezone이 주어지면
- * 해당 시간대의 벽시각으로 렌더하고, 없으면 UTC로 렌더한다.
+ * 해당 시간대의 벽시각으로 렌더하고, 없으면 UTC로 렌더한다. 약어는 DST를 반영해
+ * 계산한다(#325, `tzLabel` 참조).
  */
 function formatTime(value: string | null, tz?: string | null): string | null {
   if (!value) return null;
@@ -75,7 +64,7 @@ function formatTime(value: string | null, tz?: string | null): string | null {
       minute: "2-digit",
       hour12: false,
     }).format(d);
-    return tz ? `${hhmm} ${tzAbbr(tz)}` : hhmm;
+    return tz ? `${hhmm} ${tzLabel(tz, d)}` : hhmm;
   }
   /* c8 ignore next -- defensive passthrough: 동일. DB는 ISO만 저장. */
   return value;

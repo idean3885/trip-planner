@@ -9,5 +9,8 @@ export default {
   providers: [Google({ allowDangerousEmailAccountLinking: true })],
   pages: {
     signIn: "/auth/signin",
+    // OAuth 취소·Configuration 같은 에러도 기본 /api/auth/error(Server error 문구)
+    // 대신 signin 페이지가 받아 맥락에 맞는 안내를 보여준다(#334).
+    error: "/auth/signin",
   },
 } satisfies NextAuthConfig;

@@ -9,6 +9,8 @@ import InviteButton from "@/components/InviteButton";
 import DeleteTripButton from "@/components/DeleteTripButton";
 import LeaveTripButton from "@/components/LeaveTripButton";
 import MemberList from "@/components/MemberList";
+import GCalLinkPanel from "@/components/GCalLinkPanel";
+import AddDayButton from "@/components/AddDayButton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { remark } from "remark";
 import remarkGfm from "remark-gfm";
@@ -103,10 +105,21 @@ async function DbTripPage({ tripId }: { tripId: number }) {
         </Card>
       )}
 
+      <GCalLinkPanel tripId={tripId} />
+
       <MemberList tripId={tripId} />
 
       <section className="space-y-3">
-        <h2 className="text-base font-semibold tracking-tight">일정</h2>
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="text-base font-semibold tracking-tight">일정</h2>
+          {member.role !== "GUEST" && (
+            <AddDayButton
+              tripId={tripId}
+              tripStartDate={trip.startDate.toISOString()}
+              tripEndDate={trip.endDate.toISOString()}
+            />
+          )}
+        </div>
         <div className="space-y-2">
           {trip.days.map((day) => (
             <Link

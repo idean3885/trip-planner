@@ -1,7 +1,42 @@
 import NextAuth from "next-auth";
+import { NextResponse } from "next/server";
 import authConfig from "./auth.config";
 
 const { auth } = NextAuth(authConfig);
+
+/**
+ * Auth.js 세션 쿠키 이름 목록(stale 감지 대상).
+ *
+ * 진짜 stale 신호는 "session-token이 있는데 auth 결과는 false"다. callback-url /
+ * pkce / state 같은 부수 쿠키는 정상 흐름에도 남을 수 있어(로그아웃 직후 포함)
+ * stale 신호에서 제외한다(#337). session-token이 감지돼 정리할 때 같은 응답에서
+ * 부수 쿠키들도 함께 만료시켜 OAuth 재시작 꼬임도 함께 해소한다.
+ */
+const STALE_SESSION_COOKIES = [
+  "__Secure-authjs.session-token",
+  "authjs.session-token",
+];
+
+const AUXILIARY_AUTH_COOKIES = [
+  "__Secure-authjs.pkce.code_verifier",
+  "authjs.pkce.code_verifier",
+  "__Secure-authjs.state",
+  "authjs.state",
+];
+
+function clearStaleCookies(res: NextResponse, cookieNames: string[]) {
+  for (const name of cookieNames) {
+    res.cookies.set({
+      name,
+      value: "",
+      path: "/",
+      maxAge: 0,
+      httpOnly: true,
+      secure: name.startsWith("__Secure-"),
+      sameSite: "lax",
+    });
+  }
+}
 
 export default auth((req) => {
   const isLoggedIn = !!req.auth;
@@ -35,7 +70,24 @@ export default auth((req) => {
     if (pathname !== "/") {
       signInUrl.searchParams.set("callbackUrl", `${pathname}${search}`);
     }
-    return Response.redirect(signInUrl);
+
+    // stale 세션 감지 — session-token이 남아있는데 auth가 false면 쿠키가 꼬인 상태.
+    // 리디렉트 응답에서 세션·부수 쿠키를 함께 만료시켜 다음 로그인이 깔끔하게 시작되게 한다.
+    const staleSessionsPresent = STALE_SESSION_COOKIES.filter((n) =>
+      req.cookies?.has(n) ?? false
+    );
+    if (staleSessionsPresent.length > 0) {
+      signInUrl.searchParams.set("stale", "1");
+    }
+    const res = NextResponse.redirect(signInUrl, 302);
+    if (staleSessionsPresent.length > 0) {
+      // 세션 쿠키 + 부수 쿠키(PKCE/state)도 함께 정리
+      const auxPresent = AUXILIARY_AUTH_COOKIES.filter((n) =>
+        req.cookies?.has(n) ?? false
+      );
+      clearStaleCookies(res, [...staleSessionsPresent, ...auxPresent]);
+    }
+    return res;
   }
 });
 
