@@ -11,10 +11,18 @@ vi.mock("next-auth", () => ({
 
 import middleware from "@/middleware";
 
-type FakeReq = { auth: unknown; nextUrl: URL };
+interface FakeCookies {
+  has: (name: string) => boolean;
+}
+type FakeReq = { auth: unknown; nextUrl: URL; cookies?: FakeCookies };
 
-function makeReq(url: string, loggedIn: boolean): FakeReq {
-  return { auth: loggedIn ? { user: { id: "u1" } } : null, nextUrl: new URL(url) };
+function makeReq(url: string, loggedIn: boolean, cookieNames: string[] = []): FakeReq {
+  const set = new Set(cookieNames);
+  return {
+    auth: loggedIn ? { user: { id: "u1" } } : null,
+    nextUrl: new URL(url),
+    cookies: { has: (name: string) => set.has(name) },
+  };
 }
 
 describe("middleware", () => {
@@ -63,6 +71,33 @@ describe("middleware", () => {
   it("allows logged-in users on root (page.tsx handles /trips redirect)", () => {
     const res = middleware(makeReq("https://x.test/", true) as never, {} as never);
     expect(res).toBeUndefined();
+  });
+
+  it("clears stale Auth.js cookies on signin redirect and marks ?stale=1 (#329)", () => {
+    const res = middleware(
+      makeReq("https://x.test/trips/42", false, [
+        "__Secure-authjs.session-token",
+        "__Secure-authjs.pkce.code_verifier",
+      ]) as never,
+      {} as never,
+    ) as Response;
+    expect(res.status).toBe(302);
+    const loc = new URL(res.headers.get("location") ?? "");
+    expect(loc.pathname).toBe("/auth/signin");
+    expect(loc.searchParams.get("stale")).toBe("1");
+
+    const setCookies = res.headers.getSetCookie?.() ?? [];
+    expect(setCookies.some((c) => c.startsWith("__Secure-authjs.session-token=;"))).toBe(true);
+    expect(setCookies.some((c) => c.includes("Max-Age=0"))).toBe(true);
+  });
+
+  it("does not add ?stale=1 when no Auth.js cookies are present", () => {
+    const res = middleware(
+      makeReq("https://x.test/trips/42", false, []) as never,
+      {} as never,
+    ) as Response;
+    const loc = new URL(res.headers.get("location") ?? "");
+    expect(loc.searchParams.get("stale")).toBeNull();
   });
 
   it("allows /about and /docs as public routes", () => {

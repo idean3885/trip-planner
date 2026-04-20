@@ -3,9 +3,9 @@ import { signIn } from "@/auth";
 export default async function SignInPage({
   searchParams,
 }: {
-  searchParams: Promise<{ callbackUrl?: string }>;
+  searchParams: Promise<{ callbackUrl?: string; stale?: string }>;
 }) {
-  const { callbackUrl } = await searchParams;
+  const { callbackUrl, stale } = await searchParams;
   const redirectTo = callbackUrl || "/";
 
   return (
@@ -19,6 +19,11 @@ export default async function SignInPage({
             로그인하고 여행 일정을 관리하세요
           </p>
         </div>
+        {stale === "1" && (
+          <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-left text-xs text-amber-900">
+            이전 세션이 유효하지 않아 자동으로 정리했습니다. 다시 로그인해 주세요.
+          </div>
+        )}
         <form
           action={async () => {
             "use server";
