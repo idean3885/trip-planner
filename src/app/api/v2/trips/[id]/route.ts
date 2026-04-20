@@ -36,12 +36,7 @@ export async function GET(request: Request, { params }: Params) {
     return NextResponse.json({ error: "Not Found" }, { status: 404 });
   }
 
-  const days = trip.days.map((d) => {
-    const enriched = withDayNumber(d, trip.startDate);
-    const { sortOrder: _drop, ...rest } = enriched;
-    return rest;
-  });
-
+  const days = trip.days.map((d) => withDayNumber(d, trip.startDate));
   return NextResponse.json({ ...trip, days, myRole: member.role });
 }
 

@@ -1,11 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthUserId, getTripMember, canEdit } from "@/lib/auth-helpers";
-import {
-  computeDayNumber,
-  expandTripRangeIfNeeded,
-  recomputeAllDayNumbers,
-} from "@/lib/day-number";
+import { expandTripRangeIfNeeded, withSortOrder } from "@/lib/day-number";
 
 type Params = { params: Promise<{ id: string; dayId: string }> };
 
@@ -22,17 +18,23 @@ export async function GET(request: Request, { params }: Params) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const day = await prisma.day.findUnique({
-    where: { id: parseInt(dayId), tripId },
-    include: {
-      activities: { orderBy: [{ sortOrder: "asc" }, { startTime: "asc" }] },
-    },
-  });
-  if (!day) {
+  const [trip, day] = await Promise.all([
+    prisma.trip.findUnique({
+      where: { id: tripId },
+      select: { startDate: true },
+    }),
+    prisma.day.findUnique({
+      where: { id: parseInt(dayId), tripId },
+      include: {
+        activities: { orderBy: [{ sortOrder: "asc" }, { startTime: "asc" }] },
+      },
+    }),
+  ]);
+  if (!trip || !day) {
     return NextResponse.json({ error: "Not Found" }, { status: 404 });
   }
 
-  return NextResponse.json(day);
+  return NextResponse.json(withSortOrder(day, trip.startDate));
 }
 
 // T030: 일정 수정
@@ -51,22 +53,27 @@ export async function PUT(request: Request, { params }: Params) {
   const body = await request.json();
   const { title, content, date } = body;
 
-  // sortOrder는 dayNumber와 동기화. date 변경 시 Trip 범위 자동 확장.
   try {
-    const day = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx) => {
+      let tripStart: Date;
       if (date !== undefined) {
         const newDate = new Date(date);
         const { trip } = await expandTripRangeIfNeeded(tx, tripId, newDate);
+        tripStart = trip.startDate;
         await tx.day.update({
           where: { id: parseInt(dayId), tripId },
           data: {
             ...(title !== undefined && { title }),
             ...(content !== undefined && { content }),
             date: newDate,
-            sortOrder: computeDayNumber(newDate, trip.startDate),
           },
         });
       } else {
+        const trip = await tx.trip.findUniqueOrThrow({
+          where: { id: tripId },
+          select: { startDate: true },
+        });
+        tripStart = trip.startDate;
         await tx.day.update({
           where: { id: parseInt(dayId), tripId },
           data: {
@@ -75,9 +82,12 @@ export async function PUT(request: Request, { params }: Params) {
           },
         });
       }
-      return tx.day.findUniqueOrThrow({ where: { id: parseInt(dayId) } });
+      const fresh = await tx.day.findUniqueOrThrow({
+        where: { id: parseInt(dayId) },
+      });
+      return { day: fresh, tripStart };
     });
-    return NextResponse.json(day);
+    return NextResponse.json(withSortOrder(result.day, result.tripStart));
   } catch (e: unknown) {
     if ((e as { code?: string }).code === "P2002") {
       return NextResponse.json(
@@ -102,15 +112,8 @@ export async function DELETE(request: Request, { params }: Params) {
     return NextResponse.json({ error: "편집 권한이 없습니다" }, { status: 403 });
   }
 
-  await prisma.$transaction(async (tx) => {
-    await tx.day.delete({
-      where: { id: parseInt(dayId), tripId },
-    });
-    const trip = await tx.trip.findUniqueOrThrow({
-      where: { id: tripId },
-      select: { startDate: true },
-    });
-    await recomputeAllDayNumbers(tx, tripId, trip.startDate);
+  await prisma.day.delete({
+    where: { id: parseInt(dayId), tripId },
   });
 
   return NextResponse.json({ ok: true });

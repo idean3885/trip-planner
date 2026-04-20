@@ -34,8 +34,8 @@ describe("v2 — GET /api/v2/trips/{id}/days", () => {
       startDate: new Date("2026-06-01T00:00:00Z"),
     });
     mockPrisma.day.findMany.mockResolvedValue([
-      { id: 1, tripId: 1, date: new Date("2026-06-01T00:00:00Z"), sortOrder: 1 },
-      { id: 2, tripId: 1, date: new Date("2026-06-03T00:00:00Z"), sortOrder: 3 },
+      { id: 1, tripId: 1, date: new Date("2026-06-01T00:00:00Z") },
+      { id: 2, tripId: 1, date: new Date("2026-06-03T00:00:00Z") },
     ]);
 
     const res = await GET(new Request("http://localhost/api/v2/trips/1/days"), params());
