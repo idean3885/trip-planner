@@ -145,6 +145,13 @@ develop ──●──●──●───●──●──●──●──
 - MCP 도구: `mcp/trip_mcp/**` (list_trips, get_trip, create/update/delete_day/activity 등)
 - Apple '여행' 캘린더는 독립 정본 — 확정 일정(예약·티켓)만 등록. `che-ical-mcp`로 조회
 
+### DB 마이그레이션 (공유 DB 제약)
+
+- **현재 Neon DB는 dev/preview/prod 3환경 공유 1개 인스턴스** (분리는 후속 이슈)
+- **`prisma migrate dev` 금지** — 즉시 스키마 변경 = prod 직격. 로컬 실험 포함 금지
+- 마이그레이션은 **`prisma migrate deploy`만 허용**. 실행 시점은 PR 머지 후 배포 파이프라인
+- 새 마이그레이션 SQL은 PR에 파일로 포함, 리뷰 필수. 헤더 `[migration-type: ...]` 강제 (speckit 하네스)
+
 ### 예약 상태 (Prisma enum `ReservationStatus`)
 
 - `REQUIRED` — 사전 예약 필수 (매진 위험)

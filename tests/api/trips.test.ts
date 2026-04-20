@@ -55,13 +55,25 @@ describe("POST /api/trips — 생성 (#191)", () => {
     mockPrisma.trip.create.mockResolvedValue({ id: 42, title: "Test" });
 
     const res = await POST(
-      jsonRequest("http://localhost/api/trips", { title: "Test" }),
+      jsonRequest("http://localhost/api/trips", {
+        title: "Test",
+        startDate: "2026-06-01",
+        endDate: "2026-06-10",
+      }),
     );
 
     expect(res.status).toBe(201);
     const callArg = mockPrisma.trip.create.mock.calls[0][0];
     expect(callArg.data.tripMembers.create).toEqual({ userId: "user1", role: "OWNER" });
     expect(callArg.data.createdBy).toBe("user1");
+  });
+
+  it("returns 400 when startDate or endDate missing (v2.7.0 NOT NULL)", async () => {
+    mockAuth.mockResolvedValue("user1");
+    const res = await POST(
+      jsonRequest("http://localhost/api/trips", { title: "x" }),
+    );
+    expect(res.status).toBe(400);
   });
 });
 

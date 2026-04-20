@@ -73,12 +73,12 @@ model VerificationToken {
 // ============================================================
 
 model Trip {
-  id          Int       @id @default(autoincrement())
+  id          Int      @id @default(autoincrement())
   title       String
-  description String?   @db.Text
-  startDate   DateTime? @map("start_date") @db.Timestamptz(3)
-  endDate     DateTime? @map("end_date") @db.Timestamptz(3)
-  createdBy   String    @map("created_by")
+  description String?  @db.Text
+  startDate   DateTime @map("start_date") @db.Timestamptz(3)
+  endDate     DateTime @map("end_date") @db.Timestamptz(3)
+  createdBy   String   @map("created_by")
   updatedBy   String    @map("updated_by")
   createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
@@ -102,6 +102,7 @@ model Day {
   trip       Trip       @relation(fields: [tripId], references: [id], onDelete: Cascade)
   activities Activity[]
 
+  @@unique([tripId, date])
   @@index([tripId, date])
   @@map("days")
 }

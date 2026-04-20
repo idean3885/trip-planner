@@ -36,13 +36,19 @@ export async function POST(request: Request) {
   if (!title) {
     return NextResponse.json({ error: "제목은 필수입니다" }, { status: 400 });
   }
+  if (!startDate || !endDate) {
+    return NextResponse.json(
+      { error: "startDate / endDate는 필수입니다" },
+      { status: 400 },
+    );
+  }
 
   const trip = await prisma.trip.create({
     data: {
       title,
       description,
-      startDate: startDate ? new Date(startDate) : null,
-      endDate: endDate ? new Date(endDate) : null,
+      startDate: new Date(startDate),
+      endDate: new Date(endDate),
       createdBy: userId,
       updatedBy: userId,
       tripMembers: {

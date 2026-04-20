@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { computeDayNumber } from "@/lib/day-number";
 import { formatCalendarDateFull, formatCalendarDate } from "@/lib/date-utils";
 import InviteButton from "@/components/InviteButton";
 import DeleteTripButton from "@/components/DeleteTripButton";
@@ -73,12 +74,10 @@ async function DbTripPage({ tripId }: { tripId: number }) {
 
       <div>
         <h1 className="text-xl font-semibold tracking-tight">{trip.title}</h1>
-        {trip.startDate && trip.endDate && (
-          <p className="mt-1 text-sm text-muted-foreground tabular-nums">
-            {formatCalendarDateFull(trip.startDate)} ~{" "}
-            {formatCalendarDateFull(trip.endDate)}
-          </p>
-        )}
+        <p className="mt-1 text-sm text-muted-foreground tabular-nums">
+          {formatCalendarDateFull(trip.startDate)} ~{" "}
+          {formatCalendarDateFull(trip.endDate)}
+        </p>
         <div className="mt-3 flex flex-wrap items-center gap-2">
           {member.role !== "GUEST" && <InviteButton tripId={tripId} />}
           {member.role === "OWNER" && (
@@ -119,7 +118,7 @@ async function DbTripPage({ tripId }: { tripId: number }) {
                 <CardContent className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3 min-w-0">
                     <span className="inline-flex items-center rounded-md bg-foreground px-2 py-0.5 text-xs font-medium text-background shrink-0 tabular-nums">
-                      DAY {day.sortOrder}
+                      DAY {computeDayNumber(day.date, trip.startDate)}
                     </span>
                     {day.title && (
                       <span className="text-sm text-foreground truncate">

@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthUserId, getTripMember, canEdit } from "@/lib/auth-helpers";
-import { computeDayNumber, expandTripRangeIfNeeded } from "@/lib/day-number";
+import {
+  computeDayNumber,
+  expandTripRangeIfNeeded,
+  withDayNumber,
+} from "@/lib/day-number";
 
 type Params = { params: Promise<{ id: string }> };
 
-// T029: 일정 목록
 export async function GET(request: Request, { params }: Params) {
   const { id } = await params;
   const tripId = parseInt(id);
@@ -14,8 +17,12 @@ export async function GET(request: Request, { params }: Params) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const [member, days] = await Promise.all([
+  const [member, trip, days] = await Promise.all([
     getTripMember(tripId, userId),
+    prisma.trip.findUnique({
+      where: { id: tripId },
+      select: { startDate: true },
+    }),
     prisma.day.findMany({
       where: { tripId },
       orderBy: { date: "asc" },
@@ -25,11 +32,19 @@ export async function GET(request: Request, { params }: Params) {
   if (!member) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
+  if (!trip) {
+    return NextResponse.json({ error: "Not Found" }, { status: 404 });
+  }
 
-  return NextResponse.json(days);
+  const result = days.map((d) => {
+    const enriched = withDayNumber(d, trip.startDate);
+    const { sortOrder: _drop, ...rest } = enriched;
+    return rest;
+  });
+
+  return NextResponse.json(result);
 }
 
-// T029: 일정 추가
 export async function POST(request: Request, { params }: Params) {
   const { id } = await params;
   const tripId = parseInt(id);
@@ -44,13 +59,12 @@ export async function POST(request: Request, { params }: Params) {
 
   const body = await request.json();
   const { date, title, content } = body;
-
   if (!date) {
     return NextResponse.json({ error: "날짜는 필수입니다" }, { status: 400 });
   }
 
-  // sortOrder는 dayNumber와 동기화된다(v2.7.0). Trip 범위 밖 date는 자동 확장.
   const newDate = new Date(date);
+
   try {
     const day = await prisma.$transaction(async (tx) => {
       const { trip } = await expandTripRangeIfNeeded(tx, tripId, newDate);
@@ -64,9 +78,10 @@ export async function POST(request: Request, { params }: Params) {
           sortOrder: dayNumber,
         },
       });
-      return tx.day.findUniqueOrThrow({ where: { id: created.id } });
+      return { ...created, dayNumber };
     });
-    return NextResponse.json(day, { status: 201 });
+    const { sortOrder: _drop, ...rest } = day;
+    return NextResponse.json(rest, { status: 201 });
   } catch (e: unknown) {
     if ((e as { code?: string }).code === "P2002") {
       return NextResponse.json(

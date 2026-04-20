@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { Lightbulb } from "lucide-react";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { computeDayNumber } from "@/lib/day-number";
 import { formatCalendarDateLong } from "@/lib/date-utils";
 import { remark } from "remark";
 import remarkGfm from "remark-gfm";
@@ -47,12 +48,13 @@ async function DbDayPage({ tripId, dayIdNum }: { tripId: number; dayIdNum: numbe
     prisma.day.findUnique({
       where: { id: dayIdNum, tripId },
       include: {
-        trip: { select: { title: true } },
+        trip: { select: { title: true, startDate: true } },
         activities: { orderBy: [{ sortOrder: "asc" }, { startTime: "asc" }] },
       },
     }),
   ]);
   if (!member || !day) notFound();
+  const dayNumber = computeDayNumber(day.date, day.trip.startDate);
 
   const contentHtml = day.content ? await markdownToHtml(day.content) : "";
 
@@ -67,12 +69,12 @@ async function DbDayPage({ tripId, dayIdNum }: { tripId: number; dayIdNum: numbe
           {day.trip.title}
         </Link>
         <span aria-hidden>·</span>
-        <span className="text-foreground">DAY {day.sortOrder}</span>
+        <span className="text-foreground">DAY {dayNumber}</span>
       </nav>
 
       <div>
         <h1 className="text-xl font-semibold tracking-tight">
-          DAY {day.sortOrder}
+          DAY {dayNumber}
           {day.title && ` — ${day.title}`}
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
