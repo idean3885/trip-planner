@@ -5,6 +5,7 @@ import {
   computeDayNumber,
   expandTripRangeIfNeeded,
   recomputeAllDayNumbers,
+  withDayNumber,
 } from "@/lib/day-number";
 
 type Params = { params: Promise<{ id: string; dayId: string }> };
@@ -22,20 +23,28 @@ export async function GET(request: Request, { params }: Params) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const day = await prisma.day.findUnique({
-    where: { id: parseInt(dayId), tripId },
-    include: {
-      activities: { orderBy: [{ sortOrder: "asc" }, { startTime: "asc" }] },
-    },
-  });
-  if (!day) {
+  const [trip, day] = await Promise.all([
+    prisma.trip.findUnique({
+      where: { id: tripId },
+      select: { startDate: true },
+    }),
+    prisma.day.findUnique({
+      where: { id: parseInt(dayId), tripId },
+      include: {
+        activities: { orderBy: [{ sortOrder: "asc" }, { startTime: "asc" }] },
+      },
+    }),
+  ]);
+
+  if (!trip || !day) {
     return NextResponse.json({ error: "Not Found" }, { status: 404 });
   }
 
-  return NextResponse.json(day);
+  const enriched = withDayNumber(day, trip.startDate);
+  const { sortOrder: _drop, ...rest } = enriched;
+  return NextResponse.json(rest);
 }
 
-// T030: 일정 수정
 export async function PUT(request: Request, { params }: Params) {
   const { id, dayId } = await params;
   const tripId = parseInt(id);
@@ -51,19 +60,20 @@ export async function PUT(request: Request, { params }: Params) {
   const body = await request.json();
   const { title, content, date } = body;
 
-  // sortOrder는 dayNumber와 동기화. date 변경 시 Trip 범위 자동 확장.
   try {
     const day = await prisma.$transaction(async (tx) => {
+      let tripStart: Date | null = null;
       if (date !== undefined) {
         const newDate = new Date(date);
         const { trip } = await expandTripRangeIfNeeded(tx, tripId, newDate);
+        tripStart = trip.startDate;
         await tx.day.update({
           where: { id: parseInt(dayId), tripId },
           data: {
             ...(title !== undefined && { title }),
             ...(content !== undefined && { content }),
             date: newDate,
-            sortOrder: computeDayNumber(newDate, trip.startDate),
+            sortOrder: computeDayNumber(newDate, tripStart),
           },
         });
       } else {
@@ -75,9 +85,20 @@ export async function PUT(request: Request, { params }: Params) {
           },
         });
       }
-      return tx.day.findUniqueOrThrow({ where: { id: parseInt(dayId) } });
+      const fresh = await tx.day.findUniqueOrThrow({
+        where: { id: parseInt(dayId) },
+      });
+      if (tripStart === null) {
+        const trip = await tx.trip.findUniqueOrThrow({
+          where: { id: tripId },
+          select: { startDate: true },
+        });
+        tripStart = trip.startDate;
+      }
+      return { ...fresh, dayNumber: computeDayNumber(fresh.date, tripStart) };
     });
-    return NextResponse.json(day);
+    const { sortOrder: _drop, ...rest } = day;
+    return NextResponse.json(rest);
   } catch (e: unknown) {
     if ((e as { code?: string }).code === "P2002") {
       return NextResponse.json(
@@ -89,7 +110,6 @@ export async function PUT(request: Request, { params }: Params) {
   }
 }
 
-// T030: 일정 삭제
 export async function DELETE(request: Request, { params }: Params) {
   const { id, dayId } = await params;
   const tripId = parseInt(id);

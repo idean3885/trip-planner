@@ -9,8 +9,11 @@ const { mockPrisma, mockAuthHelpers } = vi.hoisted(() => ({
       update: vi.fn(),
       delete: vi.fn(),
     },
+    trip: {
+      findUniqueOrThrow: vi.fn(),
+      update: vi.fn(),
+    },
     tripMember: { findUnique: vi.fn() },
-    // resortDaysByDate는 $transaction 경유라 callback(tx) 스타일로 흉내
     $transaction: vi.fn(),
   },
   mockAuthHelpers: {
@@ -28,12 +31,18 @@ import { PUT, DELETE } from "@/app/api/trips/[id]/days/[dayId]/route";
 const mockAuth = mockAuthHelpers.getAuthUserId;
 const mockCanEdit = mockAuthHelpers.canEdit;
 
+const TRIP = {
+  id: 1,
+  startDate: new Date("2026-06-01T00:00:00Z"),
+  endDate: new Date("2026-06-30T00:00:00Z"),
+};
+
 beforeEach(() => {
-  // callback 기반 $transaction mock — tx === mockPrisma로 통과
   mockPrisma.$transaction.mockImplementation(
     async (cb: (tx: typeof mockPrisma) => unknown) => cb(mockPrisma),
   );
   mockPrisma.day.findMany.mockResolvedValue([]);
+  mockPrisma.trip.findUniqueOrThrow.mockResolvedValue(TRIP);
 });
 
 function makeRequest(body?: object, method = "PUT"): Request {
@@ -49,7 +58,14 @@ function params() {
 }
 
 describe("PUT /days/{dayId}", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockPrisma.$transaction.mockImplementation(
+      async (cb: (tx: typeof mockPrisma) => unknown) => cb(mockPrisma),
+    );
+    mockPrisma.day.findMany.mockResolvedValue([]);
+    mockPrisma.trip.findUniqueOrThrow.mockResolvedValue(TRIP);
+  });
 
   it("returns 401 when not authenticated", async () => {
     mockAuth.mockResolvedValue(null);
@@ -64,55 +80,98 @@ describe("PUT /days/{dayId}", () => {
     expect(res.status).toBe(403);
   });
 
-  it("updates day with partial fields", async () => {
+  it("updates day with partial fields (title only)", async () => {
     mockAuth.mockResolvedValue("user1");
     mockCanEdit.mockResolvedValue(true);
-    const updated = { id: 43, title: "Updated", content: null };
+    const updated = {
+      id: 43,
+      title: "Updated",
+      content: null,
+      date: new Date("2026-06-07T00:00:00Z"),
+      sortOrder: 7,
+    };
     mockPrisma.day.update.mockResolvedValue(updated);
+    mockPrisma.day.findUniqueOrThrow.mockResolvedValue(updated);
 
     const res = await PUT(makeRequest({ title: "Updated" }), params());
     expect(res.status).toBe(200);
     const data = await res.json();
     expect(data.title).toBe("Updated");
+    // date 미변경 시 trip.findUniqueOrThrow 호출 안 됨
+    expect(mockPrisma.trip.findUniqueOrThrow).not.toHaveBeenCalled();
   });
 
-  it("updates day with all fields — date 변경 시 resort 트리거", async () => {
+  it("date 변경 시 expandTripRangeIfNeeded 경유 + sortOrder 재계산", async () => {
     mockAuth.mockResolvedValue("user1");
     mockCanEdit.mockResolvedValue(true);
-    const updated = { id: 43, title: "Full", content: "md", date: "2026-06-07", sortOrder: 2 };
+    const updated = {
+      id: 43,
+      title: "Full",
+      content: "md",
+      date: new Date("2026-06-07T00:00:00Z"),
+      sortOrder: 7,
+    };
     mockPrisma.day.update.mockResolvedValue(updated);
-    mockPrisma.day.findMany.mockResolvedValue([
-      { id: 41 }, { id: 42 }, { id: 43 },
-    ]);
-    mockPrisma.day.findUniqueOrThrow.mockResolvedValue({ ...updated, sortOrder: 3 });
+    mockPrisma.day.findUniqueOrThrow.mockResolvedValue(updated);
 
     const res = await PUT(
       makeRequest({ title: "Full", content: "md", date: "2026-06-07" }),
-      params()
+      params(),
     );
     expect(res.status).toBe(200);
-    // resortDaysByDate가 각 Day에 대해 update를 호출해야 함
-    expect(mockPrisma.day.findMany).toHaveBeenCalled();
+    expect(mockPrisma.trip.findUniqueOrThrow).toHaveBeenCalled();
+    const updateCall = mockPrisma.day.update.mock.calls[0]?.[0] as {
+      data: { sortOrder?: number };
+    };
+    // 2026-06-07 - 2026-06-01 + 1 = 7
+    expect(updateCall.data.sortOrder).toBe(7);
   });
 
-  it("ignores sortOrder from client body (서버 자동 채번)", async () => {
+  it("ignores sortOrder from client body", async () => {
     mockAuth.mockResolvedValue("user1");
     mockCanEdit.mockResolvedValue(true);
     mockPrisma.day.update.mockResolvedValue({ id: 43, title: "X" });
+    mockPrisma.day.findUniqueOrThrow.mockResolvedValue({ id: 43, title: "X" });
 
-    await PUT(
-      makeRequest({ title: "X", sortOrder: 999 }),
-      params()
-    );
+    await PUT(makeRequest({ title: "X", sortOrder: 999 }), params());
     const updateCall = mockPrisma.day.update.mock.calls[0]?.[0] as {
       data: Record<string, unknown>;
     };
     expect(updateCall.data.sortOrder).toBeUndefined();
   });
+
+  it("returns 409 when date 충돌 (P2002)", async () => {
+    mockAuth.mockResolvedValue("user1");
+    mockCanEdit.mockResolvedValue(true);
+    mockPrisma.day.update.mockRejectedValue({ code: "P2002" });
+
+    const res = await PUT(
+      makeRequest({ date: "2026-06-07" }),
+      params(),
+    );
+    expect(res.status).toBe(409);
+  });
+
+  it("rethrows non-P2002 errors", async () => {
+    mockAuth.mockResolvedValue("user1");
+    mockCanEdit.mockResolvedValue(true);
+    mockPrisma.day.update.mockRejectedValue(new Error("DB exploded"));
+
+    await expect(
+      PUT(makeRequest({ title: "X" }), params()),
+    ).rejects.toThrow("DB exploded");
+  });
 });
 
 describe("DELETE /days/{dayId}", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockPrisma.$transaction.mockImplementation(
+      async (cb: (tx: typeof mockPrisma) => unknown) => cb(mockPrisma),
+    );
+    mockPrisma.day.findMany.mockResolvedValue([]);
+    mockPrisma.trip.findUniqueOrThrow.mockResolvedValue(TRIP);
+  });
 
   it("returns 401 when not authenticated", async () => {
     mockAuth.mockResolvedValue(null);
@@ -127,7 +186,7 @@ describe("DELETE /days/{dayId}", () => {
     expect(res.status).toBe(403);
   });
 
-  it("deletes day", async () => {
+  it("deletes day + recomputes remaining sortOrder", async () => {
     mockAuth.mockResolvedValue("user1");
     mockCanEdit.mockResolvedValue(true);
     mockPrisma.day.delete.mockResolvedValue({});
@@ -136,5 +195,8 @@ describe("DELETE /days/{dayId}", () => {
     expect(res.status).toBe(200);
     const data = await res.json();
     expect(data.ok).toBe(true);
+    // recomputeAllDayNumbers가 trip 조회 + day 목록 조회 수행
+    expect(mockPrisma.trip.findUniqueOrThrow).toHaveBeenCalled();
+    expect(mockPrisma.day.findMany).toHaveBeenCalled();
   });
 });

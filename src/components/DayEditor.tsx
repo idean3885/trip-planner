@@ -30,7 +30,7 @@ export default function DayEditor({
   async function handleSave() {
     setSaving(true);
     try {
-      const res = await fetch(`/api/trips/${tripId}/days/${dayId}`, {
+      const res = await fetch(`/api/v2/trips/${tripId}/days/${dayId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content }),
