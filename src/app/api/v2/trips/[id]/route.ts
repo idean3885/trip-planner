@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthUserId, getTripMember, canEdit, isOwner } from "@/lib/auth-helpers";
+import { withDayNumber } from "@/lib/day-number";
 
 type Params = { params: Promise<{ id: string }> };
 
-// T026: 여행 상세
 export async function GET(request: Request, { params }: Params) {
   const { id } = await params;
   const tripId = parseInt(id);
@@ -36,10 +36,15 @@ export async function GET(request: Request, { params }: Params) {
     return NextResponse.json({ error: "Not Found" }, { status: 404 });
   }
 
-  return NextResponse.json({ ...trip, myRole: member.role });
+  const days = trip.days.map((d) => {
+    const enriched = withDayNumber(d, trip.startDate);
+    const { sortOrder: _drop, ...rest } = enriched;
+    return rest;
+  });
+
+  return NextResponse.json({ ...trip, days, myRole: member.role });
 }
 
-// T026: 여행 수정
 export async function PUT(request: Request, { params }: Params) {
   const { id } = await params;
   const tripId = parseInt(id);
@@ -76,7 +81,6 @@ export async function PUT(request: Request, { params }: Params) {
   return NextResponse.json(trip);
 }
 
-// T026: 여행 삭제 (HOST만)
 export async function DELETE(request: Request, { params }: Params) {
   const { id } = await params;
   const tripId = parseInt(id);
@@ -90,6 +94,5 @@ export async function DELETE(request: Request, { params }: Params) {
   }
 
   await prisma.trip.delete({ where: { id: tripId } });
-
   return NextResponse.json({ ok: true });
 }

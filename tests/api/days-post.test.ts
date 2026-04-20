@@ -8,6 +8,10 @@ const { mockPrisma, mockAuthHelpers } = vi.hoisted(() => ({
       findUniqueOrThrow: vi.fn(),
       update: vi.fn(),
     },
+    trip: {
+      findUniqueOrThrow: vi.fn(),
+      update: vi.fn(),
+    },
     $transaction: vi.fn(),
   },
   mockAuthHelpers: {
@@ -24,6 +28,12 @@ import { POST } from "@/app/api/trips/[id]/days/route";
 
 const mockAuth = mockAuthHelpers.getAuthUserId;
 const mockCanEdit = mockAuthHelpers.canEdit;
+
+const TRIP = {
+  id: 1,
+  startDate: new Date("2026-06-01T00:00:00Z"),
+  endDate: new Date("2026-06-30T00:00:00Z"),
+};
 
 function makeRequest(body: object): Request {
   return new Request("http://localhost/api/trips/1/days", {
@@ -43,6 +53,7 @@ beforeEach(() => {
     async (cb: (tx: typeof mockPrisma) => unknown) => cb(mockPrisma),
   );
   mockPrisma.day.findMany.mockResolvedValue([]);
+  mockPrisma.trip.findUniqueOrThrow.mockResolvedValue(TRIP);
 });
 
 describe("POST /trips/{id}/days", () => {
@@ -66,63 +77,61 @@ describe("POST /trips/{id}/days", () => {
     expect(res.status).toBe(400);
   });
 
-  it("creates day with auto-assigned sortOrder (ignores client value)", async () => {
+  it("creates day with sortOrder = dayNumber (date 기반 파생)", async () => {
     mockAuth.mockResolvedValue("user1");
     mockCanEdit.mockResolvedValue(true);
-    const created = { id: 50, tripId: 1, date: "2026-06-07", sortOrder: 0 };
-    mockPrisma.day.create.mockResolvedValue(created);
-    mockPrisma.day.findMany.mockResolvedValue([{ id: 50 }]);
-    mockPrisma.day.findUniqueOrThrow.mockResolvedValue({ ...created, sortOrder: 1 });
-
-    const res = await POST(
-      makeRequest({ date: "2026-06-07", sortOrder: 999 }),
-      params(),
-    );
-
-    expect(res.status).toBe(201);
-    // create 호출 시 sortOrder = 0 (임시, 이후 resort로 덮어씀)
-    const createArgs = mockPrisma.day.create.mock.calls[0]?.[0] as {
-      data: { sortOrder: number };
+    const created = {
+      id: 50,
+      tripId: 1,
+      date: new Date("2026-06-07T00:00:00Z"),
+      sortOrder: 7,
     };
-    expect(createArgs.data.sortOrder).toBe(0);
-    // 클라이언트 sortOrder=999는 무시
-    expect(createArgs.data.sortOrder).not.toBe(999);
-    // resort가 호출되어 최종 sortOrder는 1 (유일 Day이므로)
-    expect(mockPrisma.day.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ orderBy: [{ date: "asc" }, { id: "asc" }] }),
-    );
-  });
-
-  it("middle-insert renumbers all days", async () => {
-    // 기존 Day 2개(2026-06-05, 2026-06-09) 사이에 2026-06-07 추가
-    mockAuth.mockResolvedValue("user1");
-    mockCanEdit.mockResolvedValue(true);
-    mockPrisma.day.create.mockResolvedValue({
-      id: 52, tripId: 1, date: "2026-06-07", sortOrder: 0,
-    });
-    // resort 단계에서 날짜순으로 3개 반환
-    mockPrisma.day.findMany.mockResolvedValue([
-      { id: 40 }, // 06-05
-      { id: 52 }, // 06-07 (신규)
-      { id: 41 }, // 06-09
-    ]);
-    mockPrisma.day.findUniqueOrThrow.mockResolvedValue({
-      id: 52, tripId: 1, date: "2026-06-07", sortOrder: 2,
-    });
+    mockPrisma.day.create.mockResolvedValue(created);
+    mockPrisma.day.findUniqueOrThrow.mockResolvedValue(created);
 
     const res = await POST(makeRequest({ date: "2026-06-07" }), params());
     expect(res.status).toBe(201);
 
-    // Day 3개 모두 update로 재번호
-    expect(mockPrisma.day.update).toHaveBeenCalledTimes(3);
-    expect(mockPrisma.day.update).toHaveBeenCalledWith({
-      where: { id: 40 }, data: { sortOrder: 1 },
+    const createArgs = mockPrisma.day.create.mock.calls[0]?.[0] as {
+      data: { sortOrder: number };
+    };
+    // 2026-06-07 - 2026-06-01 + 1 = 7
+    expect(createArgs.data.sortOrder).toBe(7);
+  });
+
+  it("Trip 범위 밖 date → expandTripRangeIfNeeded로 자동 확장", async () => {
+    mockAuth.mockResolvedValue("user1");
+    mockCanEdit.mockResolvedValue(true);
+    mockPrisma.day.create.mockResolvedValue({
+      id: 60,
+      tripId: 1,
+      date: new Date("2026-07-05T00:00:00Z"),
+      sortOrder: 35,
     });
-    expect(mockPrisma.day.update).toHaveBeenCalledWith({
-      where: { id: 52 }, data: { sortOrder: 2 },
+    mockPrisma.day.findUniqueOrThrow.mockResolvedValue({
+      id: 60,
+      tripId: 1,
+      date: new Date("2026-07-05T00:00:00Z"),
+      sortOrder: 35,
     });
-    expect(mockPrisma.day.update).toHaveBeenCalledWith({
-      where: { id: 41 }, data: { sortOrder: 3 },
+
+    const res = await POST(makeRequest({ date: "2026-07-05" }), params());
+    expect(res.status).toBe(201);
+    // Trip endDate가 새 date를 포함하도록 확장됨
+    expect(mockPrisma.trip.update).toHaveBeenCalledWith({
+      where: { id: 1 },
+      data: expect.objectContaining({
+        endDate: expect.any(Date),
+      }),
     });
+  });
+
+  it("returns 409 when date 중복 (P2002)", async () => {
+    mockAuth.mockResolvedValue("user1");
+    mockCanEdit.mockResolvedValue(true);
+    mockPrisma.day.create.mockRejectedValue({ code: "P2002" });
+
+    const res = await POST(makeRequest({ date: "2026-06-07" }), params());
+    expect(res.status).toBe(409);
   });
 });
