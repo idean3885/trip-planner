@@ -48,19 +48,27 @@ export default function GCalLinkPanel({ tripId }: Props) {
     loadStatus();
   }, [loadStatus]);
 
-  // 동의 완료 후 복귀 시 자동 연동 실행
+  // 동의 완료 후 복귀 시 자동 연동 실행 — 세션당 1회만 재시도해 consent 루프 방지(#332)
   useEffect(() => {
     if (typeof window === "undefined") return;
     const qp = new URLSearchParams(window.location.search);
-    if (qp.get("gcal") === "link-ready") {
+    const action = qp.get("gcal");
+    if (action !== "link-ready" && action !== "sync-ready") return;
+
+    const loopKey = `gcal-auto-${action}-${tripId}`;
+    if (window.sessionStorage.getItem(loopKey) === "1") {
+      // 이미 한 번 자동 실행했는데 또 같은 신호 → consent가 풀리지 않은 상태.
+      // 다시 튕기지 않고 사용자가 직접 버튼을 누르도록 둔다.
       qp.delete("gcal");
       window.history.replaceState(null, "", `${window.location.pathname}`);
-      void handleLink("DEDICATED");
-    } else if (qp.get("gcal") === "sync-ready") {
-      qp.delete("gcal");
-      window.history.replaceState(null, "", `${window.location.pathname}`);
-      void handleSync();
+      toast.error("구글 캘린더 권한이 아직 반영되지 않았습니다. 잠시 후 다시 시도해 주세요.");
+      return;
     }
+    window.sessionStorage.setItem(loopKey, "1");
+    qp.delete("gcal");
+    window.history.replaceState(null, "", `${window.location.pathname}`);
+    if (action === "link-ready") void handleLink("DEDICATED");
+    else void handleSync();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tripId]);
 
