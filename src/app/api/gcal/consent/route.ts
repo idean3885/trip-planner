@@ -11,7 +11,7 @@
 
 import { NextRequest } from "next/server";
 import { signIn } from "@/auth";
-import { GCAL_EVENTS_SCOPE } from "@/types/gcal";
+import { GCAL_SCOPE } from "@/types/gcal";
 
 export async function GET(req: NextRequest) {
   const returnTo = req.nextUrl.searchParams.get("returnTo") ?? "/";
@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
     "google",
     { redirectTo: returnTo },
     {
-      scope: `openid email profile ${GCAL_EVENTS_SCOPE}`,
+      scope: `openid email profile ${GCAL_SCOPE}`,
       include_granted_scopes: "true",
       prompt: "consent",
       access_type: "offline",

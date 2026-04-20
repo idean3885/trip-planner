@@ -10,18 +10,21 @@
  */
 
 import { prisma } from "@/lib/prisma";
-import { GCAL_EVENTS_SCOPE } from "@/types/gcal";
+import { GCAL_SCOPE } from "@/types/gcal";
 
 const GOOGLE_PROVIDER = "google";
+// 구버전에서 받은 events-only scope도 사용자의 유효 권한으로 인정해 재동의 요구를 최소화한다.
+const LEGACY_EVENTS_SCOPE = "https://www.googleapis.com/auth/calendar.events";
 
-/** 현재 사용자의 Google Account가 Calendar 이벤트 scope를 이미 보유하는지 확인. */
+/** 현재 사용자의 Google Account가 Calendar 관련 scope를 이미 보유하는지 확인. */
 export async function hasCalendarScope(userId: string): Promise<boolean> {
   const account = await prisma.account.findFirst({
     where: { userId, provider: GOOGLE_PROVIDER },
     select: { scope: true },
   });
   if (!account?.scope) return false;
-  return account.scope.split(/\s+/).includes(GCAL_EVENTS_SCOPE);
+  const scopes = account.scope.split(/\s+/);
+  return scopes.includes(GCAL_SCOPE) || scopes.includes(LEGACY_EVENTS_SCOPE);
 }
 
 /**
