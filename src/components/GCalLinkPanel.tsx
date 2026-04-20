@@ -96,6 +96,8 @@ export default function GCalLinkPanel({ tripId }: Props) {
       }
       const data = (await res.json()) as SyncResponse;
       setFailed(data.failed);
+      // 성공 — 다음 세션에서 자동재시도가 루프로 오판되지 않도록 플래그 제거(#337)
+      window.sessionStorage.removeItem(`gcal-auto-link-ready-${tripId}`);
       toast.success(
         data.status === "ok"
           ? "구글 캘린더에 반영했습니다"
@@ -131,6 +133,7 @@ export default function GCalLinkPanel({ tripId }: Props) {
       }
       const data = (await res.json()) as SyncResponse;
       setFailed(data.failed);
+      window.sessionStorage.removeItem(`gcal-auto-sync-ready-${tripId}`);
       toast.success(
         data.status === "ok"
           ? "최신 상태로 반영했습니다"
