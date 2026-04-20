@@ -8,10 +8,10 @@
 
 ## Coverage Targets
 
-- Vercel env 변수 스코프 분리 [why: env-split] (인프라 — CLI로 실행됨)
-- dev DB 모델 동기화 [why: model-sync] (인프라 — `prisma db push` + `migrate resolve` 실행됨)
 - CLAUDE.md 문서 갱신 [why: docs-update]
-- 배포 검증 [why: verify-split]
+- 배포 검증 (towncrier 단편 + quickstart) [why: verify-split]
+
+> 인프라 작업 (Vercel env 변수 스코프 분리, dev DB 모델 동기화)은 세션 중 수동 실행 완료. 리포 산출물이 없으므로 Coverage Targets에 포함하지 않고 "Implementation Notes (실행 기록)" 섹션에 기록. tasks.md 참조.
 
 ## Technical Context
 
