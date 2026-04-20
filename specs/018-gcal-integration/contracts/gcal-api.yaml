@@ -1,0 +1,270 @@
+openapi: 3.0.3
+info:
+  title: Google Calendar Integration API
+  version: 0.1.0
+  description: |
+    여행별 Google Calendar 연동을 위한 Next.js App Router API.
+    모든 엔드포인트는 세션 인증(Auth.js) 필수. 요청자의 Google Account만 사용하며,
+    다른 멤버의 토큰에는 접근하지 않는다(feature spec FR-007, research R5).
+
+servers:
+  - url: https://trip.idean.me
+    description: Production
+  - url: https://dev.trip.idean.me
+    description: Development
+
+paths:
+  /api/trips/{tripId}/gcal/link:
+    post:
+      summary: 여행을 본인 구글 캘린더에 연결하고 이벤트를 일괄 생성한다
+      description: |
+        본인 `Account.scope`에 `https://www.googleapis.com/auth/calendar.events`가
+        없으면 `consent_required`로 응답하며, 응답 body의 `authorizationUrl`로
+        브라우저를 리디렉트해야 한다. 동의 완료 후 동일 엔드포인트로 재요청한다.
+      parameters:
+        - $ref: '#/components/parameters/TripIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LinkRequest'
+      responses:
+        '200':
+          description: 연결 및 초기 동기화 완료(부분 실패 허용)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncResponse'
+        '401':
+          description: 세션 없음
+        '403':
+          description: 여행 멤버가 아님
+        '409':
+          description: scope 부족. authorization URL로 이동 필요
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsentRequired'
+    delete:
+      summary: 여행과 구글 캘린더의 연결을 해제하고 이벤트를 삭제한다
+      description: |
+        trip-planner가 생성·관리한 이벤트만 삭제한다. 사용자가 GCal에서 직접
+        수정한 이벤트는 ETag 불일치로 412가 발생하여 건너뛰며, 응답의 `skipped`로
+        집계된다(사용자의 수정을 보호).
+      parameters:
+        - $ref: '#/components/parameters/TripIdParam'
+      responses:
+        '200':
+          description: 해제 완료(부분 실패 허용)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnlinkResponse'
+        '401':
+          description: 세션 없음
+        '404':
+          description: 해당 여행에 본인 연동이 없음
+
+  /api/trips/{tripId}/gcal/sync:
+    patch:
+      summary: 여행 활동 변경을 구글 캘린더에 재반영한다
+      description: |
+        활동과 매핑을 diff 하여 생성/갱신/삭제를 수행한다. 갱신·삭제는 `If-Match`
+        헤더로 ETag 검증을 거치며, 사용자가 GCal에서 직접 수정한 이벤트는 건너뛴다.
+      parameters:
+        - $ref: '#/components/parameters/TripIdParam'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                retryOnly:
+                  type: array
+                  description: 이전 응답의 failed[].activityId 만 재시도
+                  items:
+                    type: integer
+      responses:
+        '200':
+          description: 재반영 완료(부분 실패 허용)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncResponse'
+        '401':
+          description: 세션 없음
+        '404':
+          description: 링크 없음
+        '409':
+          description: scope 부족. 재동의 필요
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsentRequired'
+
+  /api/trips/{tripId}/gcal/status:
+    get:
+      summary: 현재 사용자의 여행 연동 상태를 조회한다
+      parameters:
+        - $ref: '#/components/parameters/TripIdParam'
+      responses:
+        '200':
+          description: 상태 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+        '401':
+          description: 세션 없음
+
+components:
+  parameters:
+    TripIdParam:
+      name: tripId
+      in: path
+      required: true
+      schema:
+        type: integer
+      description: 대상 여행 ID
+
+  schemas:
+    LinkRequest:
+      type: object
+      required: [calendarType]
+      properties:
+        calendarType:
+          type: string
+          enum: [DEDICATED, PRIMARY]
+          description: DEDICATED=이 여행 전용 캘린더 자동 생성, PRIMARY=기본 캘린더 사용
+
+    ConsentRequired:
+      type: object
+      required: [error, authorizationUrl]
+      properties:
+        error:
+          type: string
+          enum: [consent_required]
+        authorizationUrl:
+          type: string
+          format: uri
+          description: |
+            incremental authorization URL. include_granted_scopes=true 포함.
+            브라우저를 이 URL로 리디렉트해야 한다.
+
+    SyncResponse:
+      type: object
+      required: [status, summary, failed, link]
+      properties:
+        status:
+          type: string
+          enum: [ok, partial, failed]
+        summary:
+          $ref: '#/components/schemas/SyncSummary'
+        failed:
+          type: array
+          items:
+            $ref: '#/components/schemas/FailedItem'
+        link:
+          $ref: '#/components/schemas/LinkState'
+
+    UnlinkResponse:
+      type: object
+      required: [status, summary]
+      properties:
+        status:
+          type: string
+          enum: [ok, partial]
+        summary:
+          type: object
+          required: [deleted, skipped, failed]
+          properties:
+            deleted:
+              type: integer
+              description: 삭제된 이벤트 수
+            skipped:
+              type: integer
+              description: 사용자가 직접 수정하여 보호된(삭제 건너뛴) 이벤트 수
+            failed:
+              type: integer
+              description: 네트워크·API 오류로 실패한 수
+        failed:
+          type: array
+          items:
+            $ref: '#/components/schemas/FailedItem'
+
+    SyncSummary:
+      type: object
+      required: [created, updated, deleted, skipped, failed]
+      properties:
+        created:
+          type: integer
+        updated:
+          type: integer
+        deleted:
+          type: integer
+        skipped:
+          type: integer
+          description: 사용자가 GCal에서 직접 수정하여 덮어쓰기를 건너뛴 이벤트 수
+        failed:
+          type: integer
+
+    FailedItem:
+      type: object
+      required: [activityId, reason]
+      properties:
+        activityId:
+          type: integer
+        reason:
+          type: string
+          enum: [rate_limited, network, forbidden, not_found, unknown]
+
+    LinkState:
+      type: object
+      required: [calendarType, calendarId, calendarName, lastSyncedAt, lastError, skippedCount]
+      properties:
+        calendarType:
+          type: string
+          enum: [DEDICATED, PRIMARY]
+        calendarId:
+          type: string
+        calendarName:
+          type: string
+          nullable: true
+        lastSyncedAt:
+          type: string
+          format: date-time
+          nullable: true
+        lastError:
+          type: string
+          nullable: true
+          enum: [null, REVOKED, RATE_LIMITED, NETWORK, UNKNOWN]
+        skippedCount:
+          type: integer
+
+    StatusResponse:
+      oneOf:
+        - $ref: '#/components/schemas/StatusLinked'
+        - $ref: '#/components/schemas/StatusUnlinked'
+
+    StatusLinked:
+      type: object
+      required: [linked, link]
+      properties:
+        linked:
+          type: boolean
+          enum: [true]
+        link:
+          $ref: '#/components/schemas/LinkState'
+
+    StatusUnlinked:
+      type: object
+      required: [linked, scopeGranted]
+      properties:
+        linked:
+          type: boolean
+          enum: [false]
+        scopeGranted:
+          type: boolean
+          description: 현재 사용자가 calendar.events scope를 이미 보유하고 있는지
