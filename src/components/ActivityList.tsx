@@ -63,6 +63,7 @@ export default function ActivityList({
     try {
       return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
     } catch {
+      /* c8 ignore next -- defensive: 모든 현대 브라우저가 Intl을 지원. 테스트 도달 불가 */
       return "UTC";
     }
   }
