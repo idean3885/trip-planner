@@ -139,6 +139,28 @@ describe("PUT /days/{dayId}", () => {
     };
     expect(updateCall.data.sortOrder).toBeUndefined();
   });
+
+  it("returns 409 when date 충돌 (P2002)", async () => {
+    mockAuth.mockResolvedValue("user1");
+    mockCanEdit.mockResolvedValue(true);
+    mockPrisma.day.update.mockRejectedValue({ code: "P2002" });
+
+    const res = await PUT(
+      makeRequest({ date: "2026-06-07" }),
+      params(),
+    );
+    expect(res.status).toBe(409);
+  });
+
+  it("rethrows non-P2002 errors", async () => {
+    mockAuth.mockResolvedValue("user1");
+    mockCanEdit.mockResolvedValue(true);
+    mockPrisma.day.update.mockRejectedValue(new Error("DB exploded"));
+
+    await expect(
+      PUT(makeRequest({ title: "X" }), params()),
+    ).rejects.toThrow("DB exploded");
+  });
 });
 
 describe("DELETE /days/{dayId}", () => {
