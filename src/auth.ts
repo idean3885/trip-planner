@@ -29,10 +29,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
      * PrismaAdapter는 기존 Account가 있으면 linkAccount를 호출하지 않아 재로그인
      * 시 새로 받은 access_token/refresh_token/scope/expires_at이 DB에 반영되지
      * 않는다. 이 콜백에서 직접 upsert하여 scope 증분 동의가 항상 반영되게 한다.
+     *
+     * Auth.js v5에서 Google은 `account.type === "oidc"`로 분류된다. 이전 구현이
+     * `type !== "oauth"` 이면 early return 했기 때문에 Google의 경우 실제로
+     * scope 동기화가 한 번도 실행되지 않아 consent 루프가 재발했다(#332b).
+     * provider 식별자만으로 게이트한다.
      */
     async signIn({ user, account }) {
-      if (!account || account.type !== "oauth") return true;
+      if (!account?.provider || !account.providerAccountId) return true;
       if (!user?.id) return true;
+      if (account.type !== "oauth" && account.type !== "oidc") return true;
       try {
         await prisma.account.updateMany({
           where: {
