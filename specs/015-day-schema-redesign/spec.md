@@ -11,7 +11,7 @@
 2. **Trip 범위 정책: 자동 확장** — Day 추가 시 date가 Trip 범위 밖이면 Trip.startDate/endDate를 그 날짜를 포함하도록 자동 확장.
 3. **API 버저닝**: `/api/trips/...`(=v1)는 응답 스키마 무변경(MCP 호환). `/api/v2/trips/...` 신설은 `dayNumber` 중심.
 4. **contract 단계는 본 피처에서 제외** — `sortOrder` 컬럼 DROP은 #317 별도 트래킹. 본 v2.7.0은 expand + migrate + v2 신설 + UI 전환까지.
-5. **공유 DB 제약 인지** — dev/prod 같은 Neon 인스턴스. `prisma migrate deploy`만 사용.
+5. **공유 DB 제약 인지** — dev/prod가 동일 데이터베이스 인스턴스 공유. 안전한 마이그레이션 명령만 사용 (구체 명령은 plan.md).
 
 ## Metatag Conventions
 
@@ -70,7 +70,7 @@
 - **SC-001**: v2.7.0 배포 직후 MCP `get_trip` 호출 100% 정상 (sortOrder 응답 유지)
 - **SC-002**: 웹 UI 모든 Day 카드 DAY 0 노출 0건
 - **SC-003**: Day 추가 E2E 테스트 통과 (범위 안 / 범위 밖 모두)
-- **SC-004**: prisma migrate deploy 실행 시 데이터 손실 0건
+- **SC-004**: 마이그레이션 실행 시 데이터 손실 0건
 
 ## Key Entities
 
@@ -83,4 +83,4 @@
 - `Day.sortOrder` 컬럼 DROP — #317에서 후속 처리
 - `Activity.sortOrder` 변경 — 무관
 - v1 API deprecation 공지 — 추후 메이저 버전
-- Neon DB 환경 분리 — #318 후속
+- DB 환경 분리 (인프라) — #318 후속

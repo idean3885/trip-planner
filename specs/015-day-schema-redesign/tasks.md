@@ -14,6 +14,7 @@
 - [ ] T011 v2 API days CRUD `/api/v2/trips/<id>/days/...` [artifact: src/app/api/v2/trips/<id>/days/route.ts] [why: v2-api]
 - [ ] T012 dayNumber 계산 헬퍼 [artifact: src/lib/day-number.ts] [why: schema-expand]
 - [ ] T013 expand 마이그레이션 — Trip.startDate NOT NULL + Day @@unique([tripId, date]) [artifact: prisma/migrations/20260420000000_v270_expand_day_constraints/migration.sql] [why: schema-expand] [migration-type: schema-only]
+- [ ] T013b 데이터 감사 베이스라인 마이그레이션 (감사 0건 확인 NOOP) [artifact: prisma/migrations/20260420000001_v270_data_audit_baseline/migration.sql] [why: schema-expand] [migration-type: data-migration]
 - [ ] T014 Prisma 스키마 업데이트 [artifact: prisma/schema.prisma] [why: schema-expand]
 - [ ] T015 웹 UI fetch v2 전환 — `src/app/trips/<id>/page.tsx` [artifact: src/app/trips/<id>/page.tsx] [why: ui-migration]
 - [ ] T016 웹 UI fetch v2 전환 — `src/app/trips/<id>/day/<dayId>/page.tsx` [artifact: src/app/trips/<id>/day/<dayId>/page.tsx] [why: ui-migration]
