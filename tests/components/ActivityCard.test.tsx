@@ -43,9 +43,8 @@ describe("ActivityCard", () => {
     expect(screen.getByText("08:30–09:45")).toBeInTheDocument();
   });
 
-  it("falls back to iana string when tzAbbr fails to resolve abbr", () => {
-    // Intl.DateTimeFormat이 timeZoneName short를 돌려주지 못하는 IANA에 대해
-    // tzAbbr의 catch/옵셔널 경로가 iana를 그대로 반환한다.
+  it("falls back for IANA outside whitelist (Etc/GMT → GMT via Intl)", () => {
+    // 화이트리스트에 없고 Intl이 GMT를 돌려줄 경우 최종 폴백(마지막 세그먼트) 사용.
     render(
       <ActivityCard
         activity={makeActivity({
@@ -55,8 +54,7 @@ describe("ActivityCard", () => {
         })}
       />
     );
-    // 정확한 abbr 문자열은 ICU 구현에 의존 — tz 문자열이 렌더되기만 하면 충분
-    expect(screen.getByText(/04:00 .+/)).toBeInTheDocument();
+    expect(screen.getByText(/04:00 GMT/)).toBeInTheDocument();
   });
 
   it("renders cost and currency", () => {
@@ -142,8 +140,8 @@ describe("ActivityCard", () => {
     expect(screen.queryByText(/\d{2}:\d{2}/)).not.toBeInTheDocument();
   });
 
-  it("renders time in the activity's IANA timezone (#232)", () => {
-    // 04:00 UTC → Asia/Seoul 13:00
+  it("renders time in Asia/Seoul as KST (#232 #325)", () => {
+    // 04:00 UTC → Asia/Seoul 13:00 KST
     render(
       <ActivityCard
         activity={makeActivity({
@@ -154,12 +152,11 @@ describe("ActivityCard", () => {
         })}
       />
     );
-    // "13:00 GMT+9"(또는 "13:00 KST" 등 — 실제 abbr은 ICU 의존) 형태 검증
-    expect(screen.getByText(/^13:00 .+–15:00 .+$/)).toBeInTheDocument();
+    expect(screen.getByText("13:00 KST–15:00 KST")).toBeInTheDocument();
   });
 
-  it("renders time in Europe/Lisbon DST (WEST, UTC+1)", () => {
-    // 19:15 UTC + Europe/Lisbon 여름 = 20:15
+  it("renders Europe/Lisbon DST as WEST (#325)", () => {
+    // 19:15 UTC + Europe/Lisbon 여름 = 20:15 WEST
     render(
       <ActivityCard
         activity={makeActivity({
@@ -169,7 +166,21 @@ describe("ActivityCard", () => {
         })}
       />
     );
-    expect(screen.getByText(/^20:15 .+$/)).toBeInTheDocument();
+    expect(screen.getByText("20:15 WEST")).toBeInTheDocument();
+  });
+
+  it("renders Europe/Lisbon winter as WET (#325)", () => {
+    // 1월은 표준시 (WET)
+    render(
+      <ActivityCard
+        activity={makeActivity({
+          startTime: "2026-01-15T12:00:00.000Z",
+          endTime: null,
+          startTimezone: "Europe/Lisbon",
+        })}
+      />
+    );
+    expect(screen.getByText("12:00 WET")).toBeInTheDocument();
   });
 
   it("renders all category types", () => {
