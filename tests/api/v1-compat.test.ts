@@ -8,6 +8,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 const { mockPrisma, mockAuthHelpers } = vi.hoisted(() => ({
   mockPrisma: {
     day: { findMany: vi.fn() },
+    trip: { findUnique: vi.fn() },
   },
   mockAuthHelpers: {
     getAuthUserId: vi.fn(),
@@ -27,12 +28,15 @@ function params() {
 }
 
 describe("v1 호환 — GET /api/trips/{id}/days", () => {
-  it("응답에 sortOrder 키 정수 포함 (MCP 호환)", async () => {
+  it("응답에 sortOrder 키 정수 포함 (MCP 호환, dayNumber 동적 계산)", async () => {
     mockAuthHelpers.getAuthUserId.mockResolvedValue("user1");
     mockAuthHelpers.getTripMember.mockResolvedValue({ role: "OWNER" });
+    mockPrisma.trip.findUnique.mockResolvedValue({
+      startDate: new Date("2026-06-01T00:00:00Z"),
+    });
     mockPrisma.day.findMany.mockResolvedValue([
-      { id: 1, tripId: 1, date: new Date("2026-06-01"), sortOrder: 1 },
-      { id: 2, tripId: 1, date: new Date("2026-06-02"), sortOrder: 2 },
+      { id: 1, tripId: 1, date: new Date("2026-06-01T00:00:00Z") },
+      { id: 2, tripId: 1, date: new Date("2026-06-03T00:00:00Z") },
     ]);
 
     const res = await GET(new Request("http://localhost/api/trips/1/days"), params());
@@ -40,7 +44,9 @@ describe("v1 호환 — GET /api/trips/{id}/days", () => {
     const data = await res.json();
     expect(Array.isArray(data)).toBe(true);
     expect(data[0]).toHaveProperty("sortOrder");
-    expect(typeof data[0].sortOrder).toBe("number");
+    expect(data[0].sortOrder).toBe(1);
+    // 06-03 - 06-01 + 1 = 3 (gap-aware)
+    expect(data[1].sortOrder).toBe(3);
     // dayNumber 키는 v1에 미포함
     expect(data[0]).not.toHaveProperty("dayNumber");
   });

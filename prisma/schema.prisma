@@ -92,12 +92,11 @@ model Trip {
 }
 
 model Day {
-  id        Int      @id @default(autoincrement())
-  tripId    Int      @map("trip_id")
-  date      DateTime @db.Timestamptz(3)
-  title     String?
-  content   String?  @db.Text
-  sortOrder Int      @default(0) @map("sort_order")
+  id      Int      @id @default(autoincrement())
+  tripId  Int      @map("trip_id")
+  date    DateTime @db.Timestamptz(3)
+  title   String?
+  content String?  @db.Text
 
   trip       Trip       @relation(fields: [tripId], references: [id], onDelete: Cascade)
   activities Activity[]

@@ -88,7 +88,6 @@ describe("PUT /days/{dayId}", () => {
       title: "Updated",
       content: null,
       date: new Date("2026-06-07T00:00:00Z"),
-      sortOrder: 7,
     };
     mockPrisma.day.update.mockResolvedValue(updated);
     mockPrisma.day.findUniqueOrThrow.mockResolvedValue(updated);
@@ -97,11 +96,13 @@ describe("PUT /days/{dayId}", () => {
     expect(res.status).toBe(200);
     const data = await res.json();
     expect(data.title).toBe("Updated");
-    // date 미변경 시 trip.findUniqueOrThrow 호출 안 됨
-    expect(mockPrisma.trip.findUniqueOrThrow).not.toHaveBeenCalled();
+    // 응답에 sortOrder 동적 부착됨
+    expect(data.sortOrder).toBe(7);
+    // date 미변경이어도 startDate 조회 위해 trip.findUniqueOrThrow 1회 호출
+    expect(mockPrisma.trip.findUniqueOrThrow).toHaveBeenCalled();
   });
 
-  it("date 변경 시 expandTripRangeIfNeeded 경유 + sortOrder 재계산", async () => {
+  it("date 변경 시 expandTripRangeIfNeeded 경유 (sortOrder 컬럼 쓰기 없음)", async () => {
     mockAuth.mockResolvedValue("user1");
     mockCanEdit.mockResolvedValue(true);
     const updated = {
@@ -109,7 +110,6 @@ describe("PUT /days/{dayId}", () => {
       title: "Full",
       content: "md",
       date: new Date("2026-06-07T00:00:00Z"),
-      sortOrder: 7,
     };
     mockPrisma.day.update.mockResolvedValue(updated);
     mockPrisma.day.findUniqueOrThrow.mockResolvedValue(updated);
@@ -120,11 +120,14 @@ describe("PUT /days/{dayId}", () => {
     );
     expect(res.status).toBe(200);
     expect(mockPrisma.trip.findUniqueOrThrow).toHaveBeenCalled();
+    // sortOrder 컬럼은 더 이상 쓰지 않음
     const updateCall = mockPrisma.day.update.mock.calls[0]?.[0] as {
-      data: { sortOrder?: number };
+      data: Record<string, unknown>;
     };
-    // 2026-06-07 - 2026-06-01 + 1 = 7
-    expect(updateCall.data.sortOrder).toBe(7);
+    expect(updateCall.data.sortOrder).toBeUndefined();
+    // 응답엔 동적 부착됨
+    const data = await res.json();
+    expect(data.sortOrder).toBe(7);
   });
 
   it("ignores sortOrder from client body", async () => {
@@ -186,7 +189,7 @@ describe("DELETE /days/{dayId}", () => {
     expect(res.status).toBe(403);
   });
 
-  it("deletes day + recomputes remaining sortOrder", async () => {
+  it("deletes day (sortOrder 컬럼 없으므로 재계산 불필요)", async () => {
     mockAuth.mockResolvedValue("user1");
     mockCanEdit.mockResolvedValue(true);
     mockPrisma.day.delete.mockResolvedValue({});
@@ -195,8 +198,7 @@ describe("DELETE /days/{dayId}", () => {
     expect(res.status).toBe(200);
     const data = await res.json();
     expect(data.ok).toBe(true);
-    // recomputeAllDayNumbers가 trip 조회 + day 목록 조회 수행
-    expect(mockPrisma.trip.findUniqueOrThrow).toHaveBeenCalled();
-    expect(mockPrisma.day.findMany).toHaveBeenCalled();
+    // 컬럼 사라져 재계산 호출 없음
+    expect(mockPrisma.trip.findUniqueOrThrow).not.toHaveBeenCalled();
   });
 });

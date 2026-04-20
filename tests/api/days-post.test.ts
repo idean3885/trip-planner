@@ -77,26 +77,26 @@ describe("POST /trips/{id}/days", () => {
     expect(res.status).toBe(400);
   });
 
-  it("creates day with sortOrder = dayNumber (date 기반 파생)", async () => {
+  it("creates day + 응답에 sortOrder 동적 부착 (date 파생)", async () => {
     mockAuth.mockResolvedValue("user1");
     mockCanEdit.mockResolvedValue(true);
     const created = {
       id: 50,
       tripId: 1,
       date: new Date("2026-06-07T00:00:00Z"),
-      sortOrder: 7,
     };
     mockPrisma.day.create.mockResolvedValue(created);
-    mockPrisma.day.findUniqueOrThrow.mockResolvedValue(created);
 
     const res = await POST(makeRequest({ date: "2026-06-07" }), params());
     expect(res.status).toBe(201);
-
-    const createArgs = mockPrisma.day.create.mock.calls[0]?.[0] as {
-      data: { sortOrder: number };
-    };
+    const data = await res.json();
     // 2026-06-07 - 2026-06-01 + 1 = 7
-    expect(createArgs.data.sortOrder).toBe(7);
+    expect(data.sortOrder).toBe(7);
+    // sortOrder 컬럼이 없으므로 create.data에 sortOrder 키 없음
+    const createArgs = mockPrisma.day.create.mock.calls[0]?.[0] as {
+      data: Record<string, unknown>;
+    };
+    expect(createArgs.data.sortOrder).toBeUndefined();
   });
 
   it("Trip 범위 밖 date → expandTripRangeIfNeeded로 자동 확장", async () => {

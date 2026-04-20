@@ -17,7 +17,7 @@ export function computeDayNumber(date: Date, tripStartDate: Date): number {
   return toUtcEpochDay(date) - toUtcEpochDay(tripStartDate) + 1;
 }
 
-/** Day POST/PUT 시 Trip 범위 자동 확장 + 영향받은 Day들의 sortOrder 재계산. */
+/** Day POST/PUT 시 Trip 범위 자동 확장. */
 export async function expandTripRangeIfNeeded(
   tx: Prisma.TransactionClient,
   tripId: number,
@@ -50,36 +50,12 @@ export async function expandTripRangeIfNeeded(
       where: { id: tripId },
       data: { startDate: updatedStart, endDate: updatedEnd },
     });
-    await recomputeAllDayNumbers(tx, tripId, updatedStart);
   }
 
   return {
     trip: { id: tripId, startDate: updatedStart, endDate: updatedEnd },
     expanded,
   };
-}
-
-/**
- * Trip.startDate 기준으로 그 Trip의 모든 Day.sortOrder를 dayNumber 값으로 동기화.
- * sortOrder 컬럼은 v1 호환을 위해 유지되며 dayNumber와 동일 값을 갖는다.
- */
-export async function recomputeAllDayNumbers(
-  tx: Prisma.TransactionClient,
-  tripId: number,
-  tripStartDate: Date,
-): Promise<void> {
-  const days = await tx.day.findMany({
-    where: { tripId },
-    select: { id: true, date: true },
-  });
-  await Promise.all(
-    days.map((day) =>
-      tx.day.update({
-        where: { id: day.id },
-        data: { sortOrder: computeDayNumber(day.date, tripStartDate) },
-      }),
-    ),
-  );
 }
 
 /** Day 응답 객체에 dayNumber 필드 부착 (v2 응답). */
@@ -91,4 +67,15 @@ export function withDayNumber<T extends { date: Date | string }>(
   const start =
     tripStartDate instanceof Date ? tripStartDate : new Date(tripStartDate);
   return { ...day, dayNumber: computeDayNumber(date, start) };
+}
+
+/** Day 응답 객체에 sortOrder 필드 부착 (v1 응답, dayNumber와 동일 값). */
+export function withSortOrder<T extends { date: Date | string }>(
+  day: T,
+  tripStartDate: Date | string,
+): T & { sortOrder: number } {
+  const date = day.date instanceof Date ? day.date : new Date(day.date);
+  const start =
+    tripStartDate instanceof Date ? tripStartDate : new Date(tripStartDate);
+  return { ...day, sortOrder: computeDayNumber(date, start) };
 }

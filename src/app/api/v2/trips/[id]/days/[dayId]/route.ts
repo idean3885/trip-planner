@@ -4,7 +4,6 @@ import { getAuthUserId, getTripMember, canEdit } from "@/lib/auth-helpers";
 import {
   computeDayNumber,
   expandTripRangeIfNeeded,
-  recomputeAllDayNumbers,
   withDayNumber,
 } from "@/lib/day-number";
 
@@ -40,9 +39,7 @@ export async function GET(request: Request, { params }: Params) {
     return NextResponse.json({ error: "Not Found" }, { status: 404 });
   }
 
-  const enriched = withDayNumber(day, trip.startDate);
-  const { sortOrder: _drop, ...rest } = enriched;
-  return NextResponse.json(rest);
+  return NextResponse.json(withDayNumber(day, trip.startDate));
 }
 
 export async function PUT(request: Request, { params }: Params) {
@@ -61,8 +58,8 @@ export async function PUT(request: Request, { params }: Params) {
   const { title, content, date } = body;
 
   try {
-    const day = await prisma.$transaction(async (tx) => {
-      let tripStart: Date | null = null;
+    const result = await prisma.$transaction(async (tx) => {
+      let tripStart: Date;
       if (date !== undefined) {
         const newDate = new Date(date);
         const { trip } = await expandTripRangeIfNeeded(tx, tripId, newDate);
@@ -73,10 +70,14 @@ export async function PUT(request: Request, { params }: Params) {
             ...(title !== undefined && { title }),
             ...(content !== undefined && { content }),
             date: newDate,
-            sortOrder: computeDayNumber(newDate, tripStart),
           },
         });
       } else {
+        const trip = await tx.trip.findUniqueOrThrow({
+          where: { id: tripId },
+          select: { startDate: true },
+        });
+        tripStart = trip.startDate;
         await tx.day.update({
           where: { id: parseInt(dayId), tripId },
           data: {
@@ -88,17 +89,12 @@ export async function PUT(request: Request, { params }: Params) {
       const fresh = await tx.day.findUniqueOrThrow({
         where: { id: parseInt(dayId) },
       });
-      if (tripStart === null) {
-        const trip = await tx.trip.findUniqueOrThrow({
-          where: { id: tripId },
-          select: { startDate: true },
-        });
-        tripStart = trip.startDate;
-      }
-      return { ...fresh, dayNumber: computeDayNumber(fresh.date, tripStart) };
+      return { day: fresh, tripStart };
     });
-    const { sortOrder: _drop, ...rest } = day;
-    return NextResponse.json(rest);
+    return NextResponse.json({
+      ...result.day,
+      dayNumber: computeDayNumber(result.day.date, result.tripStart),
+    });
   } catch (e: unknown) {
     if ((e as { code?: string }).code === "P2002") {
       return NextResponse.json(
@@ -122,16 +118,8 @@ export async function DELETE(request: Request, { params }: Params) {
     return NextResponse.json({ error: "편집 권한이 없습니다" }, { status: 403 });
   }
 
-  await prisma.$transaction(async (tx) => {
-    await tx.day.delete({
-      where: { id: parseInt(dayId), tripId },
-    });
-    const trip = await tx.trip.findUniqueOrThrow({
-      where: { id: tripId },
-      select: { startDate: true },
-    });
-    await recomputeAllDayNumbers(tx, tripId, trip.startDate);
+  await prisma.day.delete({
+    where: { id: parseInt(dayId), tripId },
   });
-
   return NextResponse.json({ ok: true });
 }

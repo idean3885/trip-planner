@@ -36,13 +36,9 @@ export async function GET(request: Request, { params }: Params) {
     return NextResponse.json({ error: "Not Found" }, { status: 404 });
   }
 
-  const result = days.map((d) => {
-    const enriched = withDayNumber(d, trip.startDate);
-    const { sortOrder: _drop, ...rest } = enriched;
-    return rest;
-  });
-
-  return NextResponse.json(result);
+  return NextResponse.json(
+    days.map((d) => withDayNumber(d, trip.startDate)),
+  );
 }
 
 export async function POST(request: Request, { params }: Params) {
@@ -70,18 +66,11 @@ export async function POST(request: Request, { params }: Params) {
       const { trip } = await expandTripRangeIfNeeded(tx, tripId, newDate);
       const dayNumber = computeDayNumber(newDate, trip.startDate);
       const created = await tx.day.create({
-        data: {
-          tripId,
-          date: newDate,
-          title,
-          content,
-          sortOrder: dayNumber,
-        },
+        data: { tripId, date: newDate, title, content },
       });
       return { ...created, dayNumber };
     });
-    const { sortOrder: _drop, ...rest } = day;
-    return NextResponse.json(rest, { status: 201 });
+    return NextResponse.json(day, { status: 201 });
   } catch (e: unknown) {
     if ((e as { code?: string }).code === "P2002") {
       return NextResponse.json(

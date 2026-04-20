@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthUserId, getTripMember, canEdit } from "@/lib/auth-helpers";
-import { computeDayNumber, expandTripRangeIfNeeded } from "@/lib/day-number";
+import { expandTripRangeIfNeeded, withSortOrder } from "@/lib/day-number";
 
 type Params = { params: Promise<{ id: string }> };
 
-// T029: 일정 목록
+// T029: 일정 목록 (v1 — sortOrder 응답 동적 부착, MCP 호환)
 export async function GET(request: Request, { params }: Params) {
   const { id } = await params;
   const tripId = parseInt(id);
@@ -14,8 +14,12 @@ export async function GET(request: Request, { params }: Params) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const [member, days] = await Promise.all([
+  const [member, trip, days] = await Promise.all([
     getTripMember(tripId, userId),
+    prisma.trip.findUnique({
+      where: { id: tripId },
+      select: { startDate: true },
+    }),
     prisma.day.findMany({
       where: { tripId },
       orderBy: { date: "asc" },
@@ -25,8 +29,11 @@ export async function GET(request: Request, { params }: Params) {
   if (!member) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
+  if (!trip) {
+    return NextResponse.json({ error: "Not Found" }, { status: 404 });
+  }
 
-  return NextResponse.json(days);
+  return NextResponse.json(days.map((d) => withSortOrder(d, trip.startDate)));
 }
 
 // T029: 일정 추가
@@ -49,24 +56,19 @@ export async function POST(request: Request, { params }: Params) {
     return NextResponse.json({ error: "날짜는 필수입니다" }, { status: 400 });
   }
 
-  // sortOrder는 dayNumber와 동기화된다(v2.7.0). Trip 범위 밖 date는 자동 확장.
   const newDate = new Date(date);
   try {
-    const day = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx) => {
       const { trip } = await expandTripRangeIfNeeded(tx, tripId, newDate);
-      const dayNumber = computeDayNumber(newDate, trip.startDate);
       const created = await tx.day.create({
-        data: {
-          tripId,
-          date: newDate,
-          title,
-          content,
-          sortOrder: dayNumber,
-        },
+        data: { tripId, date: newDate, title, content },
       });
-      return tx.day.findUniqueOrThrow({ where: { id: created.id } });
+      return { day: created, tripStartDate: trip.startDate };
     });
-    return NextResponse.json(day, { status: 201 });
+    return NextResponse.json(
+      withSortOrder(result.day, result.tripStartDate),
+      { status: 201 },
+    );
   } catch (e: unknown) {
     if ((e as { code?: string }).code === "P2002") {
       return NextResponse.json(
