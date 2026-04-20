@@ -24,6 +24,36 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (token.id) session.user.id = token.id as string;
       return session;
     },
+    /**
+     * 재동의 시 Account 정보 동기화 (#332).
+     * PrismaAdapter는 기존 Account가 있으면 linkAccount를 호출하지 않아 재로그인
+     * 시 새로 받은 access_token/refresh_token/scope/expires_at이 DB에 반영되지
+     * 않는다. 이 콜백에서 직접 upsert하여 scope 증분 동의가 항상 반영되게 한다.
+     */
+    async signIn({ user, account }) {
+      if (!account || account.type !== "oauth") return true;
+      if (!user?.id) return true;
+      try {
+        await prisma.account.updateMany({
+          where: {
+            userId: user.id,
+            provider: account.provider,
+            providerAccountId: account.providerAccountId,
+          },
+          data: {
+            access_token: account.access_token ?? undefined,
+            refresh_token: account.refresh_token ?? undefined,
+            expires_at: account.expires_at ?? undefined,
+            token_type: account.token_type ?? undefined,
+            scope: account.scope ?? undefined,
+            id_token: account.id_token ?? undefined,
+          },
+        });
+      } catch {
+        /* 기록 실패해도 로그인 흐름은 유지 — 다음 요청에서 scope 부족 시 재동의 유도 */
+      }
+      return true;
+    },
   },
   ...authConfig,
 });
