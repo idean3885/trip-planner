@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [2.7.2] - 2026-04-20
+
+### Chore
+
+- Neon DB 환경별 분리 — Production은 `neondb`, Preview/Development는 신설한 `neondb_dev`로 분리. Vercel env 변수 `DATABASE_URL` 등 8종을 스코프별로 분기 설정. 향후 PR preview build의 `prisma migrate deploy`는 `neondb_dev`에만 적용되어 prod 영향 0 (expand-and-contract 패턴의 preview-build-timing 위험 구조적 해소). ([#318](https://github.com/idean3885/trip-planner/issues/318))
+
+
 ## [2.7.1] - 2026-04-20
 
 ### Fixed
