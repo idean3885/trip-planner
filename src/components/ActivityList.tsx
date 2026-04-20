@@ -54,13 +54,34 @@ export default function ActivityList({
 
   const apiBase = `/api/trips/${tripId}/days/${dayId}/activities`;
 
+  /**
+   * 브라우저의 IANA 타임존 감지(#341). Activity 저장 시 startTime/endTime과
+   * 함께 전송해 ActivityCard가 KST 등 약어를 붙일 수 있게 한다.
+   * SSR 시 window 없음 대비해 함수 호출부에서만 평가한다.
+   */
+  function getBrowserTimezone(): string {
+    try {
+      return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+    } catch {
+      /* c8 ignore next -- defensive: 모든 현대 브라우저가 Intl을 지원. 테스트 도달 불가 */
+      return "UTC";
+    }
+  }
+
   async function handleCreate(data: ActivityFormData) {
+    const tz = getBrowserTimezone();
     const body: Record<string, unknown> = {
       category: data.category,
       title: data.title,
     };
-    if (data.startTime) body.startTime = data.startTime;
-    if (data.endTime) body.endTime = data.endTime;
+    if (data.startTime) {
+      body.startTime = data.startTime;
+      body.startTimezone = tz;
+    }
+    if (data.endTime) {
+      body.endTime = data.endTime;
+      body.endTimezone = tz;
+    }
     if (data.location) body.location = data.location;
     if (data.memo) body.memo = data.memo;
     if (data.cost) body.cost = parseFloat(data.cost);
@@ -86,11 +107,14 @@ export default function ActivityList({
   }
 
   async function handleUpdate(activityId: number, data: ActivityFormData) {
+    const tz = getBrowserTimezone();
     const body: Record<string, unknown> = {
       category: data.category,
       title: data.title,
       startTime: data.startTime || null,
+      startTimezone: data.startTime ? tz : null,
       endTime: data.endTime || null,
+      endTimezone: data.endTime ? tz : null,
       location: data.location || null,
       memo: data.memo || null,
       cost: data.cost ? parseFloat(data.cost) : null,
