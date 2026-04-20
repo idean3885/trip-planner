@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [2.7.1] - 2026-04-20
+
+### Fixed
+
+- v2.7.0 expand-and-contract 패턴의 contract 단계 — `Day.sortOrder` 컬럼을 DB에서 제거. v1 응답(`/api/trips/...`)의 `sortOrder` 키는 dayNumber 동적 계산으로 그대로 응답되어 MCP 호환 100% 유지. 데이터 손실 없음(컬럼 값은 모두 `(date - trip.startDate) + 1`로 정확히 복원 가능). ([#317](https://github.com/idean3885/trip-planner/issues/317))
+
+
 ## [2.7.0] - 2026-04-20
 
 ### Added

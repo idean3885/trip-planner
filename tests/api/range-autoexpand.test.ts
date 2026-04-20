@@ -39,12 +39,8 @@ describe("expandTripRangeIfNeeded", () => {
     expect(mockPrisma.trip.update).not.toHaveBeenCalled();
   });
 
-  it("startDate 이전 date → startDate 확장 + 모든 Day sortOrder 재계산", async () => {
+  it("startDate 이전 date → startDate 확장 (sortOrder 컬럼 없음, 재계산 불필요)", async () => {
     mockPrisma.trip.findUniqueOrThrow.mockResolvedValue(TRIP);
-    mockPrisma.day.findMany.mockResolvedValue([
-      { id: 11, date: new Date("2026-06-10T00:00:00Z") },
-      { id: 12, date: new Date("2026-06-11T00:00:00Z") },
-    ]);
 
     const result = await expandTripRangeIfNeeded(
       mockPrisma as never,
@@ -59,15 +55,8 @@ describe("expandTripRangeIfNeeded", () => {
         startDate: new Date("2026-06-08T00:00:00Z"),
       }),
     });
-    // 기존 Day 2개 sortOrder 재계산: 06-10 → 3, 06-11 → 4 (start = 06-08)
-    expect(mockPrisma.day.update).toHaveBeenCalledWith({
-      where: { id: 11 },
-      data: { sortOrder: 3 },
-    });
-    expect(mockPrisma.day.update).toHaveBeenCalledWith({
-      where: { id: 12 },
-      data: { sortOrder: 4 },
-    });
+    // sortOrder 컬럼이 사라졌으므로 day.update 재계산 호출 없음
+    expect(mockPrisma.day.update).not.toHaveBeenCalled();
   });
 
   it("endDate 이후 date → endDate만 확장", async () => {
