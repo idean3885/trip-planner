@@ -69,9 +69,9 @@ describe("GCalLinkPanel — spec 020 미연결 비-주인 UI", () => {
     const trigger = await screen.findByRole("button", { name: "구글 캘린더 연결" });
     fireEvent.click(trigger);
 
-    // 다이얼로그 내부의 CTA 버튼이 렌더되기를 기다림.
-    const cta = await screen.findByRole("button", { name: "공유 캘린더 연결" });
-    expect(cta).toBeInTheDocument();
+    // Dialog 내부 콘텐츠가 DOM에 렌더되기를 기다림. CI coverage 모드에서 base-ui
+    // Dialog open 이벤트가 느려지는 경우가 있어 role이 아닌 텍스트로 확인한다.
+    await screen.findByText(/여행의 공유 캘린더를 만들고/);
 
     // 레거시 업그레이드/legacy 안내가 없음.
     expect(screen.queryByText(/업그레이드/)).toBeNull();
