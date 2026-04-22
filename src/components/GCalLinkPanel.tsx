@@ -55,7 +55,9 @@ export default function GCalLinkPanel({ tripId, role = "OWNER" }: Props) {
     if (typeof window === "undefined") return;
     const qp = new URLSearchParams(window.location.search);
     const action = qp.get("gcal");
-    if (action !== "link-ready" && action !== "sync-ready") return;
+    if (action !== "link-ready" && action !== "sync-ready" && action !== "subscribed") {
+      return;
+    }
 
     const loopKey = `gcal-auto-${action}-${tripId}`;
     if (window.sessionStorage.getItem(loopKey) === "1") {
@@ -70,6 +72,7 @@ export default function GCalLinkPanel({ tripId, role = "OWNER" }: Props) {
     qp.delete("gcal");
     window.history.replaceState(null, "", `${window.location.pathname}`);
     if (action === "link-ready") void handleLink("DEDICATED");
+    else if (action === "subscribed") void handleSubscribe("add");
     else void handleSync();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tripId]);

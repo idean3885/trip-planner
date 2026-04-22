@@ -27,6 +27,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **ADR 0003: 여행 캘린더는 여행당 1개 공유 캘린더 (v2.9.0 #363)**: 멤버별 중복 캘린더 문제 해결을 위한 아키텍처 결정을 `docs/adr/0003-per-trip-shared-calendar.md`로 고정. 이유·대안·trade-off·contract 타임라인 명시. ([#363](https://github.com/idean3885/trip-planner/issues/363))
 
+### Fixed
+
+- **v2.8.0 마이그레이션 트립의 멤버 ACL 자동 복구 + 동의 후 자동 subscribe**: 백필 SQL은 DB의 TripCalendarLink 승격만 수행하고 Google 쪽 ACL 부여는 하지 못하므로, 승격된 트립에서 멤버가 "내 구글 캘린더에 추가"를 눌러도 404로 실패하는 문제를 해소. 오너가 "다시 반영하기"를 누르면 sync 전에 현재 멤버 전원에게 ACL을 idempotent하게 upsert해 Google 쪽 권한을 복구한다. 또 멤버가 subscribe 시 calendar scope 동의를 완료하고 돌아오면 자동으로 subscribe가 재시도되도록 `?gcal=subscribed` 쿼리를 auto-retry 대상에 추가.
+
 ### Chore
 
 - **레거시 GCal 상태 API가 공유 모델 응답에 적응 (v2.9.0 #361)**: `GET /api/trips/{id}/gcal/status`가 신규 `TripCalendarLink`가 있으면 그것을 우선 사용하고, 없을 때만 기존 per-user `GCalLink`로 폴백한다. 외부 MCP 클라이언트와 웹 UI가 같은 응답 형식을 받으며 v2.9.0 이후에도 기존 통합이 깨지지 않는다. ([#361](https://github.com/idean3885/trip-planner/issues/361))

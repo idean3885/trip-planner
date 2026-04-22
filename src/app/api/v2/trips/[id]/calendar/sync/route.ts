@@ -22,6 +22,7 @@ import {
 } from "@/lib/gcal/auth";
 import { getCalendarClient, classifyError } from "@/lib/gcal/client";
 import { syncActivities } from "@/lib/gcal/sync";
+import { upsertAcl, mapRoleToAcl } from "@/lib/gcal/acl";
 import type { ConsentRequired, SyncResponse, GCalLastError } from "@/types/gcal";
 
 function normalizeLastError(raw: string | null): GCalLastError {
@@ -84,6 +85,28 @@ export async function POST(
   const client = await getCalendarClient(session.user.id);
   if (!client) {
     return NextResponse.json({ error: "no_google_account" }, { status: 409 });
+  }
+
+  // 현재 멤버 전원에게 ACL 재부여 (idempotent). v2.8.0 → v2.9.0 마이그레이션으로 승격된
+  // 트립은 DB 레코드만 존재하고 Google 쪽 ACL이 부여되지 않은 상태라, 오너가 sync를
+  // 실행할 때 ACL 부여를 함께 복구한다. 오너 본인은 Google이 자동 owner 데이터 오너로
+  // 인식하므로 대상 아님. 실패는 로그만 남기고 sync 자체는 계속 진행.
+  const members = await prisma.tripMember.findMany({
+    where: { tripId, NOT: { role: TripRole.OWNER } },
+    include: { user: { select: { email: true } } },
+  });
+  for (const m of members) {
+    if (!m.user.email) continue;
+    const aclResult = await upsertAcl(client.calendar, {
+      calendarId: link.calendarId,
+      email: m.user.email,
+      role: mapRoleToAcl(m.role),
+    });
+    if (!aclResult.ok) {
+      console.warn(
+        `[gcal] sync-time ACL upsert failed tripId=${tripId} userId=${m.userId} reason=${aclResult.reason}`
+      );
+    }
   }
 
   // 이벤트 매핑은 기존 GCalLink 기반 재활용. 없으면 bridge 생성(신규 v2.9.0 트립).
