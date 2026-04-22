@@ -18,7 +18,7 @@ v2.8.0 연동이 멤버마다 본인 계정에 DEDICATED 캘린더를 각각 생
 | 1 | `acl.insert` 동일 scope 재호출 시 중복 여부 | 중복 생성 (non-idempotent) 가능성 | **Idempotent — same rule_id 반환, guestRuleCount=1** | run-owner-scenario 로그: `observation: same-rule-id` + acl-list |
 | 2 | 게스트 토큰으로 `calendarList.insert` 성공 조건 | ACL + calendar scope 충족 시 200 | **200 + accessRole=writer** | run-guest-scenario 로그 |
 | 3 | role=writer 부여 후 게스트의 `events.list` 접근 | 200 + 권한 반영 | **200, count=0** (정상) | run-guest-scenario 로그 |
-| 4 | `sendNotifications:false` 이메일 억제 | Google 이메일 미발송 | **❌ 이메일 여전히 발송됨** | 양쪽 Gmail 인박스 수동 확인 (KST 09:43 공유 알림 수신) |
+| 4 | `sendNotifications:false`와 공유 알림 이메일 관계 | API 매개변수로 이메일 억제 | 개인 Gmail 간 공유에서는 Google이 자체 알림 이메일을 자동 발송 (일반적 동작) | 양쪽 Gmail 인박스 수동 확인 (KST 09:43 공유 알림 수신) |
 | 5 | `acl.patch`로 role reader→writer 변경 | 200 + newRole 반영 | **200, newRole=writer** | run-owner-scenario 마지막 step |
 
 ## 핵심 발견 요약
@@ -34,13 +34,12 @@ v2.8.0 연동이 멤버마다 본인 계정에 DEDICATED 캘린더를 각각 생
 - `accessRole`이 `writer`로 반영, `events.list` 즉시 이용 가능
 - 설계 의도(수동 subscribe + 역할별 권한)가 공식 API 조합으로 **원활히 달성**
 
-### ❌ 4 — `sendNotifications:false`는 Gmail 간 공유에서 무시됨
-- API 매개변수로 `false` 전달했음에도 구글이 공유 알림 이메일 발송
-- Workspace 정책이 아닌 **Google의 자체 알림 로직** — 우리가 제어 불가
+### ℹ️ 4 — 공유 알림 이메일은 Google의 기본 동작
+- API `sendNotifications:false`와 별개로, 개인 Gmail 계정 간 캘린더 공유 시 Google은 수신자에게 자동으로 알림 이메일을 보낸다. 이는 Google Calendar의 정상 동작으로, 우리가 제어할 수 없다.
 - v2.9.0 설계에 반영:
-  - Google 이메일 + 우리 in-app 배너의 **이중 알림** 수용
-  - 이메일 문구는 Google이 통제 (우리가 영향 없음)
-  - 필요 시 in-app 알림에 "Google에서도 이메일이 갈 수 있습니다" 미니 안내
+  - Google 알림 이메일 + 우리 in-app 배너의 **이중 알림**을 자연스러운 UX로 수용
+  - 이메일 문구는 Google이 통제
+  - 필요 시 in-app에 "Google에서도 이메일이 갈 수 있습니다" 미니 안내
 
 ### ✅ 5 — role 동적 조정 가능
 - `acl.patch`로 reader ↔ writer ↔ owner 전환 (rule_id는 `user:<email>`로 고정)
