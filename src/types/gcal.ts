@@ -7,7 +7,14 @@
 
 export type CalendarType = "DEDICATED" | "PRIMARY";
 
-export type GCalLastError = "REVOKED" | "RATE_LIMITED" | "NETWORK" | "UNKNOWN" | null;
+export type GCalLastError =
+  | "REVOKED"
+  | "RATE_LIMITED"
+  | "NETWORK"
+  | "UNKNOWN"
+  /** Testing 모드 제약으로 현재 계정이 Test users에 없어 동의·호출이 거부됨(spec 021). */
+  | "UNREGISTERED"
+  | null;
 
 export interface GCalLinkState {
   calendarType: CalendarType;
@@ -33,6 +40,8 @@ export type FailureReason =
   | "network"
   | "forbidden"
   | "not_found"
+  /** 현재 계정이 Test users에 없어 외부 OAuth/API가 거부함(spec 021). */
+  | "unregistered"
   | "unknown";
 
 export interface FailedItem {
@@ -67,13 +76,20 @@ export type StatusResponse =
   | {
       linked: true;
       link: GCalLinkState;
-      /** v2.9.0: 비-오너 멤버의 본인 subscription 상태. 오너 응답에는 null. */
+      /** v2.9.0: 비-주인 동행자의 본인 subscription 상태. 주인 응답에는 null. */
       mySubscription?: {
         status: "NOT_ADDED" | "ADDED" | "ERROR";
         lastError: string | null;
       } | null;
+      /** spec 021: Testing 모드 제약으로 현재 계정이 미등록 사용자인 경우 `true`. 부재 시 출력 생략(역호환). */
+      unregistered?: true;
     }
-  | { linked: false; scopeGranted: boolean };
+  | {
+      linked: false;
+      scopeGranted: boolean;
+      /** spec 021: Testing 모드 제약으로 현재 계정이 미등록 사용자인 경우 `true`. 부재 시 출력 생략(역호환). */
+      unregistered?: true;
+    };
 
 /**
  * Google Calendar API scope.

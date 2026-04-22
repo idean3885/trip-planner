@@ -5,6 +5,7 @@ import FeatureHighlights from "./FeatureHighlights";
 import TechStack from "./TechStack";
 import DemoShowcase from "./DemoShowcase";
 import BottomCta from "./BottomCta";
+import GcalTestingNotice from "./GcalTestingNotice";
 
 export default function LandingPage() {
   return (
@@ -18,6 +19,8 @@ export default function LandingPage() {
       <TechStack />
       <Separator />
       <DemoShowcase />
+      <Separator />
+      <GcalTestingNotice />
       <Separator />
       <BottomCta />
     </article>

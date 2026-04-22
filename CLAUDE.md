@@ -188,6 +188,8 @@ develop ──●──●──●───●──●──●──●──
 - Neon Postgres (Prisma ORM). Production `neondb` / Preview·Dev `neondb_dev` (#318) (018-gcal-integration)
 - TypeScript 5.x, Node.js 20+ + Next.js 16 (App Router, Turbopack), React 19, Prisma 7 (Neon Postgres adapter), Auth.js v5, Tailwind CSS v4, shadcn/ui (vendored Dialog·Button), lucide-reac (020-shared-calendar-not-linked)
 - Neon Postgres — **스키마 변경 없음**. 기존 `TripCalendarLink` / `GCalLink` 모델 참조만. (020-shared-calendar-not-linked)
+- TypeScript 5.x, Node.js 20+ + Next.js 16 App Router, React 19, Auth.js v5, `@googleapis/calendar`, shadcn/ui (vendored Dialog·Button), lucide-react. 본 피처에서 **신규 의존성 없음**. (021-gcal-access-guide)
+- Neon Postgres — **스키마 변경 없음**. 미등록 상태는 세션/쿠키·응답 플래그 수준에서만 다룬다. (021-gcal-access-guide)
 
 ## Recent Changes
 - 001-ax-travel-planning: Added Python 3.14 + FastMCP, httpx, python-dotenv, pytes
