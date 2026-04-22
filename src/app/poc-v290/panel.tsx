@@ -117,7 +117,7 @@ export function PocPanel() {
           <CardTitle>1. 내 상태</CardTitle>
           <CardDescription>
             로그인한 계정 정보 + calendar scope 부여 여부. 페이지 진입 시 자동 실행됨.
-            scopeGranted=false이면 아래 "scope 재동의" 버튼 클릭.
+            scopeGranted=false이면 아래 scope 재동의 버튼 클릭.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-wrap gap-2">
