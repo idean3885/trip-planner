@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [2.10.0] - 2026-04-23
+
+### Added
+
+- 이벤트 매핑을 공유 캘린더에 직접 귀속하도록 재설계. 왜: 기존 per-user bridge 재사용 로직이 혼선·중복 데이터의 원천이었다. 레거시 테이블·라우트는 무중단 배포를 위해 남기고 후속 릴리즈에서 drop 예정. ([#402](https://github.com/idean3885/trip-planner/issues/402))
+- 동행자 목록의 주인 항목에 "주인"+"호스트" 두 뱃지를 병렬 표시. 왜: 주인이 호스트 권한을 포함한다는 역할 계층이 UI에 드러나지 않아 혼선이 있었다. ([#403](https://github.com/idean3885/trip-planner/issues/403))
+
+
 ## [2.9.2] - 2026-04-22
 
 ### Added
