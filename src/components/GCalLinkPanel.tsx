@@ -353,6 +353,9 @@ export default function GCalLinkPanel({ tripId, role = "OWNER" }: Props) {
   if (!isOwner) {
     const sub = status.mySubscription;
     const isAdded = sub?.status === "ADDED";
+    // HOST는 트립 편집 권한이 있으므로 sync 트리거도 허용 (서버가 오너 토큰으로 수행).
+    // GUEST는 편집 불가라 sync도 안 함.
+    const canSync = role === "HOST";
 
     return (
       <Dialog>
@@ -378,10 +381,20 @@ export default function GCalLinkPanel({ tripId, role = "OWNER" }: Props) {
               부여되어 있으며, 추가하지 않아도 앱 내 일정은 정상 이용 가능합니다.
             </p>
           )}
-          <DialogFooter>
+          {canSync && link.lastSyncedAt && (
+            <p className="text-xs text-muted-foreground">
+              마지막 반영: {new Date(link.lastSyncedAt).toLocaleString("ko-KR")}
+            </p>
+          )}
+          <DialogFooter className="gap-2 flex-wrap">
             <DialogClose className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}>
               닫기
             </DialogClose>
+            {canSync && (
+              <Button size="sm" variant="outline" onClick={() => void handleSync()} disabled={busy}>
+                다시 반영하기
+              </Button>
+            )}
             {isAdded ? (
               <Button
                 size="sm"
