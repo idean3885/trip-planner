@@ -29,8 +29,9 @@ describe("GCalLinkPanel — spec 020 미연결 비-주인 UI", () => {
     // 상태 로드 후 트리거 버튼이 렌더되기를 기다림.
     const trigger = await screen.findByRole("button", { name: /구글 캘린더 \(공유\)/ });
     fireEvent.click(trigger);
-    // 다이얼로그 내용 대기.
-    await waitFor(() => expect(screen.getByRole("dialog")).toBeInTheDocument());
+    // 다이얼로그 내부의 "닫기" 버튼이 DOM에 렌더되기를 기다린다. CI 환경에서 portal
+    // 기반 role="dialog" 탐색이 타이밍에 민감해, 내부 버튼 기준으로 대기.
+    await screen.findByRole("button", { name: "닫기" });
     return trigger;
   }
 
