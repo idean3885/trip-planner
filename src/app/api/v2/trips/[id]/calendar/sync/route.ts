@@ -55,23 +55,25 @@ export async function POST(
     return NextResponse.json({ error: "bad_trip_id" }, { status: 400 });
   }
 
-  // 오너만 sync 가능.
+  // OWNER·HOST 모두 sync 트리거 가능. GUEST는 편집 권한 없어 불가.
+  // Google API는 항상 링크 오너의 토큰으로 실행된다(이벤트 데이터 오너 = 트립 오너).
   const member = await getTripMember(tripId, session.user.id);
-  if (member?.role !== TripRole.OWNER) {
-    return NextResponse.json({ error: "owner_only" }, { status: 403 });
-  }
-
-  if (!(await hasCalendarScope(session.user.id))) {
-    const body: ConsentRequired = {
-      error: "consent_required",
-      authorizationUrl: buildConsentRedirectUrl(`/trips/${tripId}?gcal=synced`),
-    };
-    return NextResponse.json(body, { status: 409 });
+  if (!member || (member.role !== TripRole.OWNER && member.role !== TripRole.HOST)) {
+    return NextResponse.json({ error: "editor_only" }, { status: 403 });
   }
 
   const link = await prisma.tripCalendarLink.findUnique({ where: { tripId } });
   if (!link) {
     return NextResponse.json({ error: "not_linked" }, { status: 404 });
+  }
+
+  // 오너가 직접 sync할 때만 본인 scope 점검. 호스트는 오너 토큰 경유라 본인 scope 무관.
+  if (member.role === TripRole.OWNER && !(await hasCalendarScope(session.user.id))) {
+    const body: ConsentRequired = {
+      error: "consent_required",
+      authorizationUrl: buildConsentRedirectUrl(`/trips/${tripId}?gcal=synced`),
+    };
+    return NextResponse.json(body, { status: 409 });
   }
 
   const trip = await prisma.trip.findUnique({
@@ -82,9 +84,10 @@ export async function POST(
     return NextResponse.json({ error: "trip_not_found" }, { status: 404 });
   }
 
-  const client = await getCalendarClient(session.user.id);
+  // 항상 링크 오너 토큰으로 Google API 호출.
+  const client = await getCalendarClient(link.ownerId);
   if (!client) {
-    return NextResponse.json({ error: "no_google_account" }, { status: 409 });
+    return NextResponse.json({ error: "owner_token_unavailable" }, { status: 502 });
   }
 
   // 현재 멤버 전원에게 ACL 재부여 (idempotent). v2.8.0 → v2.9.0 마이그레이션으로 승격된

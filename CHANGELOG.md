@@ -36,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **"건너뛴 이벤트" 카운터 누적 버그**. 왜: sync마다 누적되던 `skippedCount`를 현재 run의 실제 값으로 덮어쓰도록 변경.
 - **subscribe 성공 후에도 안 바뀌는 UX**. 왜: 상태 응답에 `mySubscription`을 추가해 ADDED 상태면 컴팩트 카드(오너 "연결됨" 카드와 동일 톤)로 전환.
 - **412 오탐으로 앱 편집이 Google에 안 밀리는 문제**. 왜: 412 시 **컨텐츠 비교 → 타임스탬프 비교** 순서로 판정해, 진짜 사용자 GCal 편집일 때만 `skipped`로 남긴다.
+- **호스트가 본인 편집을 sync 트리거 못 하던 문제**. 왜: 호스트도 트립 편집 권한이 있으므로 "다시 반영하기"를 쓸 수 있도록 확장(서버는 오너 토큰으로 수행).
 
 ### Chore
 
