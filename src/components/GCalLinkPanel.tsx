@@ -130,8 +130,11 @@ export default function GCalLinkPanel({ tripId, role = "OWNER" }: Props) {
   }
 
   async function handleSync(retryOnly?: number[]) {
-    // v2.9.0 오너는 v2 sync 엔드포인트 사용. retryOnly는 현재 v2에서 미지원(향후 확장).
-    if (isOwner && !retryOnly) {
+    // v2.9.0: OWNER·HOST 모두 v2 sync 엔드포인트 사용 (per-trip 공유 캘린더).
+    // v1 per-user 경로는 레거시(GUEST는 애초에 편집 불가라 sync 호출 경로 없음).
+    // retryOnly는 현재 v2 미지원이라 v1 폴백이 필요하나, 실제로 failed 아이템 재시도는
+    // 오너/호스트의 v2 sync 일반 호출로 동일 효과를 얻으므로 여기서도 v2로 보낸다.
+    if (isOwner || role === "HOST") {
       return handleSyncV2();
     }
     setBusy(true);
