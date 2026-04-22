@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **v2.8.0 마이그레이션 트립의 멤버 ACL 자동 복구 + 동의 후 자동 subscribe**: 백필 SQL은 DB의 TripCalendarLink 승격만 수행하고 Google 쪽 ACL 부여는 하지 못하므로, 승격된 트립에서 멤버가 "내 구글 캘린더에 추가"를 눌러도 404로 실패하는 문제를 해소. 오너가 "다시 반영하기"를 누르면 sync 전에 현재 멤버 전원에게 ACL을 idempotent하게 upsert해 Google 쪽 권한을 복구한다. 또 멤버가 subscribe 시 calendar scope 동의를 완료하고 돌아오면 자동으로 subscribe가 재시도되도록 `?gcal=subscribed` 쿼리를 auto-retry 대상에 추가.
 - **"직접 수정하여 건너뛴 이벤트" 카운터가 누적되는 문제**: sync를 누를 때마다 동일 이벤트가 반복 카운트되어 숫자가 선형 증가하던 버그 수정. 이번 sync의 실제 건너뛴 수로 덮어쓰도록 변경(v2 sync·v1 sync·v1 link 모두). 사용자 직접 수정 이벤트가 해결되면 다음 sync에서 자동으로 0으로 리셋된다.
+- **멤버 "내 구글 캘린더에 추가" 후에도 버튼·안내문이 그대로 유지되던 UX 이슈**: 상태 응답에 본인 subscription 상태(`mySubscription`)를 함께 반환하고, 패널은 `ADDED` 상태면 "내 캘린더에 추가됨" 배지 + "제거" 단일 버튼의 컴팩트 카드로 전환한다. 오너 쪽 "연결됨" 카드와 동일한 톤.
 
 ### Chore
 
