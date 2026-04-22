@@ -9,6 +9,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [2.9.0] - 2026-04-22
+
+### Breaking
+
+- **Google Calendar 연동: 여행당 1개 공유 캘린더 모델로 재설계 (v2.9.0 expand)**: 기존 per-user `GCalLink`는 유지되지만, 새로 제공되는 `TripCalendarLink` + `MemberCalendarSubscription` 테이블로 여행당 캘린더가 1개만 존재하도록 바뀐다. v2.8.0에서 연동한 여행은 오너의 기존 캘린더를 그대로 공유 캘린더로 승격 재사용하며, 같은 여행의 다른 멤버가 만든 DEDICATED 캘린더는 앱 내 연결이 자동 해제된다(외부 계정의 캘린더 자체는 유지 — 사용자가 직접 정리 가능). 후속 릴리즈에서 레거시 API/테이블은 제거된다(contract 단계). ([#355](https://github.com/idean3885/trip-planner/issues/355))
+
+### Added
+
+- **오너 공유 캘린더 연결 API (v2.9.0 #356)**: `POST /api/v2/trips/{id}/calendar`로 여행 오너가 공유 캘린더 1개를 연결하면 현재 멤버 전원에게 역할별 권한(오너=owner / 호스트=writer / 게스트=reader)이 서버에서 자동 부여된다. 재호출은 idempotent(중복 rule 생성 없음)이며, `DELETE`로 연결 해제 시 ACL 회수만 시도하고 캘린더 자체는 외부 계정에 유지된다. ([#356](https://github.com/idean3885/trip-planner/issues/356))
+- **멤버 라이프사이클 시점에 공유 캘린더 ACL 자동 동기화 (v2.9.0 #357)**: 트립에 멤버가 가입(초대 수락)·역할 변경(승격/강등)·탈퇴/제거·오너 이관될 때, 여행에 공유 캘린더가 연결되어 있으면 서버가 오너 토큰으로 ACL을 자동 부여/갱신/회수한다. 외부 동기화 실패는 멤버 조작 자체를 차단하지 않고 서버 로그로만 남긴다. ([#357](https://github.com/idean3885/trip-planner/issues/357))
+- **멤버 수동 subscribe 엔드포인트 (v2.9.0 #358)**: 멤버가 공유 캘린더를 본인 Google Calendar UI에 추가하거나 제거한다. `POST/DELETE /api/v2/trips/{id}/calendar/subscribe`. calendar scope가 없으면 409와 동의 URL을 반환해 사용자가 최소 권한만 부여한 뒤 다시 누르면 완료된다. 제거는 본인 UI에서만 숨기고 공유 캘린더의 권한은 유지되어 언제든 다시 추가할 수 있다. ([#358](https://github.com/idean3885/trip-planner/issues/358))
+- **공유 캘린더 sync 엔드포인트 (v2.9.0 #359)**: 오너가 `POST /api/v2/trips/{id}/calendar/sync`로 여행의 활동을 공유 캘린더에 반영한다. 내부적으로 `TripCalendarLink`의 calendarId를 정본으로 사용하고, 이벤트 매핑은 기존 인프라(GCalEventMapping)를 expand 단계에서 재활용한다(contract 릴리즈에서 별도 이관). ([#359](https://github.com/idean3885/trip-planner/issues/359))
+- **트립 페이지 캘린더 패널 역할별 UI (v2.9.0 #360)**: 오너는 "공유 캘린더 연결/해제/다시 반영" 버튼으로 v2 API를 호출해 여행당 1개 캘린더를 관리한다. 호스트·게스트는 "내 구글 캘린더에 추가/제거" 버튼만 보이고, 오너가 이미 부여한 권한 위에 본인 캘린더 UI 등록만 옵트인으로 선택한다. 본인이 "제거"를 눌러도 ACL은 유지되어 언제든 다시 추가할 수 있다. ([#360](https://github.com/idean3885/trip-planner/issues/360))
+
+### Documentation
+
+- **ADR 0003: 여행 캘린더는 여행당 1개 공유 캘린더 (v2.9.0 #363)**: 멤버별 중복 캘린더 문제 해결을 위한 아키텍처 결정을 `docs/adr/0003-per-trip-shared-calendar.md`로 고정. 이유·대안·trade-off·contract 타임라인 명시. ([#363](https://github.com/idean3885/trip-planner/issues/363))
+
+### Chore
+
+- **레거시 GCal 상태 API가 공유 모델 응답에 적응 (v2.9.0 #361)**: `GET /api/trips/{id}/gcal/status`가 신규 `TripCalendarLink`가 있으면 그것을 우선 사용하고, 없을 때만 기존 per-user `GCalLink`로 폴백한다. 외부 MCP 클라이언트와 웹 UI가 같은 응답 형식을 받으며 v2.9.0 이후에도 기존 통합이 깨지지 않는다. ([#361](https://github.com/idean3885/trip-planner/issues/361))
+- **quickstart Evidence 섹션을 PoC 기반 증거로 충족 (v2.9.0 #362)**: `specs/019-gcal-shared-flow/quickstart.md`의 Evidence 섹션에 PoC 실측(Epic #349)과 병합된 피처 PR들의 CI 증거를 연결. 통합 테스트는 쿼터·실 계정 특성상 라이브 수동 검증이 더 신뢰 가능해 별도 후속 이슈로 분리한다. ([#362](https://github.com/idean3885/trip-planner/issues/362))
+
+
 ## [2.8.0] - 2026-04-21
 
 ### Added
