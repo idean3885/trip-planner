@@ -4,6 +4,11 @@ const { mockPrisma, mockAuthHelpers } = vi.hoisted(() => ({
   mockPrisma: {
     trip: { create: vi.fn(), delete: vi.fn() },
     tripMember: { delete: vi.fn() },
+    // v2.9.0 per-trip 공유 캘린더 훅이 호출됨 — 미연결 여행에서 no-op으로 흐르도록
+    // findUnique가 null을 반환하게만 만들어두면 onMemberLeave가 조용히 return.
+    tripCalendarLink: { findUnique: vi.fn().mockResolvedValue(null) },
+    memberCalendarSubscription: { deleteMany: vi.fn().mockResolvedValue({ count: 0 }) },
+    user: { findUnique: vi.fn().mockResolvedValue(null) },
   },
   mockAuthHelpers: {
     getAuthUserId: vi.fn(),
