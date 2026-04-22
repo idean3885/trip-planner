@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { rolesFor, type RoleBadgeTone } from "@/lib/member-role";
 
 interface MemberListProps {
   tripId: number;
@@ -8,23 +9,13 @@ interface MemberListProps {
 
 const ROLE_ORDER: Record<string, number> = { OWNER: 0, HOST: 1, GUEST: 2 };
 
-function roleBadge(role: string) {
-  const base =
-    "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ring-1";
-  switch (role) {
-    case "OWNER":
-      return `${base} bg-foreground text-background ring-transparent`;
-    case "HOST":
-      return `${base} bg-secondary text-secondary-foreground ring-foreground/10`;
-    default:
-      return `${base} bg-muted text-muted-foreground ring-foreground/5`;
-  }
-}
+const BADGE_BASE =
+  "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ring-1";
 
-function roleLabel(role: string) {
-  if (role === "OWNER") return "주인";
-  if (role === "HOST") return "호스트";
-  return "게스트";
+function badgeClass(tone: RoleBadgeTone) {
+  if (tone === "primary") return `${BADGE_BASE} bg-foreground text-background ring-transparent`;
+  if (tone === "secondary") return `${BADGE_BASE} bg-secondary text-secondary-foreground ring-foreground/10`;
+  return `${BADGE_BASE} bg-muted text-muted-foreground ring-foreground/5`;
 }
 
 export default async function MemberList({ tripId }: MemberListProps) {
@@ -73,7 +64,13 @@ export default async function MemberList({ tripId }: MemberListProps) {
                     </p>
                   )}
                 </div>
-                <span className={roleBadge(m.role)}>{roleLabel(m.role)}</span>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {rolesFor(m.role).map((b) => (
+                    <span key={b.key} className={badgeClass(b.tone)}>
+                      {b.label}
+                    </span>
+                  ))}
+                </div>
               </li>
             );
           })}
