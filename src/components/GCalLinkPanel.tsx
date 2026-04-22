@@ -319,22 +319,27 @@ export default function GCalLinkPanel({ tripId, role = "OWNER" }: Props) {
   // 클릭 시 다이얼로그로 확장해 연결/해제/동기화 등을 수행한다.
 
   if (!status.linked) {
+    const isLegacy = status.legacy === "needs_owner_relink";
     if (!isOwner) {
-      // 오너가 아직 연결 안 함. 비-오너에게는 정보 없음 → 아예 렌더 안 함.
+      // 오너가 아직 v2.9.0 공유 캘린더를 연결하지 않았다. 비-오너는 스스로 해결 불가라
+      // 아예 렌더하지 않는다. (레거시 per-user 링크가 남아있어도 동일 — 오너 재연결 전까진 의미 없음)
       return null;
     }
     return (
       <Dialog>
         <DialogTrigger className={cn(buttonVariants({ variant: "outline", size: "sm" }), "gap-1.5")}>
           <Calendar className="size-4" />
-          구글 캘린더 연결
+          {isLegacy ? "구글 캘린더 업그레이드" : "구글 캘린더 연결"}
         </DialogTrigger>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>구글 캘린더 (공유) 연결</DialogTitle>
+            <DialogTitle>
+              {isLegacy ? "구글 캘린더 공유로 업그레이드" : "구글 캘린더 (공유) 연결"}
+            </DialogTitle>
             <DialogDescription>
-              여행의 공유 캘린더를 만들고 호스트·게스트에게 자동 권한을 부여합니다.
-              구글에서 공유 알림 메일이 발송될 수 있습니다.
+              {isLegacy
+                ? "이전 방식(개인 캘린더)으로 연결되어 있어 공유 기능이 동작하지 않습니다. 공유 캘린더로 업그레이드하면 호스트·게스트에게 자동 권한이 부여됩니다."
+                : "여행의 공유 캘린더를 만들고 호스트·게스트에게 자동 권한을 부여합니다. 구글에서 공유 알림 메일이 발송될 수 있습니다."}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -342,7 +347,7 @@ export default function GCalLinkPanel({ tripId, role = "OWNER" }: Props) {
               취소
             </DialogClose>
             <Button size="sm" onClick={() => void handleLink(choice)} disabled={busy}>
-              공유 캘린더 연결
+              {isLegacy ? "공유 캘린더로 업그레이드" : "공유 캘린더 연결"}
             </Button>
           </DialogFooter>
         </DialogContent>

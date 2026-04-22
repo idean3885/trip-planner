@@ -63,6 +63,13 @@ export interface ConsentRequired {
   authorizationUrl?: string;
 }
 
+/**
+ * 비연결 상태의 세부 사유.
+ *  - `needs_owner_relink`: v2.8.0 per-user `GCalLink`는 남아 있으나 v2.9.0 `TripCalendarLink`가 없어,
+ *    오너가 공유 캘린더를 다시 연결해야 하는 상태. #393 수정으로 도입.
+ */
+export type LegacyStatusReason = "needs_owner_relink";
+
 export type StatusResponse =
   | {
       linked: true;
@@ -73,7 +80,12 @@ export type StatusResponse =
         lastError: string | null;
       } | null;
     }
-  | { linked: false; scopeGranted: boolean };
+  | {
+      linked: false;
+      scopeGranted: boolean;
+      /** 레거시 per-user 링크가 남아있을 때 UI 안내용. 없으면 순수 미연결. */
+      legacy?: LegacyStatusReason;
+    };
 
 /**
  * Google Calendar API scope.

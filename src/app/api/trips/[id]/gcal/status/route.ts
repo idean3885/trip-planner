@@ -1,8 +1,14 @@
 /**
  * GET /api/trips/[id]/gcal/status
  *
- * v2.9.0 호환 어댑터 — 레거시 응답 형식은 유지하되, 신규 TripCalendarLink가 있으면
- * 그것을 우선 반영. 없으면 기존 GCalLink 폴백 (v2.8.0 경로).
+ * v2.9.0 호환 어댑터 — TripCalendarLink가 존재하면 그것을 정본으로 사용한다.
+ *
+ * v2.8.0 per-user GCalLink로의 폴백은 #393에서 제거했다. 이유:
+ *   backfill_v28_gcal_links가 "오너 DEDICATED"만 승격하므로, 오너 PRIMARY·미연결 트립에서는
+ *   비오너의 per-user 링크가 남아 폴백이 `linked:true`를 돌려주는데,
+ *   UI는 이를 근거로 v2 subscribe/sync 버튼을 그리고 실제 호출은 not_linked 404로 떨어졌다.
+ *   이제 TripCalendarLink가 없으면 항상 linked:false. 레거시 GCalLink가 감지되면
+ *   `legacy: "needs_owner_relink"`로 안내해 오너의 재연결을 유도한다.
  *
  * 공유 여행에서 타 멤버의 연동 상태는 본 응답에 포함되지 않는다(FR-007).
  */
@@ -72,26 +78,18 @@ export async function GET(
     return NextResponse.json(body);
   }
 
-  // 폴백: v2.8.0 per-user GCalLink 조회.
-  const link = await prisma.gCalLink.findUnique({
-    where: { userId_tripId: { userId: session.user.id, tripId } },
+  // TripCalendarLink가 없는 트립에서 레거시 per-user GCalLink가 남아있는지만 검사한다.
+  // 존재 시 미연결 상태로 응답하되 legacy 힌트를 실어 UI가 오너에게 재연결을 유도한다.
+  // #393: 폴백으로 linked:true를 돌려주지 않는다 — v2 subscribe/sync가 not_linked 404로
+  // 떨어지던 문제의 원인이었다.
+  const legacyLink = await prisma.gCalLink.findFirst({
+    where: { tripId },
+    select: { id: true },
   });
-
-  if (link) {
-    const body: StatusResponse = {
-      linked: true,
-      link: {
-        calendarType: link.calendarType,
-        calendarId: link.calendarId,
-        calendarName: link.calendarName,
-        lastSyncedAt: link.lastSyncedAt?.toISOString() ?? null,
-        lastError: normalizeLastError(link.lastError),
-        skippedCount: link.skippedCount,
-      },
-    };
-    return NextResponse.json(body);
-  }
-
   const scopeGranted = await hasCalendarScope(session.user.id);
-  return NextResponse.json({ linked: false, scopeGranted } satisfies StatusResponse);
+  return NextResponse.json({
+    linked: false,
+    scopeGranted,
+    ...(legacyLink ? { legacy: "needs_owner_relink" as const } : {}),
+  } satisfies StatusResponse);
 }
