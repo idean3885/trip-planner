@@ -64,7 +64,15 @@ export interface ConsentRequired {
 }
 
 export type StatusResponse =
-  | { linked: true; link: GCalLinkState }
+  | {
+      linked: true;
+      link: GCalLinkState;
+      /** v2.9.0: 비-오너 멤버의 본인 subscription 상태. 오너 응답에는 null. */
+      mySubscription?: {
+        status: "NOT_ADDED" | "ADDED" | "ERROR";
+        lastError: string | null;
+      } | null;
+    }
   | { linked: false; scopeGranted: boolean };
 
 /**
@@ -83,3 +91,51 @@ export const GCAL_EVENTS_SCOPE = GCAL_SCOPE;
 
 /** 전용 캘린더 이름 접미어. 사용자의 다른 캘린더와 구분 목적. */
 export const DEDICATED_CALENDAR_SUFFIX = " (trip-planner)" as const;
+
+// ============================================================
+// v2.9.0 per-trip 공유 모델 (#349, spec 019)
+// ============================================================
+
+export type TripCalendarLastError = GCalLastError;
+
+export interface MemberAclState {
+  userId: string;
+  email: string;
+  role: "OWNER" | "HOST" | "GUEST";
+  aclRole: "owner" | "writer" | "reader";
+  /** 해당 멤버의 ACL 부여 성공 여부. 실패면 사유 포함. */
+  aclStatus: "granted" | "failed";
+  aclError?: FailureReason;
+}
+
+export interface TripCalendarLinkState {
+  tripId: number;
+  calendarId: string;
+  calendarName: string | null;
+  ownerId: string;
+  lastSyncedAt: string | null;
+  lastError: TripCalendarLastError;
+  skippedCount: number;
+}
+
+export interface TripCalendarLinkResponse {
+  status: "ok" | "partial" | "failed";
+  link: TripCalendarLinkState;
+  members: MemberAclState[];
+}
+
+export type MemberSubscriptionStatusValue = "NOT_ADDED" | "ADDED" | "ERROR";
+
+export interface MemberSubscriptionState {
+  tripId: number;
+  status: MemberSubscriptionStatusValue;
+  accessRole: string | null;
+  lastError: string | null;
+}
+
+export interface MemberSubscribeResponse {
+  status: "ok" | "consent_required" | "failed";
+  subscription?: MemberSubscriptionState;
+  authorizationUrl?: string;
+  error?: FailureReason;
+}

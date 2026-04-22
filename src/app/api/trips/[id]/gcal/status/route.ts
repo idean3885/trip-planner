@@ -1,11 +1,14 @@
 /**
  * GET /api/trips/[id]/gcal/status
  *
- * 현재 사용자의 이 여행에 대한 GCal 연동 상태를 돌려준다.
+ * v2.9.0 호환 어댑터 — 레거시 응답 형식은 유지하되, 신규 TripCalendarLink가 있으면
+ * 그것을 우선 반영. 없으면 기존 GCalLink 폴백 (v2.8.0 경로).
+ *
  * 공유 여행에서 타 멤버의 연동 상태는 본 응답에 포함되지 않는다(FR-007).
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { TripRole } from "@prisma/client";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getTripMember } from "@/lib/auth-helpers";
@@ -38,7 +41,38 @@ export async function GET(
     return NextResponse.json({ error: "not_a_member" }, { status: 403 });
   }
 
-  // 본인(Self) 링크만 조회 — 타 멤버의 GCalLink는 응답에 포함하지 않는다.
+  // v2.9.0: TripCalendarLink가 존재하면 그걸 응답 정본으로 사용.
+  const sharedLink = await prisma.tripCalendarLink.findUnique({ where: { tripId } });
+  if (sharedLink) {
+    // 비-오너 멤버의 본인 subscription 상태를 함께 반환해 UI가 역할·상태별 카드를 렌더할 수 있게 함.
+    type MySubscription =
+      | { status: "NOT_ADDED" | "ADDED" | "ERROR"; lastError: string | null }
+      | null;
+    let mySubscription: MySubscription = null;
+    if (member.role !== TripRole.OWNER) {
+      const sub = await prisma.memberCalendarSubscription.findUnique({
+        where: { linkId_userId: { linkId: sharedLink.id, userId: session.user.id } },
+      });
+      mySubscription = sub
+        ? { status: sub.status, lastError: sub.lastError ?? null }
+        : { status: "NOT_ADDED", lastError: null };
+    }
+    const body: StatusResponse = {
+      linked: true,
+      link: {
+        calendarType: "DEDICATED",
+        calendarId: sharedLink.calendarId,
+        calendarName: sharedLink.calendarName,
+        lastSyncedAt: sharedLink.lastSyncedAt?.toISOString() ?? null,
+        lastError: normalizeLastError(sharedLink.lastError),
+        skippedCount: sharedLink.skippedCount,
+      },
+      mySubscription,
+    };
+    return NextResponse.json(body);
+  }
+
+  // 폴백: v2.8.0 per-user GCalLink 조회.
   const link = await prisma.gCalLink.findUnique({
     where: { userId_tripId: { userId: session.user.id, tripId } },
   });

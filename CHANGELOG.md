@@ -9,6 +9,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [2.9.0] - 2026-04-22
+
+> 이번 릴리즈부터 각 엔트리는 **What** (한 줄 요약) + **Why** (배경 1줄)로 단순화.
+
+### Breaking
+
+- **여행당 1개 공유 캘린더 모델**로 전환. 왜: v2.8.0은 멤버마다 개인 캘린더를 만들어 여행 1개에 N개 중복 생성됐다. v2.8.0 오너 캘린더는 자동 승격 재사용, 다른 멤버 캘린더는 앱 내 연결 해제. 레거시 API는 다음 릴리즈에서 제거. ([#355](https://github.com/idean3885/trip-planner/issues/355))
+
+### Added
+
+- **오너 공유 캘린더 연결 API** (`POST/DELETE /api/v2/trips/{id}/calendar`). 왜: 연결 시 현재 멤버 전원에게 역할별 ACL을 서버가 한 번에 부여. ([#356](https://github.com/idean3885/trip-planner/issues/356))
+- **멤버 라이프사이클 ACL 자동 동기화**. 왜: 가입·역할 변경·탈퇴·오너 이관 시점에 서버가 자동으로 ACL을 맞춰, 오너의 수동 조작 없이 권한 일관성 유지. ([#357](https://github.com/idean3885/trip-planner/issues/357))
+- **멤버 수동 subscribe 엔드포인트** (`POST/DELETE /api/v2/trips/{id}/calendar/subscribe`). 왜: "안 쓸 자유"를 보장하면서 필요한 멤버만 옵트인으로 본인 GCal에 띄우도록. ([#358](https://github.com/idean3885/trip-planner/issues/358))
+- **공유 캘린더 sync 엔드포인트** (`POST /api/v2/trips/{id}/calendar/sync`). 왜: 오너 토큰 1개로만 쓰기가 들어가 중복 이벤트가 원천 차단. ([#359](https://github.com/idean3885/trip-planner/issues/359))
+- **역할별 트립 페이지 UI**. 왜: 오너는 연결/sync/해제, 멤버는 내 캘린더 추가/제거만 보여 조작 실수와 혼선을 최소화. ([#360](https://github.com/idean3885/trip-planner/issues/360))
+
+### Documentation
+
+- **ADR 0003 — 여행당 1개 공유 캘린더**. 왜: 모델 선택·거절된 대안·후속 contract 타임라인을 한 곳에 고정. ([#363](https://github.com/idean3885/trip-planner/issues/363))
+
+### Fixed
+
+- **v2.8.0 트립의 멤버 ACL 자동 복구**. 왜: 백필 SQL은 Google API를 호출하지 못해 ACL이 누락됐고, 오너가 "다시 반영하기"를 누르면 sync 전에 ACL을 idempotent하게 복구하도록 했다.
+- **subscribe 동의 복귀 후 자동 재시도**. 왜: `?gcal=subscribed` 쿼리를 auto-retry 화이트리스트에 추가해 "한 번 더 누르기" 수고 제거.
+- **"건너뛴 이벤트" 카운터 누적 버그**. 왜: sync마다 누적되던 `skippedCount`를 현재 run의 실제 값으로 덮어쓰도록 변경.
+- **subscribe 성공 후에도 안 바뀌는 UX**. 왜: 상태 응답에 `mySubscription`을 추가해 ADDED 상태면 컴팩트 카드(오너 "연결됨" 카드와 동일 톤)로 전환.
+- **412 오탐으로 앱 편집이 Google에 안 밀리는 문제**. 왜: 412 시 **컨텐츠 비교 → 타임스탬프 비교** 순서로 판정해, 진짜 사용자 GCal 편집일 때만 `skipped`로 남긴다.
+- **호스트가 본인 편집을 sync 트리거 못 하던 문제**. 왜: 호스트도 트립 편집 권한이 있으므로 "다시 반영하기"를 쓸 수 있도록 확장(서버는 오너 토큰으로 수행).
+
+### Chore
+
+- **레거시 status 라우트가 공유 모델 응답으로 어댑트**. 왜: 기존 MCP 클라이언트가 v2.9.0 이후에도 같은 응답 형식을 받도록 뒤호환 유지. ([#361](https://github.com/idean3885/trip-planner/issues/361))
+- **quickstart Evidence 섹션 충족**. 왜: PoC 실측(#349) + 피처 PR CI를 증거로 연결, 통합 테스트는 별도 후속 이슈로 분리. ([#362](https://github.com/idean3885/trip-planner/issues/362))
+
+
 ## [2.8.0] - 2026-04-21
 
 ### Added

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthUserId, isOwner } from "@/lib/auth-helpers";
+import { onOwnerTransfer } from "@/lib/gcal/member-sync";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -42,6 +43,14 @@ export async function POST(request: Request, { params }: Params) {
     prisma.tripMember.update({ where: { id: target.id }, data: { role: "OWNER" } }),
     prisma.tripMember.update({ where: { id: currentOwner.id }, data: { role: "HOST" } }),
   ]);
+
+  // 공유 캘린더의 기록상 오너 필드도 갱신 (데이터 오너는 Google 제약으로 이전 불가 — 메모 유지).
+  await prisma.tripCalendarLink.updateMany({
+    where: { tripId },
+    data: { ownerId: target.userId },
+  });
+
+  await onOwnerTransfer(tripId, currentOwner.userId, target.userId);
 
   return NextResponse.json({ ok: true });
 }

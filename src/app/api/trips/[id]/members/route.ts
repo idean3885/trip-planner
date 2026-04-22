@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthUserId, getTripMember, isHost, isOwner } from "@/lib/auth-helpers";
+import { onRoleChange, onMemberLeave } from "@/lib/gcal/member-sync";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -59,6 +60,7 @@ export async function PATCH(request: Request, { params }: Params) {
       return NextResponse.json({ error: "호스트만 승격할 수 있습니다" }, { status: 403 });
     }
     await prisma.tripMember.update({ where: { id: memberId }, data: { role: "HOST" } });
+    await onRoleChange(tripId, target.userId, "HOST");
   } else {
     // 호스트 → 게스트: 주인만 가능
     if (target.role !== "HOST") {
@@ -68,6 +70,7 @@ export async function PATCH(request: Request, { params }: Params) {
       return NextResponse.json({ error: "주인만 강등할 수 있습니다" }, { status: 403 });
     }
     await prisma.tripMember.update({ where: { id: memberId }, data: { role: "GUEST" } });
+    await onRoleChange(tripId, target.userId, "GUEST");
   }
 
   return NextResponse.json({ ok: true });
@@ -110,6 +113,7 @@ export async function DELETE(request: Request, { params }: Params) {
   }
 
   await prisma.tripMember.delete({ where: { id: memberId } });
+  await onMemberLeave(tripId, target.userId);
 
   return NextResponse.json({ ok: true });
 }

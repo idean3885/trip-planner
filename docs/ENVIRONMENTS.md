@@ -54,6 +54,53 @@
 - ❌ 내부 링크를 canonical 도메인으로 강제 — 환경 교차 참조 유발
 - ❌ `process.env.AUTH_URL`을 앱 로직에서 직접 참조 — 이미 `getAppOrigin` / `getCanonicalOrigin` 헬퍼 존재
 
+## Dev 환경 접근 (Vercel Deployment Protection)
+
+`dev.trip.idean.me`는 Vercel Deployment Protection이 걸려 있어 Vercel 팀 외부 접근은 401. 테스트 계정·외부 조력자·PoC용 다계정 교차 검증 등에서 "팀 멤버 아닌 브라우저"가 필요할 때 **Protection Bypass for Automation** 토큰을 사용한다.
+
+### 저장 규약
+
+토큰 **값** 자체는 macOS Keychain에만 존재. 저장소·이슈·PR·채팅 어디에도 평문으로 남기지 않는다. Keychain entry 이름은 lookup key일 뿐 비밀이 아니므로 본 문서에 공개.
+
+| 항목 | 값 |
+|------|----|
+| Keychain service | `trip-planner-vercel-bypass` |
+| Keychain account | `$USER` |
+| 갱신 출처 | Vercel Dashboard → Settings → Deployment Protection → Protection Bypass for Automation |
+
+### 저장 / 갱신
+
+```bash
+# 새 값으로 저장 (-U로 기존 덮어쓰기)
+security add-generic-password \
+  -s "trip-planner-vercel-bypass" \
+  -a "$USER" \
+  -w "<vercel에서_발급한_secret>" \
+  -U
+```
+
+### 사용
+
+```bash
+# URL 생성 (브라우저용)
+TOKEN=$(security find-generic-password -s "trip-planner-vercel-bypass" -w) && \
+echo "https://dev.trip.idean.me/<path>?x-vercel-protection-bypass=$TOKEN&x-vercel-set-bypass-cookie=samesitenone"
+```
+
+- `samesitenone` 덕에 쿠키 설정 → OAuth 리다이렉트(쿼리 유실) 이후에도 bypass 유지
+- CI/curl에서는 헤더 방식 권장: `-H "x-vercel-protection-bypass: $TOKEN"`
+
+### 언제 사용
+
+- v2.9.0 PoC 같은 다계정 교차 테스트에서 계정 B(비 Vercel 팀)의 dev 접근
+- 외부 공동 작업자의 일시 dev 검증
+- 자동화 스크립트의 dev 헬스체크
+
+### 삭제 / 순환
+
+- Vercel에서 Secret 회수 → Keychain 값도 동일 명령으로 갱신
+- 키체인만 비우기: `security delete-generic-password -s "trip-planner-vercel-bypass"`
+
 ## 과거 회귀(#194)
 
 - 증상: dev에서 초대 링크가 `/invite/TOKEN` 상대경로로 복사됨 → 붙여넣기 시 `file:///invite/...`

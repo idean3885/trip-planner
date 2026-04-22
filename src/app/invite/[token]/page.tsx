@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { verifyInviteToken } from "@/lib/invite-token";
+import { onMemberJoin } from "@/lib/gcal/member-sync";
 
 export default async function InvitePage({
   params,
@@ -69,6 +70,9 @@ export default async function InvitePage({
       role: payload.role,
     },
   });
+
+  // 공유 캘린더가 연결된 여행이면 ACL 자동 부여. 실패는 서버 로그로만 남김.
+  await onMemberJoin(trip.id, session.user.id, payload.role);
 
   redirect(`/trips/${trip.id}`);
 }
