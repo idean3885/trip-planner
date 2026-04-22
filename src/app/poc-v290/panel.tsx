@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,6 +27,9 @@ type Action =
   | "list-my-calendars"
   | "list-acl";
 
+const STORAGE_CALENDAR_ID = "poc-v290:calendarId";
+const STORAGE_GUEST_EMAIL = "poc-v290:guestEmail";
+
 async function call(body: Record<string, unknown>) {
   const res = await fetch("/api/poc/v290", {
     method: "POST",
@@ -42,6 +45,37 @@ export function PocPanel() {
   const [guestEmail, setGuestEmail] = useState("");
   const [log, setLog] = useState<LogEntry[]>([]);
   const [busy, setBusy] = useState<Action | null>(null);
+  const autoWhoamiRan = useRef(false);
+
+  // 새로고침·OAuth 복귀 후에도 값 유지.
+  useEffect(() => {
+    try {
+      const cid = localStorage.getItem(STORAGE_CALENDAR_ID);
+      if (cid) setCalendarId(cid);
+      const email = localStorage.getItem(STORAGE_GUEST_EMAIL);
+      if (email) setGuestEmail(email);
+    } catch {
+      // localStorage 불가 환경(시크릿 모드 일부) — 무시
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      if (calendarId) localStorage.setItem(STORAGE_CALENDAR_ID, calendarId);
+      else localStorage.removeItem(STORAGE_CALENDAR_ID);
+    } catch {
+      /* noop */
+    }
+  }, [calendarId]);
+
+  useEffect(() => {
+    try {
+      if (guestEmail) localStorage.setItem(STORAGE_GUEST_EMAIL, guestEmail);
+      else localStorage.removeItem(STORAGE_GUEST_EMAIL);
+    } catch {
+      /* noop */
+    }
+  }, [guestEmail]);
 
   const append = useCallback((action: string, data: unknown) => {
     setLog((prev) => [
@@ -69,21 +103,42 @@ export function PocPanel() {
     [append]
   );
 
+  // 페이지 진입 시 whoami 자동 실행 — scope 상태를 즉시 파악해 재동의 필요 여부 판단.
+  useEffect(() => {
+    if (autoWhoamiRan.current) return;
+    autoWhoamiRan.current = true;
+    void run("whoami");
+  }, [run]);
+
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
           <CardTitle>1. 내 상태</CardTitle>
           <CardDescription>
-            로그인한 계정 정보 + calendar scope 부여 여부 확인. 시작 전에 한 번 누릅니다.
+            로그인한 계정 정보 + calendar scope 부여 여부. 페이지 진입 시 자동 실행됨.
+            scopeGranted=false이면 아래 scope 재동의 버튼 클릭.
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex flex-wrap gap-2">
           <Button
             onClick={() => run("whoami")}
             disabled={busy !== null}
           >
             whoami
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => {
+              // 현재 페이지 URL 쿼리를 보존하면서 consent 경로로 이동.
+              const bypass = new URLSearchParams(window.location.search);
+              const returnTo = window.location.pathname;
+              const params = new URLSearchParams({ returnTo });
+              for (const [k, v] of bypass.entries()) params.set(k, v);
+              window.location.href = `/api/gcal/consent?${params.toString()}`;
+            }}
+          >
+            scope 재동의 (Google 이동)
           </Button>
         </CardContent>
       </Card>
