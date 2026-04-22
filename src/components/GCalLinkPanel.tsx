@@ -25,7 +25,7 @@ import type {
 
 interface Props {
   tripId: number;
-  /** 현재 사용자의 트립 역할. v2.9.0부터 오너만 연결·해제·sync 가능, 멤버는 subscribe만. */
+  /** 현재 사용자의 여행 역할. v2.9.0부터 주인만 연결·해제·sync 가능, 멤버는 subscribe만. */
   role?: "OWNER" | "HOST" | "GUEST";
 }
 
@@ -89,7 +89,7 @@ export default function GCalLinkPanel({ tripId, role = "OWNER" }: Props) {
   }, [tripId]);
 
   async function handleLink(calendarType: CalendarType) {
-    // v2.9.0: 오너는 새 per-trip 공유 캘린더 엔드포인트 사용. DEDICATED 강제.
+    // v2.9.0: 주인은 새 per-trip 공유 캘린더 엔드포인트 사용. DEDICATED 강제.
     if (isOwner) {
       return handleLinkV2();
     }
@@ -133,7 +133,7 @@ export default function GCalLinkPanel({ tripId, role = "OWNER" }: Props) {
     // v2.9.0: OWNER·HOST 모두 v2 sync 엔드포인트 사용 (per-trip 공유 캘린더).
     // v1 per-user 경로는 레거시(GUEST는 애초에 편집 불가라 sync 호출 경로 없음).
     // retryOnly는 현재 v2 미지원이라 v1 폴백이 필요하나, 실제로 failed 아이템 재시도는
-    // 오너/호스트의 v2 sync 일반 호출로 동일 효과를 얻으므로 여기서도 v2로 보낸다.
+    // 주인/호스트의 v2 sync 일반 호출로 동일 효과를 얻으므로 여기서도 v2로 보낸다.
     if (isOwner || role === "HOST") {
       return handleSyncV2();
     }
@@ -320,8 +320,35 @@ export default function GCalLinkPanel({ tripId, role = "OWNER" }: Props) {
 
   if (!status.linked) {
     if (!isOwner) {
-      // 오너가 아직 연결 안 함. 비-오너에게는 정보 없음 → 아예 렌더 안 함.
-      return null;
+      // 호스트·게스트: 주인의 연결 트리거와 동일한 위치·크기의 버튼을 노출하되,
+      // 다이얼로그 내부는 안내문 + "닫기"만. 주인이 공유 캘린더를 연결해야 진입 가능하다
+      // (spec 020, Clarification Session 2026-04-22).
+      return (
+        <Dialog>
+          <DialogTrigger className={cn(buttonVariants({ variant: "outline", size: "sm" }), "gap-1.5")}>
+            <Calendar className="size-4" />
+            구글 캘린더 (공유)
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>구글 캘린더 (공유)</DialogTitle>
+              <DialogDescription>
+                이 여행의 주인이 공유 캘린더를 아직 연결하지 않았습니다.
+              </DialogDescription>
+            </DialogHeader>
+            <p className="text-sm text-muted-foreground">
+              주인이 공유 캘린더를 연결하면 이 동행자들도 자기 구글 캘린더에서 여행 일정을
+              볼 수 있습니다. 지금은 앱 내 일정만 이용 가능합니다. 필요하면 동행자 목록에서
+              주인에게 요청해 주세요.
+            </p>
+            <DialogFooter>
+              <DialogClose className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}>
+                닫기
+              </DialogClose>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      );
     }
     return (
       <Dialog>
@@ -356,7 +383,7 @@ export default function GCalLinkPanel({ tripId, role = "OWNER" }: Props) {
   if (!isOwner) {
     const sub = status.mySubscription;
     const isAdded = sub?.status === "ADDED";
-    // HOST는 트립 편집 권한이 있으므로 sync 트리거도 허용 (서버가 오너 토큰으로 수행).
+    // HOST는 여행 편집 권한이 있으므로 sync 트리거도 허용 (서버가 주인 토큰으로 수행).
     // GUEST는 편집 불가라 sync도 안 함.
     const canSync = role === "HOST";
 

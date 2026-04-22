@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [2.9.1] - 2026-04-22
+
+### Added
+
+- 주인이 공유 캘린더를 아직 연결하지 않은 여행에서 호스트·게스트에게도 같은 위치에 안내 전용 다이얼로그를 제공. 왜: 이전에는 작동하지 않는 "내 구글 캘린더에 추가"·"다시 반영하기" 버튼이 노출돼 404 오류가 발생했다. ([#395](https://github.com/idean3885/trip-planner/issues/395))
+
+
 ## [2.9.0] - 2026-04-22
 
 > 이번 릴리즈부터 각 엔트리는 **What** (한 줄 요약) + **Why** (배경 1줄)로 단순화.
@@ -37,6 +44,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **subscribe 성공 후에도 안 바뀌는 UX**. 왜: 상태 응답에 `mySubscription`을 추가해 ADDED 상태면 컴팩트 카드(오너 "연결됨" 카드와 동일 톤)로 전환.
 - **412 오탐으로 앱 편집이 Google에 안 밀리는 문제**. 왜: 412 시 **컨텐츠 비교 → 타임스탬프 비교** 순서로 판정해, 진짜 사용자 GCal 편집일 때만 `skipped`로 남긴다.
 - **호스트가 본인 편집을 sync 트리거 못 하던 문제**. 왜: 호스트도 트립 편집 권한이 있으므로 "다시 반영하기"를 쓸 수 있도록 확장(서버는 오너 토큰으로 수행).
+
+### Fixed
+
+- **v2.8.0 마이그레이션 트립의 멤버 ACL 자동 복구 + 동의 후 자동 subscribe**: 백필 SQL은 DB의 TripCalendarLink 승격만 수행하고 Google 쪽 ACL 부여는 하지 못하므로, 승격된 트립에서 멤버가 "내 구글 캘린더에 추가"를 눌러도 404로 실패하는 문제를 해소. 오너가 "다시 반영하기"를 누르면 sync 전에 현재 멤버 전원에게 ACL을 idempotent하게 upsert해 Google 쪽 권한을 복구한다. 또 멤버가 subscribe 시 calendar scope 동의를 완료하고 돌아오면 자동으로 subscribe가 재시도되도록 `?gcal=subscribed` 쿼리를 auto-retry 대상에 추가.
+- **"직접 수정하여 건너뛴 이벤트" 카운터가 누적되는 문제**: sync를 누를 때마다 동일 이벤트가 반복 카운트되어 숫자가 선형 증가하던 버그 수정. 이번 sync의 실제 건너뛴 수로 덮어쓰도록 변경(v2 sync·v1 sync·v1 link 모두). 사용자 직접 수정 이벤트가 해결되면 다음 sync에서 자동으로 0으로 리셋된다.
+- **멤버 "내 구글 캘린더에 추가" 후에도 버튼·안내문이 그대로 유지되던 UX 이슈**: 상태 응답에 본인 subscription 상태(`mySubscription`)를 함께 반환하고, 패널은 `ADDED` 상태면 "내 캘린더에 추가됨" 배지 + "제거" 단일 버튼의 컴팩트 카드로 전환한다. 오너 쪽 "연결됨" 카드와 동일한 톤.
+- **412 Precondition 처리 개선 — "건너뛴 이벤트"의 오탐 제거**: 412 시 Google 현재 이벤트의 **컨텐츠(summary·description·location·start·end)**를 우리가 설정하려는 값과 먼저 비교한다. 같으면 ETag만 밀린 상태로 판단해 조용히 갱신(`updated`). 다를 때만 Google `updated`와 `lastSyncedAt`을 비교하여, 우리 앱 편집이면 재-patch로 밀고 Google 편집이면 `skipped`로 보존. 결과적으로 "사용자가 GCal에서 직접 수정한 경우에만" skipped에 잡힌다.
 
 ### Chore
 
