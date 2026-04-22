@@ -1,10 +1,15 @@
 /**
  * GET /api/trips/[id]/gcal/status
  *
- * v2.9.0 호환 어댑터 — 레거시 응답 형식은 유지하되, 신규 TripCalendarLink가 있으면
- * 그것을 우선 반영. 없으면 기존 GCalLink 폴백 (v2.8.0 경로).
+ * TripCalendarLink만 "연결됨/미연결"의 정본이다. per-user GCalLink는 v2.9.0 이후
+ * 정본이 아니므로 폴백 조회하지 않는다(spec 020, Clarification Session 2026-04-22).
  *
- * 공유 여행에서 타 멤버의 연동 상태는 본 응답에 포함되지 않는다(FR-007).
+ * 과거에는 TripCalendarLink 부재 시 본인 per-user GCalLink로 폴백해 linked:true를
+ * 돌려주었으나, 이는 주인이 아직 공유 캘린더를 연결하지 않은 여행에서 호스트·게스트
+ * UI가 v2 subscribe/sync 버튼을 그리게 해 404 not_linked를 유발했다. 본 피처에서
+ * 폴백을 해제하고 TripCalendarLink 부재 = linked:false로 정본화한다.
+ *
+ * 공유 여행에서 타 동행자의 연동 상태는 본 응답에 포함되지 않는다(FR-007, spec 018).
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -44,7 +49,7 @@ export async function GET(
   // v2.9.0: TripCalendarLink가 존재하면 그걸 응답 정본으로 사용.
   const sharedLink = await prisma.tripCalendarLink.findUnique({ where: { tripId } });
   if (sharedLink) {
-    // 비-오너 멤버의 본인 subscription 상태를 함께 반환해 UI가 역할·상태별 카드를 렌더할 수 있게 함.
+    // 비-주인 동행자의 본인 subscription 상태를 함께 반환해 UI가 역할·상태별 카드를 렌더할 수 있게 함.
     type MySubscription =
       | { status: "NOT_ADDED" | "ADDED" | "ERROR"; lastError: string | null }
       | null;
@@ -72,26 +77,7 @@ export async function GET(
     return NextResponse.json(body);
   }
 
-  // 폴백: v2.8.0 per-user GCalLink 조회.
-  const link = await prisma.gCalLink.findUnique({
-    where: { userId_tripId: { userId: session.user.id, tripId } },
-  });
-
-  if (link) {
-    const body: StatusResponse = {
-      linked: true,
-      link: {
-        calendarType: link.calendarType,
-        calendarId: link.calendarId,
-        calendarName: link.calendarName,
-        lastSyncedAt: link.lastSyncedAt?.toISOString() ?? null,
-        lastError: normalizeLastError(link.lastError),
-        skippedCount: link.skippedCount,
-      },
-    };
-    return NextResponse.json(body);
-  }
-
+  // TripCalendarLink가 없으면 "미연결" — per-user GCalLink 폴백은 하지 않는다(spec 020).
   const scopeGranted = await hasCalendarScope(session.user.id);
   return NextResponse.json({ linked: false, scopeGranted } satisfies StatusResponse);
 }
