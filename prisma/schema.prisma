@@ -18,13 +18,15 @@ model User {
   image         String?
   createdAt     DateTime  @default(now()) @map("created_at")
 
-  accounts             Account[]
-  sessions             Session[]
-  createdTrips         Trip[]                @relation("TripCreator")
-  updatedTrips         Trip[]                @relation("TripUpdater")
-  tripMembers          TripMember[]
-  personalAccessTokens PersonalAccessToken[]
-  gcalLinks            GCalLink[]
+  accounts                    Account[]
+  sessions                    Session[]
+  createdTrips                Trip[]                       @relation("TripCreator")
+  updatedTrips                Trip[]                       @relation("TripUpdater")
+  tripMembers                 TripMember[]
+  personalAccessTokens        PersonalAccessToken[]
+  gcalLinks                   GCalLink[]
+  ownedCalendarLinks          TripCalendarLink[]           @relation("TripCalendarLinkOwner")
+  memberCalendarSubscriptions MemberCalendarSubscription[] @relation("MemberCalendarSubscriptionUser")
 
   @@map("users")
 }
@@ -84,11 +86,12 @@ model Trip {
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  creator     User         @relation("TripCreator", fields: [createdBy], references: [id])
-  updater     User         @relation("TripUpdater", fields: [updatedBy], references: [id])
-  days        Day[]
-  tripMembers TripMember[]
-  gcalLinks   GCalLink[]
+  creator        User              @relation("TripCreator", fields: [createdBy], references: [id])
+  updater        User              @relation("TripUpdater", fields: [updatedBy], references: [id])
+  days           Day[]
+  tripMembers    TripMember[]
+  gcalLinks      GCalLink[]
+  calendarLink   TripCalendarLink?
 
   @@map("trips")
 }
@@ -226,6 +229,55 @@ model GCalEventMapping {
 
   @@unique([linkId, activityId])
   @@map("gcal_event_mappings")
+}
+
+// ============================================================
+// Trip Calendar 공유 (spec 019, Epic #349)
+// v2.9.0 expand: per-trip 공유 캘린더 모델. 레거시 GCalLink/GCalEventMapping은 병존.
+// 후속 릴리즈에서 contract로 제거 예정.
+// ============================================================
+
+enum MemberCalendarSubscriptionStatus {
+  NOT_ADDED
+  ADDED
+  ERROR
+}
+
+model TripCalendarLink {
+  id           Int       @id @default(autoincrement())
+  tripId       Int       @unique @map("trip_id")
+  ownerId      String    @map("owner_id")
+  calendarId   String    @map("calendar_id")
+  calendarName String?   @map("calendar_name")
+  lastSyncedAt DateTime? @map("last_synced_at") @db.Timestamptz(3)
+  lastError    String?   @map("last_error")
+  skippedCount Int       @default(0) @map("skipped_count")
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  trip          Trip                         @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  owner         User                         @relation("TripCalendarLinkOwner", fields: [ownerId], references: [id])
+  subscriptions MemberCalendarSubscription[]
+
+  @@index([ownerId])
+  @@map("trip_calendar_links")
+}
+
+model MemberCalendarSubscription {
+  id        Int                              @id @default(autoincrement())
+  linkId    Int                              @map("link_id")
+  userId    String                           @map("user_id")
+  status    MemberCalendarSubscriptionStatus @default(NOT_ADDED)
+  lastError String?                          @map("last_error")
+  createdAt DateTime                         @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime                         @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  link TripCalendarLink @relation(fields: [linkId], references: [id], onDelete: Cascade)
+  user User             @relation("MemberCalendarSubscriptionUser", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([linkId, userId])
+  @@index([userId])
+  @@map("member_calendar_subscriptions")
 }
 
 // ============================================================
