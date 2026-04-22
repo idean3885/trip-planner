@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthUserId, getTripMember } from "@/lib/auth-helpers";
+import { onMemberLeave } from "@/lib/gcal/member-sync";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -27,6 +28,7 @@ export async function POST(request: Request, { params }: Params) {
   }
 
   await prisma.tripMember.delete({ where: { id: member.id } });
+  await onMemberLeave(tripId, userId);
 
   return NextResponse.json({ ok: true });
 }
