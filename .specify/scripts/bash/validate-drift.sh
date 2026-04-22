@@ -96,9 +96,13 @@ extract_tag_values() {
 }
 
 # artifact 값에서 파일 경로 추출 ("path::symbol" → "path")
+# Next.js 동적 라우트 세그먼트는 metatag bracket 규칙과 충돌하므로 `<name>` placeholder로
+# 쓰고(예: src/app/api/trips/<id>/...), 여기서 실제 경로 `[name]`으로 변환해 파일 존재를 확인한다.
 artifact_path() {
     local v="$1"
-    printf '%s' "${v%%::*}"
+    local path="${v%%::*}"
+    path=$(printf '%s' "$path" | sed -E 's/<([.A-Za-z_][.A-Za-z0-9_-]*)>/[\1]/g')
+    printf '%s' "$path"
 }
 
 # 한 tasks.md 검사. 전역 ERRORS/WARNINGS/*_LINES 누적.
@@ -143,9 +147,23 @@ scan_tasks_file() {
             [[ -z "$art" ]] && continue
             local path
             path=$(artifact_path "$art")
-            # skip pseudo-artifacts (예: "CHANGELOG.md::unreleased-added"의 unreleased-added는 파일 존재만 확인)
-            local fullpath="$repo_root/$path"
-            if [[ -e "$fullpath" ]]; then
+            # artifact 값은 `<path>|<path>` 형식으로 복수 경로를 허용한다(한 태스크가
+            # 여러 파일을 편집한 경우). AND 해석 — 모두 존재해야 통과.
+            local all_exist=1
+            local IFS_BAK="$IFS"; IFS='|'
+            read -ra _path_parts <<< "$path"
+            IFS="$IFS_BAK"
+            local p
+            for p in "${_path_parts[@]}"; do
+                [[ -z "$p" ]] && continue
+                local fullpath="$repo_root/$p"
+                if [[ ! -e "$fullpath" ]]; then
+                    all_exist=0
+                    break
+                fi
+            done
+
+            if [[ "$all_exist" -eq 1 ]]; then
                 if [[ "$checked" -eq 0 ]]; then
                     WARNINGS=$((WARNINGS + 1))
                     WARNING_LINES+=("${feature_label}/tasks.md:${lineno} — 미체크인데 아티팩트 존재: \`${path}\`")
