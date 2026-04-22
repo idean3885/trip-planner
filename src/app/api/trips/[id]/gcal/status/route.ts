@@ -8,6 +8,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { TripRole } from "@prisma/client";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getTripMember } from "@/lib/auth-helpers";
@@ -43,6 +44,19 @@ export async function GET(
   // v2.9.0: TripCalendarLink가 존재하면 그걸 응답 정본으로 사용.
   const sharedLink = await prisma.tripCalendarLink.findUnique({ where: { tripId } });
   if (sharedLink) {
+    // 비-오너 멤버의 본인 subscription 상태를 함께 반환해 UI가 역할·상태별 카드를 렌더할 수 있게 함.
+    type MySubscription =
+      | { status: "NOT_ADDED" | "ADDED" | "ERROR"; lastError: string | null }
+      | null;
+    let mySubscription: MySubscription = null;
+    if (member.role !== TripRole.OWNER) {
+      const sub = await prisma.memberCalendarSubscription.findUnique({
+        where: { linkId_userId: { linkId: sharedLink.id, userId: session.user.id } },
+      });
+      mySubscription = sub
+        ? { status: sub.status, lastError: sub.lastError ?? null }
+        : { status: "NOT_ADDED", lastError: null };
+    }
     const body: StatusResponse = {
       linked: true,
       link: {
@@ -53,6 +67,7 @@ export async function GET(
         lastError: normalizeLastError(sharedLink.lastError),
         skippedCount: sharedLink.skippedCount,
       },
+      mySubscription,
     };
     return NextResponse.json(body);
   }
