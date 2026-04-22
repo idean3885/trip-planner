@@ -146,11 +146,14 @@ export async function POST(
       : "failed"
     : "ok";
 
+  // skippedCount는 "이번 sync에서 사용자가 직접 수정한 이벤트 수"를 표시한다.
+  // 매 sync마다 set(덮어쓰기)로 갱신해 누적되지 않도록 한다. 이전 동작(increment)은
+  // 동일 이벤트가 매 호출마다 다시 카운트되어 숫자가 선형 증가하는 문제가 있었다.
   const updatedLink = await prisma.tripCalendarLink.update({
     where: { id: link.id },
     data: {
       lastSyncedAt: new Date(),
-      skippedCount: { increment: result.skipped },
+      skippedCount: result.skipped,
       lastError: hasFailure ? inferLastError(result) : null,
     },
   });
@@ -159,7 +162,7 @@ export async function POST(
     where: { id: bridgeLink.id },
     data: {
       lastSyncedAt: new Date(),
-      skippedCount: { increment: result.skipped },
+      skippedCount: result.skipped,
       lastError: hasFailure ? inferLastError(result) : null,
     },
   });
