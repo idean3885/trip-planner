@@ -45,6 +45,12 @@ curl -sSL https://raw.githubusercontent.com/idean3885/trip-planner/main/scripts/
 
 웹에서만 쓰고 싶다면 위 "써보고 싶은 분" 섹션의 링크로 바로 들어가면 됩니다.
 
+### 구글 캘린더 연동 제약 (현재 심사 전 단계)
+
+본 앱은 아직 앱 심사 전 단계라, **개발자가 직접 허용한 Google 계정**(최대 100명)만 구글 캘린더 연동을 사용할 수 있습니다. 앱 내 일정 조회·편집은 누구나 정상 이용 가능하며, 연동만 등록 사용자에게 한정됩니다.
+
+연동 등록을 원하시면 [공개 토론 채널의 Q&A](https://github.com/idean3885/trip-planner/discussions/new?category=q-a)에 가입 Google 이메일을 남겨 주세요. 자세한 사유는 [ADR 0004](docs/adr/0004-gcal-testing-mode-cost.md) 참고.
+
 ## 링크
 
 | | |

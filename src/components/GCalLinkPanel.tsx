@@ -15,6 +15,11 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import {
+  GCAL_DISCUSSIONS_URL,
+  UNREGISTERED_NOTICE_BODY,
+  UNREGISTERED_NOTICE_TITLE,
+} from "@/lib/gcal/unregistered";
 import type {
   CalendarType,
   FailedItem,
@@ -22,6 +27,19 @@ import type {
   SyncResponse,
   UnlinkResponse,
 } from "@/types/gcal";
+
+async function readError(res: Response): Promise<{ error?: string; reason?: string } | null> {
+  try {
+    return (await res.clone().json()) as { error?: string; reason?: string };
+  } catch {
+    return null;
+  }
+}
+
+function isUnregisteredResponse(body: { error?: string; reason?: string } | null): boolean {
+  if (!body) return false;
+  return body.error === "unregistered" || body.reason === "unregistered";
+}
 
 interface Props {
   tripId: number;
@@ -45,6 +63,9 @@ export default function GCalLinkPanel({ tripId, role = "OWNER" }: Props) {
   const [choice] = useState<CalendarType>("DEDICATED"); // v2.9.0: DEDICATED 고정 (PRIMARY 공유 불가)
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState<FailedItem[]>([]);
+  // spec 021: 외부 OAuth/Calendar API가 Testing 모드 제약으로 거부한 사실이 한 번이라도
+  // 감지되면 안내 카드로 전환한다. 상태는 세션 내에서만 유지(페이지 리로드 시 초기화).
+  const [unregistered, setUnregistered] = useState(false);
   const isOwner = role === "OWNER";
 
   const loadStatus = useCallback(async () => {
@@ -184,6 +205,11 @@ export default function GCalLinkPanel({ tripId, role = "OWNER" }: Props) {
         }
       }
       if (!res.ok) {
+        const body = await readError(res);
+        if (isUnregisteredResponse(body)) {
+          setUnregistered(true);
+          return;
+        }
         toast.error("공유 캘린더 연결에 실패했습니다");
         return;
       }
@@ -214,6 +240,11 @@ export default function GCalLinkPanel({ tripId, role = "OWNER" }: Props) {
         }
       }
       if (!res.ok) {
+        const body = await readError(res);
+        if (isUnregisteredResponse(body)) {
+          setUnregistered(true);
+          return;
+        }
         toast.error("반영에 실패했습니다");
         return;
       }
@@ -264,6 +295,11 @@ export default function GCalLinkPanel({ tripId, role = "OWNER" }: Props) {
         }
       }
       if (!res.ok) {
+        const body = await readError(res);
+        if (isUnregisteredResponse(body)) {
+          setUnregistered(true);
+          return;
+        }
         toast.error(action === "add" ? "추가에 실패했습니다" : "제거에 실패했습니다");
         return;
       }
@@ -317,6 +353,43 @@ export default function GCalLinkPanel({ tripId, role = "OWNER" }: Props) {
   // ── 트리거 버튼(작게) + 다이얼로그(세부 관리) 패턴 ──
   // 여행 페이지 상단은 아래 일정 스캔이 우선. 캘린더 연동은 버튼 한 개로 접고
   // 클릭 시 다이얼로그로 확장해 연결/해제/동기화 등을 수행한다.
+
+  // spec 021: Testing 모드 제약으로 본 계정이 거부된 사실이 한 번이라도 확인되면
+  // 모든 기존 분기(linked/linked:false)보다 우선해 안내 카드를 노출한다.
+  if (unregistered) {
+    return (
+      <Dialog>
+        <DialogTrigger className={cn(buttonVariants({ variant: "outline", size: "sm" }), "gap-1.5")}>
+          <AlertTriangle className="size-4" />
+          구글 캘린더 연동 제한
+        </DialogTrigger>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{UNREGISTERED_NOTICE_TITLE}</DialogTitle>
+            <DialogDescription>{UNREGISTERED_NOTICE_BODY}</DialogDescription>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            등록을 요청하려면 아래 링크로 가입 Google 이메일을 남겨 주세요. 앱 내 일정 조회·편집은
+            정상 이용할 수 있습니다.
+          </p>
+          <DialogFooter className="gap-2 flex-wrap">
+            <DialogClose className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}>
+              닫기
+            </DialogClose>
+            <a
+              href={GCAL_DISCUSSIONS_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={cn(buttonVariants({ variant: "default", size: "sm" }), "gap-1.5")}
+            >
+              개발자에게 문의 (토론)
+              <span aria-hidden>↗</span>
+            </a>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   if (!status.linked) {
     if (!isOwner) {

@@ -139,6 +139,13 @@ export async function POST(
     });
   } catch (err) {
     const { reason } = classifyError(err);
+    // spec 021: Testing 모드 제약 사용자(주인)에게 sync가 거부되면 UI 안내 카드로 분기.
+    if (reason === "unregistered") {
+      return NextResponse.json(
+        { error: "unregistered", reason },
+        { status: 403 }
+      );
+    }
     return NextResponse.json({ error: "sync_failed", reason }, { status: 502 });
   }
 

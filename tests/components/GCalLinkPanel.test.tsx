@@ -76,3 +76,55 @@ describe("GCalLinkPanel — spec 020 미연결 비-주인 UI", () => {
     expect(screen.queryByText(/업그레이드/)).toBeNull();
   });
 });
+
+describe("GCalLinkPanel — spec 021 Testing 모드 미등록 UI", () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  async function renderWithUnregisteredError(role: "OWNER" | "HOST" | "GUEST") {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = typeof input === "string" ? input : input.toString();
+      // 초기 /status 조회는 정상 응답.
+      if (url.includes("/gcal/status")) {
+        return new Response(
+          JSON.stringify({ linked: false, scopeGranted: false }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        );
+      }
+      // 첫 번째 조작 API 호출에 UNREGISTERED 응답.
+      return new Response(
+        JSON.stringify({ error: "unregistered", reason: "unregistered" }),
+        { status: 403, headers: { "Content-Type": "application/json" } }
+      );
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<GCalLinkPanel tripId={5} role={role} />);
+
+    // 역할별 초기 트리거 클릭 → API 호출 발생(미등록 에러).
+    if (role === "OWNER") {
+      const trigger = await screen.findByRole("button", { name: "구글 캘린더 연결" });
+      fireEvent.click(trigger);
+      const cta = await screen.findByRole("button", { name: "공유 캘린더 연결" });
+      fireEvent.click(cta);
+    } else {
+      const trigger = await screen.findByRole("button", { name: /구글 캘린더 \(공유\)/ });
+      // 비-주인은 이 시점에서 실제 API 호출을 하지 않으므로 테스트를 위해 수동으로
+      // subscribe 시나리오를 흉내내기 어렵다. 본 테스트는 OWNER 경로로 집중한다.
+      fireEvent.click(trigger);
+    }
+  }
+
+  it("주인 미등록: 조작 API 응답이 unregistered면 안내 카드 트리거로 전환", async () => {
+    await renderWithUnregisteredError("OWNER");
+
+    // 안내 카드의 트리거 라벨로 전환되었는지 확인.
+    const unregisteredText = await screen.findByText("구글 캘린더 연동 제한");
+    expect(unregisteredText).toBeInTheDocument();
+
+    // 기존 미연결 분기의 조작 버튼이 더 이상 DOM에 없음.
+    expect(screen.queryByRole("button", { name: "다시 반영하기" })).toBeNull();
+    expect(screen.queryByText(/주인이 공유 캘린더를 아직 연결하지 않았습니다/)).toBeNull();
+  });
+});
