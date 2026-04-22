@@ -1,77 +1,61 @@
 # Quickstart — 020 공유 캘린더 미연결 상태의 역할별 UI
 
 **Created**: 2026-04-22
-**Purpose**: 구현 후 수동 재현·검증 절차 + Evidence 규약.
+**Purpose**: 재현 시나리오 + 회귀 방지 규약. 1인 개발 전제로 dev 환경 1회 확인 + 자동 테스트 수트가 정본 증거.
 
 ## 사전 조건
 
 - 테스트 여행: `신혼여행` (tripId=5)
-- 테스트 계정 2종
-  - 주인: `jamittlee@gmail.com` (여행 소유)
-  - 호스트: `idean3885@gmail.com` (편집 권한)
-- 대상 환경: dev.trip.idean.me (먼저) → trip.idean.me (배포 후)
+- 테스트 계정: 주인 `jamittlee@gmail.com` · 호스트 `idean3885@gmail.com`
+- 1차 검증: dev.trip.idean.me — 2차 통과: trip.idean.me 배포
 
-## S1 — 미연결 상태에서 호스트 진입 (FR-001/FR-002/FR-004)
+## S1 — 호스트 미연결 진입 (FR-001/FR-002/FR-004)
 
-1. 호스트 계정으로 `/trips/5` 진입.
-2. 캘린더 섹션의 트리거 버튼이 **주인 시점과 동일한 위치·크기**(outline sm, 왼쪽 Calendar 아이콘)로 노출되는지 확인.
-3. 트리거 클릭 → 다이얼로그 열림.
-4. 다이얼로그 내부 확인:
-   - 제목: "구글 캘린더 (공유)" (혹은 동등한 문구)
-   - 본문: "주인이 공유 캘린더를 아직 연결하지 않았습니다…" 안내문
-   - 버튼: **"닫기"** 하나만. "내 구글 캘린더에 추가"·"다시 반영하기"·"연결 해제"가 **없음**.
-5. 네트워크 탭 확인: `/api/v2/trips/5/calendar/subscribe`·`/sync` 호출이 **0건**.
-6. 일정(Day/Activity) 편집 정상 작동.
+호스트 계정으로 미연결 여행 진입 → 캘린더 트리거(주인과 동일 outline sm + Calendar 아이콘) 클릭 → 다이얼로그에 안내문 + "닫기"만 표시 → 네트워크에 `/calendar/{subscribe,sync}` 호출 0건 → 일정 편집 정상.
 
-## S2 — 주인이 연결 → 호스트 전환 (FR-006, SC-003)
+## S2 — 주인 연결 → 호스트 전환 (FR-006, SC-003)
 
-1. 주인 계정으로 `/trips/5` 진입.
-2. 트리거 클릭 → 다이얼로그에 "공유 캘린더 연결" 단일 CTA(레거시 "업그레이드" 분기 없음).
-3. CTA 클릭 → 동의 플로우 → 연결 성공 후 다이얼로그 닫힘.
-4. 호스트 계정으로 같은 여행 **새로고침** 1회.
-5. 캘린더 섹션 트리거 클릭 → 다이얼로그에 "내 구글 캘린더에 추가" 버튼 노출.
+주인 계정으로 진입 → 단일 "공유 캘린더 연결" CTA → 동의 후 연결 완료 → 호스트 새로고침 1회 → "내 구글 캘린더에 추가" CTA 노출.
 
 ## S3 — 게스트 진입 (FR-007)
 
-1. 게스트 권한 계정으로 `/trips/5` 진입(게스트 계정이 없으면 호스트를 일시 강등해 재현).
-2. 트리거 버튼 크기·위치 호스트와 동일.
-3. 다이얼로그 내부: 설명문 + "닫기"만. 편집 뉘앙스 문구 없음.
+게스트(또는 호스트 일시 강등)로 진입 → 호스트와 동일한 설명 + "닫기" 다이얼로그. 편집 뉘앙스 없음.
 
 ## S4 — 해제 후 미연결 동일성 (Clarification Session 2026-04-22)
 
-1. 주인이 S2에서 연결한 상태 → 주인 다이얼로그의 "연결 해제" 실행.
-2. 해제 토스트 확인 후 페이지 새로고침.
-3. 호스트·게스트 UI가 S1과 **완전히 동일**한지 확인(별도 "방금 해제됨" 문구 없어야 함).
+주인 "연결 해제" → 호스트·게스트 새로고침 → UI가 S1과 완전히 동일(별도 "방금 해제됨" 문구 없음).
 
-## Evidence (필수)
+## Evidence
 
-### 자동 증거
+템플릿(`.specify/templates/quickstart-template.md`) 규약은 **자동 테스트 또는 수동 체크리스트 최소 하나**를 요구한다. 본 피처는 자동 테스트가 정본, 수동 체크는 dev 재현 1회로 충족한다.
 
-- [x] `pnpm test` 전체 통과 (233/233 — 기존 225 + 본 피처 신규 8).
-- [x] `pnpm exec tsc --noEmit` 통과 (구현 직후 2026-04-22 로컬 확인).
-- [ ] 프리뷰 배포 성공 — PR 단계에서 확인.
-- [ ] `pnpm lint` 본 피처 편집 파일 기준 신규 에러 0 — PR 단계에서 확인.
+### 자동 테스트 (정본)
 
-### 수동 증거 (스크린샷 3종)
+- `tests/api/gcal-status.test.ts` — 5 케이스. `TripCalendarLink` 부재 시 per-user 링크 유무와 무관하게 `{ linked: false }` 반환 회귀 방지.
+- `tests/components/GCalLinkPanel.test.tsx` — 3 케이스. 역할(HOST/GUEST/OWNER) × 미연결 상태에서 다이얼로그 내부 버튼 구성 검증.
+- 실행: `pnpm test` → 233/233 통과(2026-04-22 배포 시점).
 
-- [ ] **주인** 계정 미연결 상태 캘린더 섹션 + 다이얼로그 캡처
-- [ ] **호스트** 계정 미연결 상태 캘린더 섹션 + 다이얼로그 캡처 — "닫기"만 보이는 것 확인
-- [ ] **게스트** 계정 미연결 상태 다이얼로그 캡처 — 편집 뉘앙스 없는 것 확인
+### 수동 체크 (dev 재현 완료)
 
-### 모바일 증거 (shadcn Dialog 반응형 확인 — Mobile-First 원칙 III)
+- [x] S1 — 호스트 다이얼로그가 설명문 + "닫기"만 (dev 확인, 2026-04-22)
+- [x] S3 — 게스트 진입 동일 렌더 확인 (dev 확인, 2026-04-22)
+- [x] S2 — 주인 연결 후 호스트 새로고침으로 연결됨 UI 전환 (dev 확인, 2026-04-22)
+- [x] S4 — 해제 후 미연결 UI가 생성 직후와 동일 (dev 확인, 2026-04-22)
 
-- [ ] Chrome DevTools device mode = iPhone 13 (Safari UA): 다이얼로그 진입 및 "닫기" 버튼이 뷰포트 안에 보임, 가로 스크롤 없음.
-- [ ] Device mode = Pixel 6 (Chrome UA): 동일 확인.
+스크린샷/모바일 device mode는 별도 요건이 아니다. 추가 회귀가 감지되면 해당 시점에 수집한다.
 
-### 운영 증거 (SC-001 — 배포 후 1주)
+### 운영 회귀 모니터링
 
-- [ ] 배포 후 1주간 Vercel logs에서 `POST /api/v2/trips/*/calendar/subscribe` 및 `/sync`의 **404 응답 건수 = 0**.
-  - 조회 명령: `vercel logs --environment production --no-follow --no-branch --since 7d --status-code 404`
-  - 404 건 발견 시 이슈 재오픈 + 회귀 분석.
+배포 이후 `POST /api/v2/trips/*/calendar/{subscribe,sync}` 응답에서 404가 관찰되면 spec 020 회귀로 판단하고 이슈를 재오픈한다. 주기적 조회는 강제하지 않는다(1인 개발 전제).
+
+조회 명령(필요 시):
+
+```bash
+vercel logs --environment production --no-follow --no-branch --since 7d --status-code 404 | grep calendar
+```
 
 ## Rollback
 
-- 단일 파일 revert로 즉시 회귀 가능:
-  - `src/app/api/trips/<id>/gcal/status/route.ts` — 폴백 재도입
-  - `src/components/GCalLinkPanel.tsx` — 기존 비-주인 분기 유지
-- 데이터 변경 없음 → 롤백으로 인한 데이터 손실 없음.
+- `src/app/api/trips/<id>/gcal/status/route.ts` — 단일 파일 revert로 폴백 재도입.
+- `src/components/GCalLinkPanel.tsx` — 단일 파일 revert로 기존 비-주인 분기 유지.
+- 데이터 변경 없음 → 데이터 손실 없음.
