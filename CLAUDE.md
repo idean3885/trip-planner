@@ -190,6 +190,8 @@ develop ──●──●──●───●──●──●──●──
 - Neon Postgres — **스키마 변경 없음**. 기존 `TripCalendarLink` / `GCalLink` 모델 참조만. (020-shared-calendar-not-linked)
 - TypeScript 5.x, Node.js 20+ + Next.js 16 App Router, React 19, Auth.js v5, `@googleapis/calendar`, shadcn/ui (vendored Dialog·Button), lucide-react. 본 피처에서 **신규 의존성 없음**. (021-gcal-access-guide)
 - Neon Postgres — **스키마 변경 없음**. 미등록 상태는 세션/쿠키·응답 플래그 수준에서만 다룬다. (021-gcal-access-guide)
+- TypeScript 5.x, Node.js 20+ + Next.js 16 App Router, Prisma 7 (Neon Postgres adapter), `@googleapis/calendar`, Auth.js v5. 본 피처에서 **신규 의존성 없음**. (022-gcal-legacy-contract)
+- Neon Postgres — **신규 테이블 1종 추가**, 기존 테이블 2종 유지. Prisma migration 1건. (022-gcal-legacy-contract)
 
 ## Recent Changes
 - 001-ax-travel-planning: Added Python 3.14 + FastMCP, httpx, python-dotenv, pytes
