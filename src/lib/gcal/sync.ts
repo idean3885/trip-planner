@@ -13,6 +13,7 @@
  *  - 원본(DB)은 절대 훼손하지 않는다. 부분 실패 허용.
  */
 
+import type { calendar_v3 } from "@googleapis/calendar";
 import { prisma } from "@/lib/prisma";
 import {
   classifyError,
@@ -167,13 +168,42 @@ export async function syncActivities(
 }
 
 /**
+ * 이벤트 컨텐츠 비교 — summary/description/location/start/end가 모두 같으면 true.
+ * Google이 내부적으로 정규화한 값(예: timeZone 표현 차이)과 우리 값의 미세 차이를
+ * 허용하기 위해 start/end는 UTC 밀리초로 비교, 문자열은 trim 비교.
+ */
+function eventContentsMatch(
+  current: calendar_v3.Schema$Event,
+  desired: ReturnType<typeof formatActivityAsEvent>
+): boolean {
+  const normStr = (s: string | null | undefined) => (s ?? "").trim();
+  if (normStr(current.summary) !== normStr(desired.summary)) return false;
+  if (normStr(current.location) !== normStr(desired.location)) return false;
+  if (normStr(current.description) !== normStr(desired.description)) return false;
+  const toMs = (v: string | null | undefined) =>
+    v ? new Date(v).getTime() : 0;
+  // desired는 dateTime만 사용. current는 all-day일 수 있어 date도 폴백.
+  const curStart = toMs(current.start?.dateTime ?? current.start?.date);
+  const desStart = toMs(desired.start.dateTime);
+  if (curStart !== desStart) return false;
+  const curEnd = toMs(current.end?.dateTime ?? current.end?.date);
+  const desEnd = toMs(desired.end.dateTime);
+  if (curEnd !== desEnd) return false;
+  return true;
+}
+
+/**
  * 412 발생 시 실제 사용자 수정 여부를 판별해 적절히 재시도하거나 skip한다.
  *
- * 반환:
- *  - "updated": Google 쪽이 우리 마지막 sync 이후 수정되지 않았음 → 현재 ETag로 재-patch 성공, mapping 갱신
- *  - "skipped": Google 쪽이 마지막 sync 이후 수정됨 → 사용자 편집 존중, 그대로 둠
- *  - "cleaned": 404로 내려가 mapping 정리됨 (다음 sync에서 insert로 재생성)
- *  - "failed": 복구 중 알 수 없는 에러
+ * 판정 순서:
+ *  1. events.get으로 현재 이벤트 조회. 404면 mapping 정리(cleaned).
+ *  2. 컨텐츠(summary/description/location/start/end)가 desiredEvent와 같으면
+ *     Google 상태가 이미 우리 의도와 일치 → 조용히 ETag 갱신(updated).
+ *  3. 컨텐츠가 다르면:
+ *     - Google updated <= 우리 lastSyncedAt + 2s → 앱 편집이 push 안 된 상태 →
+ *       현재 ETag로 재-patch (updated).
+ *     - Google updated > 우리 lastSyncedAt + 2s → 사용자가 GCal에서 편집 →
+ *       skipped (덮어쓰지 않음).
  */
 async function resolvePreconditionConflict(
   client: GCalClient,
@@ -195,20 +225,32 @@ async function resolvePreconditionConflict(
     return "failed";
   }
 
+  // 1차 판정: 컨텐츠가 이미 일치 → ETag만 밀린 상태로 판단, 조용히 refresh.
+  if (eventContentsMatch(currentRes.data, desiredEvent)) {
+    await prisma.gCalEventMapping.update({
+      where: { id: mapping.id },
+      data: {
+        syncedEtag: currentRes.data.etag ?? mapping.syncedEtag,
+        lastSyncedAt: new Date(),
+      },
+    });
+    return "updated";
+  }
+
+  // 2차 판정: 컨텐츠가 다르다. timestamp로 "누가 바꿨나" 구분.
   const googleUpdatedMs = currentRes.data.updated
     ? new Date(currentRes.data.updated).getTime()
     : 0;
   const ourLastSyncMs = mapping.lastSyncedAt
     ? mapping.lastSyncedAt.getTime()
     : 0;
-  // 2초 오차 허용 — Google 내부 시각 차이·우리 서버 시계 보정.
   const userTouchedInGoogle = googleUpdatedMs > ourLastSyncMs + 2000;
 
   if (userTouchedInGoogle) {
     return "skipped";
   }
 
-  // Google 쪽은 사용자 수정 없음 → 현재 ETag로 재-patch 시도.
+  // Google 쪽은 사용자 수정 없음 → 우리 앱 편집을 밀어넣는다 (현재 ETag로 재-patch).
   try {
     const retryRes = await client.calendar.events.patch(
       { calendarId, eventId: mapping.googleEventId, requestBody: desiredEvent },
