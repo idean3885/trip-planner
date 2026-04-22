@@ -89,11 +89,12 @@ export async function PATCH(
       : "failed"
     : "ok";
 
+  // skippedCount는 이번 sync의 건너뛴 이벤트 수로 set (매 호출마다 누적되지 않도록).
   const updated = await prisma.gCalLink.update({
     where: { id: link.id },
     data: {
       lastSyncedAt: new Date(),
-      skippedCount: { increment: result.skipped },
+      skippedCount: result.skipped,
       lastError: hasFailure ? inferLastError(result) : null,
     },
   });
