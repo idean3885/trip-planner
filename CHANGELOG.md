@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [2.9.1] - 2026-04-22
+
+### Added
+
+- 주인이 공유 캘린더를 아직 연결하지 않은 여행에서 호스트·게스트에게도 같은 위치에 안내 전용 다이얼로그를 제공. 왜: 이전에는 작동하지 않는 "내 구글 캘린더에 추가"·"다시 반영하기" 버튼이 노출돼 404 오류가 발생했다. ([#395](https://github.com/idean3885/trip-planner/issues/395))
+
+
 ## [2.9.0] - 2026-04-22
 
 ### Breaking
