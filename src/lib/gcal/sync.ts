@@ -1,5 +1,5 @@
 /**
- * Sync 엔진 — 여행 활동과 GCalEventMapping을 diff하여 Google Calendar 이벤트를
+ * Sync 엔진 — 여행 활동과 TripCalendarEventMapping을 diff하여 Google Calendar 이벤트를
  * 생성·갱신·삭제한다.
  *
  * 핵심 원칙(스펙 Clarifications 3, research R3):
@@ -23,10 +23,10 @@ import {
 } from "./client";
 import { formatActivityAsEvent, type ActivityForFormat } from "./format";
 import type { FailureReason } from "@/types/gcal";
-import type { Activity, GCalEventMapping, Trip } from "@prisma/client";
+import type { Activity, TripCalendarEventMapping, Trip } from "@prisma/client";
 
 export interface SyncContext {
-  linkId: number;
+  tripCalendarLinkId: number;
   calendarId: string;
   trip: Pick<Trip, "id" | "title">;
   tripUrl: string;
@@ -65,10 +65,10 @@ export async function syncActivities(
   options: { retryOnly?: number[] } = {}
 ): Promise<SyncResult> {
   const activities = await fetchTripActivities(ctx.trip.id);
-  const mappings = await prisma.gCalEventMapping.findMany({
-    where: { linkId: ctx.linkId },
+  const mappings = await prisma.tripCalendarEventMapping.findMany({
+    where: { tripCalendarLinkId: ctx.tripCalendarLinkId },
   });
-  const mapByActivity = new Map<number, GCalEventMapping>();
+  const mapByActivity = new Map<number, TripCalendarEventMapping>();
   mappings.forEach((m) => mapByActivity.set(m.activityId, m));
 
   const retryFilter = options.retryOnly ? new Set(options.retryOnly) : null;
@@ -88,9 +88,9 @@ export async function syncActivities(
           requestBody: event,
         });
         if (res.data.id && res.data.etag) {
-          await prisma.gCalEventMapping.create({
+          await prisma.tripCalendarEventMapping.create({
             data: {
-              linkId: ctx.linkId,
+              tripCalendarLinkId: ctx.tripCalendarLinkId,
               activityId: a.id,
               googleEventId: res.data.id,
               syncedEtag: res.data.etag,
@@ -109,7 +109,7 @@ export async function syncActivities(
           { headers: { "If-Match": mapping.syncedEtag } }
         );
         if (res.data.etag) {
-          await prisma.gCalEventMapping.update({
+          await prisma.tripCalendarEventMapping.update({
             where: { id: mapping.id },
             data: { syncedEtag: res.data.etag, lastSyncedAt: new Date() },
           });
@@ -130,7 +130,7 @@ export async function syncActivities(
         }
       } else if (getStatus(err) === 404 && mapping) {
         // 이벤트가 이미 삭제됨 → 매핑 정리
-        await prisma.gCalEventMapping.delete({ where: { id: mapping.id } });
+        await prisma.tripCalendarEventMapping.delete({ where: { id: mapping.id } });
       } else {
         const { reason } = classifyError(err);
         result.failed.push({ activityId: a.id, reason });
@@ -148,15 +148,15 @@ export async function syncActivities(
         { calendarId: ctx.calendarId, eventId: mapping.googleEventId },
         { headers: { "If-Match": mapping.syncedEtag } }
       );
-      await prisma.gCalEventMapping.delete({ where: { id: mapping.id } });
+      await prisma.tripCalendarEventMapping.delete({ where: { id: mapping.id } });
       result.deleted++;
     } catch (err) {
       if (isPreconditionFailed(err)) {
         // 사용자가 직접 수정한 이벤트 — 보존, 매핑만 끊는다.
-        await prisma.gCalEventMapping.delete({ where: { id: mapping.id } });
+        await prisma.tripCalendarEventMapping.delete({ where: { id: mapping.id } });
         result.skipped++;
       } else if (getStatus(err) === 404) {
-        await prisma.gCalEventMapping.delete({ where: { id: mapping.id } });
+        await prisma.tripCalendarEventMapping.delete({ where: { id: mapping.id } });
       } else {
         const { reason } = classifyError(err);
         result.failed.push({ activityId: mapping.activityId, reason });
@@ -208,7 +208,7 @@ function eventContentsMatch(
 async function resolvePreconditionConflict(
   client: GCalClient,
   calendarId: string,
-  mapping: GCalEventMapping,
+  mapping: TripCalendarEventMapping,
   desiredEvent: ReturnType<typeof formatActivityAsEvent>
 ): Promise<"updated" | "skipped" | "cleaned" | "failed"> {
   let currentRes;
@@ -219,7 +219,7 @@ async function resolvePreconditionConflict(
     });
   } catch (getErr) {
     if (getStatus(getErr) === 404) {
-      await prisma.gCalEventMapping.delete({ where: { id: mapping.id } });
+      await prisma.tripCalendarEventMapping.delete({ where: { id: mapping.id } });
       return "cleaned";
     }
     return "failed";
@@ -227,7 +227,7 @@ async function resolvePreconditionConflict(
 
   // 1차 판정: 컨텐츠가 이미 일치 → ETag만 밀린 상태로 판단, 조용히 refresh.
   if (eventContentsMatch(currentRes.data, desiredEvent)) {
-    await prisma.gCalEventMapping.update({
+    await prisma.tripCalendarEventMapping.update({
       where: { id: mapping.id },
       data: {
         syncedEtag: currentRes.data.etag ?? mapping.syncedEtag,
@@ -257,7 +257,7 @@ async function resolvePreconditionConflict(
       { headers: { "If-Match": currentRes.data.etag ?? "" } }
     );
     if (retryRes.data.etag) {
-      await prisma.gCalEventMapping.update({
+      await prisma.tripCalendarEventMapping.update({
         where: { id: mapping.id },
         data: { syncedEtag: retryRes.data.etag, lastSyncedAt: new Date() },
       });
@@ -266,7 +266,7 @@ async function resolvePreconditionConflict(
     return "failed";
   } catch (retryErr) {
     if (getStatus(retryErr) === 404) {
-      await prisma.gCalEventMapping.delete({ where: { id: mapping.id } });
+      await prisma.tripCalendarEventMapping.delete({ where: { id: mapping.id } });
       return "cleaned";
     }
     return "failed";
@@ -276,10 +276,10 @@ async function resolvePreconditionConflict(
 /** 링크 해제 — 매핑된 이벤트를 모두 삭제하려 시도한다. 412면 보존. */
 export async function unlinkEvents(
   client: GCalClient,
-  ctx: Pick<SyncContext, "linkId" | "calendarId">
+  ctx: Pick<SyncContext, "tripCalendarLinkId" | "calendarId">
 ): Promise<UnlinkResult> {
-  const mappings = await prisma.gCalEventMapping.findMany({
-    where: { linkId: ctx.linkId },
+  const mappings = await prisma.tripCalendarEventMapping.findMany({
+    where: { tripCalendarLinkId: ctx.tripCalendarLinkId },
   });
   const result: UnlinkResult = { deleted: 0, skipped: 0, failed: [] };
 

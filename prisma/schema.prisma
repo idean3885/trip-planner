@@ -149,8 +149,9 @@ model Activity {
   createdAt         DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt         DateTime           @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  day               Day                @relation(fields: [dayId], references: [id], onDelete: Cascade)
-  gcalEventMappings GCalEventMapping[]
+  day                      Day                        @relation(fields: [dayId], references: [id], onDelete: Cascade)
+  gcalEventMappings        GCalEventMapping[]
+  tripCalendarEventMappings TripCalendarEventMapping[] @relation("TripCalendarEventMappingActivity")
 
   @@index([dayId, startTime])
   @@index([dayId, sortOrder])
@@ -258,9 +259,29 @@ model TripCalendarLink {
   trip          Trip                         @relation(fields: [tripId], references: [id], onDelete: Cascade)
   owner         User                         @relation("TripCalendarLinkOwner", fields: [ownerId], references: [id])
   subscriptions MemberCalendarSubscription[]
+  eventMappings TripCalendarEventMapping[]
 
   @@index([ownerId])
   @@map("trip_calendar_links")
+}
+
+// 이벤트 매핑 정본 (spec 022 v2.10.0). 레거시 GCalEventMapping은 병존하되 활성 쓰기는 없다.
+model TripCalendarEventMapping {
+  id                 Int      @id @default(autoincrement())
+  tripCalendarLinkId Int      @map("trip_calendar_link_id")
+  activityId         Int      @map("activity_id")
+  googleEventId      String   @map("google_event_id")
+  syncedEtag         String   @map("synced_etag")
+  lastSyncedAt       DateTime @map("last_synced_at") @db.Timestamptz(3)
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt          DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  link     TripCalendarLink @relation(fields: [tripCalendarLinkId], references: [id], onDelete: Cascade)
+  activity Activity         @relation("TripCalendarEventMappingActivity", fields: [activityId], references: [id], onDelete: Cascade)
+
+  @@unique([tripCalendarLinkId, activityId])
+  @@index([tripCalendarLinkId])
+  @@map("trip_calendar_event_mappings")
 }
 
 model MemberCalendarSubscription {
