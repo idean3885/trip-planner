@@ -64,7 +64,15 @@ export interface ConsentRequired {
 }
 
 export type StatusResponse =
-  | { linked: true; link: GCalLinkState }
+  | {
+      linked: true;
+      link: GCalLinkState;
+      /** v2.9.0: 비-오너 멤버의 본인 subscription 상태. 오너 응답에는 null. */
+      mySubscription?: {
+        status: "NOT_ADDED" | "ADDED" | "ERROR";
+        lastError: string | null;
+      } | null;
+    }
   | { linked: false; scopeGranted: boolean };
 
 /**

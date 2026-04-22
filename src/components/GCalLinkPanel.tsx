@@ -340,7 +340,42 @@ export default function GCalLinkPanel({ tripId, role = "OWNER" }: Props) {
   const isRevoked = link.lastError === "REVOKED";
 
   if (!isOwner) {
-    // 호스트·게스트: 본인 subscribe 상태 + 추가/제거 버튼만.
+    // 호스트·게스트: 본인 subscribe 상태에 따라 컴팩트(추가됨) / 안내(미추가) 카드로 분기.
+    const sub = status.mySubscription;
+    const isAdded = sub?.status === "ADDED";
+
+    if (isAdded) {
+      // 추가 완료 상태 — 오너 쪽 "연결됨" 카드처럼 컴팩트하게 유지.
+      return (
+        <Card size="sm">
+          <CardContent className="space-y-1">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold">구글 캘린더 (공유)</h3>
+              <span className="text-[11px] rounded px-1.5 py-0.5 bg-emerald-100 text-emerald-700">
+                내 캘린더에 추가됨
+              </span>
+            </div>
+            {link.calendarName && (
+              <p className="text-xs text-muted-foreground">
+                캘린더: <span className="text-foreground">{link.calendarName}</span>
+              </p>
+            )}
+          </CardContent>
+          <CardFooter>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => void handleSubscribe("remove")}
+              disabled={busy}
+            >
+              내 캘린더에서 제거
+            </Button>
+          </CardFooter>
+        </Card>
+      );
+    }
+
+    // 미추가 / 에러 상태 — 안내 + 추가 버튼.
     return (
       <Card size="sm">
         <CardContent className="space-y-2">
@@ -360,12 +395,9 @@ export default function GCalLinkPanel({ tripId, role = "OWNER" }: Props) {
             부여되어 있으며, 추가하지 않아도 앱 내 일정은 정상 이용 가능합니다.
           </p>
         </CardContent>
-        <CardFooter className="gap-2">
+        <CardFooter>
           <Button size="sm" onClick={() => void handleSubscribe("add")} disabled={busy}>
             내 구글 캘린더에 추가
-          </Button>
-          <Button size="sm" variant="ghost" onClick={() => void handleSubscribe("remove")} disabled={busy}>
-            제거
           </Button>
         </CardFooter>
       </Card>
