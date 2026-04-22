@@ -112,27 +112,14 @@ export async function POST(
     }
   }
 
-  // 이벤트 매핑은 기존 GCalLink 기반 재활용. 없으면 bridge 생성(신규 v2.9.0 트립).
-  let bridgeLink = await prisma.gCalLink.findUnique({
-    where: { userId_tripId: { userId: link.ownerId, tripId } },
-  });
-  if (!bridgeLink) {
-    bridgeLink = await prisma.gCalLink.create({
-      data: {
-        userId: link.ownerId,
-        tripId,
-        calendarId: link.calendarId,
-        calendarType: "DEDICATED",
-        calendarName: link.calendarName,
-      },
-    });
-  }
-
+  // spec 022(v2.10.0): 이벤트 매핑을 공유 캘린더에 직접 귀속. 기존 bridge GCalLink
+  // 동적 생성·재사용 로직은 제거. 레거시 GCalLink 테이블은 남아 있으나 활성 코드
+  // 경로에서 참조하지 않는다(후속 v2.11.0+ contract에서 drop).
   const tripUrl = `${getAppOrigin(req)}/trips/${tripId}`;
   let result;
   try {
     result = await syncActivities(client, {
-      linkId: bridgeLink.id,
+      tripCalendarLinkId: link.id,
       calendarId: link.calendarId,
       trip,
       tripUrl,
@@ -161,15 +148,6 @@ export async function POST(
   // 동일 이벤트가 매 호출마다 다시 카운트되어 숫자가 선형 증가하는 문제가 있었다.
   const updatedLink = await prisma.tripCalendarLink.update({
     where: { id: link.id },
-    data: {
-      lastSyncedAt: new Date(),
-      skippedCount: result.skipped,
-      lastError: hasFailure ? inferLastError(result) : null,
-    },
-  });
-  // bridgeLink의 메타도 함께 업데이트 (레거시 상태 응답 일관성용)
-  await prisma.gCalLink.update({
-    where: { id: bridgeLink.id },
     data: {
       lastSyncedAt: new Date(),
       skippedCount: result.skipped,
