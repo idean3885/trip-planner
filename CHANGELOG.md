@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [2.9.2] - 2026-04-22
+
+### Added
+
+- 구글 캘린더 연동이 개발자 등록 사용자에게만 제공되는 사실을 UI·문서에 정직하게 전달. 왜: 심사 전 단계라 미등록 사용자가 일반 실패 토스트만 보고 원인·해결을 몰랐다. ([#399](https://github.com/idean3885/trip-planner/issues/399))
+
+### Documentation
+
+- 과한 Evidence 요구 경량화. 왜: 템플릿 규약은 자동 테스트 OR 수동 체크리스트 최소 하나이며 스크린샷·모바일 device mode·1주 운영 로그는 과한 정형화였다(1인 개발 전제). ([#395](https://github.com/idean3885/trip-planner/issues/395))
+
+
 ## [2.9.1] - 2026-04-22
 
 ### Added

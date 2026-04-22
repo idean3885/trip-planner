@@ -121,6 +121,14 @@ export async function POST(
       if (!calendarId) throw new Error("empty calendar id from insert");
     } catch (err) {
       const { reason } = classifyError(err);
+      // spec 021: Testing 모드 제약으로 미등록 사용자가 캘린더 생성을 거부당한 경우
+      // UI가 안내 카드로 분기할 수 있도록 error 키에 직접 노출한다.
+      if (reason === "unregistered") {
+        return NextResponse.json(
+          { error: "unregistered", reason },
+          { status: 403 }
+        );
+      }
       return NextResponse.json(
         { error: "calendar_create_failed", reason },
         { status: 502 }
