@@ -132,11 +132,12 @@ export async function POST(
       : "failed"
     : "ok";
 
+  // skippedCount는 이번 호출의 건너뛴 이벤트 수로 set (누적 방지, 이전 increment 버그 수정).
   const updated = await prisma.gCalLink.update({
     where: { id: link.id },
     data: {
       lastSyncedAt: new Date(),
-      skippedCount: { increment: result.skipped },
+      skippedCount: result.skipped,
       lastError: hasFailure ? inferLastError(result) : null,
     },
   });
