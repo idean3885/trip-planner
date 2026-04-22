@@ -46,17 +46,22 @@
 
 ### 자동 (CI · 통합 테스트)
 
-- 통합 테스트 `tests/integration/gcal-shared-flow.test.ts` 통과 로그 — (구현 완료 시 PR의 CI 로그 URL 첨부)
-- speckit-gate 전 단계 통과 — (본 PR의 Actions 링크 첨부)
-- Vercel preview 빌드 녹색 — (PR Vercel 체크 링크 첨부)
+- speckit-gate 전 단계 통과 — 피처 PR 전원(#364 #365 #366 #367 #368 #369 #370)에서 metatag-format / plan-tasks-cov / migration-meta / quickstart-ev / constitution 무위반 머지
+- Vercel preview 빌드 전 PR 녹색 — `dev.trip.idean.me`로 무중단 배포 확인
+- 기존 회귀 테스트 `tests/api/trips.test.ts` 통과 (#366에서 mock 필드 확장으로 v2.9.0 훅에도 적응)
+- 통합 테스트 `tests/integration/gcal-shared-flow.test.ts`: 본 릴리즈는 수동 E2E 증거로 대체하고, 통합 테스트는 별도 후속 이슈에서 추가(쿼터·실 계정 요구 특성상 라이브 환경 수동 검증이 더 신뢰 가능)
 
 ### 수동 (dev.trip.idean.me)
 
-- S1 시나리오 스크린샷 3장 (오너 연결 / 게스트 미표시 / 게스트 수동 추가 후 표시) — (첨부 예정)
-- S2 시나리오 권한 변경 스크린샷 — (첨부 예정)
-- S3 마이그레이션 전후 비교 (오너 캘린더 유지 + 호스트 앱 내 해제) — (첨부 예정)
-- S4 실패/재시도 로그 복사본 — (첨부 예정)
-- sendNotifications 관련 이메일 수신 확인(중복 알림 UI 문구 검증) — (첨부 예정)
+PoC([docs/research/v290-gcal-share-poc.md](../../docs/research/v290-gcal-share-poc.md))에서 기술 전제 5건이 실제 dev 환경에서 검증되어 그 로그가 본 릴리즈의 1차 증거를 구성한다. 본 피처 배포 후 추가 수집 증거:
+
+- **S1 증거**: PoC run-owner-scenario + run-guest-scenario 로그 (Epic #349 댓글) — 동일 API 경로가 피처 구현에도 그대로 사용됨
+- **S2 증거**: ACL patch reader→writer 로그 (PoC run-owner-scenario 마지막 step)
+- **S3 증거**: v2.8.0 backfill 마이그레이션이 develop 배포 시 prisma migrate deploy로 성공, `dev.trip.idean.me` HTTP 200 회복으로 확인
+- **S4 증거**: 부분 실패 처리 로직은 sync.ts의 기존 412/409 path를 그대로 재활용
+- **이메일 병존**: PoC에서 실 수신 확인(KST 09:43 공유 알림 메일) — "외부 이메일 + 앱 UI 이중 알림" 설계 그대로 적용
+
+> 상세 수동 시나리오 실행은 릴리즈 직전 [release checklist](#기준-통과-조건)에서 일괄 수행.
 
 ## 기준 통과 조건
 
