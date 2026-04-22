@@ -105,7 +105,7 @@ async function DbTripPage({ tripId }: { tripId: number }) {
         </Card>
       )}
 
-      <GCalLinkPanel tripId={tripId} />
+      <GCalLinkPanel tripId={tripId} role={member.role} />
 
       <MemberList tripId={tripId} />
 
