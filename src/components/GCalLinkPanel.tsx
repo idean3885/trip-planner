@@ -2,8 +2,19 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Calendar, Check, AlertTriangle } from "lucide-react";
+import { Button, buttonVariants } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { cn } from "@/lib/utils";
 import type {
   CalendarType,
   FailedItem,
@@ -294,45 +305,45 @@ export default function GCalLinkPanel({ tripId, role = "OWNER" }: Props) {
   if (state.phase === "loading") return null;
   if (state.phase === "error") {
     return (
-      <Card size="sm">
-        <CardContent className="text-sm text-muted-foreground">{state.message}</CardContent>
-      </Card>
+      <p className="text-xs text-muted-foreground">{state.message}</p>
     );
   }
 
   const status = state.status;
 
+  // ── 트리거 버튼(작게) + 다이얼로그(세부 관리) 패턴 ──
+  // 여행 페이지 상단은 아래 일정 스캔이 우선. 캘린더 연동은 버튼 한 개로 접고
+  // 클릭 시 다이얼로그로 확장해 연결/해제/동기화 등을 수행한다.
+
   if (!status.linked) {
     if (!isOwner) {
-      return (
-        <Card size="sm">
-          <CardContent className="space-y-2">
-            <h3 className="text-sm font-semibold">구글 캘린더 연결</h3>
-            <p className="text-xs text-muted-foreground">
-              오너가 아직 공유 캘린더를 연결하지 않았습니다.
-            </p>
-          </CardContent>
-        </Card>
-      );
+      // 오너가 아직 연결 안 함. 비-오너에게는 정보 없음 → 아예 렌더 안 함.
+      return null;
     }
     return (
-      <Card size="sm">
-        <CardContent className="space-y-3">
-          <div className="space-y-1">
-            <h3 className="text-sm font-semibold">구글 캘린더 연결</h3>
-            <p className="text-xs text-muted-foreground">
-              이 여행의 공유 캘린더를 만들고 호스트·게스트에게 자동으로 권한을 부여합니다.
+      <Dialog>
+        <DialogTrigger className={cn(buttonVariants({ variant: "outline", size: "sm" }), "gap-1.5")}>
+          <Calendar className="size-4" />
+          구글 캘린더 연결
+        </DialogTrigger>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>구글 캘린더 (공유) 연결</DialogTitle>
+            <DialogDescription>
+              여행의 공유 캘린더를 만들고 호스트·게스트에게 자동 권한을 부여합니다.
               구글에서 공유 알림 메일이 발송될 수 있습니다.
-            </p>
-          </div>
-          {/* v2.9.0: PRIMARY 공유 불가 — DEDICATED 전용. 선택 UI는 숨김. */}
-        </CardContent>
-        <CardFooter>
-          <Button size="sm" onClick={() => void handleLink(choice)} disabled={busy}>
-            공유 캘린더 연결
-          </Button>
-        </CardFooter>
-      </Card>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <DialogClose className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}>
+              취소
+            </DialogClose>
+            <Button size="sm" onClick={() => void handleLink(choice)} disabled={busy}>
+              공유 캘린더 연결
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     );
   }
 
@@ -340,88 +351,81 @@ export default function GCalLinkPanel({ tripId, role = "OWNER" }: Props) {
   const isRevoked = link.lastError === "REVOKED";
 
   if (!isOwner) {
-    // 호스트·게스트: 본인 subscribe 상태에 따라 컴팩트(추가됨) / 안내(미추가) 카드로 분기.
     const sub = status.mySubscription;
     const isAdded = sub?.status === "ADDED";
 
-    if (isAdded) {
-      // 추가 완료 상태 — 오너 쪽 "연결됨" 카드처럼 컴팩트하게 유지.
-      return (
-        <Card size="sm">
-          <CardContent className="space-y-1">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold">구글 캘린더 (공유)</h3>
-              <span className="text-[11px] rounded px-1.5 py-0.5 bg-emerald-100 text-emerald-700">
-                내 캘린더에 추가됨
-              </span>
-            </div>
-            {link.calendarName && (
-              <p className="text-xs text-muted-foreground">
-                캘린더: <span className="text-foreground">{link.calendarName}</span>
-              </p>
-            )}
-          </CardContent>
-          <CardFooter>
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => void handleSubscribe("remove")}
-              disabled={busy}
-            >
-              내 캘린더에서 제거
-            </Button>
-          </CardFooter>
-        </Card>
-      );
-    }
-
-    // 미추가 / 에러 상태 — 안내 + 추가 버튼.
     return (
-      <Card size="sm">
-        <CardContent className="space-y-2">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold">구글 캘린더 (공유)</h3>
-            <span className="text-[11px] rounded px-1.5 py-0.5 bg-emerald-100 text-emerald-700">
-              연결됨
-            </span>
-          </div>
-          {link.calendarName && (
-            <p className="text-xs text-muted-foreground">
-              캘린더: <span className="text-foreground">{link.calendarName}</span>
+      <Dialog>
+        <DialogTrigger className={cn(buttonVariants({ variant: "outline", size: "sm" }), "gap-1.5")}>
+          {isAdded ? <Check className="size-4" /> : <Calendar className="size-4" />}
+          {isAdded ? "구글 캘린더 추가됨" : "내 구글 캘린더에 추가"}
+        </DialogTrigger>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>구글 캘린더 (공유)</DialogTitle>
+            <DialogDescription>
+              {link.calendarName ? `캘린더: ${link.calendarName}` : "연결된 공유 캘린더"}
+            </DialogDescription>
+          </DialogHeader>
+          {isAdded ? (
+            <p className="text-sm text-muted-foreground">
+              내 구글 캘린더 UI에 이 공유 캘린더가 표시되어 있습니다. 제거해도 권한은 유지되어
+              언제든 다시 추가할 수 있습니다.
+            </p>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              이 캘린더를 내 구글 캘린더 UI에 추가하면 바로 일정을 볼 수 있습니다. 권한은 이미
+              부여되어 있으며, 추가하지 않아도 앱 내 일정은 정상 이용 가능합니다.
             </p>
           )}
-          <p className="text-xs text-muted-foreground">
-            이 캘린더를 내 구글 캘린더 UI에 추가하면 바로 일정을 볼 수 있습니다. 권한은 이미
-            부여되어 있으며, 추가하지 않아도 앱 내 일정은 정상 이용 가능합니다.
-          </p>
-        </CardContent>
-        <CardFooter>
-          <Button size="sm" onClick={() => void handleSubscribe("add")} disabled={busy}>
-            내 구글 캘린더에 추가
-          </Button>
-        </CardFooter>
-      </Card>
+          <DialogFooter>
+            <DialogClose className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}>
+              닫기
+            </DialogClose>
+            {isAdded ? (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => void handleSubscribe("remove")}
+                disabled={busy}
+              >
+                내 캘린더에서 제거
+              </Button>
+            ) : (
+              <Button size="sm" onClick={() => void handleSubscribe("add")} disabled={busy}>
+                내 구글 캘린더에 추가
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     );
   }
 
   return (
-    <Card size="sm">
-      <CardContent className="space-y-2">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold">구글 캘린더 (공유)</h3>
-          <span
-            className={`text-[11px] rounded px-1.5 py-0.5 ${isRevoked ? "bg-destructive/10 text-destructive" : "bg-emerald-100 text-emerald-700"}`}
-          >
-            {isRevoked ? "권한 회수됨" : "연결됨"}
-          </span>
-        </div>
+    <Dialog>
+      <DialogTrigger
+        className={cn(
+          buttonVariants({ variant: "outline", size: "sm" }),
+          "gap-1.5",
+          isRevoked && "text-destructive border-destructive/40"
+        )}
+      >
+        {isRevoked ? <AlertTriangle className="size-4" /> : <Calendar className="size-4" />}
+        {isRevoked ? "구글 캘린더 권한 회수됨" : "구글 캘린더 연결됨"}
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>구글 캘린더 (공유)</DialogTitle>
+          <DialogDescription>
+            {isRevoked
+              ? "외부 계정의 권한이 회수되어 동기화가 중단되었습니다. 다시 연결해 복구하세요."
+              : link.calendarName
+                ? `캘린더: ${link.calendarName}`
+                : "연결된 공유 캘린더"}
+          </DialogDescription>
+        </DialogHeader>
         <dl className="space-y-1 text-xs text-muted-foreground">
-          {link.calendarName && (
-            <div className="flex gap-1">
-              <dt>캘린더:</dt>
-              <dd className="text-foreground">{link.calendarName}</dd>
-            </div>
-          )}
           {link.lastSyncedAt && (
             <div className="flex gap-1">
               <dt>마지막 반영:</dt>
@@ -441,39 +445,42 @@ export default function GCalLinkPanel({ tripId, role = "OWNER" }: Props) {
             </div>
           )}
         </dl>
-      </CardContent>
-      <CardFooter className="gap-2">
-        {isRevoked ? (
-          <Button
-            size="sm"
-            onClick={() => {
-              window.location.href = `/api/gcal/consent?returnTo=/trips/${tripId}?gcal=sync-ready`;
-            }}
-            disabled={busy}
-          >
-            다시 연결하기
-          </Button>
-        ) : (
-          <>
-            <Button size="sm" variant="outline" onClick={() => void handleSync()} disabled={busy}>
-              다시 반영하기
+        <DialogFooter className="gap-2 flex-wrap">
+          <DialogClose className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}>
+            닫기
+          </DialogClose>
+          {isRevoked ? (
+            <Button
+              size="sm"
+              onClick={() => {
+                window.location.href = `/api/gcal/consent?returnTo=/trips/${tripId}?gcal=sync-ready`;
+              }}
+              disabled={busy}
+            >
+              다시 연결하기
             </Button>
-            {failed.length > 0 && (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => void handleSync(failed.map((f) => f.activityId))}
-                disabled={busy}
-              >
-                실패한 것만 재시도 ({failed.length})
+          ) : (
+            <>
+              <Button size="sm" variant="outline" onClick={() => void handleSync()} disabled={busy}>
+                다시 반영하기
               </Button>
-            )}
-          </>
-        )}
-        <Button size="sm" variant="ghost" onClick={() => void handleUnlink()} disabled={busy}>
-          연결 해제
-        </Button>
-      </CardFooter>
-    </Card>
+              {failed.length > 0 && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => void handleSync(failed.map((f) => f.activityId))}
+                  disabled={busy}
+                >
+                  실패한 것만 재시도 ({failed.length})
+                </Button>
+              )}
+            </>
+          )}
+          <Button size="sm" variant="outline" onClick={() => void handleUnlink()} disabled={busy}>
+            연결 해제
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
