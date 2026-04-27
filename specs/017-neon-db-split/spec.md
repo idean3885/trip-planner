@@ -2,7 +2,7 @@
 
 **Feature Branch**: `017-neon-db-split`
 **Created**: 2026-04-20
-**Status**: Approved (인프라 작업 완료, CLAUDE.md 갱신 필요)
+**Status**: Released (v2.7.2 — 2026-04-20)
 **Input**: #318 Neon DB 환경별 분리 — dev/prod 격리
 
 ## Clarifications

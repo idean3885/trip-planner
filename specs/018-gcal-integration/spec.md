@@ -2,7 +2,7 @@
 
 **Feature Branch**: `018-gcal-integration`
 **Created**: 2026-04-20
-**Status**: Draft
+**Status**: Released (v2.8.0 — 2026-04-21)
 **Input**: User description: #305 Google Calendar 연동. 웹으로 처음 들어온 사용자에게 캘린더 연결 경로를 제공한다. 기존 iCal(명령줄 설치 + 플러그인) 경로는 개발자/레포 접근자용 보조 경로로 남겨 둔다. 구글 로그인이 이미 기본 인증이므로 권한 범위만 확장해 자연스럽게 연결한다. 공유 여행은 멤버 각자가 직접 "내 캘린더에 올리기"를 실행했을 때에 한해 본인 캘린더에 이벤트가 만들어진다. Closes #305, Resolves #150. 마일스톤: v2.8.0.
 
 ## Clarifications *(초안 작성 중 모호했던 지점을 결정으로 봉합)*

@@ -2,7 +2,7 @@
 
 **Feature Branch**: `022-gcal-legacy-contract`
 **Created**: 2026-04-23
-**Status**: Draft
+**Status**: Released (v2.10.0 — 2026-04-23, 매핑 expand. 레거시 테이블 DROP은 후속 contract)
 **Input**: User description: "v2.9.0 expand-and-contract 패턴의 C 단계 — 레거시 per-user GCalLink / GCalEventMapping 테이블·코드·API를 제거하고 이벤트 매핑을 공유 캘린더 기반 신규 모델로 이관."
 
 ## Background

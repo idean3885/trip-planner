@@ -23,10 +23,61 @@ import {
 import type {
   CalendarType,
   FailedItem,
+  GCalLastError,
   StatusResponse,
   SyncResponse,
   UnlinkResponse,
 } from "@/types/gcal";
+
+interface V2StatusUnlinked {
+  linked: false;
+  scopeGranted: boolean;
+}
+interface V2LinkState {
+  tripId: number;
+  calendarId: string;
+  calendarName: string | null;
+  ownerId: string;
+  lastSyncedAt: string | null;
+  lastError: GCalLastError;
+  skippedCount: number;
+}
+interface V2StatusOwner {
+  linked: true;
+  link: V2LinkState;
+  members: unknown[];
+}
+interface V2StatusMember {
+  linked: true;
+  link: V2LinkState;
+  subscription: { status: "NOT_ADDED" | "ADDED" | "ERROR"; lastError: string | null } | null;
+}
+type V2StatusResponse = V2StatusUnlinked | V2StatusOwner | V2StatusMember;
+
+function adaptV2Status(raw: V2StatusResponse): StatusResponse {
+  if (!raw.linked) {
+    return { linked: false, scopeGranted: raw.scopeGranted };
+  }
+  // v2.9.0 공유 캘린더는 항상 DEDICATED. v2 응답엔 calendarType이 없으므로 기본값 부여.
+  const link = {
+    calendarType: "DEDICATED" as CalendarType,
+    calendarId: raw.link.calendarId,
+    calendarName: raw.link.calendarName,
+    lastSyncedAt: raw.link.lastSyncedAt,
+    lastError: raw.link.lastError,
+    skippedCount: raw.link.skippedCount,
+  };
+  if ("subscription" in raw) {
+    return {
+      linked: true,
+      link,
+      mySubscription: raw.subscription
+        ? { status: raw.subscription.status, lastError: raw.subscription.lastError }
+        : null,
+    };
+  }
+  return { linked: true, link };
+}
 
 async function readError(res: Response): Promise<{ error?: string; reason?: string } | null> {
   try {
@@ -69,13 +120,15 @@ export default function GCalLinkPanel({ tripId, role = "OWNER" }: Props) {
   const isOwner = role === "OWNER";
 
   const loadStatus = useCallback(async () => {
-    const res = await fetch(`/api/trips/${tripId}/gcal/status`);
+    // v2.10.0(spec 022)에서 레거시 /api/trips/[id]/gcal/status는 410 Gone으로 폐기.
+    // v2 per-trip 공유 캘린더 GET 엔드포인트로 호출 + 응답 형식을 클라이언트 타입에 어댑팅.
+    const res = await fetch(`/api/v2/trips/${tripId}/calendar`);
     if (!res.ok) {
       setState({ phase: "error", message: "상태를 불러오지 못했습니다" });
       return;
     }
-    const data = (await res.json()) as StatusResponse;
-    setState({ phase: "ready", status: data });
+    const raw = (await res.json()) as V2StatusResponse;
+    setState({ phase: "ready", status: adaptV2Status(raw) });
   }, [tripId]);
 
   useEffect(() => {

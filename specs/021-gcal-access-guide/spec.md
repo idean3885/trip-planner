@@ -2,7 +2,7 @@
 
 **Feature Branch**: `021-gcal-access-guide`
 **Created**: 2026-04-22
-**Status**: Draft
+**Status**: Released (v2.9.2 — 2026-04-22)
 **Input**: User description: "외부 캘린더 OAuth Testing 모드 제약으로 Test users 외 사용자의 캘린더 기능 접근 거부를 정확히 감지하고 '개발자 문의' 안내로 전환한다."
 
 ## Background

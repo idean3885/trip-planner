@@ -2,7 +2,7 @@
 
 **Feature Branch**: `015-day-schema-redesign`
 **Created**: 2026-04-20
-**Status**: Approved (사용자 승인 완료)
+**Status**: Released (v2.7.0 — 2026-04-20)
 **Input**: v2.7.0 Day 모델 구조적 재설계 + API v2 신설 (#296 #304 #317)
 
 ## Clarifications

@@ -2,7 +2,7 @@
 
 **Feature Branch**: `023-role-badges`
 **Created**: 2026-04-23
-**Status**: Draft
+**Status**: Released (v2.10.0 — 2026-04-23)
 **Input**: User description: "주인은 호스트의 상위집합이라는 역할 포함 관계(docs/glossary.md)를 UI에 표면화. 동행자 목록에서 role === OWNER이면 '주인' + '호스트' 뱃지를 나란히 표시."
 
 ## Background
