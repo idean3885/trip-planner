@@ -193,18 +193,25 @@ enum GCalCalendarType {
   PRIMARY
 }
 
+// spec 024 (#416): provider 추상화 도입. GOOGLE 외에 APPLE 등 후속 가능.
+enum CalendarProviderId {
+  GOOGLE
+  APPLE
+}
+
 model GCalLink {
-  id           Int              @id @default(autoincrement())
-  userId       String           @map("user_id")
-  tripId       Int              @map("trip_id")
-  calendarId   String           @map("calendar_id")
-  calendarType GCalCalendarType @map("calendar_type")
-  calendarName String?          @map("calendar_name")
-  lastSyncedAt DateTime?        @map("last_synced_at") @db.Timestamptz(3)
-  lastError    String?          @map("last_error")
-  skippedCount Int              @default(0) @map("skipped_count")
-  createdAt    DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt    DateTime         @updatedAt @map("updated_at") @db.Timestamptz(3)
+  id           Int                @id @default(autoincrement())
+  userId       String             @map("user_id")
+  tripId       Int                @map("trip_id")
+  provider     CalendarProviderId @default(GOOGLE) // spec 024 expand
+  calendarId   String             @map("calendar_id")
+  calendarType GCalCalendarType   @map("calendar_type")
+  calendarName String?            @map("calendar_name")
+  lastSyncedAt DateTime?          @map("last_synced_at") @db.Timestamptz(3)
+  lastError    String?            @map("last_error")
+  skippedCount Int                @default(0) @map("skipped_count")
+  createdAt    DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime           @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   user          User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   trip          Trip               @relation(fields: [tripId], references: [id], onDelete: Cascade)
@@ -245,16 +252,17 @@ enum MemberCalendarSubscriptionStatus {
 }
 
 model TripCalendarLink {
-  id           Int       @id @default(autoincrement())
-  tripId       Int       @unique @map("trip_id")
-  ownerId      String    @map("owner_id")
-  calendarId   String    @map("calendar_id")
-  calendarName String?   @map("calendar_name")
-  lastSyncedAt DateTime? @map("last_synced_at") @db.Timestamptz(3)
-  lastError    String?   @map("last_error")
-  skippedCount Int       @default(0) @map("skipped_count")
-  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  id           Int                @id @default(autoincrement())
+  tripId       Int                @unique @map("trip_id")
+  ownerId      String             @map("owner_id")
+  provider     CalendarProviderId @default(GOOGLE) // spec 024 expand
+  calendarId   String             @map("calendar_id")
+  calendarName String?            @map("calendar_name")
+  lastSyncedAt DateTime?          @map("last_synced_at") @db.Timestamptz(3)
+  lastError    String?            @map("last_error")
+  skippedCount Int                @default(0) @map("skipped_count")
+  createdAt    DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime           @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   trip          Trip                         @relation(fields: [tripId], references: [id], onDelete: Cascade)
   owner         User                         @relation("TripCalendarLinkOwner", fields: [ownerId], references: [id])
