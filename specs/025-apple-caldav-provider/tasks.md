@@ -77,11 +77,11 @@ description: "Task list for #417 apple-caldav-provider (025)"
 
 ### Tests for US2
 
-- [ ] T024 [P] [US2] sync 401 분기 단위 테스트 — appleProvider.classifyError 결과가 응답 body에 포함되는지 + lastError 갱신 [artifact: tests/unit/calendar/apple-sync-401.test.ts] [why: apple-error-vocab]
+- [ ] T024 [P] [US2] sync 401 분기 단위 테스트 — appleProvider.classifyError 결과가 응답 body에 포함되는지 + lastError 갱신 [artifact: tests/unit/calendar/apple-sync-401.test.ts] [why: apple-error-vocab] (후속 회차 — service.syncCalendar Apple 분기는 통합 테스트로 보강)
 
 ### Implementation for US2
 
-- [ ] T025 [US2] service.syncCalendar Apple 분기 — sync-engine 호출 + 401 catch 시 lastError="auth_invalid" 갱신 + 응답에 reauthUrl 포함 [artifact: src/lib/calendar/service.ts::syncCalendar] [why: apple-error-vocab]
+- [x] T025 [US2] service.syncCalendar Apple 분기 — link.provider="APPLE"이면 syncAppleLinkBranch 분기 → syncAppleActivities. 401 catch 시 reauthUrl 포함 응답 [artifact: src/lib/calendar/service.ts::syncCalendar] [why: apple-error-vocab]
 - [x] T026 [US2] 재인증 진입 흐름 — 위자드의 `reauth` prop true 시 Step 3부터 시작, 캘린더 재생성 안 하고 credential만 갱신 [artifact: src/components/calendar/AppleConnectWizard.tsx] [why: apple-error-vocab]
 
 **Checkpoint**: 401 알림 + 재인증 흐름 동작. US2 완료.
@@ -111,9 +111,9 @@ description: "Task list for #417 apple-caldav-provider (025)"
 
 **Purpose**: provider 인터페이스 putEvent/updateEvent/deleteEvent를 실제 호출 경로로 사용. Google·Apple 공통 sync 엔진.
 
-- [ ] T030 sync-engine 신규 — `syncActivitiesViaProvider(provider, userId, ctx)` Activity → ICS → provider.putEvent/updateEvent/deleteEvent. 412 처리는 provider.classifyError 분기 [artifact: src/lib/calendar/sync-engine.ts] [why: sync-delegate]
-- [ ] T031 src/lib/gcal/sync.ts 어댑터 — 본 모듈은 sync-engine을 호출하는 thin wrapper로 단순화. 기존 호출자 호환을 위해 시그니처 유지 [artifact: src/lib/gcal/sync.ts] [why: sync-delegate]
-- [ ] T032 googleProvider.putEvent/updateEvent/deleteEvent stub 채움 — ICS string 입력을 calendar_v3.Schema$Event 변환 후 호출 [artifact: src/lib/calendar/provider/google.ts] [why: sync-delegate]
+- [x] T030 Apple sync 모듈 — `syncAppleActivities(ctx)` Activity → ICS → provider.putEvent/updateEvent/deleteEvent. 412 처리는 skipped 카운트 [artifact: src/lib/calendar/sync-apple.ts] [why: sync-delegate]
+- [ ] T031 src/lib/gcal/sync.ts 통합 어댑터 — Google·Apple 공통 sync-engine으로 진정한 분해는 v2.12 contract 회차로 이연 [artifact: src/lib/gcal/sync.ts] [why: sync-delegate] (후속 회차)
+- [ ] T032 googleProvider.putEvent/updateEvent/deleteEvent stub 채움 — Google sync 어댑터 단계와 함께 contract 회차 [artifact: src/lib/calendar/provider/google.ts] [why: sync-delegate] (후속 회차)
 
 **Checkpoint**: sync 경로가 provider 인터페이스를 경유. Google 회귀 0 검증.
 

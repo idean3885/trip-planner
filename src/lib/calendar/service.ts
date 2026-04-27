@@ -49,6 +49,7 @@ import {
   type AclUpsertResult,
 } from "@/lib/gcal/acl";
 import { syncActivities } from "@/lib/gcal/sync";
+import { syncAppleActivities } from "./sync-apple";
 import { getProvider } from "./provider/registry";
 import type { CalendarErrorCode } from "./provider/types";
 import type {
@@ -589,6 +590,92 @@ export async function getCalendarStatus(
   });
 }
 
+/**
+ * Apple link 전용 sync 분기. service.syncCalendar에서 link.provider="APPLE"일 때 호출.
+ *
+ * Google과 다른 점:
+ *  - OAuth scope 검증 0 (Apple은 app-specific password)
+ *  - 멤버 ACL 자동 부여 0회 (capability "manual")
+ *  - syncAppleActivities로 위임 (provider.putEvent/updateEvent/deleteEvent)
+ */
+async function syncAppleLinkBranch(
+  caller: CallerCtx,
+  link: { id: number; calendarId: string; calendarName: string | null; ownerId: string },
+  args: { tripUrl: string },
+): Promise<CalendarServiceResult<SyncResponse>> {
+  const provider = getProvider("APPLE");
+  const hasAuth = await provider.hasValidAuth(link.ownerId);
+  if (!hasAuth) {
+    return err(409, {
+      error: "apple_not_authenticated",
+      reauthUrl: `/trips/${caller.tripId}/calendar/connect-apple?apple_reauth=1`,
+    });
+  }
+
+  const trip = await prisma.trip.findUnique({
+    where: { id: caller.tripId },
+    select: { id: true, title: true },
+  });
+  if (!trip) return err(404, { error: "trip_not_found" });
+
+  let result;
+  try {
+    result = await syncAppleActivities({
+      tripCalendarLinkId: link.id,
+      calendarId: link.calendarId,
+      trip,
+      tripUrl: args.tripUrl,
+      ownerId: link.ownerId,
+    });
+  } catch (e) {
+    const code = provider.classifyError(e);
+    if (code === "auth_invalid") {
+      return err(409, {
+        error: "apple_not_authenticated",
+        reauthUrl: `/trips/${caller.tripId}/calendar/connect-apple?apple_reauth=1`,
+      });
+    }
+    return err(502, { error: "sync_failed", reason: code ?? "unknown" });
+  }
+
+  const hasFailure = result.failed.length > 0;
+  const status = hasFailure
+    ? result.created + result.updated + result.deleted > 0 || result.skipped > 0
+      ? "partial"
+      : "failed"
+    : "ok";
+
+  const updatedLink = await prisma.tripCalendarLink.update({
+    where: { id: link.id },
+    data: {
+      lastSyncedAt: new Date(),
+      skippedCount: result.skipped,
+      lastError: hasFailure ? inferLastError(result) : null,
+    },
+  });
+
+  const body: SyncResponse = {
+    status,
+    summary: {
+      created: result.created,
+      updated: result.updated,
+      deleted: result.deleted,
+      skipped: result.skipped,
+      failed: result.failed.length,
+    },
+    failed: result.failed,
+    link: {
+      calendarType: "DEDICATED",
+      calendarId: updatedLink.calendarId,
+      calendarName: updatedLink.calendarName,
+      lastSyncedAt: updatedLink.lastSyncedAt?.toISOString() ?? null,
+      lastError: normalizeLastError(updatedLink.lastError),
+      skippedCount: updatedLink.skippedCount,
+    },
+  };
+  return ok(body);
+}
+
 export async function syncCalendar(
   caller: CallerCtx,
   args: { tripUrl: string },
@@ -602,6 +689,11 @@ export async function syncCalendar(
     where: { tripId: caller.tripId },
   });
   if (!link) return err(404, { error: "not_linked" });
+
+  // Apple link는 OAuth scope 무관 — 분기 분리
+  if (link.provider === "APPLE") {
+    return syncAppleLinkBranch(caller, link, args);
+  }
 
   if (member.role === TripRole.OWNER && !(await hasCalendarScope(caller.userId))) {
     return consentRequired(
