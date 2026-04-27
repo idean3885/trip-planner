@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [2.11.1] - 2026-04-28
+
+### Fixed
+
+- **trip 페이지에 Apple 캘린더 위자드 진입 카드 추가** (`AppleEntryCard`). 왜: v2.11.0 위자드는 페이지 자체로만 존재하고 진입 UI가 없어 사용자가 직접 URL을 입력해야 했다. trip 페이지에서 OWNER에게 한 번에 진입 가능한 카드를 노출해 v2.11.0 가치를 사용자가 체감할 수 있게 한다. ([#438](https://github.com/idean3885/trip-planner/issues/438))
+
+
 ## [2.11.0] - 2026-04-28
 
 ### Added
