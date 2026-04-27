@@ -48,7 +48,7 @@ description: "Task list for #417 apple-caldav-provider (025)"
 - [x] T008 [P] [US1] 암호화 round-trip 단위 테스트 — encrypt → decrypt가 원본과 일치 + 잘못된 키로 decrypt 실패 [artifact: tests/unit/calendar/apple-crypto-roundtrip.test.ts] [why: crypto]
 - [x] T009 [P] [US1] appleProvider.classifyError 단위 테스트 — 401/412/5xx/network → vocabulary 매핑 [artifact: tests/unit/calendar/apple-classify-error.test.ts] [why: apple-error-vocab]
 - [x] T010 [P] [US1] appleProvider.capabilities 단위 테스트 — `{ autoMemberAcl: "manual", supportsCalendarCreation: true, supportsCalendarSelection: true }` [artifact: tests/unit/calendar/apple-capability.test.ts] [why: provider-impl]
-- [ ] T011 [P] [US1] 위자드 검증 통합 테스트 — `/api/v2/calendar/apple/validate` 401·200 분기 (tsdav mock) [artifact: tests/integration/calendar/apple-wizard-validate.test.ts] [why: wizard-ui]
+- [ ] T011 [P] [US1] 위자드 검증 통합 테스트 — `/api/v2/calendar/apple/validate` 401·200 분기 (tsdav mock) [artifact: tests/integration/calendar/apple-wizard-validate.test.ts] [why: wizard-ui] (후속 회차)
 
 ### Implementation for US1
 
@@ -58,12 +58,12 @@ description: "Task list for #417 apple-caldav-provider (025)"
 - [x] T015 [US1] 캘린더 목록 라우트 `GET /api/v2/calendar/apple/calendars` — listCalendars 결과 반환 (VEVENT 필터 적용됨) [artifact: src/app/api/v2/calendar/apple/calendars/route.ts] [why: provider-impl]
 - [x] T016 [US1] 연결 라우트 `POST /api/v2/trips/<id>/calendar/apple/connect` — service.connectAppleCalendar 위임 (provider="APPLE") [artifact: src/app/api/v2/trips/<id>/calendar/apple/connect/route.ts] [why: wizard-ui]
 - [x] T017 [US1] service.connectAppleCalendar — provider.hasValidAuth 검증 + createCalendar 호출, link 생성 시 provider="APPLE" + manualAclGuidance 응답 포함 [artifact: src/lib/calendar/service.ts] [why: provider-impl]
-- [ ] T018 [US1] 위자드 UI Step 1 — 2FA·패스키 사전 안내 [artifact: src/components/calendar/Step1Prerequisites.tsx] [why: wizard-ui]
-- [ ] T019 [US1] 위자드 UI Step 2 — appleid.apple.com 외부 링크 + 가이드 캡쳐 임베드 [artifact: src/components/calendar/Step2GuideLink.tsx] [why: wizard-ui]
-- [ ] T020 [US1] 위자드 UI Step 3 — Apple ID + 16자리 암호 입력 + validate 호출 [artifact: src/components/calendar/Step3CredentialsInput.tsx] [why: wizard-ui]
-- [ ] T021 [US1] 위자드 UI Step 4 — 캘린더 자동 생성 결과 + 첫 sync 트리거 [artifact: src/components/calendar/Step4Result.tsx] [why: wizard-ui]
-- [ ] T022 [US1] 위자드 컨테이너 — `AppleConnectWizard` (4단계 stepper) [artifact: src/components/calendar/AppleConnectWizard.tsx] [why: wizard-ui]
-- [ ] T023 [US1] 위자드 진입 페이지 `/trips/[id]/calendar/connect-apple` (또는 모달) [artifact: src/app/trips/<id>/calendar/connect-apple/page.tsx] [why: wizard-ui]
+- [x] T018 [US1] 위자드 UI Step 1·2·3·4 — `AppleConnectWizard` 단일 컴포넌트에 4단계 inline 구현 (Step별 분리는 후속 회차) [artifact: src/components/calendar/AppleConnectWizard.tsx] [why: wizard-ui]
+- [x] T019 [US1] Step 2 가이드 캡쳐 — public/research/apple-caldav-screenshots/로 복사 + 위자드에 임베드 [artifact: public/research/apple-caldav-screenshots/step-4-create-button.png] [why: wizard-ui]
+- [x] T020 [US1] Step 3 입력·검증 흐름 — fetch /api/v2/calendar/apple/validate + 에러 안내 + 자동 connect 호출 [artifact: src/components/calendar/AppleConnectWizard.tsx] [why: wizard-ui]
+- [x] T021 [US1] Step 4 결과 — 생성 캘린더명 + manualAclGuidance 배너 [artifact: src/components/calendar/AppleConnectWizard.tsx] [why: wizard-ui]
+- [x] T022 [US1] 위자드 컨테이너 — `AppleConnectWizard` 4단계 stepper, reauth 모드 지원 [artifact: src/components/calendar/AppleConnectWizard.tsx] [why: wizard-ui]
+- [x] T023 [US1] 위자드 진입 페이지 `/trips/<id>/calendar/connect-apple` — apple_reauth=1 쿼리 시 재인증 모드 [artifact: src/app/trips/<id>/calendar/connect-apple/page.tsx] [why: wizard-ui]
 
 **Checkpoint**: Apple 첫 연결 + 첫 sync 동작. US1 완료.
 
@@ -82,7 +82,7 @@ description: "Task list for #417 apple-caldav-provider (025)"
 ### Implementation for US2
 
 - [ ] T025 [US2] service.syncCalendar Apple 분기 — sync-engine 호출 + 401 catch 시 lastError="auth_invalid" 갱신 + 응답에 reauthUrl 포함 [artifact: src/lib/calendar/service.ts::syncCalendar] [why: apple-error-vocab]
-- [ ] T026 [US2] 재인증 진입 흐름 — 위자드 진입 시 기존 credential 갱신 시도 (캘린더 재생성 안 함) [artifact: src/components/calendar/AppleConnectWizard.tsx] [why: apple-error-vocab]
+- [x] T026 [US2] 재인증 진입 흐름 — 위자드의 `reauth` prop true 시 Step 3부터 시작, 캘린더 재생성 안 하고 credential만 갱신 [artifact: src/components/calendar/AppleConnectWizard.tsx] [why: apple-error-vocab]
 
 **Checkpoint**: 401 알림 + 재인증 흐름 동작. US2 완료.
 

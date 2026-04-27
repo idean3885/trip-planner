@@ -1,0 +1,1 @@
+**Apple 캘린더 연결 위자드 UI 추가** — `/trips/{id}/calendar/connect-apple` 진입 페이지 + `AppleConnectWizard` 4단계 stepper(사전 확인·가이드·입력 검증·완료) + 재인증 모드(`?apple_reauth=1`). 왜: POC #345의 사용자 가이드를 위자드 형태로 구현 — Apple 사용자가 16자리 앱 암호를 발급·입력하고 자동으로 캘린더가 생성·연결되는 일관 흐름 제공.
