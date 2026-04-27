@@ -54,10 +54,10 @@ description: "Task list for #417 apple-caldav-provider (025)"
 
 - [x] T012 [US1] appleProvider 구현 — hasValidAuth/getReauthUrl/listCalendars/createCalendar/putEvent/updateEvent/deleteEvent/upsertMemberAcl/revokeMemberAcl/classifyError 메서드 [artifact: src/lib/calendar/provider/apple.ts] [why: provider-impl]
 - [x] T013 [US1] registry 갱신 — `getProvider("APPLE")`이 throw 대신 appleProvider 반환 [artifact: src/lib/calendar/provider/registry.ts] [why: provider-impl]
-- [ ] T014 [US1] 검증 라우트 `POST /api/v2/calendar/apple/validate` — appleId+password 검증 + AppleCalendarCredential upsert [artifact: src/app/api/v2/calendar/apple/validate/route.ts] [why: wizard-ui]
-- [ ] T015 [US1] 캘린더 목록 라우트 `GET /api/v2/calendar/apple/calendars` — listCalendars 결과 반환 (VEVENT 필터 적용됨) [artifact: src/app/api/v2/calendar/apple/calendars/route.ts] [why: provider-impl]
-- [ ] T016 [US1] 연결 라우트 `POST /api/v2/trips/[id]/calendar/apple/connect` — service.connectCalendar 위임 (provider="APPLE") [artifact: src/app/api/v2/trips/<id>/calendar/apple/connect/route.ts] [why: wizard-ui]
-- [ ] T017 [US1] service.connectCalendar Apple 분기 — provider 분기 후 createCalendar 호출, link 생성 시 provider="APPLE" [artifact: src/lib/calendar/service.ts] [why: provider-impl]
+- [x] T014 [US1] 검증 라우트 `POST /api/v2/calendar/apple/validate` — appleId+password 검증 + AppleCalendarCredential upsert [artifact: src/app/api/v2/calendar/apple/validate/route.ts] [why: wizard-ui]
+- [x] T015 [US1] 캘린더 목록 라우트 `GET /api/v2/calendar/apple/calendars` — listCalendars 결과 반환 (VEVENT 필터 적용됨) [artifact: src/app/api/v2/calendar/apple/calendars/route.ts] [why: provider-impl]
+- [x] T016 [US1] 연결 라우트 `POST /api/v2/trips/<id>/calendar/apple/connect` — service.connectAppleCalendar 위임 (provider="APPLE") [artifact: src/app/api/v2/trips/<id>/calendar/apple/connect/route.ts] [why: wizard-ui]
+- [x] T017 [US1] service.connectAppleCalendar — provider.hasValidAuth 검증 + createCalendar 호출, link 생성 시 provider="APPLE" + manualAclGuidance 응답 포함 [artifact: src/lib/calendar/service.ts] [why: provider-impl]
 - [ ] T018 [US1] 위자드 UI Step 1 — 2FA·패스키 사전 안내 [artifact: src/components/calendar/Step1Prerequisites.tsx] [why: wizard-ui]
 - [ ] T019 [US1] 위자드 UI Step 2 — appleid.apple.com 외부 링크 + 가이드 캡쳐 임베드 [artifact: src/components/calendar/Step2GuideLink.tsx] [why: wizard-ui]
 - [ ] T020 [US1] 위자드 UI Step 3 — Apple ID + 16자리 암호 입력 + validate 호출 [artifact: src/components/calendar/Step3CredentialsInput.tsx] [why: wizard-ui]
@@ -97,11 +97,11 @@ description: "Task list for #417 apple-caldav-provider (025)"
 ### Tests for US3
 
 - [ ] T027 [P] [US3] VTODO 필터 단위 테스트 — fetchCalendars mock 응답에서 VEVENT만 반환 [artifact: tests/unit/calendar/apple-vtodo-filter.test.ts] [why: provider-impl]
-- [ ] T028 [P] [US3] manual ACL 분기 단위 테스트 — capability `manual`이면 service가 upsertMemberAcl 호출 0회 + manualAclGuidance 응답 포함 [artifact: tests/unit/calendar/service-manual-acl-branch.test.ts] [why: manual-acl]
+- [x] T028 [P] [US3] manual ACL 분기 단위 테스트 — capability `manual`이면 service가 upsertMemberAcl 호출 0회 + manualAclGuidance 응답 포함 [artifact: tests/unit/calendar/service-manual-acl-branch.test.ts] [why: manual-acl]
 
 ### Implementation for US3
 
-- [ ] T029 [US3] service.connectCalendar manual 분기 — capability `auto`가 아니면 ACL 호출 skip + 응답 body에 `manualAclGuidance` (멤버 이메일 목록 안내 텍스트) 포함 [artifact: src/lib/calendar/service.ts::connectCalendar] [why: manual-acl]
+- [x] T029 [US3] service.connectAppleCalendar manual 분기 — capability `auto`가 아니면 ACL 호출 skip + 응답 body에 `manualAclGuidance` (멤버 이메일 목록 안내 텍스트) 포함 [artifact: src/lib/calendar/service.ts::connectAppleCalendar] [why: manual-acl]
 
 **Checkpoint**: VTODO 필터 + manual ACL 안내 동작. US3 완료.
 

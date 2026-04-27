@@ -411,6 +411,108 @@ export async function connectCalendar(
   return ok(body);
 }
 
+/**
+ * Apple iCloud CalDAV 전용 연결 (spec 025 #417).
+ *
+ * Google과 분리한 이유:
+ *  - Apple은 capability `manual`이라 멤버 ACL 자동 부여 단계 0
+ *  - 자격증명 입력 흐름이 OAuth가 아닌 위자드 → 별도 진입점이 자연스러움
+ *  - createCalendar의 calendar-home URL 추정 등 Google과 동작 분기가 큼
+ *
+ * 사전 조건: validate 라우트로 AppleCalendarCredential row가 이미 저장되어 있어야 한다.
+ */
+export async function connectAppleCalendar(
+  caller: CallerCtx,
+): Promise<
+  CalendarServiceResult<
+    TripCalendarLinkResponse & { manualAclGuidance?: string }
+  >
+> {
+  const member = await getTripMember(caller.tripId, caller.userId);
+  if (!member) return err(403, { error: "not_a_member" });
+  if (member.role !== TripRole.OWNER) return err(403, { error: "owner_only" });
+
+  const provider = getProvider("APPLE");
+  const hasAuth = await provider.hasValidAuth(caller.userId);
+  if (!hasAuth) {
+    return err(409, {
+      error: "apple_not_authenticated",
+      reauthUrl: `/trips/${caller.tripId}/calendar/connect-apple`,
+    });
+  }
+
+  const trip = await prisma.trip.findUnique({
+    where: { id: caller.tripId },
+    select: { id: true, title: true },
+  });
+  if (!trip) return err(404, { error: "trip_not_found" });
+
+  let link = await prisma.tripCalendarLink.findUnique({
+    where: { tripId: caller.tripId },
+  });
+
+  if (!link) {
+    let createdRef;
+    try {
+      createdRef = await provider.createCalendar(
+        caller.userId,
+        dedicatedCalendarName(trip.title),
+      );
+    } catch (e) {
+      const code = provider.classifyError(e);
+      if (code === "auth_invalid") {
+        return err(409, {
+          error: "apple_not_authenticated",
+          reauthUrl: `/trips/${caller.tripId}/calendar/connect-apple`,
+        });
+      }
+      return err(502, {
+        error: "calendar_create_failed",
+        reason: code ?? "unknown",
+      });
+    }
+    link = await prisma.tripCalendarLink.create({
+      data: {
+        tripId: caller.tripId,
+        ownerId: caller.userId,
+        provider: "APPLE",
+        calendarId: createdRef.calendarId,
+        calendarName: createdRef.displayName,
+      },
+    });
+  } else if (link.provider !== "APPLE") {
+    return err(409, {
+      error: "already_linked_other_provider",
+      currentProvider: link.provider,
+    });
+  }
+
+  // capability "manual" — 멤버 ACL 자동 부여 0회. 안내 텍스트만 응답에 포함.
+  const members = await loadMembersWithEmails(caller.tripId);
+  const otherMemberEmails = members
+    .filter((m) => m.role !== TripRole.OWNER && m.user.email)
+    .map((m) => m.user.email!);
+
+  const guidance =
+    otherMemberEmails.length > 0
+      ? `Apple Calendar 앱에서 [${otherMemberEmails.join(", ")}]을 캘린더 공유로 직접 초대해 주세요.`
+      : undefined;
+
+  const body: TripCalendarLinkResponse & { manualAclGuidance?: string } = {
+    status: "ok",
+    link: toLinkState(link),
+    members: members.map((m) => ({
+      userId: m.userId,
+      email: m.user.email ?? "",
+      role: m.role,
+      aclRole: mapRoleToAcl(m.role),
+      aclStatus: "granted",
+    })),
+    ...(guidance ? { manualAclGuidance: guidance } : {}),
+  };
+  return ok(body);
+}
+
 export async function disconnectCalendar(
   caller: CallerCtx,
 ): Promise<CalendarServiceResult<{ status: "ok" }>> {
