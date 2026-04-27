@@ -69,8 +69,9 @@ describe("GCalLinkPanel — spec 021 Testing 모드 미등록 UI", () => {
   async function renderWithUnregisteredError(role: "OWNER" | "HOST" | "GUEST") {
     const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = typeof input === "string" ? input : input.toString();
-      // 초기 /status 조회는 정상 응답.
-      if (url.includes("/gcal/status")) {
+      // 초기 status 조회는 v2 GET 엔드포인트(#410). GET 메서드만 매칭.
+      const method = init?.method?.toUpperCase() ?? "GET";
+      if (method === "GET" && url.match(/\/api\/v2\/trips\/\d+\/calendar$/)) {
         return new Response(
           JSON.stringify({ linked: false, scopeGranted: false }),
           { status: 200, headers: { "Content-Type": "application/json" } }
