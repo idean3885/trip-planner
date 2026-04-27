@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [2.10.1] - 2026-04-27
+
+### Fixed
+
+- **캘린더 패널 "상태를 불러오지 못했습니다" 회귀 수정**: v2.10.0(spec 022)에서 폐기한 레거시 status 라우트를 클라이언트가 계속 호출하던 문제를 v2 엔드포인트로 마이그레이션. 왜: 호스트·게스트가 캘린더 연결 상태와 추가 버튼을 전혀 볼 수 없었다. ([#410](https://github.com/idean3885/trip-planner/issues/410))
+
+### Documentation
+
+- **문서·스펙·도메인 정합성 정리**: ERD/DOMAIN에 캘린더 컨텍스트(v2.9.0+) 추가 + Day.sortOrder 잔존 표기 제거, spec 015~023 메타를 실제 릴리즈 버전으로 갱신, glossary 복수 역할 뱃지·캘린더 이원 표기 보강, ADR 0005 expand-and-contract 패턴 신설. 왜: v2.10.0 직후 문서가 코드 현실과 어긋나 후속 작업의 베이스 신뢰가 떨어졌다. ([#407](https://github.com/idean3885/trip-planner/issues/407))
+
+
 ## [2.10.0] - 2026-04-23
 
 ### Added
