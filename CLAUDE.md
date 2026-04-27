@@ -12,7 +12,7 @@
 ### 필수: feature → develop PR
 - 모든 코드 변경은 feature 브랜치 → develop PR로 진행한다
 - main, develop 브랜치에 직접 push 금지 (`enforce_admins: true`)
-- feature 브랜치 → develop PR → 머지 → 마일스톤 완료 시 develop → main PR
+- feature 브랜치 → develop PR → 머지 → 마일스톤 완료 시 release/vX.Y.Z → main PR (release 브랜치 패턴 v2.7.0+)
 
 ### 브랜치 최신화
 - feature 브랜치 작업 전 반드시 `git pull origin develop`으로 최신화
@@ -42,7 +42,8 @@ develop ──●──●──●───●──●──●──●──
 | PR 방향 | 머지 방식 | 이유 |
 |---------|----------|------|
 | feature/hotfix → develop | **Create a merge commit** | 커밋 조절은 개발자가 feature 브랜치에서 직접(push 전 `git rebase -i` 등). AI 하네스로 커밋을 관리하는 상황에서 웹의 수동 squash는 단순 합치기일 뿐 메시지가 의미에 맞게 재구성되지 않음 |
-| develop → main | **Create a merge commit** | 커밋 해시 보존, 역머지 시 충돌 방지 |
+| release/vX.Y.Z → main | **Create a merge commit** | 커밋 해시 보존, 자동 sync PR(main → develop)이 같은 머지 커밋을 다시 흡수해 충돌 방지 |
+| sync/main-to-develop-* → develop | **Create a merge commit** | release 직후 자동 생성된 sync PR (`.github/workflows/sync-main-to-develop.yml`) |
 
 > 커밋 수가 많아 정리가 필요하면 feature 브랜치에서 rebase/amend로 직접 정돈한 뒤 push한다. 웹 UI의 squash는 사용하지 않는다.
 
@@ -65,16 +66,18 @@ develop ──●──●──●───●──●──●──●──
 3. 마일스톤의 모든 이슈가 develop에 머지될 때까지 반복
 
 **릴리즈 (마일스톤 완료 시)**:
-1. release 브랜치에서 `uv run towncrier build --version X.Y.Z --yes` 실행
+1. `release/vX.Y.Z` 브랜치를 develop에서 분기
+2. `uv run towncrier build --version X.Y.Z --yes` 실행
    - `changes/*.md` 단편이 자동으로 `CHANGELOG.md`에 합쳐지고 단편은 삭제됨
    - 미리보기는 `--draft` 옵션
-2. `pyproject.toml`의 `version` 필드를 동일 X.Y.Z로 범프
-3. develop → main PR 생성 → 머지
+3. `pyproject.toml`의 `version` 필드를 동일 X.Y.Z로 범프
+4. release/vX.Y.Z → main PR 생성 → 머지 (`chore-no-news` 라벨 부착 — 단편이 이미 소비됐으므로)
 
 **CI 자동 (main 머지 후)**:
-4. `auto-tag.yml`: pyproject.toml 변경 감지 → annotated 태그 생성
-5. `auto-release.yml`: 태그 push → CHANGELOG 추출 → GitHub Release 생성
-6. `pypi-publish.yml`: 태그 push → 테스트 → PyPI 배포
+5. `auto-tag.yml`: pyproject.toml 변경 감지 → annotated 태그 생성
+6. `auto-release.yml`: 태그 push → CHANGELOG 추출 → GitHub Release 생성
+7. `pypi-publish.yml`: 태그 push → 테스트 → PyPI 배포
+8. `sync-main-to-develop.yml`: main과 develop diff 확인 → 차이 있으면 sync PR 자동 생성. 개발자가 PR 확인 후 수동 머지(자동 머지 아님)
 
 **버전 범프 기준 (SemVer)**:
 - MAJOR: 호환성 깨지는 변경 (API 스키마 변경, MCP 도구 삭제 등). 단편 타입 `breaking`
@@ -85,9 +88,9 @@ develop ──●──●──●───●──●──●──●──
 1. develop에서 `hotfix/*` 브랜치 생성
 2. 수정 + `changes/<이슈>.fix.md` 단편 추가
 3. hotfix → develop PR → 머지 → dev 환경 확인
-4. release 단계(towncrier build + 버전 PATCH 범프) 수행
-5. develop → main PR → 머지 → CI 자동 릴리즈
-6. main 직접 머지 금지 — dev 환경 검증 필수
+4. release 단계(`release/vX.Y.PATCH` 분기 + towncrier build + 버전 PATCH 범프) 수행
+5. release/vX.Y.PATCH → main PR → 머지 → CI 자동 릴리즈 + 자동 sync PR
+6. main 직접 push 금지 — dev 환경 검증 필수
 
 **마일스톤 정책**:
 - 모든 이슈는 마일스톤 필수 (마일스톤 = 버전 단위)

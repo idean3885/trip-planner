@@ -88,10 +88,21 @@ describe("GCalLinkPanel — spec 021 Testing 모드 미등록 UI", () => {
     render(<GCalLinkPanel tripId={5} role={role} />);
 
     // 역할별 초기 트리거 클릭 → API 호출 발생(미등록 에러).
+    // CI coverage 환경에서 base-ui Dialog portal 마운트 지연으로 default 1000ms timeout
+    // 내 CTA를 못 찾는 flaky 발생 (#420 — PR #418/#419 머지 시 develop CI 관찰).
+    // findByRole timeout 3000ms로 늘려 안정화.
     if (role === "OWNER") {
-      const trigger = await screen.findByRole("button", { name: "구글 캘린더 연결" });
+      const trigger = await screen.findByRole(
+        "button",
+        { name: "구글 캘린더 연결" },
+        { timeout: 3000 },
+      );
       fireEvent.click(trigger);
-      const cta = await screen.findByRole("button", { name: "공유 캘린더 연결" });
+      const cta = await screen.findByRole(
+        "button",
+        { name: "공유 캘린더 연결" },
+        { timeout: 3000 },
+      );
       fireEvent.click(cta);
     } else {
       const trigger = await screen.findByRole("button", { name: /구글 캘린더 \(공유\)/ });

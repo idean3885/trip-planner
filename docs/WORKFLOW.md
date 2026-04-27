@@ -112,9 +112,20 @@ Git Flow Lite. `main`은 프로덕션 유일 정본(태그 부여), `develop`은
    - `auto-release.yml` — 태그 push → CHANGELOG 추출 → GitHub Release 생성.
    - `pypi-publish.yml` — 태그 push → 테스트 → PyPI 배포.
 
-### main→develop 역머지
+### main→develop 역머지 (자동)
 
-`main`은 merge commit만 쌓이고 콘텐츠는 release 브랜치와 동일하다. 따라서 기본적으로 역머지는 불필요. `sync/main-to-develop-*` 브랜치는 기록용으로만 남는다.
+v2.7.0부터 운영 패턴은 **`release/vX.Y.Z` → `main` 직접 머지**다. release 브랜치가 `develop` 위에서 갈라져 나오기 때문에 release 머지 직후 `main`이 `develop`보다 앞선 상태가 된다 — develop 자동 sync는 일어나지 않는다.
+
+이 갭을 그대로 두면 다음 develop 기반 작업이 누락 베이스 위에서 시작(towncrier build 충돌, 스펙 메타 누락 등). v2.7.0~v2.10.0 사이 22커밋 분 부채가 한 번에 해소된 사례(#408)가 그 예.
+
+따라서 **`main` 머지 직후 자동으로 `sync/main-to-develop-*` PR이 생성**된다 (`.github/workflows/sync-main-to-develop.yml`):
+
+- 트리거: `main` push (release/* 또는 어떤 PR이든 머지 직후)
+- 동작: `main`과 `origin/develop` diff 확인 → 차이가 있으면 `sync/main-to-develop-<sha>` 브랜치 생성 + main 머지 + sync PR 자동 생성 + `chore-no-news` 라벨 부착
+- diff 없으면 skip (무한 루프 방지)
+- 자동 머지는 하지 않음 — 개발자가 PR 확인 후 수동 머지 (CI 게이트와 게이트 원칙 유지)
+
+수동 sync 필요 시(예: 워크플로우 일시 비활성화) `git switch -c sync/main-to-develop-<설명> origin/develop && git merge origin/main --no-ff` → push → PR 으로 동일 효과.
 
 ## 디자이너 협업 흐름
 
@@ -213,17 +224,20 @@ dev.trip.idean.me 환경에서 검증             ← 반드시 검증
         ↓
 release 단계 (towncrier build + PATCH 범프)
         ↓
-develop → main PR → 머지
+release/vX.Y.Z → main PR → 머지
         ↓
 CI 자동 릴리즈 (tag·GitHub Release·PyPI)
+        ↓
+자동 sync PR (main → develop) 생성 → 개발자 머지
 ```
 
 핵심 원칙:
 
-- **`main` 직접 머지 금지**. dev 환경 검증 필수.
+- **`main` 직접 push 금지**. release/* 또는 hotfix가 PR을 거쳐야 하며, dev 환경 검증 필수.
 - **단편 생략 금지**. 긴급해도 `changes/<이슈>.fix.md` 1개는 추가.
 - **피처와 동일한 CI 게이트 통과**. 핫픽스라는 이유로 검증을 건너뛰지 않는다.
 - **이슈 번호 필수**. "자명한 버그도 즉시 처리"가 원칙이지만 이슈 자체는 생성한다(추적성).
+- **release 머지 후 자동 sync PR 머지**. main에 들어간 변경이 develop으로 흘러가야 다음 작업이 누락 베이스 위에서 시작하지 않는다.
 
 ---
 
@@ -232,3 +246,4 @@ CI 자동 릴리즈 (tag·GitHub Release·PyPI)
 본 문서는 **구조적으로 업데이트되는 살아있는 정본**이다. 운영상 변경(정책·도구·규약 추가)이 있을 때마다 본 문서를 먼저 갱신하고 다른 문서(CLAUDE.md·DEVELOPMENT.md·README.md)를 그에 맞춰 조정한다.
 
 - 2026-04-19 초판 — v2.4.3(#270) 디자인 시스템 기반 제정과 함께 도입. 기존 CLAUDE.md의 Git 워크플로우·릴리즈·핫픽스 섹션을 흡수 정리.
+- 2026-04-27 (#413) — v2.7.0 이후 정착된 `release/* → main 직접 머지` 패턴을 명문화. `main → develop` 역머지 자동 sync 워크플로우(`.github/workflows/sync-main-to-develop.yml`) 도입.
