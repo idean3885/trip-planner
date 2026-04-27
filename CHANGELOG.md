@@ -9,6 +9,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [2.10.2] - 2026-04-27
+
+### Added
+
+- **멤버 라이프사이클 ACL 동기화에 retain 판정 도입**: 같은 외부 캘린더를 다른 활성 여행이 공유 중일 때, 한 여행의 멤버가 빠져도 그 멤버의 캘린더 ACL은 회수 보류된다(다른 여행 시청 보호). 왜: spec 024 추상화의 첫 가치 표현. 기존 v2.10.x는 무조건 회수해 다른 여행에서 보던 캘린더가 끊어질 수 있던 잠재 회귀를 구조적으로 차단. ([#416](https://github.com/idean3885/trip-planner/issues/416))
+
+### Fixed
+
+- **`GCalLinkPanel` 미등록 분기 테스트 flaky 안정화**: CI coverage 환경에서 base-ui Dialog portal 마운트 지연으로 timeout이 부족하던 단위 테스트의 timeout을 늘림. 사용자 가시 변경 0. 왜: PR #418/#419 머지 시 develop CI에서 일관 실패 → 재실행으로만 통과되던 패턴을 구조적으로 해소. ([#420](https://github.com/idean3885/trip-planner/issues/420))
+
+### Documentation
+
+- **WORKFLOW 현실화 + main→develop 자동 sync 워크플로우 도입**: v2.7.0 이후 정착된 `release/* → main 직접 머지` 패턴을 CLAUDE.md·docs/WORKFLOW.md에 명문화하고, release 머지 직후 sync PR을 자동 생성하는 GitHub Actions(`sync-main-to-develop.yml`)를 추가. 왜: 매 릴리즈마다 main이 develop보다 앞서고, 누군가 수동으로 sync PR을 만들지 않으면 다음 작업이 누락 베이스 위에서 시작되는 구조적 마찰이 반복됐다. ([#413](https://github.com/idean3885/trip-planner/issues/413))
+
+### Chore
+
+- **캘린더 provider 추상화 — Google 구현체 채움 + service skeleton**: Foundation의 인터페이스 stub을 실제 구현으로 교체. `googleProvider`의 인증·캘린더 관리·멤버 ACL·에러 분류(6종 vocabulary) 메서드가 기존 `src/lib/gcal/*` 함수에 위임. retain 판정(다른 여행에서 같은 캘린더 활성 사용 중이면 ACL 회수 보류) 도입. 라우트 위임 교체는 후속 PR로 분리해 회귀 검증 단순화. 왜: 후속 Apple 도입(#417) 시 같은 인터페이스에 Apple 구현체만 추가되도록 토대를 단계적으로 채운다. ([#416](https://github.com/idean3885/trip-planner/issues/416))
+
+
 ## [2.10.1] - 2026-04-27
 
 ### Fixed
