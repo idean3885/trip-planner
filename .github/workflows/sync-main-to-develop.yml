@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
-          token: ${{ secrets.AUTO_TAG_PAT }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: develop과의 diff 확인
         id: diff
@@ -31,7 +31,7 @@ jobs:
         id: existing
         if: steps.diff.outputs.has_diff == 'true'
         env:
-          GH_TOKEN: ${{ secrets.AUTO_TAG_PAT }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           OPEN_PR=$(gh pr list --base develop --search "head:sync/main-to-develop" --state open --json number --jq '.[0].number // empty')
           if [[ -n "$OPEN_PR" ]]; then
@@ -58,7 +58,7 @@ jobs:
       - name: sync PR 생성 + chore-no-news 라벨
         if: steps.diff.outputs.has_diff == 'true' && steps.existing.outputs.open_pr == ''
         env:
-          GH_TOKEN: ${{ secrets.AUTO_TAG_PAT }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh pr create \
             --base develop \
