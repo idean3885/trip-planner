@@ -1,0 +1,20 @@
+{
+  "name": "apple-caldav-poc",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "spike POC for issue #345 — Apple iCloud CalDAV. Reference only, not part of product build.",
+  "scripts": {
+    "matrix": "tsx matrix.ts",
+    "matrix:json": "tsx matrix.ts --json"
+  },
+  "dependencies": {
+    "tsdav": "^2.1.8",
+    "dotenv": "^17.0.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.20.0",
+    "typescript": "^5.6.0",
+    "@types/node": "^22.0.0"
+  }
+}
