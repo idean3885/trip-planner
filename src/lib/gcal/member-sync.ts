@@ -12,33 +12,17 @@
  *  - 오너 토큰이 없거나 공유 캘린더 미연결이면 no-op
  *  - 실패 사유는 서버 로그로만 남김 (사용자 화면 노출은 후속 UI가 담당)
  *
- * spec 024 (#416) 위임 — onMemberJoin/onRoleChange/onMemberLeave는 service의
- * `reconcileMemberAcl`로 위임. provider 분기 + retain 판정(같은 외부 캘린더를 다른
- * 활성 trip이 공유 중인지)이 캡슐화된다. onOwnerTransfer는 두 멤버 동시 처리라
- * 본 회차에서는 그대로 유지(다음 회차 분리).
+ * spec 024 (#416) 위임 — onMemberJoin/onRoleChange/onMemberLeave/onOwnerTransfer 모두
+ * service 모듈(`reconcileMemberAcl`, `reconcileOwnerTransfer`)로 위임. provider 분기 +
+ * retain 판정이 캡슐화된다.
  */
 
 import { TripRole } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { getCalendarClient } from "./client";
-import { upsertAcl } from "./acl";
-import { reconcileMemberAcl } from "@/lib/calendar/service";
-
-async function resolveContext(tripId: number, memberUserId: string) {
-  const link = await prisma.tripCalendarLink.findUnique({ where: { tripId } });
-  if (!link) return null;
-
-  const memberUser = await prisma.user.findUnique({
-    where: { id: memberUserId },
-    select: { email: true },
-  });
-  if (!memberUser?.email) return null;
-
-  const client = await getCalendarClient(link.ownerId);
-  if (!client) return null;
-
-  return { link, client, email: memberUser.email };
-}
+import {
+  reconcileMemberAcl,
+  reconcileOwnerTransfer,
+} from "@/lib/calendar/service";
 
 /**
  * 신규 멤버 가입 시 오너 토큰으로 ACL 부여.
@@ -133,34 +117,23 @@ async function loadMemberEmail(userId: string): Promise<string> {
 }
 
 /**
- * 오너 이관 시: 이전 오너는 writer로, 새 오너는 ACL에서 제거(데이터 오너로 승격 불가능해도
- * 중복 role 방지). TripCalendarLink.ownerId는 호출자가 별도로 갱신.
+ * 오너 이관 시 호출. service.reconcileOwnerTransfer가 옛 오너 ACL 격하 + DB ownerId
+ * 갱신을 함께 처리한다. 라우트는 본 함수 한 번만 호출하면 됨(별도 prisma 갱신 불필요).
  */
 export async function onOwnerTransfer(
   tripId: number,
   previousOwnerUserId: string,
-  newOwnerUserId: string
+  newOwnerUserId: string,
 ): Promise<void> {
-  const link = await prisma.tripCalendarLink.findUnique({ where: { tripId } });
-  if (!link) return;
-
-  // 이전 오너는 HOST로 격하된 이후 이 훅이 호출되므로 그 역할로 ACL 갱신.
-  const prevCtx = await resolveContext(tripId, previousOwnerUserId);
-  if (prevCtx) {
-    await upsertAcl(prevCtx.client.calendar, {
-      calendarId: prevCtx.link.calendarId,
-      email: prevCtx.email,
-      role: "writer",
+  try {
+    await reconcileOwnerTransfer({
+      tripId,
+      previousOwnerId: previousOwnerUserId,
+      newOwnerId: newOwnerUserId,
     });
-  }
-
-  // 새 오너는 데이터 오너가 아니므로 일단 owner role ACL을 부여 (데이터 이관은 외부 제약으로 불가).
-  const newCtx = await resolveContext(tripId, newOwnerUserId);
-  if (newCtx) {
-    await upsertAcl(newCtx.client.calendar, {
-      calendarId: newCtx.link.calendarId,
-      email: newCtx.email,
-      role: "owner",
-    });
+  } catch (err) {
+    console.warn(
+      `[gcal] onOwnerTransfer failed tripId=${tripId} prev=${previousOwnerUserId} new=${newOwnerUserId} reason=${(err as Error).message}`,
+    );
   }
 }
