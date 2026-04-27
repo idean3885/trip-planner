@@ -10,7 +10,7 @@
 ## Coverage Targets
 
 - `tsdav` 2.x 채택 + Apple CalDAV 클라이언트 wrapper 도입 [why: caldav-client] [multi-step: 2]
-- DB expand: `AppleCalendarCredential` 신규 테이블 + `TripCalendarEventMapping.etag` 컬럼 활용 [why: db-credential] [multi-step: 2]
+- DB expand: `AppleCalendarCredential` 신규 테이블 신설 + 기존 `TripCalendarEventMapping`의 etag 필드 재사용(신규 추가 없음) [why: db-credential] [multi-step: 2]
 - AES-256-GCM 암호화 모듈 + env 키 검증 [why: crypto]
 - `appleProvider` 객체 — `CalendarProvider` 인터페이스의 모든 메서드 구현 [why: provider-impl] [multi-step: 4]
 - 위자드 UI(`AppleConnectWizard`) Step 1~7 가이드 + 검증 진입 [why: wizard-ui] [multi-step: 3]
@@ -340,7 +340,15 @@ tests/
 **Risk**: 사용자가 가이드 6단계를 완수 못 하고 이탈.
 **Mitigation**: 각 Step에 캡쳐 + appleid.apple.com 직접 링크 + 30초 스크린캐스트. Step 7 캡쳐는 본 피처 구현 후 추가.
 
-### R4 — 암호화 키 분실
+### R4 — createCalendar의 calendar-home URL 추정 휴리스틱
+**Risk**: `fetchCalendars` 응답의 첫 항목 URL에서 마지막 segment를 제거해 calendar-home URL을 추정한다. 신규 iCloud 계정으로 캘린더가 0건이거나 URL 구조가 달라지면 createCalendar가 throw 또는 잘못된 URL 반환.
+**Mitigation**: foundation PR 후 위자드 PR 통합 테스트에서 실 dev 환경 측정. 0건 케이스는 위자드 UI에서 "Apple Calendar 앱에서 기본 캘린더를 한 번 만들어 주세요" 안내로 분기. 후속 회차에서 PROPFIND `calendar-home-set`을 직접 조회하는 패턴으로 교체 검토.
+
+### R5 — MKCALENDAR props XML 직렬화
+**Risk**: `supported-calendar-component-set` props가 tsdav `xml-js` compact 형식으로 작성되어 있다. iCloud가 이 props를 올바르게 처리하는지 POC #345에서 props 없는 단순 MKCALENDAR만 검증됐을 가능성이 있다. 잘못 직렬화되면 VEVENT 미지원 캘린더가 생성되어 이후 PUT이 실패할 수 있다.
+**Mitigation**: 위자드 통합 테스트에서 생성된 캘린더의 supported-component-set을 PROPFIND로 검증. 실패 시 props 단순화(displayname만) + iCloud 기본 component-set에 의존.
+
+### R6 — 암호화 키 분실
 **Risk**: `APPLE_PASSWORD_ENCRYPTION_KEY` 분실/유출 시 모든 credential 복호화 불가 또는 노출.
 **Mitigation**: dev/preview/production 별도 키. Vercel env에만 저장. 키 회전 시 전체 재암호화 스크립트(별도 후속 — 본 피처는 키 1개 운영 가정).
 

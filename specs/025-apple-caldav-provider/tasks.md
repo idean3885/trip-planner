@@ -18,8 +18,8 @@ description: "Task list for #417 apple-caldav-provider (025)"
 
 **Purpose**: 신규 의존성 + env 키 + 디렉토리 준비
 
-- [ ] T001 `tsdav@^2.1.8` 의존성 추가 (`pnpm add tsdav` 또는 npm). package.json + lockfile 갱신 [artifact: package.json] [why: caldav-client]
-- [ ] T002 env `APPLE_PASSWORD_ENCRYPTION_KEY` 추가 — dev/preview/production 별도 32바이트 base64. Vercel env에 저장 + .env.example 갱신 [artifact: .env.example] [why: crypto]
+- [x] T001 `tsdav@^2.1.8` 의존성 추가 (`pnpm add tsdav` 또는 npm). package.json + lockfile 갱신 [artifact: package.json] [why: caldav-client]
+- [x] T002 env `APPLE_PASSWORD_ENCRYPTION_KEY` 추가 — dev/preview/production 별도 32바이트 base64. 배포 환경 변수에 저장 + .env.example 갱신 [artifact: .env.example] [why: crypto]
 
 ---
 
@@ -27,11 +27,11 @@ description: "Task list for #417 apple-caldav-provider (025)"
 
 **Purpose**: DB 마이그레이션 + 암호화 모듈 + tsdav wrapper. US1 진행 전 모두 완료 필요.
 
-- [ ] T003 Prisma schema — `AppleCalendarCredential` 모델 추가 (userId @id @relation User, appleId, encryptedPassword, iv, createdAt, updatedAt, lastValidatedAt, lastError) [artifact: prisma/schema.prisma::AppleCalendarCredential] [why: db-credential]
-- [ ] T004 마이그레이션 SQL — `apple_calendar_credentials` 테이블 생성 [artifact: prisma/migrations/20260427000000_add_apple_credentials/migration.sql] [why: db-credential] [migration-type: schema-only]
-- [ ] T005 [P] 암호화 모듈 — `encryptPassword(plaintext)` / `decryptPassword(ciphertext, iv)`. AES-256-GCM, env 키 32바이트 검증 [artifact: src/lib/calendar/provider/apple-crypto.ts] [why: crypto]
-- [ ] T006 [P] tsdav wrapper — `createAppleClient({ appleId, appPassword })` 단일 진입점 [artifact: src/lib/calendar/provider/apple-client.ts] [why: caldav-client]
-- [ ] T007 [P] ICS 변환 — `formatActivityAsIcs(activity, trip, ctx)` Activity → VEVENT ICS 문자열 [artifact: src/lib/calendar/ics.ts] [why: sync-delegate]
+- [x] T003 Prisma schema — `AppleCalendarCredential` 모델 추가 (userId @id @relation User, appleId, encryptedPassword, iv, createdAt, updatedAt, lastValidatedAt, lastError) [artifact: prisma/schema.prisma::AppleCalendarCredential] [why: db-credential]
+- [x] T004 마이그레이션 SQL — `apple_calendar_credentials` 테이블 생성 [artifact: prisma/migrations/20260427000000_add_apple_credentials/migration.sql] [why: db-credential] [migration-type: schema-only]
+- [x] T005 [P] 암호화 모듈 — `encryptPassword(plaintext)` / `decryptPassword(ciphertext, iv)`. AES-256-GCM, env 키 32바이트 검증 [artifact: src/lib/calendar/provider/apple-crypto.ts] [why: crypto]
+- [x] T006 [P] tsdav wrapper — `createAppleClient({ appleId, appPassword })` 단일 진입점 [artifact: src/lib/calendar/provider/apple-client.ts] [why: caldav-client]
+- [x] T007 [P] ICS 변환 — `formatActivityAsIcs(activity, trip, ctx)` Activity → VEVENT ICS 문자열 [artifact: src/lib/calendar/ics.ts] [why: sync-delegate]
 
 **Checkpoint**: DB·암호화·CalDAV 클라이언트·ICS 변환 준비 완료. US1 진행 가능.
 
@@ -45,15 +45,15 @@ description: "Task list for #417 apple-caldav-provider (025)"
 
 ### Tests for US1
 
-- [ ] T008 [P] [US1] 암호화 round-trip 단위 테스트 — encrypt → decrypt가 원본과 일치 + 잘못된 키로 decrypt 실패 [artifact: tests/unit/calendar/apple-crypto-roundtrip.test.ts] [why: crypto]
-- [ ] T009 [P] [US1] appleProvider.classifyError 단위 테스트 — 401/412/5xx/network → vocabulary 매핑 [artifact: tests/unit/calendar/apple-classify-error.test.ts] [why: apple-error-vocab]
-- [ ] T010 [P] [US1] appleProvider.capabilities 단위 테스트 — `{ autoMemberAcl: "manual", supportsCalendarCreation: true, supportsCalendarSelection: true }` [artifact: tests/unit/calendar/apple-capability.test.ts] [why: provider-impl]
+- [x] T008 [P] [US1] 암호화 round-trip 단위 테스트 — encrypt → decrypt가 원본과 일치 + 잘못된 키로 decrypt 실패 [artifact: tests/unit/calendar/apple-crypto-roundtrip.test.ts] [why: crypto]
+- [x] T009 [P] [US1] appleProvider.classifyError 단위 테스트 — 401/412/5xx/network → vocabulary 매핑 [artifact: tests/unit/calendar/apple-classify-error.test.ts] [why: apple-error-vocab]
+- [x] T010 [P] [US1] appleProvider.capabilities 단위 테스트 — `{ autoMemberAcl: "manual", supportsCalendarCreation: true, supportsCalendarSelection: true }` [artifact: tests/unit/calendar/apple-capability.test.ts] [why: provider-impl]
 - [ ] T011 [P] [US1] 위자드 검증 통합 테스트 — `/api/v2/calendar/apple/validate` 401·200 분기 (tsdav mock) [artifact: tests/integration/calendar/apple-wizard-validate.test.ts] [why: wizard-ui]
 
 ### Implementation for US1
 
-- [ ] T012 [US1] appleProvider 구현 — hasValidAuth/getReauthUrl/listCalendars/createCalendar/putEvent/updateEvent/deleteEvent/upsertMemberAcl/revokeMemberAcl/classifyError 메서드 [artifact: src/lib/calendar/provider/apple.ts] [why: provider-impl]
-- [ ] T013 [US1] registry 갱신 — `getProvider("APPLE")`이 throw 대신 appleProvider 반환 [artifact: src/lib/calendar/provider/registry.ts] [why: provider-impl]
+- [x] T012 [US1] appleProvider 구현 — hasValidAuth/getReauthUrl/listCalendars/createCalendar/putEvent/updateEvent/deleteEvent/upsertMemberAcl/revokeMemberAcl/classifyError 메서드 [artifact: src/lib/calendar/provider/apple.ts] [why: provider-impl]
+- [x] T013 [US1] registry 갱신 — `getProvider("APPLE")`이 throw 대신 appleProvider 반환 [artifact: src/lib/calendar/provider/registry.ts] [why: provider-impl]
 - [ ] T014 [US1] 검증 라우트 `POST /api/v2/calendar/apple/validate` — appleId+password 검증 + AppleCalendarCredential upsert [artifact: src/app/api/v2/calendar/apple/validate/route.ts] [why: wizard-ui]
 - [ ] T015 [US1] 캘린더 목록 라우트 `GET /api/v2/calendar/apple/calendars` — listCalendars 결과 반환 (VEVENT 필터 적용됨) [artifact: src/app/api/v2/calendar/apple/calendars/route.ts] [why: provider-impl]
 - [ ] T016 [US1] 연결 라우트 `POST /api/v2/trips/[id]/calendar/apple/connect` — service.connectCalendar 위임 (provider="APPLE") [artifact: src/app/api/v2/trips/<id>/calendar/apple/connect/route.ts] [why: wizard-ui]
