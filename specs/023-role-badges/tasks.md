@@ -25,7 +25,7 @@ description: "023 복수 뱃지 — 태스크"
 ## Phase 4: Polish
 
 - [X] T002 [P] 단위 테스트 `tests/components/MemberList.test.tsx` — 역할별 뱃지 수·순서 검증(OWNER 2 주인먼저, HOST 1, GUEST 1). Prisma mock 또는 props 기반 분리 버전 사용 [artifact: tests/components/MemberList.test.tsx] [why: test-coverage]
-- [X] T003 changes 단편 [artifact: changes/403.feat.md] [why: badge-list]
+- [X] T003 changes 단편 [artifact: CHANGELOG.md] [why: badge-list]
 
 ## Dependencies
 

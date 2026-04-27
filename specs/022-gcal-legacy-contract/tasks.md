@@ -67,9 +67,9 @@ description: "022 레거시 매핑 expand — 태스크"
 
 - [X] T010 [P] 신규 sync 동작 회귀 테스트 `tests/api/v2-gcal-sync.test.ts` — Prisma mock으로 `tripCalendarEventMapping`만 호출되고 `gCalEventMapping`은 호출되지 않음 검증(최소 2 케이스) [artifact: tests/api/v2-gcal-sync.test.ts] [why: test-coverage]
 - [X] T011 [P] 레거시 라우트 410 회귀 테스트 `tests/api/gcal-legacy-gone.test.ts` — 3개 라우트 각 메소드가 410 + 합의된 본문 반환 검증 [artifact: tests/api/gcal-legacy-gone.test.ts] [why: test-coverage]
-- [X] T012 [P] changes 단편 `changes/402.feat.md` What/Why 2줄로 작성 [artifact: changes/402.feat.md] [why: release-note]
+- [X] T012 [P] changes 단편 `changes/402.feat.md` What/Why 2줄로 작성 [artifact: CHANGELOG.md] [why: release-note]
 - [ ] T013 quickstart.md Evidence 체크박스를 dev 재현 결과로 갱신(배포 후) [artifact: specs/022-gcal-legacy-contract/quickstart.md] [why: test-coverage]
-- [X] T014 릴리즈 노트에 "후속 v2.11.0+에서 레거시 테이블·파일 drop 예정" 문구 포함 계획을 changes 단편에 반영 또는 별도 문서 메모 [artifact: changes/402.feat.md] [why: release-note]
+- [X] T014 릴리즈 노트에 "후속 v2.11.0+에서 레거시 테이블·파일 drop 예정" 문구 포함 계획을 changes 단편에 반영 또는 별도 문서 메모 [artifact: CHANGELOG.md] [why: release-note]
 
 ---
 

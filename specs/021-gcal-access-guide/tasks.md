@@ -96,7 +96,7 @@ description: "021 구글 캘린더 권한 제약 감지·안내 — 태스크"
 - [X] T010 [P] ADR 0004 작성 — 제목 "Google OAuth Testing 모드 유지 — 심사 비용이 가장 큰 유보 이유". Context / Decision / Cost / Reconsider triggers / Rejected alternatives 구조. ADR 0002 Minimum Cost의 금전 원칙 적용 사례로 명시 [artifact: docs/adr/0004-gcal-testing-mode-cost.md] [why: adr-testing-mode]
 - [X] T011 [P] 단위 테스트 — `tests/lib/gcal/errors.test.ts` 신규. `classifyError`가 Testing 모드 거부 힌트를 `UNREGISTERED`로 분류하고 기존 REVOKED(순수 401/403)와 구분함을 검증. 최소 2 케이스 [artifact: tests/lib/gcal/errors.test.ts] [why: test-coverage]
 - [X] T012 [P] 단위 테스트 — `tests/components/GCalLinkPanel.test.tsx` 확장. `status.unregistered === true`일 때 역할(OWNER/HOST/GUEST) 무관하게 안내 카드 + "개발자에게 문의" 버튼이 렌더되고 기존 조작 버튼(연결/추가/sync)이 없음을 검증 [artifact: tests/components/GCalLinkPanel.test.tsx] [why: test-coverage]
-- [X] T013 changes 단편 작성 — What/Why 2줄. 이슈 번호 확정 후 파일명에 반영(`changes/<이슈>.feat.md`) [artifact: changes/399.feat.md] [why: unregistered-ui-card]
+- [X] T013 changes 단편 작성 — What/Why 2줄. 이슈 번호 확정 후 파일명에 반영(`changes/<이슈>.feat.md`) [artifact: CHANGELOG.md] [why: unregistered-ui-card]
 - [ ] T014 quickstart.md Evidence 섹션 체크박스를 dev 재현 결과로 갱신(S1·S2·S3·S4) [artifact: specs/021-gcal-access-guide/quickstart.md] [why: test-coverage]
 
 ---
