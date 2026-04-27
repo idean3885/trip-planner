@@ -16,8 +16,8 @@
 
 ### Evidence
 
-- 자동 테스트: `tests/integration/calendar/v2-routes-regression.test.ts`
-- 자동 테스트: `tests/unit/calendar/service.test.ts`
+- 자동 테스트: `tests/integration/calendar/v2-routes-regression.test.ts` *(미구현 — service-result-shape.test.ts가 권한·미링크·consent 회귀를 부분 커버. 통합 회귀는 contract 회차에서 추가 예정)*
+- 자동 테스트: `tests/unit/calendar/service-result-shape.test.ts` (12 cases — 권한·미링크·consent 분기의 status·body 회귀)
 - 수동 체크리스트 (dev.trip.idean.me):
   - [ ] 신혼여행(tripId=5)에서 캘린더 패널이 v2.10.x와 동일하게 노출됨 — 호스트 시점
   - [ ] 동일 시점 주인 시점에서 "구글 캘린더 연결됨" + 캘린더명·마지막 반영 시각·건너뜀 카운트 동일
