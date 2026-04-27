@@ -44,12 +44,7 @@ export async function POST(request: Request, { params }: Params) {
     prisma.tripMember.update({ where: { id: currentOwner.id }, data: { role: "HOST" } }),
   ]);
 
-  // 공유 캘린더의 기록상 오너 필드도 갱신 (데이터 오너는 Google 제약으로 이전 불가 — 메모 유지).
-  await prisma.tripCalendarLink.updateMany({
-    where: { tripId },
-    data: { ownerId: target.userId },
-  });
-
+  // 공유 캘린더 ownerId 갱신 + 옛/새 오너 ACL 정리는 service.reconcileOwnerTransfer가 처리.
   await onOwnerTransfer(tripId, currentOwner.userId, target.userId);
 
   return NextResponse.json({ ok: true });
