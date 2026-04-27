@@ -11,12 +11,23 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (user?.id) token.id = user.id;
       // DB 분리·이관·데이터 초기화 등으로 쿠키의 userId가 현재 DB에 존재하지 않을 수
       // 있다(#328). 쿠키가 stale이면 세션을 무효화하여 재로그인으로 흐르게 한다.
+      //
+      // v2.11.2 fix: prisma 일시 실패(connection 타임아웃·schema mismatch 등)로
+      // findUnique가 throw하면 token을 무효화해서는 안 된다. 무효화 시 OAuth 콜백
+      // 직후 정상 사용자도 즉시 세션이 끊겨 /auth/signin으로 재진입하는 무한 루프가
+      // 발생한다(2026-04-28 dev 보고). throw는 token 통과로 안전 측 분기.
       if (token.id) {
-        const exists = await prisma.user.findUnique({
-          where: { id: token.id as string },
-          select: { id: true },
-        });
-        if (!exists) return null;
+        try {
+          const exists = await prisma.user.findUnique({
+            where: { id: token.id as string },
+            select: { id: true },
+          });
+          if (!exists) return null;
+        } catch (err) {
+          console.warn(
+            `[auth] jwt callback prisma.user.findUnique failed — keeping token. id=${String(token.id)} err=${err instanceof Error ? err.message : err}`,
+          );
+        }
       }
       return token;
     },
