@@ -123,6 +123,10 @@ flowchart TD
 
 (예정 — `spike/apple-caldav/results/wizard-<run-label>.mov` 또는 외부 링크)
 
+## 사용자 가이드 (앱 암호 발급)
+
+일반 사용자 대상 단계별 캡쳐 가이드는 [`apple-caldav-app-password-guide.md`](./apple-caldav-app-password-guide.md). 후속 정식 피처(`apple-caldav-provider`)의 위자드 UI 콘텐츠 기준이 된다.
+
 ## 후속 정식 피처
 
 POC 종료 시 두 개 이슈를 신설:

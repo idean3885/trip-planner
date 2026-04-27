@@ -9,6 +9,7 @@
 | [rapidapi-travel-api-comparison.md](rapidapi-travel-api-comparison.md) | Booking.com 계열 RapidAPI 상품 비교(v1 MCP 플래닝 도입 당시) |
 | [v290-gcal-share-poc.md](v290-gcal-share-poc.md) | v2.9.0 per-trip 공유 캘린더 PoC 측정 (Epic #349) |
 | [apple-caldav-poc.md](apple-caldav-poc.md) | Apple iCloud CalDAV 연동 플로우 POC (#345). spike: `spike/apple-caldav/` |
+| [apple-caldav-app-password-guide.md](apple-caldav-app-password-guide.md) | Apple 앱 암호 발급 가이드 (일반 사용자용, 캡쳐 7장) — 후속 위자드 UI 콘텐츠 기준 |
 
 ## 작성 원칙
 
