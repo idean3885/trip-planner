@@ -1,0 +1,81 @@
+name: Sync main → develop
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.AUTO_TAG_PAT }}
+
+      - name: develop과의 diff 확인
+        id: diff
+        run: |
+          git fetch origin develop
+          if git diff --quiet origin/develop origin/main; then
+            echo "has_diff=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_diff=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: 이미 열린 sync PR 확인
+        id: existing
+        if: steps.diff.outputs.has_diff == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.AUTO_TAG_PAT }}
+        run: |
+          OPEN_PR=$(gh pr list --base develop --search "head:sync/main-to-develop" --state open --json number --jq '.[0].number // empty')
+          if [[ -n "$OPEN_PR" ]]; then
+            echo "open_pr=$OPEN_PR" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: sync 브랜치 생성 + main 머지
+        if: steps.diff.outputs.has_diff == 'true' && steps.existing.outputs.open_pr == ''
+        id: branch
+        run: |
+          SHORT_SHA=$(git rev-parse --short origin/main)
+          BRANCH="sync/main-to-develop-${SHORT_SHA}"
+          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git switch -c "$BRANCH" origin/develop
+          git merge origin/main --no-ff -m "Merge main into develop — sync ${SHORT_SHA}
+
+          자동 생성 sync PR (.github/workflows/sync-main-to-develop.yml).
+          release/* → main 직접 머지 패턴에서 develop이 자동 sync되지 않는 갭 해소."
+          git push origin "$BRANCH"
+
+      - name: sync PR 생성 + chore-no-news 라벨
+        if: steps.diff.outputs.has_diff == 'true' && steps.existing.outputs.open_pr == ''
+        env:
+          GH_TOKEN: ${{ secrets.AUTO_TAG_PAT }}
+        run: |
+          gh pr create \
+            --base develop \
+            --head "${{ steps.branch.outputs.branch }}" \
+            --label "chore-no-news" \
+            --title "sync: main → develop (자동, ${{ steps.branch.outputs.branch }})" \
+            --body "main에 새 변경(release 또는 hotfix 머지)이 들어와 develop과 분기됨. 본 PR은 자동 생성된 sync PR이며 \`docs/WORKFLOW.md\`의 \"main→develop 역머지 (자동)\" 섹션에 따라 개발자가 수동 머지한다.
+
+          - 트리거: main push (\`${{ github.sha }}\`)
+          - 워크플로우: \`.github/workflows/sync-main-to-develop.yml\`
+          - 자동 머지 비활성 — CI 게이트 통과 후 사람이 머지"
+
+      - name: 이미 열린 sync PR이 있을 때 skip 사유
+        if: steps.diff.outputs.has_diff == 'true' && steps.existing.outputs.open_pr != ''
+        run: |
+          echo "기존 열린 sync PR #${{ steps.existing.outputs.open_pr }}이 있어 skip. 머지 후 다시 트리거되어 보강 sync 가능."
+
+      - name: diff 없을 때 skip 사유
+        if: steps.diff.outputs.has_diff == 'false'
+        run: echo "main과 develop이 동일 — sync 불필요."
