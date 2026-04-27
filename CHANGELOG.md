@@ -9,6 +9,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [2.11.0] - 2026-04-28
+
+### Added
+
+- **Apple iCloud CalDAV 라우트 3종 + service `connectAppleCalendar` 분기 추가**. 왜: 위자드(다음 PR) 진입점 — 자격증명 검증·캘린더 목록·trip 연결 모두 capability "manual" 분기로 멤버 ACL 자동 호출 0회 보장 + manualAclGuidance 안내. ([#417-routes](https://github.com/idean3885/trip-planner/issues/417-routes))
+- **Apple iCloud CalDAV sync 분기 추가** — `syncAppleActivities` 모듈 + `service.syncCalendar`의 `link.provider="APPLE"` 분기. 왜: US1(첫 sync) MVP 완성 — Apple link로 연결한 trip의 활동이 iCloud 캘린더에 VEVENT로 반영되어 iPhone Calendar 앱에 표시. Google sync는 그대로 유지(회귀 0). ([#417-sync](https://github.com/idean3885/trip-planner/issues/417-sync))
+- **Apple 캘린더 연결 위자드 UI 추가** — `/trips/{id}/calendar/connect-apple` 진입 페이지 + `AppleConnectWizard` 4단계 stepper(사전 확인·가이드·입력 검증·완료) + 재인증 모드(`?apple_reauth=1`). 왜: POC #345의 사용자 가이드를 위자드 형태로 구현 — Apple 사용자가 16자리 앱 암호를 발급·입력하고 자동으로 캘린더가 생성·연결되는 일관 흐름 제공. ([#417-wizard](https://github.com/idean3885/trip-planner/issues/417-wizard))
+- **Apple iCloud CalDAV provider 토대 도입** — `appleProvider` 객체, AES-256-GCM 암호화 모듈, `tsdav` 라이브러리 wrapper, ICS VEVENT 변환, `AppleCalendarCredential` 신규 테이블. 왜: 두 번째 캘린더 provider 정식 도입의 토대 — 위자드·라우트·sync 분해는 후속 PR로 분리해 회귀 위험을 단계적으로 관리. ([#417](https://github.com/idean3885/trip-planner/issues/417))
+
+### Documentation
+
+- **Apple iCloud CalDAV provider 정식 피처 spec/plan/tasks 작성** + POC #345 결과물(연구·가이드·스크린샷) 정식 docs/ 편입. 왜: 다음 단계(구현) 전 의사결정 봉합 + 검증 시나리오 합의를 위해 spec PR을 별도로 분리. ([#417](https://github.com/idean3885/trip-planner/issues/417))
+
+### Chore
+
+- **v2 캘린더 라우트 4종을 service 위임으로 슬림화**하고 오너 이관 ACL 정리를 service 모듈로 분리. 왜: provider 추상화 잔여 작업 — 라우트는 인증·파싱만 담당하고 권한·DB·외부 호출은 service에 캡슐화해 후속 #417 Apple 추가 비용을 줄인다. ([#416](https://github.com/idean3885/trip-planner/issues/416))
+
+
 ## [2.10.3] - 2026-04-27
 
 ### Fixed
