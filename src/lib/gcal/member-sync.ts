@@ -1,5 +1,5 @@
 /**
- * 멤버 라이프사이클에 맞춘 공유 캘린더 ACL 동기화 (#349, spec 019).
+ * 멤버 라이프사이클에 맞춘 공유 캘린더 ACL 동기화 (#349, spec 019, spec 024 #416).
  *
  * 호출처 — 트립 멤버 가입/역할 변경/탈퇴 시점:
  *  - src/app/invite/[token]/page.tsx (가입 수락)
@@ -11,12 +11,18 @@
  *  - 캘린더 ACL 실패는 멤버 조작 자체를 차단하지 않는다 (외부 동기화는 부가 기능)
  *  - 오너 토큰이 없거나 공유 캘린더 미연결이면 no-op
  *  - 실패 사유는 서버 로그로만 남김 (사용자 화면 노출은 후속 UI가 담당)
+ *
+ * spec 024 (#416) 위임 — onMemberJoin/onRoleChange/onMemberLeave는 service의
+ * `reconcileMemberAcl`로 위임. provider 분기 + retain 판정(같은 외부 캘린더를 다른
+ * 활성 trip이 공유 중인지)이 캡슐화된다. onOwnerTransfer는 두 멤버 동시 처리라
+ * 본 회차에서는 그대로 유지(다음 회차 분리).
  */
 
 import { TripRole } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getCalendarClient } from "./client";
-import { upsertAcl, patchAclRole, deleteAcl, mapRoleToAcl } from "./acl";
+import { upsertAcl } from "./acl";
+import { reconcileMemberAcl } from "@/lib/calendar/service";
 
 async function resolveContext(tripId: number, memberUserId: string) {
   const link = await prisma.tripCalendarLink.findUnique({ where: { tripId } });
@@ -43,25 +49,23 @@ export async function onMemberJoin(
   userId: string,
   role: TripRole
 ): Promise<void> {
-  if (role === TripRole.OWNER) return;
-  const ctx = await resolveContext(tripId, userId);
-  if (!ctx) return;
-
-  const result = await upsertAcl(ctx.client.calendar, {
-    calendarId: ctx.link.calendarId,
-    email: ctx.email,
-    role: mapRoleToAcl(role),
-  });
-  if (!result.ok) {
+  try {
+    await reconcileMemberAcl({
+      tripId,
+      memberUserId: userId,
+      memberEmail: await loadMemberEmail(userId),
+      newRole: role,
+    });
+  } catch (err) {
     console.warn(
-      `[gcal] onMemberJoin failed tripId=${tripId} userId=${userId} role=${role} reason=${result.reason}`
+      `[gcal] onMemberJoin failed tripId=${tripId} userId=${userId} role=${role} reason=${(err as Error).message}`,
     );
   }
 }
 
 /**
  * 멤버 역할 변경 시 ACL role 조정.
- * Rule ID는 user:<email>로 결정적이라 patch 가능.
+ * provider.upsertMemberAcl이 idempotent하게 patch 처리.
  */
 export async function onRoleChange(
   tripId: number,
@@ -72,45 +76,60 @@ export async function onRoleChange(
     // 오너 이관은 별도 경로에서 처리 (onOwnerTransfer).
     return;
   }
-  const ctx = await resolveContext(tripId, userId);
-  if (!ctx) return;
-
-  const result = await patchAclRole(ctx.client.calendar, {
-    calendarId: ctx.link.calendarId,
-    email: ctx.email,
-    role: mapRoleToAcl(newRole),
-  });
-  if (!result.ok) {
+  try {
+    await reconcileMemberAcl({
+      tripId,
+      memberUserId: userId,
+      memberEmail: await loadMemberEmail(userId),
+      newRole,
+    });
+  } catch (err) {
     console.warn(
-      `[gcal] onRoleChange failed tripId=${tripId} userId=${userId} newRole=${newRole} reason=${result.reason}`
+      `[gcal] onRoleChange failed tripId=${tripId} userId=${userId} newRole=${newRole} reason=${(err as Error).message}`,
     );
   }
 }
 
 /**
  * 멤버 탈퇴/제거 시 ACL 회수.
- * 404는 "이미 없음"으로 성공 간주(deleteAcl 내부).
+ * spec 024 (#416) — `reconcileMemberAcl({ newRole: null })`이 내부에서
+ * `revokeMemberAcl({ retainIfStillNeeded: true })` 호출. 같은 외부 캘린더를 다른
+ * 활성 trip이 공유 중이면 회수 보류 → 다른 trip 멤버 시청 보호.
  */
 export async function onMemberLeave(tripId: number, userId: string): Promise<void> {
-  const ctx = await resolveContext(tripId, userId);
-  if (!ctx) return;
+  const link = await prisma.tripCalendarLink.findUnique({ where: { tripId } });
+  if (!link) return;
 
-  const result = await deleteAcl(ctx.client.calendar, {
-    calendarId: ctx.link.calendarId,
-    email: ctx.email,
-  });
-  if (!result.ok) {
+  try {
+    const memberEmail = await loadMemberEmail(userId);
+    if (memberEmail) {
+      await reconcileMemberAcl({
+        tripId,
+        memberUserId: userId,
+        memberEmail,
+        newRole: null,
+      });
+    }
+  } catch (err) {
     console.warn(
-      `[gcal] onMemberLeave failed tripId=${tripId} userId=${userId} reason=${result.reason}`
+      `[gcal] onMemberLeave failed tripId=${tripId} userId=${userId} reason=${(err as Error).message}`,
     );
   }
 
-  // 멤버의 subscription 레코드도 정리 (cascade 외에 명시 delete — link 미삭제 시 orphan 방지).
+  // 멤버의 subscription 레코드 정리 (cascade 외에 명시 delete — link 미삭제 시 orphan 방지).
   await prisma.memberCalendarSubscription
-    .deleteMany({ where: { linkId: ctx.link.id, userId } })
+    .deleteMany({ where: { linkId: link.id, userId } })
     .catch((err) => {
       console.warn(`[gcal] cleanup subscription failed userId=${userId}`, err);
     });
+}
+
+async function loadMemberEmail(userId: string): Promise<string> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { email: true },
+  });
+  return user?.email ?? "";
 }
 
 /**
