@@ -2,7 +2,7 @@
 
 **Feature Branch**: `020-shared-calendar-not-linked`
 **Created**: 2026-04-22
-**Status**: Draft
+**Status**: Released (v2.9.1 — 2026-04-22)
 **Input**: User description: "공유 캘린더 미연결 상태의 역할별 UI — 주인이 아직 v2.9.0 공유 캘린더를 연결하지 않은 여행에 호스트·게스트가 진입했을 때, 역할별로 명확한 상태 문구와 액션을 제공한다. 증상으로 발견된 status 폴백 → v2 엔드포인트 404 케이스를 정상 시나리오로 재정의."
 
 ## Background

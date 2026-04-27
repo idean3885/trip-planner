@@ -22,23 +22,42 @@ graph TB
         PA[PersonalAccessToken]
     end
 
+    subgraph "캘린더 컨텍스트 (Calendar Context, v2.9.0+)"
+        TCL[TripCalendarLink Aggregate]
+        TCEM[TripCalendarEventMapping Entity]
+        MCS[MemberCalendarSubscription Entity]
+        GCL[GCalLink — 레거시]
+        GCEM[GCalEventMapping — 레거시]
+    end
+
     TA -->|contains| DA
     DA -->|contains| AA
     TA -->|contains| TM
     TM -.->|references userId| UA
     PA -.->|references userId| UA
+    TA -.->|exports to| TCL
+    TCL -->|contains| TCEM
+    TCL -->|contains| MCS
+    AA -.->|mapped as| TCEM
+    UA -.->|owns ownerId| TCL
+    UA -.->|opts in| MCS
+    TA -.->|legacy per-user| GCL
+    GCL -->|contains| GCEM
 
     style TA fill:#f9f,stroke:#333
     style UA fill:#ff9,stroke:#333
+    style TCL fill:#9ff,stroke:#333
+    style GCL fill:#ddd,stroke:#999,stroke-dasharray: 5 5
 ```
 
-**2개 컨텍스트:**
+**3개 컨텍스트:**
 - **여행 컨텍스트**: Trip이 루트. Day, Activity, TripMember 포함. 기획 도메인 1~4를 구현
-- **인증 컨텍스트**: Auth.js v5 관리 영역. userId로만 여행 컨텍스트와 연결
+- **인증 컨텍스트**: Auth.js v5 관리 영역. userId로만 다른 컨텍스트와 연결
+- **캘린더 컨텍스트** (v2.9.0+): 여행을 외부 공유 캘린더로 발행하는 별도 애그리거트. `TripCalendarLink`가 루트, 활동 ↔ 외부 이벤트 매핑(`TripCalendarEventMapping`, v2.10.0+)과 동행자 옵트인(`MemberCalendarSubscription`)을 보유. 레거시 `GCalLink`/`GCalEventMapping`(v2.8.0 per-user)은 무중단 병존, 후속 릴리즈에서 contract 예정. 정책: [ADR-0003 per-trip-shared-calendar](./adr/0003-per-trip-shared-calendar.md)
 
 ## 용어 사전
 
-[specs/collaboration/004-fullstack-transition/spec.md — Glossary](../specs/collaboration/004-fullstack-transition/spec.md#glossary) 참조.
+도메인 용어 정본은 [`docs/glossary.md`](./glossary.md) (한국어 정본·영어 코드 매핑). 초기 합의는 [specs/collaboration/004-fullstack-transition/spec.md — Glossary](../specs/collaboration/004-fullstack-transition/spec.md#glossary) 참조.
 
 ## 애그리거트
 
@@ -61,7 +80,6 @@ classDiagram
         +int id
         +Date date
         +string title
-        +int sortOrder
         +addActivity(activity)
         +removeActivity(activityId)
         +reorderActivities(ids)
