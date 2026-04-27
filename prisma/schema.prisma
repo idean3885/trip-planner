@@ -27,6 +27,7 @@ model User {
   gcalLinks                   GCalLink[]
   ownedCalendarLinks          TripCalendarLink[]           @relation("TripCalendarLinkOwner")
   memberCalendarSubscriptions MemberCalendarSubscription[] @relation("MemberCalendarSubscriptionUser")
+  appleCalendarCredential     AppleCalendarCredential?     @relation("AppleCalendarCredentialUser")
 
   @@map("users")
 }
@@ -290,6 +291,22 @@ model TripCalendarEventMapping {
   @@unique([tripCalendarLinkId, activityId])
   @@index([tripCalendarLinkId])
   @@map("trip_calendar_event_mappings")
+}
+
+// spec 025 (#417) — Apple iCloud CalDAV 자격증명. AES-256-GCM 암호화된 app-specific password 저장.
+model AppleCalendarCredential {
+  userId            String    @id @map("user_id")
+  appleId           String    @map("apple_id")
+  encryptedPassword String    @map("encrypted_password") // base64(ciphertext + auth tag)
+  iv                String                               // base64(12바이트 random)
+  lastValidatedAt   DateTime? @map("last_validated_at") @db.Timestamptz(3)
+  lastError         String?   @map("last_error")
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt         DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  user User @relation("AppleCalendarCredentialUser", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("apple_calendar_credentials")
 }
 
 model MemberCalendarSubscription {

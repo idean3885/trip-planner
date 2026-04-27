@@ -13,8 +13,10 @@ vi.mock("@/lib/gcal/auth", () => ({
   buildConsentRedirectUrl: vi.fn(),
 }));
 vi.mock("@/lib/gcal/acl", () => ({ upsertAcl: vi.fn(), deleteAcl: vi.fn() }));
+vi.mock("tsdav", () => ({ createDAVClient: vi.fn() }));
 
 import { googleProvider } from "@/lib/calendar/provider/google";
+import { appleProvider } from "@/lib/calendar/provider/apple";
 import { getProvider } from "@/lib/calendar/provider/registry";
 
 describe("ProviderCapabilities — 노출 정합", () => {
@@ -30,7 +32,7 @@ describe("ProviderCapabilities — 노출 정합", () => {
     expect(getProvider("GOOGLE")).toBe(googleProvider);
   });
 
-  it("registry getProvider('APPLE')은 #417 명시 throw", () => {
-    expect(() => getProvider("APPLE")).toThrowError(/#417/);
+  it("registry getProvider('APPLE')은 appleProvider와 동일 객체 (spec 025로 활성화)", () => {
+    expect(getProvider("APPLE")).toBe(appleProvider);
   });
 });

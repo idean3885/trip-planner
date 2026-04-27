@@ -15,7 +15,7 @@ POC #345로 Apple iCloud CalDAV 연동의 핵심 동작이 실측 검증됐다(M
 
 1. **자동 캘린더 생성을 1순위, "기존 선택"은 고급 옵션** — POC 측정 #3에서 MKCALENDAR가 201 Created로 작동 확인. 사용자에겐 기본 액션 "trip-planner 전용 캘린더 자동 생성"만 노출하고, MKCALENDAR 실패 시에만 "기존 캘린더에 추가" 보조 옵션이 나타난다. VEVENT 컴포넌트가 없는 캘린더(미리 알림 등)는 목록에서 자동 제외(POC 추가 발견 B).
 
-2. **인증 정보 암호화는 단일 대칭키 (AES-256-GCM)** — Vercel env에 `APPLE_PASSWORD_ENCRYPTION_KEY`(32바이트 base64) 단 하나를 두고 Node `crypto`로 password 컬럼을 암호화한다. IV는 row마다 12바이트 생성·저장. 키 회전 시 전체 재암호화 필요(1인 운영·수십 명 규모에서 수동 회전 가능). 사용자 1000명 규모 도달 시 envelope encryption 도입 검토. 근거: POC 의사결정 #4 + ADR-0002(라이브러리 우선/비용 최소).
+2. **인증 정보 암호화는 단일 대칭키 (AES-256-GCM)** — 배포 환경 변수에 `APPLE_PASSWORD_ENCRYPTION_KEY`(32바이트 base64) 단 하나를 두고 표준 라이브러리로 password 컬럼을 암호화한다. IV는 row마다 12바이트 생성·저장. 키 회전 시 전체 재암호화 필요(1인 운영·수십 명 규모에서 수동 회전 가능). 사용자 1000명 규모 도달 시 envelope encryption 도입 검토. 근거: POC 의사결정 #4 + ADR-0002(라이브러리 우선/비용 최소).
 
 3. **에러 알림 채널은 401 즉시 UI 배너 + 그 외 일시 오류 무음** — POC 측정 #8에서 401이 즉시 반환됨 확인. 401은 사용자가 폐기·재발급한 경우 또는 Apple ID 비밀번호 변경(#10) 후 일괄 무효화된 경우. 두 케이스 모두 사용자 액션 필요 → 즉시 UI 배너로 안내 + 재인증 링크. 그 외 일시 오류(네트워크·5xx·rate limit)는 무음 처리하고 다음 sync에서 자동 재시도. Google과 동일 톤 유지.
 
@@ -118,7 +118,7 @@ trip 활동을 ICS VEVENT로 변환해 PUT. 응답 ETag를 `TripCalendarEventMap
 `appleProvider.classifyError`가 다음 매핑을 수행:
 - 401 → `auth_invalid`
 - 412 → `precondition_failed`
-- 5xx · 네트워크 · timeout → `transient_failure`
+- 429 (rate limit) · 5xx · 네트워크 · timeout → `transient_failure`
 - 그 외 → `null`
 
 `unregistered_user`/`already_linked`/`revoked`는 Apple에 해당 없음 → 항상 null.
@@ -166,7 +166,7 @@ Apple link trip의 멤버 가입·역할 변경·탈퇴 훅에서 `appleProvider
 
 ## Key Entities *(mandatory)*
 
-- **AppleCalendarCredential** (신규 테이블) — userId(FK User, unique) · appleId · encryptedPassword · iv · createdAt · lastValidatedAt · lastError. 1 user 1 row.
+- **AppleCalendarCredential** (신규 테이블) — userId(FK User, @id) · appleId · encryptedPassword · iv · createdAt · updatedAt · lastValidatedAt · lastError. 1 user 1 row.
 - **TripCalendarLink** (기존, 신규 컬럼 없음) — provider 컬럼은 #416에서 추가됨. Apple link는 `provider == "APPLE"` + calendarId가 CalDAV 캘린더 URL.
 - **TripCalendarEventMapping** (기존, `etag` 컬럼 추가) — Google은 syncedEtag 사용 중. Apple은 같은 컬럼 재사용.
 
