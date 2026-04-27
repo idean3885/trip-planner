@@ -1,0 +1,1 @@
+**Apple iCloud CalDAV sync 분기 추가** — `syncAppleActivities` 모듈 + `service.syncCalendar`의 `link.provider="APPLE"` 분기. 왜: US1(첫 sync) MVP 완성 — Apple link로 연결한 trip의 활동이 iCloud 캘린더에 VEVENT로 반영되어 iPhone Calendar 앱에 표시. Google sync는 그대로 유지(회귀 0).
