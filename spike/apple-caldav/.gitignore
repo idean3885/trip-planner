@@ -1,5 +1,6 @@
 .env
 .env.local
 node_modules/
+package-lock.json
 results/*.json
 results/*.local.md

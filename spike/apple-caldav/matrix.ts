@@ -19,14 +19,20 @@
  * 절대 사용자의 다른 캘린더·이벤트는 건드리지 않는다.
  */
 
-import "dotenv/config";
+import { config as loadEnv } from "dotenv";
 import { DAVClient, type DAVCalendar } from "tsdav";
-import { writeFileSync, mkdirSync } from "node:fs";
+import { writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const RESULTS_DIR = join(__dirname, "results");
+
+// .env.local 우선, 없으면 .env로 폴백.
+const envLocal = join(__dirname, ".env.local");
+const envDefault = join(__dirname, ".env");
+if (existsSync(envLocal)) loadEnv({ path: envLocal });
+else if (existsSync(envDefault)) loadEnv({ path: envDefault });
 
 const APPLE_ID = process.env.APPLE_ID;
 const APPLE_APP_PASSWORD = process.env.APPLE_APP_PASSWORD;
@@ -257,6 +263,7 @@ END:VCALENDAR
 
   if (targetCal) {
     await record(5, "VEVENT PUT (생성)", "201/204 + 반영 시각", async () => {
+      // tsdav 2.x: createCalendarObject가 fetch Response를 반환. Location/ETag 헤더로 URL/ETag 추출.
       const t = await timed(() =>
         client.createCalendarObject({
           calendar: targetCal!,
@@ -264,20 +271,37 @@ END:VCALENDAR
           iCalString: ics("[POC] 생성 테스트"),
         }),
       );
-      const r = t.value as { url?: string; etag?: string };
-      eventUrl = r.url ?? null;
-      firstEtag = r.etag ?? null;
+      const res = t.value as unknown as Response;
+      const status = (res as { status?: number }).status;
+      const headers = (res as { headers?: Headers }).headers;
+      const location = headers?.get?.("location") ?? null;
+      eventUrl = location
+        ? new URL(location, targetCal!.url ?? "").toString()
+        : `${(targetCal!.url ?? "").replace(/\/$/, "")}/${eventFilename}`;
+      firstEtag = headers?.get?.("etag") ?? null;
+      // ETag가 헤더에 없으면 PROPFIND로 보강.
+      if (!firstEtag && eventUrl) {
+        try {
+          const objs = await client.fetchCalendarObjects({
+            calendar: targetCal!,
+            objectUrls: [eventUrl],
+          });
+          firstEtag = (objs[0] as { etag?: string } | undefined)?.etag ?? null;
+        } catch {
+          /* ignore — 다음 단계 skip 처리 */
+        }
+      }
       return {
-        ok: !!eventUrl,
-        observed: `created ${eventUrl ? "OK" : "URL 없음"} ETag=${firstEtag ?? "없음"}`,
+        ok: status === 201 || status === 204,
+        observed: `created status=${status ?? "?"} ETag=${firstEtag ?? "없음"}`,
         ms: t.ms,
-        raw: r,
+        raw: { status, location, etag: firstEtag, eventUrl },
       };
     });
 
     await record(6, "VEVENT PUT (update, If-Match ETag)", "204", async () => {
       if (!eventUrl || !firstEtag) {
-        return { ok: false, observed: "이전 단계에서 URL/ETag 미확보. skip." };
+        return { ok: false, observed: `URL=${!!eventUrl} ETag=${!!firstEtag} 미확보. skip.` };
       }
       const t = await timed(() =>
         client.updateCalendarObject({
@@ -288,12 +312,13 @@ END:VCALENDAR
           },
         }),
       );
-      const r = t.value as { ok?: boolean; status?: number };
+      const res = t.value as unknown as Response;
+      const status = (res as { status?: number }).status;
       return {
-        ok: r.ok !== false,
-        observed: `update status=${r.status ?? "?"}`,
+        ok: status === 204 || status === 200,
+        observed: `update status=${status ?? "?"}`,
         ms: t.ms,
-        raw: r,
+        raw: { status },
       };
     });
 
@@ -306,12 +331,13 @@ END:VCALENDAR
           calendarObject: { url: eventUrl!, etag: firstEtag ?? "" },
         }),
       );
-      const r = t.value as { ok?: boolean; status?: number };
+      const res = t.value as unknown as Response;
+      const status = (res as { status?: number }).status;
       return {
-        ok: r.ok !== false,
-        observed: `delete status=${r.status ?? "?"}`,
+        ok: status === 204 || status === 200,
+        observed: `delete status=${status ?? "?"}`,
         ms: t.ms,
-        raw: r,
+        raw: { status },
       };
     });
   } else {
@@ -331,27 +357,25 @@ END:VCALENDAR
   // #8 잘못된 app-password
   // ─────────────────────────────────────────
   await record(8, "잘못된 app-password", "401 즉시", async () => {
-    const wrong = new DAVClient({
-      serverUrl: ICLOUD_CALDAV_URL,
-      credentials: { username: APPLE_ID!, password: "wrong-app-password-zzzz" },
-      authMethod: "Basic",
-      defaultAccountType: "caldav",
-    });
-    const t = await timed(async () => {
-      try {
-        await wrong.login();
-        return { status: 200 as number };
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        const m = msg.match(/\b(401|403|503)\b/);
-        return { status: m ? Number(m[1]) : -1, msg };
-      }
-    });
-    const r = t.value as { status: number; msg?: string };
+    // tsdav login은 401을 일반 Error로 던져 status 추출이 어려움 → fetch 직접 호출로 정확한 status 확인.
+    const credentials = Buffer.from(`${APPLE_ID}:wrong-app-password-zzzz`).toString("base64");
+    const t = await timed(() =>
+      fetch(ICLOUD_CALDAV_URL + "/", {
+        method: "PROPFIND",
+        headers: {
+          Authorization: `Basic ${credentials}`,
+          Depth: "0",
+          "Content-Type": "application/xml; charset=utf-8",
+        },
+        body: `<?xml version="1.0"?><D:propfind xmlns:D="DAV:"><D:prop><D:current-user-principal/></D:prop></D:propfind>`,
+      }),
+    );
+    const status = t.value.status;
     return {
-      ok: r.status === 401,
-      observed: `status=${r.status}${r.msg ? ` (${r.msg.slice(0, 80)})` : ""}`,
+      ok: status === 401,
+      observed: `status=${status} ${t.value.statusText}`,
       ms: t.ms,
+      raw: { status, statusText: t.value.statusText },
     };
   });
 
