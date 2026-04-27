@@ -2,7 +2,7 @@
 
 **Feature Branch**: `003-companion-feedback-channel`
 **Created**: 2026-04-07
-**Status**: Draft
+**Status**: Retired (v2.0.0 AX 방향 전환으로 채널 자체 폐기)
 **Input**: User description: "동행자가 AI 에이전트를 통해 여행 일정 보완 요청과 디자인 피드백을 개발자에게 전달할 수 있는 소통 채널. 비개발자가 별도 도구 설치 없이 AI 에이전트 환경에서 바로 피드백을 남길 수 있어야 한다. 1인 개발 + 동료 피드백 구조."
 
 ## User Scenarios & Testing *(mandatory)*

@@ -2,7 +2,7 @@
 
 **Feature Branch**: `019-gcal-shared-flow`
 **Created**: 2026-04-22
-**Status**: Draft
+**Status**: Released (v2.9.0 — 2026-04-22)
 **Input**: v2.8.0 연동이 멤버마다 본인 계정에 DEDICATED 캘린더를 개별 생성하여 여행 1개에 N배 중복 발생. v2.9.0에서 오너 1개 공유 캘린더에 멤버가 옵트인으로 구독하는 단일-소스 모델로 재설계.
 
 **Related**: Epic [#349](https://github.com/idean3885/trip-planner/issues/349), 마일스톤 [#26 v2.9.0](https://github.com/idean3885/trip-planner/milestone/26), PoC research `docs/research/v290-gcal-share-poc.md`

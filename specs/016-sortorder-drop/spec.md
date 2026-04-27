@@ -2,7 +2,7 @@
 
 **Feature Branch**: `016-sortorder-drop`
 **Created**: 2026-04-20
-**Status**: Approved
+**Status**: Released (v2.7.1 — 2026-04-20)
 **Input**: v2.7.1 contract — Day.sortOrder 컬럼 DROP (#317)
 
 ## Clarifications

@@ -17,3 +17,6 @@
 |------|------|------|------|
 | [0001](./0001-spec-terminology-policy.md) | 스펙·문서 작성 용어 정책 | Accepted | 2026-04-20 |
 | [0002](./0002-library-first-policy.md) | 라이브러리 우선 채택 정책 + Minimum Cost 해석 | Accepted | 2026-04-20 |
+| [0003](./0003-per-trip-shared-calendar.md) | 여행 캘린더는 여행당 1개 공유 캘린더로 통일 | Accepted | 2026-04-22 |
+| [0004](./0004-gcal-testing-mode-cost.md) | Google OAuth Testing 모드 유지 — 심사 비용이 가장 큰 유보 이유 | Accepted | 2026-04-22 |
+| [0005](./0005-expand-and-contract-pattern.md) | 무중단 DB 마이그레이션은 Expand-and-Contract 패턴으로 진행 | Accepted | 2026-04-27 |

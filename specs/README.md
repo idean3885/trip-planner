@@ -41,14 +41,28 @@ graph LR
 
 ## 스펙 현황
 
-| 도메인 | 스펙 | 상태 |
-|--------|------|------|
-| 여행 탐색 | 001 여행 검색 MCP | 완료 |
-| 여행 탐색 | 005 API 연동 | 완료 |
-| 일정 편성 | 006 구조화 활동 | 완료 |
-| 동행 협업 | 004 풀스택 전환 | 완료 |
-| 동행 협업 | 007 OAuth CLI 재인증 | 완료 |
-| 일정 활용 | 002 iCal 번들 | 완료 (PDF 미구현) |
-| 예산 관리 | — | 미착수 |
+| 도메인 | 스펙 | 릴리즈 | 비고 |
+|--------|------|------|------|
+| 여행 탐색 | [001 여행 검색 MCP](travel-search/001-ax-travel-planning/) | v1.0.0 | |
+| 여행 탐색 | [005 API 연동](travel-search/005-ax-api-mcp/) | v2.0.0 | |
+| 일정 편성 | [006 구조화 활동](itinerary/006-structured-activity/) | v2.1.0 | |
+| 일정 편성 | [015 Day 스키마 재설계 + API v2](015-day-schema-redesign/) | v2.7.0 | expand-and-contract: expand+migrate |
+| 일정 편성 | [016 Day.sortOrder DROP](016-sortorder-drop/) | v2.7.1 | expand-and-contract: contract |
+| 동행 협업 | [004 풀스택 전환](collaboration/004-fullstack-transition/) | v2.0.0 | |
+| 동행 협업 | [007 OAuth CLI 재인증](collaboration/007-oauth-cli-reauth/) | v2.2.0 | |
+| 동행 협업 | [023 동행자 목록 주인+호스트 복수 뱃지](023-role-badges/) | v2.10.0 | 역할 포함 관계 UI 표면화 |
+| 일정 활용 | [002 iCal 번들](export/002-bundle-ical-mcp/) | v1.x | PDF 미구현 |
+| 일정 활용 | [018 Google Calendar 연동 (per-user)](018-gcal-integration/) | v2.8.0 | 레거시 모델, 후속 contract 대상 |
+| 일정 활용 | [019 GCal 공유 플로우 재설계](019-gcal-shared-flow/) | v2.9.0 | per-trip 공유 정본 |
+| 일정 활용 | [020 공유 캘린더 미연결 역할별 UI](020-shared-calendar-not-linked/) | v2.9.1 | |
+| 일정 활용 | [021 GCal 권한 제약 감지·안내](021-gcal-access-guide/) | v2.9.2 | OAuth Testing 모드 안내 |
+| 일정 활용 | [022 레거시 캘린더 contract 정리](022-gcal-legacy-contract/) | v2.10.0 | 매핑 expand 단계. 레거시 테이블 DROP은 후속 |
+| UI/디자인 | [011 프로젝트 아이덴티티 표면](011-project-identity-surface/) | v2.4.0 | |
+| UI/디자인 | [012 shadcn 디자인 시스템 기반](012-shadcn-design-system/) | v2.4.3 | |
+| UI/디자인 | [013 shadcn Phase 2](013-shadcn-phase2/) | v2.5.0 | |
+| UI/디자인 | [014 랜딩·문서 정비](014-landing-docs-refresh/) | v2.6.0 | |
+| 인프라 | [017 Neon DB 환경별 분리](017-neon-db-split/) | v2.7.2 | preview/dev DB 격리 |
+| 예산 관리 | — | — | 미착수 |
 
-> 은퇴: [_retired/](_retired/) | 인프라: [_infra/](_infra/)
+> 은퇴: [_retired/](_retired/) (003 동행자 피드백 채널은 v2.0.0 AX 방향 전환으로 폐기)
+> 인프라: [_infra/](_infra/) (009 Git 릴리즈 전략, 010 speckit 하네스)
