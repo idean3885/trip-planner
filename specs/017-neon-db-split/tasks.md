@@ -8,5 +8,6 @@
 
 ## 릴리즈 준비
 
-- [x] T020 towncrier 단편 [artifact: changes/318.chore.md] [why: verify-split]
 - [x] T021 quickstart Evidence [artifact: specs/017-neon-db-split/quickstart.md] [why: verify-split]
+
+> T020 towncrier 단편(`changes/318.chore.md`)은 v2.7.2 릴리즈 시 towncrier build에 소비되어 리포에서 삭제됨 (정상 워크플로우). tasks 기록에서 제외.
