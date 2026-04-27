@@ -10,6 +10,7 @@ import DeleteTripButton from "@/components/DeleteTripButton";
 import LeaveTripButton from "@/components/LeaveTripButton";
 import MemberList from "@/components/MemberList";
 import GCalLinkPanel from "@/components/GCalLinkPanel";
+import AppleEntryCard from "@/components/calendar/AppleEntryCard";
 import AddDayButton from "@/components/AddDayButton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { remark } from "remark";
@@ -106,6 +107,8 @@ async function DbTripPage({ tripId }: { tripId: number }) {
       )}
 
       <GCalLinkPanel tripId={tripId} role={member.role} />
+
+      <AppleEntryCard tripId={tripId} role={member.role} />
 
       <MemberList tripId={tripId} />
 
