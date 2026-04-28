@@ -1,26 +1,56 @@
 "use client";
 
 /**
- * spec 025 (#417, hotfix v2.11.1) — trip 페이지에 Apple 캘린더 위자드 진입 카드.
+ * spec 025 (#417, hotfix v2.11.1+v2.11.4) — trip 페이지의 Apple 캘린더 진입 카드.
  *
- * 위자드 페이지 자체(`/trips/[id]/calendar/connect-apple`)는 v2.11.0에서 도입됐지만
- * 진입 UI가 없어 사용자가 직접 URL을 입력해야 했다. 본 카드를 trip 페이지에 노출해
- * OWNER가 한 번에 진입할 수 있도록 한다.
+ * 표시 분기 (spec 024 Clarification 6 — 한 trip = 1 provider 정책):
+ *  - 미연결 (currentProvider == null) + OWNER → "Apple 캘린더 연결 (Beta)" 버튼
+ *  - GOOGLE 연결됨 → 카드 자체를 hide (사용자가 Google 패널에서 먼저 해제하도록 유도)
+ *  - APPLE 연결됨 → "Apple 캘린더 연결됨" 안내 카드 (해제 UI는 v2.12 후속)
+ *  - GUEST/HOST → 카드 hide (connectAppleCalendar는 OWNER 전용)
  *
- * 연결 후 상태 표시·해제 UI는 v2.12에서 정식 패널로 분리 예정.
+ * v2.12 통합: Google·Apple 패널을 단일 컴포넌트로 통합 + 해제·전환 흐름 일원화 예정.
  */
 
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
-import type { TripRole } from "@prisma/client";
+import type { CalendarProviderId, TripRole } from "@prisma/client";
 
 interface AppleEntryCardProps {
   tripId: number;
   role: TripRole;
+  /** 해당 trip의 현재 link.provider. 미연결이면 null. */
+  currentProvider: CalendarProviderId | null;
 }
 
-export default function AppleEntryCard({ tripId, role }: AppleEntryCardProps) {
+export default function AppleEntryCard({
+  tripId,
+  role,
+  currentProvider,
+}: AppleEntryCardProps) {
   if (role !== "OWNER") return null;
+
+  // 다른 provider(GOOGLE)에 이미 연결됨 → 카드 hide.
+  // 사용자는 Google 패널에서 해제 후 Apple 시도. 같은 trip 페이지에 두 가지 진입을
+  // 동시에 노출하면 spec 024 Clarification 6의 "1 provider" 정책과 사용자 기대가
+  // 어긋난다(2026-04-28 dev 검증 피드백 — already_linked_other_provider 좌절).
+  if (currentProvider && currentProvider !== "APPLE") {
+    return null;
+  }
+
+  if (currentProvider === "APPLE") {
+    return (
+      <Card className="p-4">
+        <div className="space-y-1">
+          <h3 className="text-sm font-medium">Apple 캘린더 연결됨</h3>
+          <p className="text-xs text-muted-foreground">
+            iPhone·iPad·Mac Calendar 앱에서 본 여행 일정을 확인할 수 있습니다.
+            연결 해제·재인증 UI는 후속 회차에서 제공 예정입니다.
+          </p>
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <Card className="p-4">
