@@ -56,41 +56,44 @@ export default function CalendarProviderChoice({
           </div>
         </Link>
 
-        {/* Google — Testing 모드 제약 */}
-        <div className="rounded-lg border border-input bg-muted/30 p-3">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-muted-foreground">
-                📅 Google Calendar
-              </span>
-              <span className="rounded border border-amber-300 bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-900">
-                개발자 등록 필요
-              </span>
+        {/* Google — Testing 모드 (등록 사용자 진입 경로 명시) */}
+        <Link
+          href={`/trips/${tripId}?provider=google`}
+          scroll={false}
+          className="block rounded-lg border border-input bg-background p-3 transition-colors hover:bg-accent"
+        >
+          <div className="flex items-start justify-between gap-3">
+            <div className="space-y-0.5">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">📅 Google Calendar</span>
+                <span className="rounded border border-amber-300 bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-900">
+                  Testing
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                개발자에게 등록된 사용자만 통과합니다. 등록되어 있다면 바로 시도하세요.
+                미등록 시 동의 단계에서 차단되며 안내가 노출됩니다.
+              </p>
             </div>
-            <p className="text-xs text-muted-foreground">
-              Google Cloud Testing 모드 — 개발자가 직접 등록한 사용자만 사용
-              가능합니다. 등록을 원하시면 토론 채널로 문의해 주세요.
-            </p>
-            <div className="flex flex-wrap items-center gap-2 pt-1">
-              <a
-                href={GCAL_DISCUSSIONS_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 rounded-md border border-amber-300 bg-amber-50 px-2 py-1 text-xs font-medium text-amber-900 hover:bg-amber-100"
-              >
-                개발자 등록 문의
-                <span aria-hidden>↗</span>
-              </a>
-              <Link
-                href={`/trips/${tripId}?provider=google`}
-                scroll={false}
-                className="inline-flex items-center justify-center rounded-md border border-input bg-background px-2 py-1 text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-              >
-                Google 연결 시도
-              </Link>
-            </div>
+            <span className="shrink-0 text-sm font-medium text-foreground">
+              시작 →
+            </span>
           </div>
-        </div>
+        </Link>
+
+        {/* 등록 문의 보조 링크 (Google 박스 밖, 작은 footer 톤) */}
+        <p className="pt-1 text-center text-xs text-muted-foreground">
+          Google 등록이 필요하다면{" "}
+          <a
+            href={GCAL_DISCUSSIONS_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-amber-900 underline underline-offset-2 hover:text-amber-700"
+          >
+            토론 채널로 문의
+          </a>
+          하세요.
+        </p>
       </div>
     </Card>
   );

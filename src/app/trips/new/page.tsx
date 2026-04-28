@@ -61,7 +61,7 @@ export default function NewTripPage() {
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="포르투갈 & 스페인 여행"
+            placeholder="예: 제주도 여행"
             required
             className={inputClass}
           />
