@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [2.11.6] - 2026-04-29
+
+### Added
+
+- **Apple 연결됨 카드에 "다시 반영하기" sync 버튼 추가** — `AppleEntryCard`를 client component로 재작성. 마지막 반영 시각·건너뜀·오류 상태 표시 + OWNER/HOST가 클릭 시 `POST /api/v2/trips/[id]/calendar/sync` 트리거(provider=APPLE 분기 자동) + 결과 toast(추가/갱신/삭제/건너뜀/실패 요약). 자격증명 만료 시 위자드 재인증 링크 노출. 왜: v2.11.5까지는 안내만 있고 활동 변경을 외부 캘린더에 반영할 트리거 UI가 없어 사용자가 일정 추가/수정 후 Apple 캘린더에 반영할 방법이 없었다(2026-04-28 검증 피드백). ([#458](https://github.com/idean3885/trip-planner/issues/458))
+
+### Fixed
+
+- **여행 제목 placeholder를 일반 예시로 변경** — `포르투갈 & 스페인 여행` → `예: 제주도 여행`. 왜: trip-planner는 특정 여행 한정 도구가 아닌 범용 플래너 — placeholder가 특정 행선지로 고정되면 사용자가 "이 앱은 그 여행만 위한 것"으로 오해할 수 있다. ([#453](https://github.com/idean3885/trip-planner/issues/453))
+- **캘린더 provider 선택 — Google 등록 사용자 진입 경로 명확화** — `CalendarProviderChoice`의 Google 옵션을 Apple과 동일한 카드 형태로 균형 조정. "시작 →" CTA가 카드 전체 클릭 영역으로 노출되어 등록 사용자가 즉시 진입 가능. "등록 문의"는 카드 하단 footer 보조 링크로 약화. 왜: v2.11.5는 "개발자 등록 필요" 안내가 너무 강조돼 이미 등록된 사용자도 진입 경로를 인지하지 못하는 문제. Google Cloud Console의 Test users 등록 여부는 사전 조회 불가능하므로 시도 자체는 누구나 가능하게 두고 미등록은 OAuth consent 단계에서 자동 차단(spec 021)되도록 흐름 일관화. ([#456](https://github.com/idean3885/trip-planner/issues/456))
+- **Apple sync UID 불일치 버그 수정** — sync-apple의 update 분기가 ICS UID를 `"placeholder"` 문자열로 잘못 설정해 모든 활동이 동일 UID로 PUT되던 버그. iCloud가 UID 불일치를 새 객체 생성/reject로 처리해 활동 1개 추가·sync 시 캘린더에 2개 생성, 후속 sync에서 UNKNOWN/실패 발생. 신규 PUT은 명시적 `randomUUID()` 생성, update는 mapping URL 마지막 segment에서 UID 추출. apple.ts::putEvent의 filename도 ICS UID와 일치하도록 정렬해 CalDAV 일관성 보장. ([#460](https://github.com/idean3885/trip-planner/issues/460))
+
+
 ## [2.11.5] - 2026-04-28
 
 ### Fixed
