@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [2.11.4] - 2026-04-28
+
+### Fixed
+
+- **Apple 진입 카드 표시 조건 분기** — 이미 다른 provider(Google)에 연결된 trip에서는 Apple 카드를 자동으로 hide. 왜: spec 024 Clarification 6의 "한 trip = 1 provider" 정책에도 불구하고 카드가 노출되어 사용자가 위자드를 끝까지 진행한 뒤에야 `already_linked_other_provider` 차단을 만나는 좌절이 있었다(2026-04-28 dev 피드백). Apple 연결된 trip에는 "연결됨" 안내 카드 표시. Google 패널과의 통합·해제 UI는 v2.12 후속. ([#447](https://github.com/idean3885/trip-planner/issues/447))
+
+
 ## [2.11.3] - 2026-04-28
 
 ### Fixed

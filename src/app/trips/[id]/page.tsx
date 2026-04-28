@@ -46,7 +46,7 @@ async function DbTripPage({ tripId }: { tripId: number }) {
   const session = await auth();
   if (!session?.user?.id) redirect("/auth/signin");
 
-  const [member, trip] = await Promise.all([
+  const [member, trip, calendarLink] = await Promise.all([
     prisma.tripMember.findUnique({
       where: { tripId_userId: { tripId, userId: session.user.id } },
     }),
@@ -55,6 +55,10 @@ async function DbTripPage({ tripId }: { tripId: number }) {
       include: {
         days: { orderBy: { date: "asc" } },
       },
+    }),
+    prisma.tripCalendarLink.findUnique({
+      where: { tripId },
+      select: { provider: true },
     }),
   ]);
   if (!member || !trip) notFound();
@@ -108,7 +112,11 @@ async function DbTripPage({ tripId }: { tripId: number }) {
 
       <GCalLinkPanel tripId={tripId} role={member.role} />
 
-      <AppleEntryCard tripId={tripId} role={member.role} />
+      <AppleEntryCard
+        tripId={tripId}
+        role={member.role}
+        currentProvider={calendarLink?.provider ?? null}
+      />
 
       <MemberList tripId={tripId} />
 
