@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [2.11.6] - 2026-04-28
+
+### Fixed
+
+- **여행 제목 placeholder를 일반 예시로 변경** — `포르투갈 & 스페인 여행` → `예: 제주도 여행`. 왜: trip-planner는 특정 여행 한정 도구가 아닌 범용 플래너 — placeholder가 특정 행선지로 고정되면 사용자가 "이 앱은 그 여행만 위한 것"으로 오해할 수 있다. ([#453](https://github.com/idean3885/trip-planner/issues/453))
+
+
 ## [2.11.5] - 2026-04-28
 
 ### Fixed
