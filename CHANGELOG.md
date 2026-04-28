@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [2.11.5] - 2026-04-28
+
+### Fixed
+
+- **캘린더 연결 UX 일괄 개선** — 미연결 trip에 provider 선택 카드(Apple 권장 + Google 개발자 등록 안내) 도입 + Apple 위자드 4단계를 단일 화면으로 단축(prefill·collapsible 가이드·dash 자동 포맷팅·toast 완료). 왜: 신규 사용자는 Apple이 권장 경로임에도 Google 패널만 먼저 보였고, Apple 위자드 4단계 화면 전환이 허들로 작용해 검증 진입이 어려웠다(2026-04-28 사용자 피드백). spec 024 Clarification 6 "한 trip = 1 provider" 정책 준수. ([#450](https://github.com/idean3885/trip-planner/issues/450))
+
+
 ## [2.11.4] - 2026-04-28
 
 ### Fixed
