@@ -10,9 +10,11 @@
  * - 에러 vocabulary: 401→auth_invalid, 412→precondition_failed, 5xx/network→transient_failure
  */
 
+import { randomUUID } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { createAppleClient, type AppleDAVClient } from "./apple-client";
 import { decryptPassword } from "./apple-crypto";
+import { extractIcsUid } from "../ics";
 import type {
   CalendarErrorCode,
   CalendarProvider,
@@ -193,7 +195,10 @@ export const appleProvider: CalendarProvider = {
     if (!client) {
       throw new Error("Apple CalDAV client unavailable for user");
     }
-    const filename = `trip-planner-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}.ics`;
+    // CalDAV 일관성: filename = ICS의 UID (#460 fix). 호출자가 ICS UID를 명시
+    // 했다면 같은 값을 filename에 사용해 update·delete 시 URL 추정이 가능.
+    const uid = extractIcsUid(ics) ?? randomUUID();
+    const filename = `${uid}.ics`;
     const res = await client.createCalendarObject({
       calendar: { url: calendarId } as Parameters<typeof client.createCalendarObject>[0]["calendar"],
       filename,
