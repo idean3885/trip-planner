@@ -11,6 +11,7 @@ import LeaveTripButton from "@/components/LeaveTripButton";
 import MemberList from "@/components/MemberList";
 import GCalLinkPanel from "@/components/GCalLinkPanel";
 import AppleEntryCard from "@/components/calendar/AppleEntryCard";
+import CalendarProviderChoice from "@/components/calendar/CalendarProviderChoice";
 import AddDayButton from "@/components/AddDayButton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { remark } from "remark";
@@ -30,19 +31,29 @@ export const dynamic = "force-dynamic";
 
 export default async function TripDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ provider?: string }>;
 }) {
   const { id } = await params;
   const tripId = parseInt(id);
+  const sp = await searchParams;
+  const providerHint = sp.provider === "google" ? "google" : null;
 
   if (isNaN(tripId)) notFound();
-  return <DbTripPage tripId={tripId} />;
+  return <DbTripPage tripId={tripId} providerHint={providerHint} />;
 }
 
 /* ── DB 기반 여행 상세 ── */
 
-async function DbTripPage({ tripId }: { tripId: number }) {
+async function DbTripPage({
+  tripId,
+  providerHint,
+}: {
+  tripId: number;
+  providerHint: "google" | null;
+}) {
   const session = await auth();
   if (!session?.user?.id) redirect("/auth/signin");
 
@@ -110,13 +121,18 @@ async function DbTripPage({ tripId }: { tripId: number }) {
         </Card>
       )}
 
-      <GCalLinkPanel tripId={tripId} role={member.role} />
-
-      <AppleEntryCard
-        tripId={tripId}
-        role={member.role}
-        currentProvider={calendarLink?.provider ?? null}
-      />
+      {/* spec 024 Clarification 6: 한 trip = 1 provider · 1 외부 캘린더.
+          - 미연결 + OWNER + provider 미선택 → CalendarProviderChoice (Apple 권장 + Google 안내)
+          - GOOGLE 연결됨 OR providerHint=google 강제 노출 → GCalLinkPanel
+          - APPLE 연결됨 → AppleEntryCard
+          - 호스트/게스트 미연결 → 카드 없음 (선택권 없음) */}
+      {!calendarLink && member.role === "OWNER" && !providerHint && (
+        <CalendarProviderChoice tripId={tripId} />
+      )}
+      {(calendarLink?.provider === "GOOGLE" || providerHint === "google") && (
+        <GCalLinkPanel tripId={tripId} role={member.role} />
+      )}
+      {calendarLink?.provider === "APPLE" && <AppleEntryCard />}
 
       <MemberList tripId={tripId} />
 

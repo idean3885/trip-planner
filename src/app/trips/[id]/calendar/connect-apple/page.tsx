@@ -2,9 +2,10 @@
  * spec 025 (#417) — Apple 캘린더 연결 위자드 진입 페이지.
  *
  * /trips/[id]/calendar/connect-apple
- *   ?apple_reauth=1 → 재인증 모드 (Step 3부터, 캘린더 재생성 안 함)
+ *   ?apple_reauth=1 → 재인증 모드 (Apple ID 필드 disabled, 캘린더 재생성 안 함)
  *
- * 권한 검증·redirect는 layout 또는 미들웨어에 위임. 본 페이지는 위자드 컴포넌트를 렌더만.
+ * 사용자 세션 이메일을 prefillEmail로 위자드에 전달. 위자드는 단일 화면 +
+ * collapsible 가이드 + dash 자동 포맷팅 + toast 완료(v2.11.5).
  */
 
 import { redirect } from "next/navigation";
@@ -31,7 +32,11 @@ export default async function ConnectAppleCalendarPage({
 
   return (
     <main className="container mx-auto py-8">
-      <AppleConnectWizard tripId={tripId} reauth={isReauth} />
+      <AppleConnectWizard
+        tripId={tripId}
+        prefillEmail={session.user.email ?? undefined}
+        reauth={isReauth}
+      />
     </main>
   );
 }
