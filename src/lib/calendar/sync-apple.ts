@@ -11,11 +11,29 @@
  *  - 다음 sync에서 GET을 통한 ETag 갱신 시도(본 회차는 단순화 — 잔여 분기는 후속 회차)
  */
 
+import { randomUUID } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { appleProvider } from "./provider/apple";
-import { formatActivityAsIcs, extractIcsUid } from "./ics";
+import { formatActivityAsIcs } from "./ics";
 import type { Activity, Trip, TripCalendarEventMapping } from "@prisma/client";
 import type { FailureReason } from "@/types/gcal";
+
+/**
+ * Apple put 결과 URL의 마지막 segment에서 UID를 추출.
+ * iCloud는 PUT URL을 `<calendar>/<uid>.ics`로 보관하므로, update·delete 시 같은
+ * UID를 ICS 안에 다시 사용하면 CalDAV 일관성이 유지된다(2026-04-28 dev 보고: UID
+ * 불일치로 update가 새 객체 생성·reject되던 버그 #460 fix).
+ */
+function uidFromExternalEventId(url: string): string {
+  const last = url.replace(/\/$/, "").split("/").pop() ?? "";
+  let decoded = last;
+  try {
+    decoded = decodeURIComponent(last);
+  } catch {
+    /* keep raw */
+  }
+  return decoded.replace(/\.ics$/i, "") || randomUUID();
+}
 
 export interface AppleSyncContext {
   tripCalendarLinkId: number;
@@ -74,7 +92,13 @@ export async function syncAppleActivities(
     const mapping = mapByActivity.get(a.id);
     try {
       if (!mapping) {
-        const ics = formatActivityAsIcs(a, ctx.trip, { tripUrl: ctx.tripUrl });
+        // 신규 — 명시적 UUID 생성. ICS UID와 filename(provider 내부)을 일치시켜
+        // 후속 update/delete가 같은 객체를 정확히 가리키게 한다.
+        const uid = randomUUID();
+        const ics = formatActivityAsIcs(a, ctx.trip, {
+          tripUrl: ctx.tripUrl,
+          uid,
+        });
         const ref = await appleProvider.putEvent(ctx.ownerId, ctx.calendarId, ics);
         await prisma.tripCalendarEventMapping.create({
           data: {
@@ -87,10 +111,13 @@ export async function syncAppleActivities(
         });
         result.created++;
       } else {
-        // update — 기존 UID 재사용
+        // update — mapping URL에서 UID 추출해 ICS UID로 동일 사용 (#460 fix).
+        // 이전엔 extractIcsUid("UID:placeholder")가 "placeholder" 문자열을 반환해
+        // ICS UID가 매번 잘못된 값으로 PUT → iCloud가 새 객체로 인식하거나 reject.
+        const uid = uidFromExternalEventId(mapping.googleEventId);
         const ics = formatActivityAsIcs(a, ctx.trip, {
           tripUrl: ctx.tripUrl,
-          uid: extractIcsUid("UID:placeholder") ?? undefined, // best-effort, 새 UUID 생성도 OK
+          uid,
         });
         const ref = await appleProvider.updateEvent(
           ctx.ownerId,
