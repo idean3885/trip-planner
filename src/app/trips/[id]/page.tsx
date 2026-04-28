@@ -132,7 +132,9 @@ async function DbTripPage({
       {(calendarLink?.provider === "GOOGLE" || providerHint === "google") && (
         <GCalLinkPanel tripId={tripId} role={member.role} />
       )}
-      {calendarLink?.provider === "APPLE" && <AppleEntryCard />}
+      {calendarLink?.provider === "APPLE" && (
+        <AppleEntryCard tripId={tripId} role={member.role} />
+      )}
 
       <MemberList tripId={tripId} />
 
