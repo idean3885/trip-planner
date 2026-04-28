@@ -23,6 +23,36 @@ import { Card } from "@/components/ui/card";
 
 type WizardStep = 1 | 2 | 3 | 4;
 
+/**
+ * connect 라우트의 에러 코드를 사용자가 읽을 수 있는 한국어로 매핑.
+ * 코드 그대로 노출되면 의미 전달 실패(2026-04-28 사용자 피드백).
+ */
+function mapConnectError(
+  code: string | undefined,
+  data: { currentProvider?: string; reauthUrl?: string; reason?: string },
+): string {
+  switch (code) {
+    case "already_linked_other_provider":
+      return data.currentProvider === "GOOGLE"
+        ? "이 여행은 이미 구글 캘린더에 연결되어 있습니다. 기존 구글 캘린더 패널에서 연결 해제 후 다시 시도해 주세요."
+        : "이 여행은 이미 다른 캘린더에 연결되어 있습니다. 기존 연결을 해제 후 다시 시도해 주세요.";
+    case "owner_only":
+      return "주인만 캘린더를 연결할 수 있습니다.";
+    case "not_a_member":
+      return "이 여행의 동행자만 진행할 수 있습니다.";
+    case "trip_not_found":
+      return "여행 정보를 찾을 수 없습니다.";
+    case "apple_not_authenticated":
+      return "Apple 자격증명이 만료되었거나 누락되었습니다. 위자드 처음부터 다시 시도해 주세요.";
+    case "calendar_create_failed":
+      return `iCloud 캘린더 생성에 실패했습니다. 잠시 후 다시 시도해 주세요. (${data.reason ?? "unknown"})`;
+    default:
+      return code
+        ? `캘린더 연결에 실패했습니다 (${code})`
+        : "캘린더 연결에 실패했습니다. 잠시 후 다시 시도해 주세요.";
+  }
+}
+
 interface AppleConnectWizardProps {
   tripId: number;
   /** 위자드 종료 시 호출. UI는 모달 또는 별도 페이지 둘 다 지원. */
@@ -82,9 +112,9 @@ export default function AppleConnectWizard({
       );
       const connectData = await connectRes.json().catch(() => ({}));
       if (!connectRes.ok) {
-        setValidateError(
-          `캘린더 연결에 실패했습니다 (${connectData.error ?? connectRes.status})`,
-        );
+        const code = connectData.error as string | undefined;
+        const msg = mapConnectError(code, connectData);
+        setValidateError(msg);
         return;
       }
       setConnectResult({
