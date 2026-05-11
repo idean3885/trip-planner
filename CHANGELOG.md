@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [2.11.7] - 2026-05-11
+
+### Fixed
+
+- **drift-audit 워크플로우 보고 방식 전환** — main 직접 커밋 대신 errors>0 시 GitHub Issue 자동 생성(중복 방지) + 리포트 artifact 보존. 왜: main 보호 정책 충돌로 도입 후 4주 연속 실패 + 1인 개발에서 자동 적용은 정본을 흐림. ([#466](https://github.com/idean3885/trip-planner/issues/466))
+
+
 ## [2.11.6] - 2026-04-29
 
 ### Added
