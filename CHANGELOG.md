@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [2.11.8] - 2026-05-12
+
+### Chore
+
+- **npm 의존성 minor/patch 일괄 업데이트** — next 16.2.6, react/react-dom 19.2.6, prisma 7.8.0, lucide-react 1.14.0, shadcn 4.7.0, vitest 4.1.6 등 17+1개. 왜: dependabot grouped PR이 lockfile sync 깨짐 + 서비스 접근 불가로 자동 처리 실패해 직접 hotfix로 처리 (#472 → #474). ([#473](https://github.com/idean3885/trip-planner/issues/473))
+
+
 ## [2.11.7] - 2026-05-11
 
 ### Fixed
