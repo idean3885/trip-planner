@@ -49,7 +49,7 @@ jobs:
           echo "::notice::drift audit — errors=$ERRORS warnings=$WARNINGS report=$REPORT"
 
       - name: 리포트 artifact 업로드
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: drift-report-${{ steps.audit.outputs.date }}
           path: ${{ steps.audit.outputs.report }}
