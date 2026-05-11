@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [2.12.0] - 2026-05-12
+
+### Added
+
+- `/docs` 페이지를 데스크탑 풀폭 레이아웃으로 전환. 왜: OpenAPI 문서는 AI 에이전트·개발자가 참조하는 자료라 사이드바·본문·코드 샘플 3컬럼을 한 화면에 넓게 보여줘야 함. 기존엔 사이트 공용 `max-w-2xl`에 묶여 가운데가 비어 보였다. ([#477](https://github.com/idean3885/trip-planner/issues/477))
+
+
 ## [2.11.8] - 2026-05-12
 
 ### Chore
