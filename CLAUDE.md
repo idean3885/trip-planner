@@ -123,15 +123,15 @@ develop ──●──●──●───●──●──●──●──
 - `merge-tasks-to-issues.sh` — tasks.md → 하위 이슈 초안(`[why]` 그룹 + 8h 분할 + 마일스톤, dry-run)
 - `enforce-speckit.sh` — Edit/Write PreToolUse 훅. 피처 브랜치(NNN-*)에서 산출물 존재 강제
 - `.github/workflows/speckit-gate.yml` — PR 단계 자동 검증
-- `.github/workflows/drift-audit.yml` — 주간 drift 리포트 생성·자동 커밋
+- `.github/workflows/drift-audit.yml` — 주간 drift 리포트 생성. `total errors > 0`이면 GitHub Issue(라벨 `drift-audit`) 자동 생성(중복 방지). 리포트는 workflow artifact(90일) 보존. main 직접 커밋 없음(#466)
 
 #### rollout phase
 
 `.specify/config/harness.json`의 `rollout.phase`가 `expand`/`migrate`/`contract` 세 단계 중 하나. 각 단계 동작:
 
-- **expand** (현재): validator 경고만, 머지 차단 없음. 신규 피처 도입기.
+- **expand**: validator 경고만, 머지 차단 없음. 신규 피처 도입기.
 - **migrate**: 기존 활성 피처(004/006/007 등) 메타태그 소급 적용. 경고 여전히 비차단.
-- **contract**: quickstart-evidence / migration-meta / drift error가 머지 차단. Phase B 완료 + 1주 관찰 후 전환.
+- **contract** (현재): quickstart-evidence / migration-meta / drift error가 머지 차단. Phase B 완료 + 1주 관찰 후 전환됨.
 
 전환 조건·스냅샷은 `docs/audits/drift/2026-04-migration.md` 참조.
 

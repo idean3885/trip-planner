@@ -2,6 +2,12 @@ name: Drift Audit
 
 # speckit 하네스의 tasks ↔ artifact drift 감사 주기 실행.
 # spec 010 FR-004, PR #204. 설정: .specify/config/harness.json .driftAudit
+#
+# 동작 (#466 변경):
+#   1) 리포트 생성 → workflow artifact로 업로드 (보존 90일)
+#   2) total errors > 0 일 때만 GitHub Issue 자동 생성 (라벨: drift-audit)
+#   3) 동일 라벨의 열린 이슈가 있으면 중복 생성 스킵
+#   4) main 직접 push는 하지 않음 (보호 정책 + 자동 적용 회피)
 
 on:
   schedule:
@@ -9,11 +15,13 @@ on:
     - cron: "0 0 * * 1"
   workflow_dispatch:
 
+permissions:
+  contents: read
+  issues: write
+
 jobs:
   audit:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
       - uses: actions/checkout@v6
 
@@ -23,21 +31,75 @@ jobs:
       - name: drift audit 실행
         id: audit
         run: |
-          bash .specify/scripts/bash/validate-drift.sh --audit
-          # 파일 경로 추출 (stdout 마지막 blob)
+          set -o pipefail
+          bash .specify/scripts/bash/validate-drift.sh --audit 2>&1 | tee audit.log
           REPORT=$(ls -t docs/audits/drift/*.md | head -1)
-          echo "report=$REPORT" >> "$GITHUB_OUTPUT"
 
-      - name: 리포트 커밋 (변경 있을 때만)
+          # 리포트 본문에 기재되어 있는 정본 카운트를 파싱
+          ERRORS=$(grep -m1 -oP 'total errors:\s*\K\d+' "$REPORT" || echo 0)
+          WARNINGS=$(grep -m1 -oP 'total warnings:\s*\K\d+' "$REPORT" || echo 0)
+
+          {
+            echo "report=$REPORT"
+            echo "errors=$ERRORS"
+            echo "warnings=$WARNINGS"
+            echo "date=$(date +%Y-%m-%d)"
+          } >> "$GITHUB_OUTPUT"
+
+          echo "::notice::drift audit — errors=$ERRORS warnings=$WARNINGS report=$REPORT"
+
+      - name: 리포트 artifact 업로드
+        uses: actions/upload-artifact@v7
+        with:
+          name: drift-report-${{ steps.audit.outputs.date }}
+          path: ${{ steps.audit.outputs.report }}
+          retention-days: 90
+
+      - name: 열린 drift 이슈 조회
+        id: existing
+        if: steps.audit.outputs.errors != '0'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add docs/audits/drift/
-          if git diff --cached --quiet; then
-            echo "변경 없음 — 커밋 스킵"
-          else
-            git commit -m "chore(audit): drift 리포트 $(date +%Y-%m-%d) (자동)"
-            git push
+          NUM=$(gh issue list --label drift-audit --state open --json number --jq '.[0].number // empty')
+          echo "issue=$NUM" >> "$GITHUB_OUTPUT"
+          if [ -n "$NUM" ]; then
+            echo "::notice::기존 열린 drift 이슈 #$NUM — 신규 생성 스킵"
           fi
+
+      - name: 이슈 생성 (errors > 0 & 중복 없음)
+        if: steps.audit.outputs.errors != '0' && steps.existing.outputs.issue == ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPORT: ${{ steps.audit.outputs.report }}
+          ERRORS: ${{ steps.audit.outputs.errors }}
+          WARNINGS: ${{ steps.audit.outputs.warnings }}
+          DATE: ${{ steps.audit.outputs.date }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          BODY=$(mktemp)
+          {
+            echo "## Drift Audit 결과 — $DATE"
+            echo
+            echo "- **errors**: $ERRORS"
+            echo "- **warnings**: $WARNINGS"
+            echo "- **워크플로우 실행**: $RUN_URL"
+            echo "- **리포트 artifact**: \`drift-report-$DATE\` (위 실행 페이지 → Artifacts)"
+            echo
+            echo "## 리포트 본문"
+            echo
+            echo '<details>'
+            echo '<summary>리포트 펼치기</summary>'
+            echo
+            cat "$REPORT"
+            echo
+            echo '</details>'
+            echo
+            echo "---"
+            echo "1인 개발 환경 정책에 따라 자동 수정 없음. 항목 검토 후 해결/클로즈는 사용자 결정."
+          } > "$BODY"
+
+          gh issue create \
+            --title "drift audit $DATE: errors=$ERRORS warnings=$WARNINGS" \
+            --label drift-audit \
+            --body-file "$BODY"
