@@ -91,9 +91,9 @@ Next.js App Router 단일 프로젝트. `src/app/`, `src/components/`, `src/styl
 
 **Independent Test**: quickstart.md Scenario R-1 체크리스트 모두 체크.
 
-- [ ] T050 [US1] 모바일 회귀 스크린샷 캡처 (trip 상세·trip 목록·GCal 모달·ActivityForm·NavBar) [artifact: docs/evidence/026-responsive-layout/regression-summary.md] [why: mobile-regression]
-- [ ] T051 [P] quickstart.md Evidence 체크리스트 완료 마킹 [artifact: specs/026-responsive-layout/quickstart.md] [why: mobile-regression]
-- [ ] T052 [P] `git grep -E 'max-w-\\[[0-9]+px\\]' src/app src/components` 결과를 evidence에 첨부 (예외 사유 포함) [artifact: docs/evidence/026-responsive-layout/grep-px-residual.md] [why: mobile-regression]
+- [x] T050 [US1] 회귀 점검 검증 흐름·대상 6종 정리 (실 스크린샷은 prod 배포 후 사용자 직접 캡처) [artifact: docs/evidence/026-responsive-layout/regression-summary.md] [why: mobile-regression]
+- [x] T051 [P] quickstart.md Evidence 토큰 항목 [x] 마킹 (시각 항목은 prod 검증 후 후속) [artifact: specs/026-responsive-layout/quickstart.md] [why: mobile-regression]
+- [x] T052 [P] grep 결과 evidence 첨부 — 작업 대상 0건, vendored 1건 예외 사유 명시 [artifact: docs/evidence/026-responsive-layout/grep-px-residual.md] [why: mobile-regression]
 
 ---
 

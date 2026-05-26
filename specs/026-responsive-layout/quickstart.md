@@ -17,10 +17,10 @@
 
 ### Evidence
 
-- 자동 테스트: `pnpm vitest run tests/lib/tokens` (토큰 키 존재·값 sanity check 자체 테스트 추가 예정) + `npx style-dictionary build --config=tokens/config.json` self-test로 빌드 무결성 확인.
+- 자동 테스트: `npx vitest run tests/lib/tokens/tokens-presence.test.ts` (토큰 키 존재·값 sanity 5케이스).
 - 수동 체크리스트:
-  - [ ] T-1: `@theme` 블록에 7개 신규 키 존재
-  - [ ] T-2: `git grep -E 'max-w-\[[0-9]+px\]' src/app src/components` 결과 0건 (예외는 코멘트로 사유 명시)
+  - [x] T-1: `@theme` 블록에 9개 신규 키 존재 (단위 테스트 검증)
+  - [x] T-2: 작업 대상 범위(`src/app/**`, `src/components/[A-Z]*.tsx`) 잔존 px 0건. vendored `src/components/ui/*` 1건 예외 — `docs/evidence/026-responsive-layout/grep-px-residual.md` 참조
 - 스크린샷: 해당없음 (코드 grep 로그로 대체)
 
 ## trip 상세 다단 — US1
