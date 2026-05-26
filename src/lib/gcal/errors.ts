@@ -64,12 +64,26 @@ function extractErrorText(err: unknown): string {
   return parts.join(" ");
 }
 
+/**
+ * Google OAuth refresh 단계에서 토큰이 회수·만료된 경우 응답은 HTTP 400 + 본문
+ * `error: "invalid_grant"`로 내려온다(#481). 401/403이 아니므로 일반 status 매핑에
+ * 잡히지 않아 unknown으로 분류되던 갭을 메운다. 본 분기는 events API 응답이 아닌
+ * google-auth-library의 refresh 실패가 events.insert 호출 스택을 통해 throw된 케이스.
+ */
+export function isInvalidGrantError(err: unknown): boolean {
+  const text = extractErrorText(err).toLowerCase();
+  return text.includes("invalid_grant");
+}
+
 export function classifyError(err: unknown): {
   reason: FailureReason;
   lastError: GCalLastError;
 } {
   if (isUnregisteredError(err)) {
     return { reason: "unregistered", lastError: "UNREGISTERED" };
+  }
+  if (isInvalidGrantError(err)) {
+    return { reason: "forbidden", lastError: "REVOKED" };
   }
   const status = getStatus(err);
   if (status === 401 || status === 403)
