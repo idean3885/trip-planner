@@ -550,7 +550,7 @@ export default function GCalLinkPanel({ tripId, role = "OWNER" }: Props) {
           </DialogHeader>
           {isRevoked ? (
             <p className="text-sm text-muted-foreground">
-              주인이 trip.idean.me에 본인 구글 계정으로 로그인한 뒤 캘린더 모달의 "다시 연결하기"를
+              주인이 trip.idean.me에 본인 구글 계정으로 로그인한 뒤 캘린더 모달의 &ldquo;다시 연결하기&rdquo;를
               눌러야 동기화가 다시 시작됩니다. 그 전까지는 앱 내 일정만 이용해 주세요.
             </p>
           ) : isAdded ? (
