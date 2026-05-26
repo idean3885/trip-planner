@@ -30,7 +30,7 @@ export default function RootLayout({
     <html lang="ko">
       <body className={`${inter.className} flex min-h-screen flex-col bg-background text-foreground`}>
         <SessionProvider>
-          <header className="mx-auto flex w-full max-w-2xl items-center justify-between px-4 pt-4">
+          <header className="mx-auto flex w-full max-w-2xl items-center justify-between px-4 pt-4 lg:max-w-wide">
             <Link
               href="/"
               className="text-sm font-semibold text-foreground/80 hover:text-foreground"
@@ -39,7 +39,7 @@ export default function RootLayout({
             </Link>
             <AuthButton />
           </header>
-          <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-6 pb-16">
+          <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-6 pb-16 lg:max-w-wide">
             {children}
           </main>
           <ScrollToTop />

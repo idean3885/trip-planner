@@ -46,10 +46,10 @@ Next.js App Router 단일 프로젝트. `src/app/`, `src/components/`, `src/styl
 
 **Independent Test**: 데스크탑 1440px에서 본문/사이드 비율 시각 확인 + 모바일 375px에서 v2.12.x 스크린샷 diff 0. quickstart.md Scenario D-1~D-4.
 
-- [ ] T020 [US1] trip 상세 page layout wrapper에 `grid lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]` 분기 적용 [artifact: src/app/trips/<id>/page.tsx] [why: trip-detail-layout]
-- [ ] T021 [US1] 사이드 패널 컴포넌트 분리 (메타·멤버·캘린더 묶음) [artifact: src/app/trips/<id>/SidePanel.tsx] [why: trip-detail-layout]
-- [ ] T022 [P] [US1] 페이지 wrapper의 max-width를 `--container-wide`로 치환 [artifact: src/app/trips/<id>/page.tsx] [why: trip-detail-layout]
-- [ ] T023 [P] [US1] 분기 클래스 존재 검증 자체 테스트 [artifact: tests/app/trips-id/layout-classes.test.tsx] [why: trip-detail-layout]
+- [x] T020 [US1] trip 상세 page layout wrapper에 `grid lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]` 분기 적용 [artifact: src/app/trips/<id>/page.tsx] [why: trip-detail-layout]
+- [x] T021 [US1] 사이드 패널 컴포넌트 분리 (캘린더 3종 + MemberList) [artifact: src/app/trips/<id>/SidePanel.tsx] [why: trip-detail-layout]
+- [x] T022 [P] [US1] 글로벌 layout `<main>` 폭을 `lg:max-w-wide`로 확장 (모바일은 max-w-2xl 유지) [artifact: src/app/layout.tsx] [why: trip-detail-layout]
+- [x] T023 [P] [US1] 분기 클래스 정적 검증 단위 테스트 [artifact: tests/app/trips-id/layout-classes.test.ts] [why: trip-detail-layout]
 
 **Checkpoint**: trip 상세 P1 완료 — 단독 머지 가능, MVP 가치 제공.
 
