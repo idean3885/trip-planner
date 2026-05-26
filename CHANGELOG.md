@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [2.12.3] - 2026-05-26
+
+### Chore
+
+- **GCal sync catch 진입 시 항상 raw 에러 노출** (#481 진단 v3). 왜: 412 conflict·404 매핑 정리 분기에 진단 로그가 없어 17/17 실패의 root cause가 logs에 안 잡혔다. ([#481](https://github.com/idean3885/trip-planner/issues/481))
+
+
 ## [2.12.2] - 2026-05-26
 
 ### Chore
