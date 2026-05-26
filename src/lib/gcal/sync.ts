@@ -117,9 +117,21 @@ export async function syncActivities(
         }
       }
     } catch (err) {
+      // #481 진단 — catch 진입 시 항상 raw 에러를 prod logs에 노출 (412/404 분기 포함).
+      const e = err as { code?: number; status?: number; message?: string; response?: { status?: number; data?: unknown } };
+      const rawStatus = e.code ?? e.status ?? e.response?.status;
+      console.error(
+        `[gcal/sync] activity ${a.id} ${mapping ? "patch" : "insert"} caught`,
+        {
+          httpStatus: rawStatus,
+          message: e.message,
+          googleError: e.response?.data,
+        }
+      );
       if (isPreconditionFailed(err) && mapping) {
         // 412: ETag 불일치. 실제 사용자 수정 여부를 Google event.updated로 판별.
         const outcome = await resolvePreconditionConflict(client, ctx.calendarId, mapping, event);
+        console.error(`[gcal/sync] activity ${a.id} 412 outcome=${outcome}`);
         if (outcome === "updated") result.updated++;
         else if (outcome === "cleaned") {
           // 404로 내려가 mapping 정리된 경우 — 이후 sync에서 insert로 재생성
@@ -133,17 +145,6 @@ export async function syncActivities(
         await prisma.tripCalendarEventMapping.delete({ where: { id: mapping.id } });
       } else {
         const { reason } = classifyError(err);
-        // #481 진단 — raw status·message·payload를 prod logs에 남겨 원인 분류 회귀 추적.
-        const e = err as { code?: number; status?: number; message?: string; response?: { status?: number; data?: unknown } };
-        console.error(
-          `[gcal/sync] activity ${a.id} ${mapping ? "patch" : "insert"} failed`,
-          {
-            classifiedReason: reason,
-            httpStatus: e.code ?? e.status ?? e.response?.status,
-            message: e.message,
-            googleError: e.response?.data,
-          }
-        );
         result.failed.push({ activityId: a.id, reason });
       }
     }
