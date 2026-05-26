@@ -61,10 +61,10 @@ Next.js App Router 단일 프로젝트. `src/app/`, `src/components/`, `src/styl
 
 **Independent Test**: 데스크탑 1440px에서 카드 다단 + 모달 폭 ≤720px 중앙 정렬, 모바일에서는 1열·풀폭 모달. quickstart Scenario L-1·L-2·G-1·G-2.
 
-- [ ] T030 [US3] `/trips` 카드 컨테이너에 `grid sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-[var(--grid-gap-comfy)]` 적용 [artifact: src/app/trips/page.tsx] [why: trip-list-grid]
-- [ ] T031 [P] [US3] 카드 자체의 폭·여백을 그리드 셀에 맞춰 정리 [artifact: src/components/trips/TripCard.tsx] [why: trip-list-grid]
-- [ ] T032 [US3] GCalLinkPanel `DialogContent` 폭을 `sm:max-w-[var(--container-narrow)] lg:max-w-[680px]` 로 분기 [artifact: src/components/GCalLinkPanel.tsx] [why: gcal-dialog-width]
-- [ ] T033 [P] [US3] 모달 폭·그리드 분기 시각 회귀 자체 테스트 [artifact: tests/components/GCalLinkPanel.test.tsx|tests/app/trips/list-grid.test.tsx] [why: gcal-dialog-width]
+- [x] T030 [US3] `/trips` 카드 컨테이너에 `grid lg:grid-cols-2 xl:grid-cols-3 gap-grid-tight lg:gap-grid-comfy` 분기 적용 [artifact: src/app/trips/page.tsx] [why: trip-list-grid]
+- [x] T031 [P] [US3] 카드는 인라인 정의 그대로 — 그리드 셀에서 폭 자동 흡수. 별 컴포넌트 분리 불필요로 판단(범위 축소) [artifact: src/app/trips/page.tsx] [why: trip-list-grid]
+- [x] T032 [US3] GCalLinkPanel `DialogContent` 5건 모두 `sm:max-w-narrow` override (기본 sm:max-w-sm 좁음 회피) [artifact: src/components/GCalLinkPanel.tsx] [why: gcal-dialog-width]
+- [x] T033 [P] [US3] 그리드·모달 분기 정적 회귀 테스트 [artifact: tests/app/trips/list-grid.test.ts|tests/components/GCalLinkPanel.dialog-width.test.ts] [why: gcal-dialog-width]
 
 **Checkpoint**: 목록·모달 P2 완료 — 토큰 위에서 작성됐는지 grep으로 재확인.
 
