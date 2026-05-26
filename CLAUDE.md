@@ -195,6 +195,8 @@ develop ──●──●──●───●──●──●──●──
 - Neon Postgres — **스키마 변경 없음**. 미등록 상태는 세션/쿠키·응답 플래그 수준에서만 다룬다. (021-gcal-access-guide)
 - TypeScript 5.x, Node.js 20+ + Next.js 16 App Router, Prisma 7 (Neon Postgres adapter), `@googleapis/calendar`, Auth.js v5. 본 피처에서 **신규 의존성 없음**. (022-gcal-legacy-contract)
 - Neon Postgres — **신규 테이블 1종 추가**, 기존 테이블 2종 유지. Prisma migration 1건. (022-gcal-legacy-contract)
+- TypeScript 5.x, Node.js 20+ + Next.js 16 (App Router · Turbopack), React 19, Tailwind CSS v4 (`@theme` CSS-first), shadcn/ui (vendored), `class-variance-authority`, `tailwind-merge`, `clsx`, `lucide-react`, `tailwindcss-animate`, Style Dictionary v4. 본 피처에서 **신규 의존성 도입 없음** — spec 012/013/014 Active Technologies 승계. (026-responsive-layout)
+- N/A (UI 전용. 데이터 스키마 변경 없음.) (026-responsive-layout)
 
 ## Recent Changes
 - 001-ax-travel-planning: Added Python 3.14 + FastMCP, httpx, python-dotenv, pytes
