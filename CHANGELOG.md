@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [2.12.4] - 2026-05-26
+
+### Fixed
+
+- **Google OAuth refresh 실패(`invalid_grant`)를 REVOKED로 정확히 분류**. 왜: refresh_token이 만료·회수되면 Google이 HTTP 400 + `invalid_grant`로 응답하는데 기존 분류기는 401/403만 REVOKED로 매핑해 17/17 sync 실패가 lastError UNKNOWN으로 묻혀 UI에서 "다시 연결하기" 분기가 발동되지 않았다. ([#481](https://github.com/idean3885/trip-planner/issues/481))
+
+
 ## [2.12.3] - 2026-05-26
 
 ### Chore
