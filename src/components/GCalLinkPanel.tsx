@@ -511,22 +511,49 @@ export default function GCalLinkPanel({ tripId, role = "OWNER" }: Props) {
     const isAdded = sub?.status === "ADDED";
     // HOST는 여행 편집 권한이 있으므로 sync 트리거도 허용 (서버가 주인 토큰으로 수행).
     // GUEST는 편집 불가라 sync도 안 함.
-    const canSync = role === "HOST";
+    // #494: 주인 토큰이 회수된 상태(REVOKED)에서는 HOST가 sync를 눌러도 같은 invalid_grant로
+    // 실패만 반복되므로 버튼을 비활성화하고 안내 문구로 주인 재인증을 유도한다.
+    const canSync = role === "HOST" && !isRevoked;
 
     return (
       <Dialog>
-        <DialogTrigger className={cn(buttonVariants({ variant: "outline", size: "sm" }), "gap-1.5")}>
-          {isAdded ? <Check className="size-4" /> : <Calendar className="size-4" />}
-          {isAdded ? "구글 캘린더 추가됨" : "내 구글 캘린더에 추가"}
+        <DialogTrigger
+          className={cn(
+            buttonVariants({ variant: "outline", size: "sm" }),
+            "gap-1.5",
+            isRevoked && "text-destructive border-destructive/40"
+          )}
+        >
+          {isRevoked ? (
+            <AlertTriangle className="size-4" />
+          ) : isAdded ? (
+            <Check className="size-4" />
+          ) : (
+            <Calendar className="size-4" />
+          )}
+          {isRevoked
+            ? "주인 권한 만료"
+            : isAdded
+              ? "구글 캘린더 추가됨"
+              : "내 구글 캘린더에 추가"}
         </DialogTrigger>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>구글 캘린더 (공유)</DialogTitle>
             <DialogDescription>
-              {link.calendarName ? `캘린더: ${link.calendarName}` : "연결된 공유 캘린더"}
+              {isRevoked
+                ? "여행 주인의 구글 캘린더 권한이 만료·회수되어 동기화가 중단된 상태입니다."
+                : link.calendarName
+                  ? `캘린더: ${link.calendarName}`
+                  : "연결된 공유 캘린더"}
             </DialogDescription>
           </DialogHeader>
-          {isAdded ? (
+          {isRevoked ? (
+            <p className="text-sm text-muted-foreground">
+              주인이 trip.idean.me에 본인 구글 계정으로 로그인한 뒤 캘린더 모달의 "다시 연결하기"를
+              눌러야 동기화가 다시 시작됩니다. 그 전까지는 앱 내 일정만 이용해 주세요.
+            </p>
+          ) : isAdded ? (
             <p className="text-sm text-muted-foreground">
               내 구글 캘린더 UI에 이 공유 캘린더가 표시되어 있습니다. 제거해도 권한은 유지되어
               언제든 다시 추가할 수 있습니다.
@@ -537,7 +564,7 @@ export default function GCalLinkPanel({ tripId, role = "OWNER" }: Props) {
               부여되어 있으며, 추가하지 않아도 앱 내 일정은 정상 이용 가능합니다.
             </p>
           )}
-          {canSync && link.lastSyncedAt && (
+          {role === "HOST" && link.lastSyncedAt && (
             <p className="text-xs text-muted-foreground">
               마지막 반영: {new Date(link.lastSyncedAt).toLocaleString("ko-KR")}
             </p>
