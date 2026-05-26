@@ -63,9 +63,35 @@ describe("formatActivityAsEvent", () => {
     expect(event.end.timeZone).toBe("UTC");
   });
 
-  it("endTime이 없으면 startTime으로 폴백(0분 이벤트 가능성 허용)", () => {
+  it("endTime이 없으면 startTime + 1시간으로 보정 (Google API zero-duration 400 회피, #481)", () => {
     const event = formatActivityAsEvent(baseActivity({ endTime: null }), TRIP, URL_OPTS);
-    expect(event.end.dateTime).toBe(event.start.dateTime);
+    const startMs = new Date(event.start.dateTime).getTime();
+    const endMs = new Date(event.end.dateTime).getTime();
+    expect(endMs - startMs).toBe(60 * 60 * 1000);
+  });
+
+  it("endTime이 startTime보다 이르면 +1시간으로 보정", () => {
+    const event = formatActivityAsEvent(
+      baseActivity({
+        startTime: new Date("2026-06-07T11:00:00.000Z"),
+        endTime: new Date("2026-06-07T10:00:00.000Z"),
+      }),
+      TRIP,
+      URL_OPTS
+    );
+    const startMs = new Date(event.start.dateTime).getTime();
+    const endMs = new Date(event.end.dateTime).getTime();
+    expect(endMs - startMs).toBe(60 * 60 * 1000);
+  });
+
+  it("location이 null이면 event.location 키 자체를 제외 (Google API null reject 회피, #481)", () => {
+    const event = formatActivityAsEvent(baseActivity({ location: null }), TRIP, URL_OPTS);
+    expect("location" in event).toBe(false);
+  });
+
+  it("location이 있으면 그대로 전달", () => {
+    const event = formatActivityAsEvent(baseActivity({ location: "Torre de Belém" }), TRIP, URL_OPTS);
+    expect(event.location).toBe("Torre de Belém");
   });
 
   it("memo가 있으면 설명란에 포함", () => {
