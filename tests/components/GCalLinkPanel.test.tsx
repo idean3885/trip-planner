@@ -124,3 +124,57 @@ describe("GCalLinkPanel — spec 021 Testing 모드 미등록 UI", () => {
     expect(screen.queryByText(/주인이 공유 캘린더를 아직 연결하지 않았습니다/)).toBeNull();
   });
 });
+
+/**
+ * #494 — 주인 토큰 회수(REVOKED) 상태에서 HOST/GUEST 모달이 알림 상태로 전환되는지.
+ * 주인 권한 만료를 본인 외 멤버도 즉시 인지하고 무한 재시도하지 않도록 한다.
+ */
+describe("GCalLinkPanel — #494 비-주인 REVOKED UI", () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            linked: true,
+            link: {
+              tripId: 5,
+              calendarId: "abc@group.calendar.google.com",
+              calendarName: "테스트 (trip-planner)",
+              ownerId: "owner-id-xyz",
+              lastSyncedAt: "2026-05-26T08:00:00.000Z",
+              lastError: "REVOKED",
+              skippedCount: 0,
+            },
+            mySubscription: { tripId: 5, status: "ADDED", accessRole: null, lastError: null },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        )
+      )
+    );
+  });
+
+  it("HOST + REVOKED: 트리거 라벨이 '주인 권한 만료'로 전환", async () => {
+    render(<GCalLinkPanel tripId={5} role="HOST" />);
+    const trigger = await screen.findByRole(
+      "button",
+      { name: "주인 권한 만료" },
+      { timeout: 3000 },
+    );
+    expect(trigger).toBeInTheDocument();
+    // 일반 라벨은 더 이상 활성 트리거에 안 보임.
+    expect(screen.queryByRole("button", { name: "구글 캘린더 추가됨" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "내 구글 캘린더에 추가" })).toBeNull();
+  });
+
+  it("GUEST + REVOKED: 트리거 라벨이 '주인 권한 만료'로 전환", async () => {
+    render(<GCalLinkPanel tripId={5} role="GUEST" />);
+    const trigger = await screen.findByRole(
+      "button",
+      { name: "주인 권한 만료" },
+      { timeout: 3000 },
+    );
+    expect(trigger).toBeInTheDocument();
+  });
+});
