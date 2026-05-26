@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [2.12.1] - 2026-05-26
+
+### Fixed
+
+- **Google Calendar sync 실패(events.insert 400)** 수정. 왜: `location: null` 그대로 전달과 `endTime` 미지정 시 zero-duration 이벤트가 Google API에 의해 일괄 거부되어 17/17 활동 sync 실패가 재현됐다. ([#481](https://github.com/idean3885/trip-planner/issues/481))
+
+
 ## [2.12.0] - 2026-05-12
 
 ### Added
