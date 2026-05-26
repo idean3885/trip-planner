@@ -76,10 +76,10 @@ Next.js App Router 단일 프로젝트. `src/app/`, `src/components/`, `src/styl
 
 **Independent Test**: 1440px에서 폼 2열·NavBar 가로 노출, 375px에서 폼 1열·NavBar 햄버거 유지. quickstart Scenario F-1·N-1.
 
-- [ ] T040 [US3] ActivityForm 입력 그리드를 `grid sm:grid-cols-1 lg:grid-cols-2 gap-[var(--grid-gap-comfy)]` 로 분기 [artifact: src/components/ActivityForm.tsx] [why: activity-form-density]
-- [ ] T041 [P] [US3] Form 라벨·도움말 정렬을 데스크탑 2열에 맞춰 보정 [artifact: src/components/ActivityForm.tsx] [why: activity-form-density]
-- [ ] T042 [US4] NavBar 액션을 `hidden lg:flex` 로 가로 노출, 모바일 햄버거는 `flex lg:hidden` 으로 유지 [artifact: src/components/NavBar.tsx] [why: navbar-desktop]
-- [ ] T043 [P] [US4] NavBar·Form 분기 클래스 존재 검증 자체 테스트 [artifact: tests/components/NavBar.test.tsx|tests/components/ActivityForm.test.tsx] [why: navbar-desktop]
+- [x] T040 [US3] ActivityForm wrapper에 `lg:mx-auto lg:max-w-2xl` 추가 — 데스크탑에서 가운데 정렬 + 폭 제한 (form 내부의 기존 grid-cols-2/-3 row 유지) [artifact: src/components/ActivityForm.tsx] [why: activity-form-density]
+- [x] T041 [P] [US3] T040과 같은 변경에 흡수 — 별도 라벨 재배치 불필요(범위 축소) [artifact: src/components/ActivityForm.tsx] [why: activity-form-density]
+- [x] T042 [US4] 글로벌 layout header에 `hidden lg:flex` 가로 nav 추가 (여행 목록·API 문서). 모바일은 로고만 그대로 [artifact: src/app/layout.tsx] [why: navbar-desktop]
+- [x] T043 [P] [US4] Form·header 분기 정적 검증 단위 테스트 [artifact: tests/components/responsive-form-navbar.test.ts] [why: navbar-desktop]
 
 **Checkpoint**: 입력·내비게이션 표면 정비 완료.
 
