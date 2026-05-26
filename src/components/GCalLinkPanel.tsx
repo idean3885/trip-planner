@@ -416,7 +416,7 @@ export default function GCalLinkPanel({ tripId, role = "OWNER" }: Props) {
           <AlertTriangle className="size-4" />
           구글 캘린더 연동 제한
         </DialogTrigger>
-        <DialogContent>
+        <DialogContent className="sm:max-w-narrow">
           <DialogHeader>
             <DialogTitle>{UNREGISTERED_NOTICE_TITLE}</DialogTitle>
             <DialogDescription>{UNREGISTERED_NOTICE_BODY}</DialogDescription>
@@ -455,7 +455,7 @@ export default function GCalLinkPanel({ tripId, role = "OWNER" }: Props) {
             <Calendar className="size-4" />
             구글 캘린더 (공유)
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="sm:max-w-narrow">
             <DialogHeader>
               <DialogTitle>구글 캘린더 (공유)</DialogTitle>
               <DialogDescription>
@@ -482,7 +482,7 @@ export default function GCalLinkPanel({ tripId, role = "OWNER" }: Props) {
           <Calendar className="size-4" />
           구글 캘린더 연결
         </DialogTrigger>
-        <DialogContent>
+        <DialogContent className="sm:max-w-narrow">
           <DialogHeader>
             <DialogTitle>구글 캘린더 (공유) 연결</DialogTitle>
             <DialogDescription>
@@ -537,7 +537,7 @@ export default function GCalLinkPanel({ tripId, role = "OWNER" }: Props) {
               ? "구글 캘린더 추가됨"
               : "내 구글 캘린더에 추가"}
         </DialogTrigger>
-        <DialogContent>
+        <DialogContent className="sm:max-w-narrow">
           <DialogHeader>
             <DialogTitle>구글 캘린더 (공유)</DialogTitle>
             <DialogDescription>
@@ -610,7 +610,7 @@ export default function GCalLinkPanel({ tripId, role = "OWNER" }: Props) {
         {isRevoked ? <AlertTriangle className="size-4" /> : <Calendar className="size-4" />}
         {isRevoked ? "구글 캘린더 권한 회수됨" : "구글 캘린더 연결됨"}
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="sm:max-w-narrow">
         <DialogHeader>
           <DialogTitle>구글 캘린더 (공유)</DialogTitle>
           <DialogDescription>

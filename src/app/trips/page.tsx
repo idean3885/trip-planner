@@ -34,7 +34,8 @@ export default async function TripsIndexPage() {
         </Button>
       </div>
 
-      <div className="space-y-3">
+      {/* spec 026 묶음 C — 데스크탑 ≥1024px 2열, 와이드 ≥1440px 3열. 모바일은 단일 컬럼. */}
+      <div className="grid gap-grid-tight lg:grid-cols-2 lg:gap-grid-comfy xl:grid-cols-3">
         {trips.map((trip) => {
           const roleLabel =
             trip.tripMembers[0]?.role === "OWNER"
