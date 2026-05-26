@@ -10,7 +10,7 @@
 ## Coverage Targets
 
 - 디자인 토큰 SSOT에 breakpoint·container·grid·gap 토큰 정식화 [why: tokens-foundation] [multi-step: 3]
-- trip 상세 페이지 데스크탑 멀티컬럼 레이아웃 [why: trip-detail-layout] [multi-step: 2]
+- trip 상세 페이지 데스크탑 다단 레이아웃 [why: trip-detail-layout] [multi-step: 2]
 - trip 목록 페이지 데스크탑 카드 그리드 [why: trip-list-grid]
 - 캘린더 공유 다이얼로그 데스크탑 폭 정비 [why: gcal-dialog-width]
 - 활동 편집·생성 Form 데스크탑 2열 정보 밀도 [why: activity-form-density]
@@ -64,7 +64,7 @@
 **Rationale**: /docs(#477)에서 이미 사용 중인 풀폭 패턴과 호환. 새 페이지 추가 시 3종 중 1개만 선택하면 끝.
 **Alternatives considered**: 단일 max-width(1280px) — /docs의 1440px 풀폭과 불일치. 기각.
 
-### 4. trip 상세 멀티컬럼 분할 비율
+### 4. trip 상세 다단 분할 비율
 
 **Decision**: 데스크탑(≥1024px)에서 grid `grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]` 사용. 본문 2/3, 사이드 1/3, 사이드 최소 폭 280px 보장. <1024px는 단일 컬럼 그대로.
 **Rationale**: 멤버·캘린더·메타 정보가 280px 미만에서는 줄바꿈 깨짐. 본문 2/3은 Day·Activity 카드가 다단으로 펼쳐질 여유 확보.
@@ -86,7 +86,7 @@
 
 **Decision**: 5개 묶음으로 분할 → 자식 이슈 5개:
 - **A) 토큰 정비** — Coverage `tokens-foundation`. breakpoint/container/grid 토큰 + /docs 페이지 일원화 회귀 확인.
-- **B) trip 상세 멀티컬럼** — Coverage `trip-detail-layout`. Day/Activity 본문 + 사이드 패널 분리.
+- **B) trip 상세 다단** — Coverage `trip-detail-layout`. Day/Activity 본문 + 사이드 패널 분리.
 - **C) trip 목록 + 모달** — Coverage `trip-list-grid`, `gcal-dialog-width`. 카드 그리드 + 다이얼로그 폭.
 - **D) Form + NavBar** — Coverage `activity-form-density`, `navbar-desktop`. 입력 폼 2열 + NavBar 가로 액션.
 - **E) 모바일 회귀 점검** — Coverage `mobile-regression`. 최종 검증 라운드 + quickstart 체크리스트 마감.
@@ -137,7 +137,7 @@ src/
 │   ├── globals.css            # Tailwind @theme 블록 — breakpoint·container·grid 토큰
 │   ├── trips/
 │   │   ├── page.tsx           # 목록 — 카드 그리드 데스크탑 2~3열
-│   │   └── [id]/page.tsx      # 상세 — 본문+사이드 멀티컬럼
+│   │   └── [id]/page.tsx      # 상세 — 본문+사이드 다단
 │   └── (other pages)
 ├── components/
 │   ├── GCalLinkPanel.tsx      # 다이얼로그 폭 정비

@@ -40,9 +40,9 @@ Next.js App Router 단일 프로젝트. `src/app/`, `src/components/`, `src/styl
 
 ---
 
-## Phase 3: User Story 1 — 묶음 B: trip 상세 멀티컬럼 (P1)
+## Phase 3: User Story 1 — 묶음 B: trip 상세 다단 (P1)
 
-**Story Goal**: 데스크탑 ≥1024px에서 `/trips/[id]`가 본문(2/3) + 사이드(1/3) 멀티컬럼 노출. 모바일 회귀 없음.
+**Story Goal**: 데스크탑 ≥1024px에서 `/trips/[id]`가 본문(2/3) + 사이드(1/3) 다단 노출. 모바일 회귀 없음.
 
 **Independent Test**: 데스크탑 1440px에서 본문/사이드 비율 시각 확인 + 모바일 375px에서 v2.12.x 스크린샷 diff 0. quickstart.md Scenario D-1~D-4.
 
@@ -119,7 +119,7 @@ Phase 1 Setup
 
 ## Implementation Strategy
 
-- **MVP**: Phase 2 (토큰) + Phase 3 (trip 상세). 본 두 phase 머지가 가장 큰 사용자 가치(매일 쓰는 화면 데스크탑 멀티컬럼) 제공.
+- **MVP**: Phase 2 (토큰) + Phase 3 (trip 상세). 본 두 phase 머지가 가장 큰 사용자 가치(매일 쓰는 화면 데스크탑 다단) 제공.
 - **Increment 2**: Phase 4 (목록·모달).
 - **Increment 3**: Phase 5 (Form·NavBar).
 - **Closeout**: Phase 6 회귀 점검 + 릴리즈 v2.13.0.
@@ -129,7 +129,7 @@ Phase 1 Setup
 | 묶음 | Phase | [why] | 자식 이슈 후보 제목 |
 |------|-------|-------|---------------------|
 | A | 2 | tokens-foundation | feat(026/A): 디자인 토큰 SSOT — breakpoint·container·grid·gap |
-| B | 3 | trip-detail-layout | feat(026/B): trip 상세 데스크탑 멀티컬럼 |
+| B | 3 | trip-detail-layout | feat(026/B): trip 상세 데스크탑 다단 |
 | C | 4 | trip-list-grid·gcal-dialog-width | feat(026/C): trip 목록 카드 그리드 + 캘린더 모달 폭 |
 | D | 5 | activity-form-density·navbar-desktop | feat(026/D): 활동 폼 2열 + NavBar 데스크탑 액션 |
 | E | 6 | mobile-regression | chore(026/E): 모바일 회귀 점검 + 토큰 잔존 px grep |
