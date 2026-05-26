@@ -114,7 +114,7 @@ export default function ActivityForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="rounded-lg border border-border bg-muted/30 p-4 space-y-3"
+      className="rounded-lg border border-border bg-muted/30 p-4 space-y-3 lg:mx-auto lg:max-w-2xl"
     >
       <div className="flex items-end gap-2">
         <div className="space-y-1">
