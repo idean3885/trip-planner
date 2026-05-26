@@ -133,6 +133,17 @@ export async function syncActivities(
         await prisma.tripCalendarEventMapping.delete({ where: { id: mapping.id } });
       } else {
         const { reason } = classifyError(err);
+        // #481 진단 — raw status·message·payload를 prod logs에 남겨 원인 분류 회귀 추적.
+        const e = err as { code?: number; status?: number; message?: string; response?: { status?: number; data?: unknown } };
+        console.error(
+          `[gcal/sync] activity ${a.id} ${mapping ? "patch" : "insert"} failed`,
+          {
+            classifiedReason: reason,
+            httpStatus: e.code ?? e.status ?? e.response?.status,
+            message: e.message,
+            googleError: e.response?.data,
+          }
+        );
         result.failed.push({ activityId: a.id, reason });
       }
     }
