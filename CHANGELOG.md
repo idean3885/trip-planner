@@ -9,6 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [2.13.0] - 2026-05-26
+
+### Added
+
+- **여행 주인의 구글 캘린더 권한 회수 상태를 HOST·GUEST에게도 노출**. 왜: 멤버 모달이 주인 토큰 상태를 표시하지 않아 sync 17/17 실패가 반복돼도 원인을 알 수 없었다(#481 후속). REVOKED 상태에서는 트리거 라벨이 "주인 권한 만료"로 전환되고 본문에 재인증 안내·HOST의 "다시 반영하기" 비활성화로 무의미한 재시도를 차단한다. ([#494](https://github.com/idean3885/trip-planner/issues/494))
+- **디자인 토큰 SSOT에 반응형 척도 정식화 — breakpoint·container·spacing 9종** (spec 026 묶음 A). 왜: 페이지·컴포넌트가 매번 임의 px 값을 정의하던 관행을 차단하고 데스크탑·모바일 반응형 분기의 단일 출처를 만든다. Tailwind v4가 자동으로 `breakpoint:` prefix·`max-w-content` 유틸리티로 노출. `/docs` 페이지가 기존 `max-w-screen-2xl`을 토큰 기반 `max-w-wide`로 일원화. ([#497](https://github.com/idean3885/trip-planner/issues/497))
+- **trip 상세 페이지 데스크탑 다단 레이아웃** (spec 026 묶음 B). 왜: 데스크탑에서 일정 탐색·편집을 다수 수행하는 사용 흐름에 맞춰 본문(Day/Activity) 2/3 + 우측 사이드(캘린더·멤버) 1/3로 분리해 한 화면 정보 밀도를 높였다. 글로벌 layout `<main>`을 `lg:max-w-wide`로 확장해 데스크탑에서 토큰 기반 폭으로 확장; 모바일(<1024px) 폭·동작은 그대로 유지. ([#498](https://github.com/idean3885/trip-planner/issues/498))
+- **trip 목록 카드 그리드 + 캘린더 모달 폭 정비** (spec 026 묶음 C). 왜: 데스크탑에서 `/trips` 카드가 한 줄에 1개만 노출돼 좌우 공백이 컸고, 캘린더 다이얼로그도 기본 `sm:max-w-sm`(~384px)이라 정보가 잘렸다. lg:2열·xl:3열 그리드 + 모든 GCalLinkPanel DialogContent에 `sm:max-w-narrow` override로 정리. 모바일(<768)은 1열·풀폭 모달 유지. ([#499](https://github.com/idean3885/trip-planner/issues/499))
+- **활동 폼 데스크탑 정렬 + 글로벌 헤더 가로 액션** (spec 026 묶음 D). 왜: 데스크탑에서 ActivityForm이 layout 풀폭(1440px)에 펼쳐져 입력 시선이 분산됐다. `lg:mx-auto lg:max-w-2xl`로 가운데 정렬·폭 제한. 헤더는 데스크탑 ≥1024px에서만 "여행 목록"·"API 문서" 가로 nav를 노출 (`hidden lg:flex`), 모바일은 로고만 유지. ([#500](https://github.com/idean3885/trip-planner/issues/500))
+
+### Chore
+
+- **spec 026 회귀 점검 정리** (묶음 E 마감). 왜: 토큰·페이지·컴포넌트 모든 묶음 머지 후 작업 대상 범위 px 잔존 0건과 quickstart Evidence 토큰 항목을 확정하고, 실 스크린샷 회귀 점검은 prod 배포 후 사용자 직접 캡처로 후속한다. vendored shadcn 1건 예외 사유는 evidence에 명시. ([#501](https://github.com/idean3885/trip-planner/issues/501))
+
+
 ## [2.12.4] - 2026-05-26
 
 ### Fixed
