@@ -8,12 +8,9 @@ import { formatCalendarDateFull, formatCalendarDate } from "@/lib/date-utils";
 import InviteButton from "@/components/InviteButton";
 import DeleteTripButton from "@/components/DeleteTripButton";
 import LeaveTripButton from "@/components/LeaveTripButton";
-import MemberList from "@/components/MemberList";
-import GCalLinkPanel from "@/components/GCalLinkPanel";
-import AppleEntryCard from "@/components/calendar/AppleEntryCard";
-import CalendarProviderChoice from "@/components/calendar/CalendarProviderChoice";
 import AddDayButton from "@/components/AddDayButton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import SidePanel from "./SidePanel";
 import { remark } from "remark";
 import remarkGfm from "remark-gfm";
 import html from "remark-html";
@@ -90,99 +87,96 @@ async function DbTripPage({
         </Link>
       </div>
 
-      <div>
-        <h1 className="text-xl font-semibold tracking-tight">{trip.title}</h1>
-        <p className="mt-1 text-sm text-muted-foreground tabular-nums">
-          {formatCalendarDateFull(trip.startDate)} ~{" "}
-          {formatCalendarDateFull(trip.endDate)}
-        </p>
-        <div className="mt-3 flex flex-wrap items-center gap-2">
-          {member.role !== "GUEST" && <InviteButton tripId={tripId} />}
-          {member.role === "OWNER" && (
-            <DeleteTripButton tripId={tripId} tripTitle={trip.title} />
-          )}
-          {member.role !== "OWNER" && (
-            <LeaveTripButton tripId={tripId} tripTitle={trip.title} />
-          )}
-        </div>
-      </div>
-
-      {descriptionHtml && (
-        <Card>
-          <CardHeader>
-            <CardTitle>여행 개요</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div
-              className="prose prose-sm max-w-none"
-              dangerouslySetInnerHTML={{ __html: descriptionHtml }}
-            />
-          </CardContent>
-        </Card>
-      )}
-
-      {/* spec 024 Clarification 6: 한 trip = 1 provider · 1 외부 캘린더.
-          - 미연결 + OWNER + provider 미선택 → CalendarProviderChoice (Apple 권장 + Google 안내)
-          - GOOGLE 연결됨 OR providerHint=google 강제 노출 → GCalLinkPanel
-          - APPLE 연결됨 → AppleEntryCard
-          - 호스트/게스트 미연결 → 카드 없음 (선택권 없음) */}
-      {!calendarLink && member.role === "OWNER" && !providerHint && (
-        <CalendarProviderChoice tripId={tripId} />
-      )}
-      {(calendarLink?.provider === "GOOGLE" || providerHint === "google") && (
-        <GCalLinkPanel tripId={tripId} role={member.role} />
-      )}
-      {calendarLink?.provider === "APPLE" && (
-        <AppleEntryCard tripId={tripId} role={member.role} />
-      )}
-
-      <MemberList tripId={tripId} />
-
-      <section className="space-y-3">
-        <div className="flex items-center justify-between gap-2">
-          <h2 className="text-base font-semibold tracking-tight">일정</h2>
-          {member.role !== "GUEST" && (
-            <AddDayButton
-              tripId={tripId}
-              tripStartDate={trip.startDate.toISOString()}
-              tripEndDate={trip.endDate.toISOString()}
-            />
-          )}
-        </div>
-        <div className="space-y-2">
-          {trip.days.map((day) => (
-            <Link
-              key={day.id}
-              href={`/trips/${trip.id}/day/${day.id}`}
-              className="group block"
-            >
-              <Card size="sm" className="transition-all group-hover:ring-foreground/20 group-hover:-translate-y-px">
-                <CardContent className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <span className="inline-flex items-center rounded-md bg-foreground px-2 py-0.5 text-xs font-medium text-background shrink-0 tabular-nums">
-                      DAY {computeDayNumber(day.date, trip.startDate)}
-                    </span>
-                    {day.title && (
-                      <span className="text-sm text-foreground truncate">
-                        {day.title}
-                      </span>
-                    )}
-                  </div>
-                  <span className="text-xs text-muted-foreground tabular-nums shrink-0">
-                    {formatCalendarDate(day.date)}
-                  </span>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
-
-          {trip.days.length === 0 && (
-            <p className="py-8 text-center text-sm text-muted-foreground">
-              일정이 없습니다.
+      {/* spec 026 묶음 B — 데스크탑 ≥1024px에서 본문(2/3) + 사이드(1/3) 다단.
+          모바일(<1024px)에서는 grid가 단일 컬럼처럼 동작해 회귀 없음. */}
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)] lg:gap-grid-comfy lg:items-start">
+        <div className="space-y-6 min-w-0">
+          <div>
+            <h1 className="text-xl font-semibold tracking-tight">{trip.title}</h1>
+            <p className="mt-1 text-sm text-muted-foreground tabular-nums">
+              {formatCalendarDateFull(trip.startDate)} ~{" "}
+              {formatCalendarDateFull(trip.endDate)}
             </p>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              {member.role !== "GUEST" && <InviteButton tripId={tripId} />}
+              {member.role === "OWNER" && (
+                <DeleteTripButton tripId={tripId} tripTitle={trip.title} />
+              )}
+              {member.role !== "OWNER" && (
+                <LeaveTripButton tripId={tripId} tripTitle={trip.title} />
+              )}
+            </div>
+          </div>
+
+          {descriptionHtml && (
+            <Card>
+              <CardHeader>
+                <CardTitle>여행 개요</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div
+                  className="prose prose-sm max-w-none"
+                  dangerouslySetInnerHTML={{ __html: descriptionHtml }}
+                />
+              </CardContent>
+            </Card>
           )}
+
+          <section className="space-y-3">
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="text-base font-semibold tracking-tight">일정</h2>
+              {member.role !== "GUEST" && (
+                <AddDayButton
+                  tripId={tripId}
+                  tripStartDate={trip.startDate.toISOString()}
+                  tripEndDate={trip.endDate.toISOString()}
+                />
+              )}
+            </div>
+            <div className="space-y-2">
+              {trip.days.map((day) => (
+                <Link
+                  key={day.id}
+                  href={`/trips/${trip.id}/day/${day.id}`}
+                  className="group block"
+                >
+                  <Card size="sm" className="transition-all group-hover:ring-foreground/20 group-hover:-translate-y-px">
+                    <CardContent className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <span className="inline-flex items-center rounded-md bg-foreground px-2 py-0.5 text-xs font-medium text-background shrink-0 tabular-nums">
+                          DAY {computeDayNumber(day.date, trip.startDate)}
+                        </span>
+                        {day.title && (
+                          <span className="text-sm text-foreground truncate">
+                            {day.title}
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-xs text-muted-foreground tabular-nums shrink-0">
+                        {formatCalendarDate(day.date)}
+                      </span>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+
+              {trip.days.length === 0 && (
+                <p className="py-8 text-center text-sm text-muted-foreground">
+                  일정이 없습니다.
+                </p>
+              )}
+            </div>
+          </section>
         </div>
-      </section>
+
+        <SidePanel
+          tripId={tripId}
+          role={member.role}
+          hasCalendarLink={Boolean(calendarLink)}
+          calendarProvider={calendarLink?.provider ?? null}
+          providerHint={providerHint}
+        />
+      </div>
     </div>
   );
 }
