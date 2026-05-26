@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [2.12.2] - 2026-05-26
+
+### Chore
+
+- **GCal sync 실패 시 raw Google 에러를 prod logs에 노출** (#481 진단 보강). 왜: v2.12.1 fix 후에도 17/17 실패가 재현되어 reason 분류 외 raw status·message·payload를 추적해야 함. ([#481](https://github.com/idean3885/trip-planner/issues/481))
+
+
 ## [2.12.1] - 2026-05-26
 
 ### Fixed
