@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [2.13.1] - 2026-05-26
+
+### Fixed
+
+- **trip 상세 모바일에서 캘린더·멤버를 일정 위로 복원** (v2.13.0 회귀 hotfix). 왜: 사이드 패널이 본문 끝으로 밀려 모바일 첫 화면에서 캘린더·멤버가 안 보였다. 본문 cell 안 "개요 다음, 일정 전" 위치에 `lg:hidden` SidePanel 인라인 추가 + 기존 사이드 cell은 `hidden lg:block`으로 데스크탑 전용. v2.12.x 위치 회복. ([#509](https://github.com/idean3885/trip-planner/issues/509))
+
+
 ## [2.13.0] - 2026-05-26
 
 ### Added

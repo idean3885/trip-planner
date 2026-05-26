@@ -28,6 +28,11 @@ describe("trip 상세 데스크탑 다단 분기 (spec 026/B)", () => {
     expect(pageSrc).toMatch(/<SidePanel\b/);
   });
 
+  it("hotfix v2.13.1 — 모바일은 본문 안(lg:hidden) 인라인, 데스크탑은 사이드 cell(hidden lg:block)에 SidePanel 두 위치", () => {
+    expect(pageSrc).toMatch(/lg:hidden[\s\S]+<SidePanel/);
+    expect(pageSrc).toMatch(/hidden lg:block[\s\S]+<SidePanel/);
+  });
+
   it("SidePanel은 캘린더 패널 3종과 MemberList를 한 컴포넌트로 묶는다", () => {
     expect(sidePanelSrc).toContain("CalendarProviderChoice");
     expect(sidePanelSrc).toContain("GCalLinkPanel");

@@ -122,6 +122,18 @@ async function DbTripPage({
             </Card>
           )}
 
+          {/* spec 026 hotfix v2.13.1 — 모바일에서는 캘린더·멤버 패널을 본문 흐름 안(개요 ~ 일정 사이)에 둔다.
+              v2.12.x 위치를 회복. 데스크탑에서는 우측 사이드 cell에서 노출(아래 lg:block). */}
+          <div className="lg:hidden space-y-6">
+            <SidePanel
+              tripId={tripId}
+              role={member.role}
+              hasCalendarLink={Boolean(calendarLink)}
+              calendarProvider={calendarLink?.provider ?? null}
+              providerHint={providerHint}
+            />
+          </div>
+
           <section className="space-y-3">
             <div className="flex items-center justify-between gap-2">
               <h2 className="text-base font-semibold tracking-tight">일정</h2>
@@ -169,13 +181,15 @@ async function DbTripPage({
           </section>
         </div>
 
-        <SidePanel
-          tripId={tripId}
-          role={member.role}
-          hasCalendarLink={Boolean(calendarLink)}
-          calendarProvider={calendarLink?.provider ?? null}
-          providerHint={providerHint}
-        />
+        <div className="hidden lg:block">
+          <SidePanel
+            tripId={tripId}
+            role={member.role}
+            hasCalendarLink={Boolean(calendarLink)}
+            calendarProvider={calendarLink?.provider ?? null}
+            providerHint={providerHint}
+          />
+        </div>
       </div>
     </div>
   );
