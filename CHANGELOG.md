@@ -9,12 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [2.14.0] - 2026-05-26
+
+### Added
+
+- **OpenAPI 스펙에 operationId 21개·요청 example·Error 코드 필드·N+1 호출 규약·정렬 규약 추가**. 왜: LLM/MCP/SDK 코드젠이 안정 식별자로 매핑 가능해지고, `GET /api/trips/{id}` 응답이 activities를 포함하지 않는다는 사실과 활동 정렬 기준(startTime 우선, sortOrder 동률 보조)이 스펙에 명시됐다. ([#512](https://github.com/idean3885/trip-planner/issues/512))
+- **Activity `startTime`/`endTime`을 ISO 8601 datetime으로 정정 + `startTimezone`/`endTimezone`(IANA) 필드 명세 추가**. 왜: 실제 동작은 ISO datetime + IANA timezone이지만 스펙은 `HH:mm` 문자열만 기재해 클라이언트가 시간 입력 방식·타임존 처리 규약을 알 수 없었다. ([#514](https://github.com/idean3885/trip-planner/issues/514))
+
+### Documentation
+
+- **`/about` 페이지에 PAT 발급(`/settings/tokens`)·MCP·AI CLI 연결 안내 섹션 추가**. 왜: 비로그인 페이지·API 문서 어디에도 PAT 발급 경로·MCP 등록 가이드 링크가 없어 외부 자동화 사용자가 동선을 추측해야 했다. ([#513](https://github.com/idean3885/trip-planner/issues/513))
+
+
 ## [2.13.1] - 2026-05-26
 
 ### Fixed
 
 - **trip 상세 모바일에서 캘린더·멤버를 일정 위로 복원** (v2.13.0 회귀 hotfix). 왜: 사이드 패널이 본문 끝으로 밀려 모바일 첫 화면에서 캘린더·멤버가 안 보였다. 본문 cell 안 "개요 다음, 일정 전" 위치에 `lg:hidden` SidePanel 인라인 추가 + 기존 사이드 cell은 `hidden lg:block`으로 데스크탑 전용. v2.12.x 위치 회복. ([#509](https://github.com/idean3885/trip-planner/issues/509))
-
 
 ## [2.13.0] - 2026-05-26
 

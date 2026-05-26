@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ExternalLink, ArrowRight, BookOpen, Layers } from "lucide-react";
+import { ExternalLink, ArrowRight, BookOpen, Layers, KeyRound, Terminal } from "lucide-react";
 import { projectMeta } from "@/lib/project-meta";
 import {
   Card,
@@ -104,6 +104,69 @@ export default function AboutPage() {
               <CardContent>
                 <span className="inline-flex items-center gap-1 text-xs font-medium text-foreground">
                   ARCHITECTURE.md 열기
+                  <ExternalLink className="size-3" aria-hidden />
+                </span>
+              </CardContent>
+            </Card>
+          </a>
+        </div>
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="text-base font-semibold tracking-tight">
+          외부 자동화·AI 클라이언트 연동
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          Personal Access Token으로 외부 도구에서 API를 직접 호출하거나, MCP
+          서버로 Claude Code·Cursor 등 AI CLI에 연결할 수 있습니다.
+        </p>
+        <div className="grid gap-2 sm:grid-cols-2">
+          <Link href="/settings/tokens" className="group block">
+            <Card
+              size="sm"
+              className="h-full transition-all group-hover:ring-foreground/20 group-hover:-translate-y-px"
+            >
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-sm">
+                  <KeyRound className="size-4" aria-hidden />
+                  PAT 발급
+                </CardTitle>
+                <CardDescription className="text-xs">
+                  토큰 원문은 발급 시 1회만 노출됩니다. 화면을 닫기 전에 안전한
+                  곳(키체인·비밀번호 관리자 등)에 보관하세요.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <span className="inline-flex items-center gap-1 text-xs font-medium text-foreground">
+                  발급 페이지 열기
+                  <ArrowRight className="size-3" aria-hidden />
+                </span>
+              </CardContent>
+            </Card>
+          </Link>
+          <a
+            href={`${projectMeta.githubUrl}/tree/main/mcp`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group block"
+          >
+            <Card
+              size="sm"
+              className="h-full transition-all group-hover:ring-foreground/20 group-hover:-translate-y-px"
+            >
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-sm">
+                  <Terminal className="size-4" aria-hidden />
+                  MCP / AI CLI 연결
+                </CardTitle>
+                <CardDescription className="text-xs">
+                  trip MCP 서버 — Claude Code, Cursor 등에서 자연어로 일정을
+                  조회·수정. 설치 가이드는 GitHub `mcp/`에서.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <span className="inline-flex items-center gap-1 text-xs font-medium text-foreground">
+                  설치 가이드 (GitHub)
                   <ExternalLink className="size-3" aria-hidden />
                 </span>
               </CardContent>
