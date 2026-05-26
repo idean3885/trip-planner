@@ -29,12 +29,12 @@ Next.js App Router 단일 프로젝트. `src/app/`, `src/components/`, `src/styl
 
 **Independent Test**: `git grep -E 'max-w-\\[[0-9]+px\\]' src/app src/components` 결과 0건 (예외는 코멘트로 사유 명시) + `npx style-dictionary build`가 무결성 통과.
 
-- [ ] T010 [US2] `@theme` 블록에 breakpoint 토큰 추가 (`--bp-mobile`/`--bp-tablet`/`--bp-desktop`/`--bp-wide`) [artifact: src/app/globals.css] [why: tokens-foundation]
-- [ ] T011 [US2] `@theme` 블록에 container max-width 토큰 추가 (`--container-narrow`/`--container-content`/`--container-wide`) [artifact: src/app/globals.css] [why: tokens-foundation]
-- [ ] T012 [US2] `@theme` 블록에 grid·gap 토큰 추가 (`--grid-gap-tight`/`--grid-gap-comfy`) [artifact: src/app/globals.css] [why: tokens-foundation]
-- [ ] T013 [P] [US2] Style Dictionary 소스에 동일 키 export [artifact: tokens/source/breakpoints.json|tokens/source/spacing.json] [why: tokens-foundation]
-- [ ] T014 [P] [US2] 토큰 키 존재·값 sanity 자체 테스트 추가 [artifact: tests/lib/tokens/tokens-presence.test.ts] [why: tokens-foundation]
-- [ ] T015 [US2] `/docs` 페이지가 신규 토큰을 직접 참조하도록 일원화 (기존 임의 px 제거) [artifact: src/app/docs/page.tsx] [why: tokens-foundation]
+- [x] T010 [US2] design tokens SSOT에 breakpoint 토큰 추가 (`--breakpoint-mobile/tablet/desktop/wide`) [artifact: design/tokens.json] [why: tokens-foundation]
+- [x] T011 [US2] design tokens SSOT에 container max-width 토큰 추가 (`--container-narrow/content/wide`) [artifact: design/tokens.json] [why: tokens-foundation]
+- [x] T012 [US2] design tokens SSOT에 grid·gap 토큰 추가 (`--spacing-grid-tight/comfy`) [artifact: design/tokens.json] [why: tokens-foundation]
+- [x] T013 [P] [US2] `npm run tokens:build` 실행으로 globals.css `BEGIN:tokens` 블록 생성 [artifact: src/app/globals.css] [why: tokens-foundation]
+- [x] T014 [P] [US2] 토큰 키 존재·값 sanity 자체 테스트 추가 [artifact: tests/lib/tokens/tokens-presence.test.ts] [why: tokens-foundation]
+- [x] T015 [US2] `/docs` 페이지의 max-w-screen-2xl을 토큰 기반 `max-w-wide`로 치환 [artifact: src/app/docs/page.tsx] [why: tokens-foundation]
 
 **Checkpoint**: 토큰 SSOT가 모든 신규·기존 페이지의 1차 출처. 다음 phase부터 페이지가 임의 px 사용 금지.
 
