@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [2.16.1] - 2026-05-27
+
+### Fixed
+
+- **캘린더 동기화 다이얼로그 후속 정비** — (1) trip-planner ↔ 외부 캘린더 자동 동기화 상태를 다이얼로그 상단에 강조하고 연결된 캘린더 이름까지 노출해 어디로 push되는지 즉시 보이게 했다. (2) "외부 캘린더에서 일정 가져오기"는 기본 접힌 상태(`<details>`)로 변경 — 가져오기는 선택 옵션. (3) trip-planner가 만든 캘린더(`TripCalendarLink` 전체)는 import 후보에서 무조건 제외 — v2.15.1의 ownerId 필터가 OWNER 아닌 trip의 캘린더를 빠뜨리던 결함 수정. ([#539](https://github.com/idean3885/trip-planner/issues/539))
+
+
 ## [2.16.0] - 2026-05-27
 
 ### Added
