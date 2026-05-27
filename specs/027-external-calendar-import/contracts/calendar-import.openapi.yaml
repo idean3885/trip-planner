@@ -1,0 +1,159 @@
+openapi: 3.1.0
+info:
+  title: Trip Planner — Calendar Import API
+  version: 0.1.0
+  description: |
+    외부 캘린더(Google·Apple)의 이벤트를 trip-planner의 draft activity로 가져온다.
+    Spec: specs/027-external-calendar-import/spec.md
+
+servers:
+  - url: https://trip.idean.me/api
+    description: production
+  - url: https://dev.trip.idean.me/api
+    description: dev
+
+security:
+  - sessionCookie: []
+
+paths:
+  /trips/{tripId}/calendar-import:
+    post:
+      operationId: importTripFromExternalCalendar
+      summary: 외부 캘린더에서 trip으로 일정 import (수동 트리거)
+      description: |
+        호출자가 선택한 외부 캘린더의 이벤트들을 trip 기간과 겹치는 범위에서
+        `ActivityDraft`로 가져온다. 멱등성 보장: (provider, externalCalendarId,
+        externalEventId) 키로 기존 draft가 있으면 새로 만들지 않고 skip 카운트만 증가.
+        권한: trip의 OWNER 또는 HOST. GUEST는 403.
+      parameters:
+        - in: path
+          name: tripId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CalendarImportRequest"
+      responses:
+        "200":
+          description: import 완료. 결과 요약 반환.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CalendarImportResult"
+        "400":
+          description: 잘못된 요청 (provider/calendarId 누락 등)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: 미인증
+        "403":
+          description: 권한 부족 (GUEST 또는 trip 비멤버)
+        "404":
+          description: trip 또는 외부 캘린더를 찾을 수 없음
+        "409":
+          description: 외부 계정 미연결 — /settings/calendars로 안내
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /users/me/external-calendars:
+    get:
+      operationId: listMyExternalCalendars
+      summary: 사용자가 연결한 외부 계정의 캘린더 목록
+      description: |
+        Google·Apple 모두 합쳐서 반환. trip-planner가 만든 캘린더는 제외(`isManagedByTripPlanner=true`인
+        캘린더 제외). 본 API의 결과를 캘린더 선택 모달에 표시한다.
+      responses:
+        "200":
+          description: 외부 캘린더 목록
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  calendars:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ExternalCalendar"
+        "401":
+          description: 미인증
+
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: authjs.session-token
+
+  schemas:
+    CalendarImportRequest:
+      type: object
+      required: [provider, externalCalendarId]
+      properties:
+        provider:
+          type: string
+          enum: [GOOGLE, APPLE]
+        externalCalendarId:
+          type: string
+          description: 외부 캘린더 식별자. Google calendarId 또는 Apple CalDAV href.
+
+    CalendarImportResult:
+      type: object
+      required: [importRunId, importedCount, skippedCount, failedCount]
+      properties:
+        importRunId:
+          type: integer
+        importedCount:
+          type: integer
+          description: 신규 생성된 draft 수
+        skippedCount:
+          type: integer
+          description: 이미 draft가 존재해 건너뛴 외부 이벤트 수
+        failedCount:
+          type: integer
+          description: fetch·매핑 실패 이벤트 수
+        failedTitles:
+          type: array
+          maxItems: 3
+          items:
+            type: string
+          description: 실패 이벤트의 외부 제목 첫 3건(privacy 고려해 title만)
+
+    ExternalCalendar:
+      type: object
+      required: [provider, externalCalendarId, name]
+      properties:
+        provider:
+          type: string
+          enum: [GOOGLE, APPLE]
+        externalCalendarId:
+          type: string
+        name:
+          type: string
+          description: 외부 캘린더 이름(사용자가 본 그대로)
+        accountLabel:
+          type: string
+          description: 어느 외부 계정에 속하는지(예: "user@gmail.com")
+        isManagedByTripPlanner:
+          type: boolean
+          description: trip-planner가 만든 캘린더인지. true면 import 대상에서 제외.
+
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          example: EXTERNAL_ACCOUNT_NOT_LINKED
+        message:
+          type: string
+        details:
+          type: object
+          additionalProperties: true
