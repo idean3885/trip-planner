@@ -124,23 +124,18 @@ export default function ImportSection({ tripId, role, onImported }: Props) {
     }
   }, [importable, loadCalendars, onImported, selected, tripId]);
 
+  // 헤더·일반 안내는 통합 다이얼로그(CalendarSyncDialog)의 <details> summary가 담당.
+  // 본 섹션은 캘린더 목록·진단 분기·실행 버튼만 그린다.
   if (!canImport) {
     return (
-      <section>
-        <h4 className="mb-2 text-sm font-semibold">외부 캘린더에서 가져오기</h4>
-        <p className="text-xs text-muted-foreground">
-          호스트 이상 권한에서만 외부 일정을 가져올 수 있습니다. 가져오기가 끝난 초안은 아래에서 확인할 수 있습니다.
-        </p>
-      </section>
+      <p className="text-xs text-muted-foreground">
+        호스트 이상 권한에서만 외부 일정을 가져올 수 있습니다. 가져오기가 끝난 초안은 아래에서 확인할 수 있습니다.
+      </p>
     );
   }
 
   return (
-    <section>
-      <h4 className="mb-2 text-sm font-semibold">외부 캘린더에서 가져오기</h4>
-      <p className="mb-3 text-xs text-muted-foreground">
-        다른 캘린더에 쌓아둔 일정을 이 여행의 초안으로 옮깁니다. 매핑 안 되는 정보는 비어 있는 상태로 들어오며, 같은 이벤트는 다시 눌러도 중복되지 않습니다.
-      </p>
+    <div className="space-y-3">
 
       {loadingList && (
         <p className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -241,6 +236,6 @@ export default function ImportSection({ tripId, role, onImported }: Props) {
           </Button>
         </div>
       )}
-    </section>
+    </div>
   );
 }
