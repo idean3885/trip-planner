@@ -199,6 +199,8 @@ develop ──●──●──●───●──●──●──●──
 - N/A (UI 전용. 데이터 스키마 변경 없음.) (026-responsive-layout)
 - TypeScript 5.x, Node.js 20+ (Next.js 16). Python 3.10+ (MCP — 본 피처 영향 없음). + Next.js 16 (App Router · Turbopack), React 19, Prisma 7 (Neon Postgres adapter), Auth.js v5, `@googleapis/calendar`(Google), 기존 CalDAV 클라이언트 모듈(`src/lib/caldav/*`, v2.11.0 도입). shadcn/ui (vendored), Radix UI primitives, Tailwind CSS v4. **본 피처 신규 의존성 도입 없음** — v2.14.1 Active Technologies 승계. (027-external-calendar-import)
 - Neon Postgres (Production `neondb` / Preview·Dev `neondb_dev`). Prisma 마이그레이션 1건(schema-only): `ActivityDraft` 추가 + `(calendarId, externalEventId)` 유니크 인덱스. (027-external-calendar-import)
+- TypeScript 5.x, Node.js 20+ (Next.js 16). + Next.js 16 (App Router), React 19, shadcn/ui `Dialog`/`Button`/`Select`/`DropdownMenu`, Tailwind CSS v4. **신규 의존성 도입 없음**. (028-calendar-sync-dialog)
+- 변경 없음. UI-only 피처. (028-calendar-sync-dialog)
 
 ## Recent Changes
 - 001-ax-travel-planning: Added Python 3.14 + FastMCP, httpx, python-dotenv, pytes
