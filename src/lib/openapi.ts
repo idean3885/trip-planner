@@ -2,6 +2,10 @@
  * OpenAPI 3.0 스펙 정의
  * 모든 공개 API 엔드포인트를 문서화한다.
  */
+const apiAuth = [{ BearerAuth: [] }, { SessionAuth: [] }];
+const sessionOnly = [{ SessionAuth: [] }];
+const errorResponse = { content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } };
+
 export const openApiSpec = {
   openapi: "3.0.3",
   info: {
@@ -22,13 +26,16 @@ export const openApiSpec = {
       "",
       "## 정렬 규약",
       "활동 목록은 `startTime` 오름차순을 1차 정렬, `sortOrder`를 동률 보조 정렬로 사용합니다. 신규 활동을 POST 할 때 `sortOrder`를 지정하지 않으면 0이 부여되므로, 시간 정보를 함께 보내는 것을 권장합니다.",
+      "",
+      "## 응답 타입 주의",
+      "DB Decimal 컬럼(`cost` 등)은 응답에서 정수 문자열로 직렬화됩니다. 입력은 number도 허용되지만 응답 파싱 시 항상 문자열로 처리하세요.",
     ].join("\n"),
   },
   servers: [
     { url: "https://trip.idean.me", description: "Production" },
     { url: "http://localhost:3000", description: "Development" },
   ],
-  security: [{ BearerAuth: [] }, { SessionAuth: [] }],
+  security: apiAuth,
   components: {
     securitySchemes: {
       BearerAuth: {
@@ -96,6 +103,15 @@ export const openApiSpec = {
           createdAt: { type: "string", format: "date-time" },
         },
       },
+      Cost: {
+        oneOf: [
+          { type: "integer", description: "정수 비용 (요청)" },
+          { type: "string", pattern: "^[0-9]+$", description: "정수 문자열 (응답·DB Decimal 직렬화)" },
+        ],
+        nullable: true,
+        description:
+          "비용 (DB Decimal). 입력은 number 또는 numeric string, 응답은 항상 정수 문자열로 직렬화됩니다.",
+      },
       Activity: {
         type: "object",
         properties: {
@@ -130,12 +146,7 @@ export const openApiSpec = {
           },
           location: { type: "string", nullable: true },
           memo: { type: "string", nullable: true },
-          cost: {
-            type: "string",
-            nullable: true,
-            description:
-              "비용 (DB Decimal). 응답은 항상 정수 문자열로 직렬화됩니다. 요청에는 number도 허용됩니다.",
-          },
+          cost: { $ref: "#/components/schemas/Cost" },
           currency: { type: "string", default: "EUR" },
           reservationStatus: {
             type: "string",
@@ -171,18 +182,20 @@ export const openApiSpec = {
         tags: ["Trips"],
         summary: "여행 목록 조회",
         description: "현재 사용자가 멤버로 참여 중인 여행 목록을 반환한다.",
+        security: apiAuth,
         responses: {
           "200": {
             description: "여행 목록",
             content: { "application/json": { schema: { type: "array", items: { $ref: "#/components/schemas/Trip" } } } },
           },
-          "401": { description: "미인증", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
+          "401": { description: "미인증", ...errorResponse },
         },
       },
       post: {
         operationId: "createTrip",
         tags: ["Trips"],
         summary: "여행 생성",
+        security: apiAuth,
         requestBody: {
           required: true,
           content: {
@@ -208,7 +221,8 @@ export const openApiSpec = {
         },
         responses: {
           "201": { description: "생성된 여행", content: { "application/json": { schema: { $ref: "#/components/schemas/Trip" } } } },
-          "401": { description: "미인증", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
+          "400": { description: "필수 필드 누락", ...errorResponse },
+          "401": { description: "미인증", ...errorResponse },
         },
       },
     },
@@ -220,10 +234,12 @@ export const openApiSpec = {
         summary: "여행 상세 조회",
         description:
           "여행 상세 정보, 일자 목록, 멤버 목록을 반환한다. **활동(activities)은 포함되지 않는다** — 일자별로 `GET /api/trips/{id}/days/{dayId}/activities`를 호출해야 한다.",
+        security: apiAuth,
         responses: {
           "200": { description: "여행 상세" },
-          "401": { description: "미인증", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
-          "403": { description: "멤버가 아님", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
+          "401": { description: "미인증", ...errorResponse },
+          "403": { description: "멤버가 아님", ...errorResponse },
+          "404": { description: "여행 없음", ...errorResponse },
         },
       },
       put: {
@@ -231,6 +247,7 @@ export const openApiSpec = {
         tags: ["Trips"],
         summary: "여행 수정",
         description: "HOST 이상 권한 필요. 전달된 필드만 업데이트.",
+        security: apiAuth,
         requestBody: {
           content: {
             "application/json": {
@@ -248,7 +265,9 @@ export const openApiSpec = {
         },
         responses: {
           "200": { description: "수정된 여행" },
-          "403": { description: "권한 부족", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
+          "401": { description: "미인증", ...errorResponse },
+          "403": { description: "권한 부족", ...errorResponse },
+          "404": { description: "여행 없음", ...errorResponse },
         },
       },
       delete: {
@@ -256,9 +275,12 @@ export const openApiSpec = {
         tags: ["Trips"],
         summary: "여행 삭제",
         description: "OWNER만 삭제 가능. 모든 일자와 멤버가 함께 삭제된다.",
+        security: apiAuth,
         responses: {
           "200": { description: "삭제 완료" },
-          "403": { description: "OWNER가 아님", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
+          "401": { description: "미인증", ...errorResponse },
+          "403": { description: "OWNER가 아님", ...errorResponse },
+          "404": { description: "여행 없음", ...errorResponse },
         },
       },
     },
@@ -268,9 +290,11 @@ export const openApiSpec = {
         operationId: "listDays",
         tags: ["Days"],
         summary: "일자 목록 조회",
+        security: apiAuth,
         responses: {
           "200": { description: "일자 목록", content: { "application/json": { schema: { type: "array", items: { $ref: "#/components/schemas/Day" } } } } },
-          "403": { description: "멤버가 아님", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
+          "401": { description: "미인증", ...errorResponse },
+          "403": { description: "멤버가 아님", ...errorResponse },
         },
       },
       post: {
@@ -278,6 +302,7 @@ export const openApiSpec = {
         tags: ["Days"],
         summary: "일자 추가",
         description: "HOST 이상 권한 필요.",
+        security: apiAuth,
         requestBody: {
           required: true,
           content: {
@@ -302,7 +327,9 @@ export const openApiSpec = {
         },
         responses: {
           "201": { description: "생성된 일자" },
-          "403": { description: "권한 부족", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
+          "400": { description: "필수 필드 누락", ...errorResponse },
+          "401": { description: "미인증", ...errorResponse },
+          "403": { description: "권한 부족", ...errorResponse },
         },
       },
     },
@@ -316,6 +343,7 @@ export const openApiSpec = {
         tags: ["Days"],
         summary: "일자 수정",
         description: "HOST 이상 권한 필요.",
+        security: apiAuth,
         requestBody: {
           content: {
             "application/json": {
@@ -333,7 +361,9 @@ export const openApiSpec = {
         },
         responses: {
           "200": { description: "수정된 일자" },
-          "403": { description: "권한 부족", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
+          "401": { description: "미인증", ...errorResponse },
+          "403": { description: "권한 부족", ...errorResponse },
+          "404": { description: "일자 없음", ...errorResponse },
         },
       },
       delete: {
@@ -341,9 +371,12 @@ export const openApiSpec = {
         tags: ["Days"],
         summary: "일자 삭제",
         description: "HOST 이상 권한 필요.",
+        security: apiAuth,
         responses: {
           "200": { description: "삭제 완료" },
-          "403": { description: "권한 부족", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
+          "401": { description: "미인증", ...errorResponse },
+          "403": { description: "권한 부족", ...errorResponse },
+          "404": { description: "일자 없음", ...errorResponse },
         },
       },
     },
@@ -358,10 +391,11 @@ export const openApiSpec = {
         summary: "활동 목록 조회",
         description:
           "일자의 활동 목록을 반환한다. **정렬 권장**: `startTime` 오름차순 1차, 동일 시간 시 `sortOrder` 보조.",
+        security: apiAuth,
         responses: {
           "200": { description: "활동 목록", content: { "application/json": { schema: { type: "array", items: { $ref: "#/components/schemas/Activity" } } } } },
-          "401": { description: "미인증", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
-          "403": { description: "멤버가 아님", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
+          "401": { description: "미인증", ...errorResponse },
+          "403": { description: "멤버가 아님", ...errorResponse },
         },
       },
       post: {
@@ -369,6 +403,7 @@ export const openApiSpec = {
         tags: ["Activities"],
         summary: "활동 추가",
         description: "HOST 이상 권한 필요. `sortOrder`를 지정하지 않으면 0이 부여된다.",
+        security: apiAuth,
         requestBody: {
           required: true,
           content: {
@@ -385,7 +420,7 @@ export const openApiSpec = {
                   endTimezone: { type: "string", description: "IANA timezone" },
                   location: { type: "string" },
                   memo: { type: "string" },
-                  cost: { type: "number", description: "비용 정수. 응답에서는 문자열로 직렬화." },
+                  cost: { $ref: "#/components/schemas/Cost" },
                   currency: { type: "string" },
                   reservationStatus: { type: "string", enum: ["REQUIRED", "RECOMMENDED", "ON_SITE", "NOT_NEEDED"] },
                   sortOrder: { type: "integer" },
@@ -409,9 +444,10 @@ export const openApiSpec = {
         },
         responses: {
           "201": { description: "생성된 활동", content: { "application/json": { schema: { $ref: "#/components/schemas/Activity" } } } },
-          "400": { description: "필수 필드 누락", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
-          "403": { description: "권한 부족", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
-          "404": { description: "일자 없음", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
+          "400": { description: "필수 필드 누락", ...errorResponse },
+          "401": { description: "미인증", ...errorResponse },
+          "403": { description: "권한 부족", ...errorResponse },
+          "404": { description: "일자 없음", ...errorResponse },
         },
       },
       patch: {
@@ -419,6 +455,7 @@ export const openApiSpec = {
         tags: ["Activities"],
         summary: "활동 순서 변경",
         description: "HOST 이상 권한 필요. `orderedIds` 배열에 명시된 순서대로 `sortOrder`가 1부터 재부여된다.",
+        security: apiAuth,
         requestBody: {
           required: true,
           content: {
@@ -436,8 +473,9 @@ export const openApiSpec = {
         },
         responses: {
           "200": { description: "순서 변경 완료" },
-          "400": { description: "orderedIds 누락", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
-          "403": { description: "권한 부족", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
+          "400": { description: "orderedIds 누락", ...errorResponse },
+          "401": { description: "미인증", ...errorResponse },
+          "403": { description: "권한 부족", ...errorResponse },
         },
       },
     },
@@ -452,6 +490,7 @@ export const openApiSpec = {
         tags: ["Activities"],
         summary: "활동 수정",
         description: "HOST 이상 권한 필요. 전달된 필드만 업데이트.",
+        security: apiAuth,
         requestBody: {
           content: {
             "application/json": {
@@ -466,7 +505,7 @@ export const openApiSpec = {
                   endTimezone: { type: "string", description: "IANA timezone" },
                   location: { type: "string" },
                   memo: { type: "string" },
-                  cost: { type: "number" },
+                  cost: { $ref: "#/components/schemas/Cost" },
                   currency: { type: "string" },
                   reservationStatus: { type: "string", enum: ["REQUIRED", "RECOMMENDED", "ON_SITE", "NOT_NEEDED"] },
                   sortOrder: { type: "integer" },
@@ -477,7 +516,9 @@ export const openApiSpec = {
         },
         responses: {
           "200": { description: "수정된 활동", content: { "application/json": { schema: { $ref: "#/components/schemas/Activity" } } } },
-          "403": { description: "권한 부족", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
+          "401": { description: "미인증", ...errorResponse },
+          "403": { description: "권한 부족", ...errorResponse },
+          "404": { description: "활동 없음", ...errorResponse },
         },
       },
       delete: {
@@ -485,9 +526,12 @@ export const openApiSpec = {
         tags: ["Activities"],
         summary: "활동 삭제",
         description: "HOST 이상 권한 필요.",
+        security: apiAuth,
         responses: {
           "200": { description: "삭제 완료" },
-          "403": { description: "권한 부족", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
+          "401": { description: "미인증", ...errorResponse },
+          "403": { description: "권한 부족", ...errorResponse },
+          "404": { description: "활동 없음", ...errorResponse },
         },
       },
     },
@@ -497,8 +541,11 @@ export const openApiSpec = {
         operationId: "listMembers",
         tags: ["Members"],
         summary: "멤버 목록 조회",
+        security: apiAuth,
         responses: {
           "200": { description: "멤버 목록", content: { "application/json": { schema: { type: "array", items: { $ref: "#/components/schemas/TripMember" } } } } },
+          "401": { description: "미인증", ...errorResponse },
+          "403": { description: "멤버가 아님", ...errorResponse },
         },
       },
       patch: {
@@ -506,6 +553,7 @@ export const openApiSpec = {
         tags: ["Members"],
         summary: "멤버 역할 변경",
         description: "promote(GUEST→HOST): HOST 필요, demote(HOST→GUEST): OWNER 필요.",
+        security: apiAuth,
         requestBody: {
           content: {
             "application/json": {
@@ -520,14 +568,24 @@ export const openApiSpec = {
             },
           },
         },
-        responses: { "200": { description: "역할 변경 완료" } },
+        responses: {
+          "200": { description: "역할 변경 완료" },
+          "400": { description: "필수 필드 누락", ...errorResponse },
+          "401": { description: "미인증", ...errorResponse },
+          "403": { description: "권한 부족", ...errorResponse },
+        },
       },
       delete: {
         operationId: "removeMember",
         tags: ["Members"],
         summary: "멤버 제거",
         parameters: [{ name: "memberId", in: "query", required: true, schema: { type: "integer" } }],
-        responses: { "200": { description: "제거 완료" } },
+        security: apiAuth,
+        responses: {
+          "200": { description: "제거 완료" },
+          "401": { description: "미인증", ...errorResponse },
+          "403": { description: "권한 부족", ...errorResponse },
+        },
       },
     },
     "/api/trips/{id}/invite": {
@@ -537,6 +595,7 @@ export const openApiSpec = {
         tags: ["Members"],
         summary: "초대 링크 생성",
         description: "HOST 이상 권한 필요. JWT 기반 7일 유효 초대 토큰 발급.",
+        security: apiAuth,
         requestBody: {
           content: {
             "application/json": {
@@ -553,6 +612,8 @@ export const openApiSpec = {
             description: "초대 URL",
             content: { "application/json": { schema: { type: "object", properties: { inviteUrl: { type: "string" } } } } },
           },
+          "401": { description: "미인증", ...errorResponse },
+          "403": { description: "권한 부족", ...errorResponse },
         },
       },
     },
@@ -563,6 +624,7 @@ export const openApiSpec = {
         tags: ["Members"],
         summary: "소유권 이전",
         description: "OWNER만 가능. 대상은 HOST여야 한다.",
+        security: apiAuth,
         requestBody: {
           content: {
             "application/json": {
@@ -570,7 +632,12 @@ export const openApiSpec = {
             },
           },
         },
-        responses: { "200": { description: "이전 완료" } },
+        responses: {
+          "200": { description: "이전 완료" },
+          "400": { description: "대상이 HOST 아님", ...errorResponse },
+          "401": { description: "미인증", ...errorResponse },
+          "403": { description: "OWNER가 아님", ...errorResponse },
+        },
       },
     },
     "/api/trips/{id}/leave": {
@@ -580,7 +647,12 @@ export const openApiSpec = {
         tags: ["Members"],
         summary: "여행 탈퇴",
         description: "OWNER는 탈퇴 불가 (소유권 이전 후 가능).",
-        responses: { "200": { description: "탈퇴 완료" } },
+        security: apiAuth,
+        responses: {
+          "200": { description: "탈퇴 완료" },
+          "401": { description: "미인증", ...errorResponse },
+          "403": { description: "OWNER는 탈퇴 불가", ...errorResponse },
+        },
       },
     },
     "/api/tokens": {
@@ -589,12 +661,13 @@ export const openApiSpec = {
         tags: ["Tokens"],
         summary: "토큰 목록 조회",
         description: "세션 인증 필수. 본인의 PAT 목록을 반환한다.",
-        security: [{ SessionAuth: [] }],
+        security: sessionOnly,
         responses: {
           "200": {
             description: "토큰 목록",
             content: { "application/json": { schema: { type: "array", items: { $ref: "#/components/schemas/PersonalAccessToken" } } } },
           },
+          "401": { description: "미인증", ...errorResponse },
         },
       },
       post: {
@@ -602,7 +675,7 @@ export const openApiSpec = {
         tags: ["Tokens"],
         summary: "토큰 수동 생성",
         description: "세션 인증 필수. 생성된 토큰 원문은 이 응답에서만 노출된다. 권장 경로는 `install.sh`의 OAuth CLI 자동 발급이며, 본 엔드포인트는 웹 전용 사용자의 수동 발급용으로 유지된다.",
-        security: [{ SessionAuth: [] }],
+        security: sessionOnly,
         requestBody: {
           required: true,
           content: {
@@ -638,6 +711,8 @@ export const openApiSpec = {
               },
             },
           },
+          "400": { description: "필수 필드 누락", ...errorResponse },
+          "401": { description: "미인증", ...errorResponse },
         },
       },
     },
@@ -648,11 +723,12 @@ export const openApiSpec = {
         tags: ["Tokens"],
         summary: "토큰 삭제",
         description: "세션 인증 필수. 본인 토큰만 삭제 가능. 즉시 무효화.",
-        security: [{ SessionAuth: [] }],
+        security: sessionOnly,
         responses: {
           "200": { description: "삭제 완료" },
-          "403": { description: "타인 토큰", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
-          "404": { description: "존재하지 않음", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
+          "401": { description: "미인증", ...errorResponse },
+          "403": { description: "타인 토큰", ...errorResponse },
+          "404": { description: "존재하지 않음", ...errorResponse },
         },
       },
     },
