@@ -28,6 +28,7 @@ model User {
   ownedCalendarLinks          TripCalendarLink[]           @relation("TripCalendarLinkOwner")
   memberCalendarSubscriptions MemberCalendarSubscription[] @relation("MemberCalendarSubscriptionUser")
   appleCalendarCredential     AppleCalendarCredential?     @relation("AppleCalendarCredentialUser")
+  triggeredImportRuns         ImportRun[]                  @relation("ImportRunTriggeredByUser")
 
   @@map("users")
 }
@@ -93,6 +94,8 @@ model Trip {
   tripMembers    TripMember[]
   gcalLinks      GCalLink[]
   calendarLink   TripCalendarLink?
+  activityDrafts ActivityDraft[]
+  importRuns     ImportRun[]
 
   @@map("trips")
 }
@@ -104,8 +107,9 @@ model Day {
   title   String?
   content String?  @db.Text
 
-  trip       Trip       @relation(fields: [tripId], references: [id], onDelete: Cascade)
-  activities Activity[]
+  trip           Trip            @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  activities     Activity[]
+  activityDrafts ActivityDraft[]
 
   @@unique([tripId, date])
   @@index([tripId, date])
@@ -150,9 +154,10 @@ model Activity {
   createdAt         DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt         DateTime           @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  day                      Day                        @relation(fields: [dayId], references: [id], onDelete: Cascade)
-  gcalEventMappings        GCalEventMapping[]
+  day                       Day                        @relation(fields: [dayId], references: [id], onDelete: Cascade)
+  gcalEventMappings         GCalEventMapping[]
   tripCalendarEventMappings TripCalendarEventMapping[] @relation("TripCalendarEventMappingActivity")
+  promotedFromDraft         ActivityDraft?             @relation("ActivityDraftPromoted")
 
   @@index([dayId, startTime])
   @@index([dayId, sortOrder])
@@ -298,7 +303,7 @@ model AppleCalendarCredential {
   userId            String    @id @map("user_id")
   appleId           String    @map("apple_id")
   encryptedPassword String    @map("encrypted_password") // base64(ciphertext + auth tag)
-  iv                String                               // base64(12바이트 random)
+  iv                String // base64(12바이트 random)
   lastValidatedAt   DateTime? @map("last_validated_at") @db.Timestamptz(3)
   lastError         String?   @map("last_error")
   createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
@@ -324,6 +329,84 @@ model MemberCalendarSubscription {
   @@unique([linkId, userId])
   @@index([userId])
   @@map("member_calendar_subscriptions")
+}
+
+// ============================================================
+// Personal Access Token (외부 클라이언트 API 인증)
+// ============================================================
+
+// ============================================================
+// 외부 캘린더 import (spec 027, ADR 0006, v2.15.0)
+// 외부 → 내부 단방향. trip 캘린더 정본(ADR 0003)은 그대로 유지.
+// ============================================================
+
+enum ActivityDraftStatus {
+  PENDING
+  PROMOTED
+  DELETED
+}
+
+model ActivityDraft {
+  id     Int  @id @default(autoincrement())
+  tripId Int  @map("trip_id")
+  dayId  Int? @map("day_id")
+
+  // 외부 출처 식별
+  provider           CalendarProviderId
+  externalCalendarId String             @map("external_calendar_id")
+  externalEventId    String             @map("external_event_id")
+
+  // 매핑 가능 필드 (외부 → 자동 채움)
+  title        String
+  startTime    DateTime @map("start_time") @db.Timestamptz(3)
+  endTime      DateTime @map("end_time") @db.Timestamptz(3)
+  isAllDay     Boolean  @default(false) @map("is_all_day")
+  locationText String?  @map("location_text")
+  description  String?  @db.Text
+
+  // 매핑 불가 필드 (사용자 보강 대상)
+  startTimezone String? @map("start_timezone") @db.VarChar(40)
+  endTimezone   String? @map("end_timezone") @db.VarChar(40)
+
+  // 상태
+  status               ActivityDraftStatus @default(PENDING)
+  promotedToActivityId Int?                @unique @map("promoted_to_activity_id")
+
+  // 메타
+  importRunId     Int       @map("import_run_id")
+  lastRefreshedAt DateTime? @map("last_refreshed_at") @db.Timestamptz(3)
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  trip               Trip      @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  day                Day?      @relation(fields: [dayId], references: [id], onDelete: SetNull)
+  promotedToActivity Activity? @relation("ActivityDraftPromoted", fields: [promotedToActivityId], references: [id], onDelete: SetNull)
+  importRun          ImportRun @relation(fields: [importRunId], references: [id], onDelete: Restrict)
+
+  @@unique([provider, externalCalendarId, externalEventId])
+  @@index([tripId, status])
+  @@map("activity_drafts")
+}
+
+model ImportRun {
+  id                 Int                @id @default(autoincrement())
+  tripId             Int                @map("trip_id")
+  triggeredByUserId  String             @map("triggered_by_user_id")
+  provider           CalendarProviderId
+  externalCalendarId String             @map("external_calendar_id")
+  importedCount      Int                @default(0) @map("imported_count")
+  skippedCount       Int                @default(0) @map("skipped_count")
+  failedCount        Int                @default(0) @map("failed_count")
+  failedTitles       String[]           @map("failed_titles")
+  startedAt          DateTime           @default(now()) @map("started_at") @db.Timestamptz(3)
+  finishedAt         DateTime?          @map("finished_at") @db.Timestamptz(3)
+
+  trip            Trip            @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  triggeredByUser User            @relation("ImportRunTriggeredByUser", fields: [triggeredByUserId], references: [id])
+  drafts          ActivityDraft[]
+
+  @@index([tripId, startedAt])
+  @@map("import_runs")
 }
 
 // ============================================================

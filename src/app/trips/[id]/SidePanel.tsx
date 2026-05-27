@@ -2,6 +2,8 @@ import MemberList from "@/components/MemberList";
 import GCalLinkPanel from "@/components/GCalLinkPanel";
 import AppleEntryCard from "@/components/calendar/AppleEntryCard";
 import CalendarProviderChoice from "@/components/calendar/CalendarProviderChoice";
+import CalendarImportPanel from "@/components/calendar-import/CalendarImportPanel";
+import DraftListPanel from "@/components/calendar-import/DraftListPanel";
 import type { TripRole } from "@prisma/client";
 
 /**
@@ -32,6 +34,8 @@ export default function SidePanel({
       {showProviderChoice && <CalendarProviderChoice tripId={tripId} />}
       {showGcal && <GCalLinkPanel tripId={tripId} role={role} />}
       {showApple && <AppleEntryCard tripId={tripId} role={role} />}
+      <CalendarImportPanel tripId={tripId} role={role} />
+      <DraftListPanel tripId={tripId} canEdit={role === "OWNER" || role === "HOST"} />
       <MemberList tripId={tripId} />
     </aside>
   );
