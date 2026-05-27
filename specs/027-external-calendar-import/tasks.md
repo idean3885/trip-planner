@@ -34,7 +34,7 @@ description: "외부 캘린더 import — 작업 목록"
 **⚠️ Checkpoint**: 본 phase 통과 전 US 작업 착수 금지.
 
 - [x] T002 Prisma schema에 `ActivityDraft`·`ImportRun` 모델 + `ActivityDraftStatus`·`CalendarProvider` enum 추가 [artifact: prisma/schema.prisma::ActivityDraft] [why: draft-schema] [multi-step: 2]
-- [x] T003 마이그레이션 SQL 생성 — `CREATE TYPE` + `CREATE TABLE`, 헤더 `[migration-type: schema-only]` 명시. trip 삭제 cascade·draft-importRun restrict FK 포함 [artifact: prisma/migrations/20260527_add_activity_draft/migration.sql] [why: draft-schema] [multi-step: 2]
+- [x] T003 마이그레이션 SQL 생성 — `CREATE TYPE` + `CREATE TABLE`, 헤더 `[migration-type: schema-only]` 명시. trip 삭제 cascade·draft-importRun restrict FK 포함 [artifact: prisma/migrations/20260527000000_add_activity_draft/migration.sql] [why: draft-schema] [multi-step: 2]
 - [x] T004 권한 매트릭스에 "외부 캘린더 import" 행 추가 + 헬퍼 `canImportCalendar(role)` 구현 [artifact: src/lib/permissions/activity.ts::canImportCalendar] [why: import-api]
 
 ---
