@@ -21,16 +21,16 @@ const EVENTS_PAGE_SIZE = 250;
 const MAX_EVENTS_PER_IMPORT = 500;
 
 async function loadManagedCalendarIds(userId: string): Promise<Set<string>> {
-  // 사용자 본인이 만든·소유한 trip 캘린더만 제외. 다른 사용자 trip의 공유 캘린더 ID는
-  // 본인 Google calendarList에 노출되지 않으므로 일반적으로 영향 없으나, 식별자 우연 충돌
-  // 방지를 위해 ownerId 필터를 명시한다.
+  // trip-planner가 만든 캘린더는 사용자가 본 trip의 OWNER인지와 무관하게 import 후보에서
+  // 제외. 본인이 OWNER 아닌 trip의 공유 캘린더가 본인 calendarList에 옵트인 추가된 경우에도
+  // 동일하게 차단한다.
   const [gcalLinks, sharedLinks] = await Promise.all([
     prisma.gCalLink.findMany({
       where: { userId, provider: "GOOGLE" },
       select: { calendarId: true },
     }),
     prisma.tripCalendarLink.findMany({
-      where: { provider: "GOOGLE", ownerId: userId },
+      where: { provider: "GOOGLE" },
       select: { calendarId: true },
     }),
   ]);

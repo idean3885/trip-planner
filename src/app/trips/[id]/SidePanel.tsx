@@ -12,12 +12,14 @@ export default function SidePanel({
   role,
   hasCalendarLink,
   calendarProvider,
+  calendarName,
   providerHint,
 }: {
   tripId: number;
   role: TripRole;
   hasCalendarLink: boolean;
   calendarProvider: "GOOGLE" | "APPLE" | null;
+  calendarName: string | null;
   providerHint: "google" | null;
 }) {
   return (
@@ -27,6 +29,7 @@ export default function SidePanel({
         role={role}
         calendarLinked={hasCalendarLink}
         calendarProvider={calendarProvider}
+        calendarName={calendarName}
         providerHint={providerHint}
       />
       <MemberList tripId={tripId} />
