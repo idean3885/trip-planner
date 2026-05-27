@@ -23,6 +23,7 @@ interface Props {
   role: TripRole;
   calendarLinked: boolean;
   calendarProvider: "GOOGLE" | "APPLE" | null;
+  calendarName: string | null;
   providerHint: "google" | null;
 }
 
@@ -31,12 +32,16 @@ export default function CalendarSyncEntryCard({
   role,
   calendarLinked,
   calendarProvider,
+  calendarName,
   providerHint,
 }: Props) {
   const [open, setOpen] = useState<boolean>(initialOpenFromUrl);
 
+  const providerLabel = calendarProvider === "APPLE" ? "Apple iCloud" : "Google";
   const summary = calendarLinked
-    ? `${calendarProvider === "APPLE" ? "Apple iCloud" : "Google"} 캘린더 연결됨`
+    ? calendarName
+      ? `${providerLabel} · ${calendarName} 연결됨`
+      : `${providerLabel} 캘린더 연결됨`
     : "캘린더 연결 안 됨";
 
   const description = role === "GUEST"
@@ -61,6 +66,7 @@ export default function CalendarSyncEntryCard({
         role={role}
         initialCalendarLinked={calendarLinked}
         initialCalendarProvider={calendarProvider}
+        initialCalendarName={calendarName}
         providerHint={providerHint}
         open={open}
         onOpenChange={setOpen}
