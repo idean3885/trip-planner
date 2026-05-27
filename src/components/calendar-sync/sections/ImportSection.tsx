@@ -84,6 +84,14 @@ export default function ImportSection({ tripId, role, onImported }: Props) {
   const importable = (calendars ?? []).filter((c) => !c.isManagedByTripPlanner);
   const hasManaged = (calendars ?? []).some((c) => c.isManagedByTripPlanner);
 
+  const notConnected = diagnostics?.notConnected ?? [];
+  const scopeInsufficient = diagnostics?.scopeInsufficient ?? [];
+  const googleScopeInsufficient = scopeInsufficient.includes("GOOGLE");
+  const googleNotConnected = notConnected.includes("GOOGLE") && !googleScopeInsufficient;
+  const appleNotConnected = notConnected.includes("APPLE");
+  const hasConnectionGap = googleScopeInsufficient || googleNotConnected || appleNotConnected;
+  const googleConsentHref = `/api/gcal/consent?returnTo=${encodeURIComponent(`/trips/${tripId}?calsync=open`)}`;
+
   const handleImport = useCallback(async () => {
     if (!selected) return;
     const target = importable.find((c) => c.externalCalendarId === selected);
@@ -143,35 +151,56 @@ export default function ImportSection({ tripId, role, onImported }: Props) {
         </p>
       )}
 
-      {!loadingList && importable.length === 0 && (
-        <div className="space-y-2 text-sm">
-          {diagnostics?.scopeInsufficient?.includes("GOOGLE") ? (
-            <>
+      {!loadingList && hasConnectionGap && (
+        <div className="space-y-2">
+          {googleScopeInsufficient && (
+            <div className="space-y-2 rounded-md border p-3 text-sm">
               <p className="font-medium">Google 캘린더 권한이 부족합니다.</p>
               <p className="text-xs text-muted-foreground">
                 이전에 받은 권한이 일정 읽기·쓰기에 한정되어 캘린더 목록을 가져올 수 없습니다. 다시 동의해주세요.
               </p>
               <a
-                href={`/api/gcal/consent?returnTo=${encodeURIComponent(`/trips/${tripId}?calsync=open`)}`}
+                href={googleConsentHref}
                 className="inline-flex items-center rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90"
               >
                 Google 다시 연결
               </a>
-            </>
-          ) : diagnostics?.notConnected && diagnostics.notConnected.length === 2 ? (
-            <>
-              <p className="font-medium">캘린더 계정 미연결</p>
+            </div>
+          )}
+          {googleNotConnected && (
+            <div className="space-y-2 rounded-md border p-3 text-sm">
+              <p className="font-medium">Google 캘린더 미연결</p>
               <p className="text-xs text-muted-foreground">
-                Google 또는 Apple 캘린더 계정을 trip-planner에 먼저 연결하세요.
+                Google 계정 OAuth 동의로 연결합니다.
+              </p>
+              <a
+                href={googleConsentHref}
+                className="inline-flex items-center rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90"
+              >
+                Google 연결
+              </a>
+            </div>
+          )}
+          {appleNotConnected && (
+            <div className="space-y-2 rounded-md border p-3 text-sm">
+              <p className="font-medium">Apple 캘린더 미연결</p>
+              <p className="text-xs text-muted-foreground">
+                Apple은 OAuth를 지원하지 않습니다. 설정에서 Apple ID와 앱 비밀번호를 등록하세요.
               </p>
               <a
                 href="/settings/calendars"
                 className="inline-flex items-center rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90"
               >
-                설정 열기
+                Apple 연결 설정
               </a>
-            </>
-          ) : hasManaged ? (
+            </div>
+          )}
+        </div>
+      )}
+
+      {!loadingList && importable.length === 0 && !hasConnectionGap && (
+        <div className="space-y-2 text-sm">
+          {hasManaged ? (
             <>
               <p>가져올 수 있는 외부 캘린더가 없습니다.</p>
               <p className="text-xs text-muted-foreground">
@@ -185,18 +214,6 @@ export default function ImportSection({ tripId, role, onImported }: Props) {
                 Google 또는 Apple 계정에 trip-planner 외 캘린더를 만든 뒤 다시 시도하세요.
               </p>
             </>
-          )}
-          {diagnostics?.errors && diagnostics.errors.length > 0 && (
-            <details className="text-xs text-muted-foreground">
-              <summary>진단 정보</summary>
-              <ul className="mt-1 space-y-0.5">
-                {diagnostics.errors.map((e, i) => (
-                  <li key={i}>
-                    {e.provider}: {e.message}
-                  </li>
-                ))}
-              </ul>
-            </details>
           )}
         </div>
       )}
@@ -235,6 +252,19 @@ export default function ImportSection({ tripId, role, onImported }: Props) {
             )}
           </Button>
         </div>
+      )}
+
+      {!loadingList && diagnostics?.errors && diagnostics.errors.length > 0 && (
+        <details className="text-xs text-muted-foreground">
+          <summary>진단 정보</summary>
+          <ul className="mt-1 space-y-0.5">
+            {diagnostics.errors.map((e, i) => (
+              <li key={i}>
+                {e.provider}: {e.message}
+              </li>
+            ))}
+          </ul>
+        </details>
       )}
     </div>
   );
