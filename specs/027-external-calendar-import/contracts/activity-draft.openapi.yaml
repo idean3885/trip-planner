@@ -1,0 +1,239 @@
+openapi: 3.1.0
+info:
+  title: Trip Planner — Activity Draft API
+  version: 0.1.0
+  description: |
+    외부 캘린더에서 import된 draft 일정을 조회·승격·갱신·삭제한다.
+    Spec: specs/027-external-calendar-import/spec.md
+
+servers:
+  - url: https://trip.idean.me/api
+    description: production
+  - url: https://dev.trip.idean.me/api
+    description: dev
+
+security:
+  - sessionCookie: []
+
+paths:
+  /trips/{tripId}/drafts:
+    get:
+      operationId: listTripDrafts
+      summary: trip의 draft 목록
+      parameters:
+        - in: path
+          name: tripId
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [PENDING, PROMOTED, DELETED]
+            default: PENDING
+      responses:
+        "200":
+          description: draft 목록
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  drafts:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ActivityDraft"
+        "401":
+          description: 미인증
+        "403":
+          description: trip 비멤버
+        "404":
+          description: trip 없음
+
+  /trips/{tripId}/drafts/{draftId}/promote:
+    post:
+      operationId: promoteDraftToActivity
+      summary: draft를 정식 Activity로 승격
+      description: |
+        매핑 불가 필드(activity type, hotel·attraction 참조, reservation status, timezone)를
+        사용자 입력으로 채워 정식 Activity로 전환. 승격 후 trip 캘린더(ADR 0003 모델) push 경로에
+        자동 연결. 필수 필드 누락 시 422.
+      parameters:
+        - in: path
+          name: tripId
+          required: true
+          schema: { type: string }
+        - in: path
+          name: draftId
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PromoteRequest"
+      responses:
+        "200":
+          description: 승격 완료
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [activityId]
+                properties:
+                  activityId:
+                    type: integer
+        "401": { description: 미인증 }
+        "403": { description: 권한 부족 — GUEST 또는 trip 비멤버 }
+        "404": { description: draft 없음 또는 이미 PROMOTED }
+        "422":
+          description: 필수 필드 누락
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+
+  /trips/{tripId}/drafts/{draftId}/refresh:
+    post:
+      operationId: refreshDraftFromExternal
+      summary: 외부 최신 값으로 draft의 매핑 가능 필드 덮어쓰기
+      description: |
+        매핑 가능 필드(title·startTime·endTime·locationText·description·isAllDay)만 외부 최신 값으로
+        업데이트. 매핑 불가 필드(사용자가 채운 timezone 등)는 보존. PROMOTED 상태 draft에 대해서는 거부(409).
+      parameters:
+        - in: path
+          name: tripId
+          required: true
+          schema: { type: string }
+        - in: path
+          name: draftId
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: 덮어쓰기 완료
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActivityDraft"
+        "404": { description: draft 없음 또는 외부 이벤트가 사라짐 }
+        "409":
+          description: PROMOTED 상태 draft는 refresh 불가
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /trips/{tripId}/drafts/{draftId}:
+    delete:
+      operationId: deleteDraft
+      summary: draft 단건 삭제 (외부 캘린더에는 영향 없음)
+      parameters:
+        - in: path
+          name: tripId
+          required: true
+          schema: { type: string }
+        - in: path
+          name: draftId
+          required: true
+          schema: { type: string }
+      responses:
+        "204": { description: 삭제 완료 — 멱등 처리이므로 대상이 없어도 204 반환 }
+
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: authjs.session-token
+
+  schemas:
+    ActivityDraft:
+      type: object
+      required: [id, tripId, provider, externalCalendarId, externalEventId, title, startTime, endTime, isAllDay, status]
+      properties:
+        id: { type: integer }
+        tripId: { type: integer }
+        dayId:
+          type: integer
+          nullable: true
+        provider:
+          type: string
+          enum: [GOOGLE, APPLE]
+        externalCalendarId: { type: string }
+        externalEventId: { type: string }
+        title: { type: string }
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+        isAllDay: { type: boolean }
+        locationText:
+          type: string
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        startTimezone:
+          type: string
+          nullable: true
+        endTimezone:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [PENDING, PROMOTED, DELETED]
+        promotedToActivityId:
+          type: integer
+          nullable: true
+        lastRefreshedAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+
+    PromoteRequest:
+      type: object
+      required: [category, reservationStatus, startTimezone, endTimezone]
+      properties:
+        category:
+          type: string
+          description: Prisma `ActivityCategory` enum과 동일.
+          enum: [SIGHTSEEING, DINING, TRANSPORT, ACCOMMODATION, SHOPPING, OTHER]
+        reservationStatus:
+          type: string
+          enum: [REQUIRED, RECOMMENDED, ON_SITE, NOT_NEEDED]
+        startTimezone:
+          type: string
+          description: IANA timezone (예 "Asia/Seoul")
+        endTimezone:
+          type: string
+        location:
+          type: string
+          nullable: true
+          description: location 문자열을 수정할 경우. 누락 시 draft.locationText를 그대로 사용.
+
+    ValidationError:
+      type: object
+      required: [code, message, fields]
+      properties:
+        code:
+          type: string
+          example: MISSING_REQUIRED_FIELDS
+        message: { type: string }
+        fields:
+          type: array
+          items: { type: string }
+
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code: { type: string }
+        message: { type: string }
