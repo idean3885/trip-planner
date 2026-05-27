@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [2.16.2] - 2026-05-27
+
+### Fixed
+
+- **캘린더 동기화 다이얼로그 — 가져오기 섹션 헤더 중복 제거**. 왜: v2.16.1에서 `<details>` summary와 ImportSection 내부 h4가 같은 "외부 캘린더에서 일정 가져오기"를 두 번 표시했다. ImportSection 내부 헤더·중복 안내를 제거. ([#543](https://github.com/idean3885/trip-planner/issues/543))
+
+
 ## [2.16.1] - 2026-05-27
 
 ### Fixed
