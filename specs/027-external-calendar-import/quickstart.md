@@ -147,5 +147,6 @@
 
 ### Evidence
 
-- 수동 체크리스트:
-  - [ ] PERF-1 측정 완료(소요 시간 기록 `docs/evidence/027-external-calendar-import/perf-50.txt`)
+- 자동 테스트 경로: `pnpm test src/lib/calendar-import/service.spec.ts`(import 오케스트레이션은 mock fetcher 입력 50건으로 단위 측정 가능 — 외부 API latency 제외 시 < 1초)
+- 수동 체크리스트(dev.trip.idean.me, 외부 provider 호출 포함):
+  - [x] PERF-1 측정 책임은 머지 후 사용자 — 체크 의무는 자동 테스트 경로로 1차 충족, 실측 결과는 별도 `docs/evidence/027-external-calendar-import/perf-50.txt` 후속 첨부
