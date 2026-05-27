@@ -70,7 +70,7 @@ export async function POST(request: Request, { params }: Params) {
         {
           error: "external_account_not_linked",
           message: "캘린더 계정을 먼저 연결하세요.",
-          settingsPath: "/settings/calendars",
+          settingsPath: `/trips/${tripId}/calendar/connect-apple`,
         },
         { status: 409 },
       );
