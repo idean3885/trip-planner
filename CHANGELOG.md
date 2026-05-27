@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [2.15.1] - 2026-05-27
+
+### Fixed
+
+- **외부 캘린더 import — Google scope 검사 + 진단 안내 분기 추가**. 왜: v2.15.0에서 legacy events-only OAuth scope를 가진 사용자가 import 모달을 열면 "가져올 수 있는 캘린더 없음"으로만 표시되어 원인을 알 수 없었다. 이제 scope 부족 시 "Google 다시 연결" 버튼, 미연결 시 `/settings/calendars` 진입, 모든 캘린더가 trip-planner 관리로 분류된 경우의 안내를 분기로 노출한다. API 응답에 `diagnostics` 필드 추가. 모달 본문의 "Apple 캘린더 가져오기는 후속 릴리즈에서 지원될 예정" 잘못된 안내 제거. ([#531](https://github.com/idean3885/trip-planner/issues/531))
+
+
 ## [2.15.0] - 2026-05-27
 
 ### Added
