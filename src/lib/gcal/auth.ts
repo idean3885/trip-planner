@@ -28,6 +28,21 @@ export async function hasCalendarScope(userId: string): Promise<boolean> {
 }
 
 /**
+ * Calendar List 읽기에 필요한 full scope(`calendar`)를 보유했는지 확인.
+ * legacy events-only는 calendarList.list 호출 권한이 없으므로 false로 분류된다.
+ * spec 027 외부 캘린더 import에서 사용.
+ */
+export async function hasFullCalendarScope(userId: string): Promise<boolean> {
+  const account = await prisma.account.findFirst({
+    where: { userId, provider: GOOGLE_PROVIDER },
+    select: { scope: true },
+  });
+  if (!account?.scope) return false;
+  const scopes = account.scope.split(/\s+/);
+  return scopes.includes(GCAL_SCOPE);
+}
+
+/**
  * 현재 트립으로 돌아오도록 returnTo를 포함한 동의 시작 URL.
  * 실제 Google 리디렉트는 /api/gcal/consent 핸들러가 signIn으로 수행한다.
  */
