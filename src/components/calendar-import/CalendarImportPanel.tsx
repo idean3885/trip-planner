@@ -31,6 +31,14 @@ interface ExternalCalendar {
   isManagedByTripPlanner: boolean;
 }
 
+interface Diagnostics {
+  unfilteredCount: number;
+  managedFilteredCount: number;
+  notConnected: CalendarProviderId[];
+  scopeInsufficient: CalendarProviderId[];
+  errors: { provider: CalendarProviderId; message: string }[];
+}
+
 interface ImportResultPayload {
   importRunId: number;
   importedCount: number;
@@ -54,6 +62,7 @@ export default function CalendarImportPanel({
   const canImport = role === "OWNER" || role === "HOST";
   const [open, setOpen] = useState(false);
   const [calendars, setCalendars] = useState<ExternalCalendar[] | null>(null);
+  const [diagnostics, setDiagnostics] = useState<Diagnostics | null>(null);
   const [loadingList, setLoadingList] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
   const [running, setRunning] = useState(false);
@@ -66,10 +75,15 @@ export default function CalendarImportPanel({
       });
       if (!res.ok) {
         setCalendars([]);
+        setDiagnostics(null);
         return;
       }
-      const data = (await res.json()) as { calendars: ExternalCalendar[] };
+      const data = (await res.json()) as {
+        calendars: ExternalCalendar[];
+        diagnostics?: Diagnostics;
+      };
       setCalendars(data.calendars);
+      setDiagnostics(data.diagnostics ?? null);
     } finally {
       setLoadingList(false);
     }
@@ -177,15 +191,59 @@ export default function CalendarImportPanel({
 
           {!loadingList && importable.length === 0 && (
             <div className="space-y-2 text-sm">
-              <p>가져올 수 있는 외부 캘린더가 없습니다.</p>
-              {hasManaged && (
-                <p className="text-xs text-muted-foreground">
-                  trip-planner가 만든 캘린더는 가져오기 대상에서 제외됩니다.
-                </p>
+              {diagnostics?.scopeInsufficient?.includes("GOOGLE") ? (
+                <>
+                  <p className="font-medium">Google 캘린더 권한이 부족합니다.</p>
+                  <p className="text-xs text-muted-foreground">
+                    이전에 받은 권한이 일정 읽기·쓰기에 한정되어 캘린더 목록을 가져올 수 없습니다. 다시 동의해주세요.
+                  </p>
+                  <a
+                    href={`/api/gcal/consent?returnTo=${encodeURIComponent(typeof window !== "undefined" ? window.location.pathname : "/")}`}
+                    className="inline-flex items-center rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90"
+                  >
+                    Google 다시 연결
+                  </a>
+                </>
+              ) : diagnostics?.notConnected?.length === 2 ? (
+                <>
+                  <p className="font-medium">캘린더 계정 미연결</p>
+                  <p className="text-xs text-muted-foreground">
+                    Google 또는 Apple 캘린더 계정을 trip-planner에 먼저 연결하세요.
+                  </p>
+                  <a
+                    href="/settings/calendars"
+                    className="inline-flex items-center rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90"
+                  >
+                    설정 열기
+                  </a>
+                </>
+              ) : hasManaged ? (
+                <>
+                  <p>가져올 수 있는 외부 캘린더가 없습니다.</p>
+                  <p className="text-xs text-muted-foreground">
+                    본인 계정의 모든 캘린더가 trip-planner 관리 캘린더로 분류되어 제외됐습니다.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p>가져올 수 있는 외부 캘린더가 없습니다.</p>
+                  <p className="text-xs text-muted-foreground">
+                    Google 또는 Apple 계정에 trip-planner 외 캘린더를 만든 뒤 다시 시도하세요.
+                  </p>
+                </>
               )}
-              <p className="text-xs text-muted-foreground">
-                Google 계정에 다른 캘린더가 있다면 그 캘린더에 일정을 만든 뒤 다시 시도하세요. Apple 캘린더 가져오기는 후속 릴리즈에서 지원될 예정입니다.
-              </p>
+              {diagnostics?.errors && diagnostics.errors.length > 0 && (
+                <details className="text-xs text-muted-foreground">
+                  <summary>진단 정보</summary>
+                  <ul className="mt-1 space-y-0.5">
+                    {diagnostics.errors.map((e, i) => (
+                      <li key={i}>
+                        {e.provider}: {e.message}
+                      </li>
+                    ))}
+                  </ul>
+                </details>
+              )}
             </div>
           )}
 
