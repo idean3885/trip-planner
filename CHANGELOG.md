@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [2.16.0] - 2026-05-27
+
+### Added
+
+- **trip 상세의 캘린더 동선을 단일 진입 카드 + 단일 다이얼로그로 통합**. 왜: SidePanel의 캘린더 관련 카드가 분산되어(provider 선택·연결 상태·외부 캘린더 가져오기·draft 목록) 사용자가 무엇이 뭘 하는지 파악하기 어려웠다. SidePanel에 "외부 캘린더 동기화" 카드 1개만 노출하고, 클릭 시 다이얼로그 1개 안에서 연결 상태·가져오기·draft 승격·다시 가져오기·삭제까지 모두 진행(depth 0). OAuth 재동의 redirect 복귀 시 `?calsync=open` 으로 다이얼로그 자동 오픈. 도메인·API·DB 변경 없음. 기존 5종 패널은 후속 v2.16.x patch에서 contract 제거 예정. ([#535](https://github.com/idean3885/trip-planner/issues/535))
+
+
 ## [2.15.1] - 2026-05-27
 
 ### Fixed
