@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [2.16.5] - 2026-05-27
+
+### Fixed
+
+- **Apple 연결 안내 링크 6곳**을 trip 단위 진입점(`/trips/<id>/calendar/connect-apple`)으로 정정. 왜: 기존 `/settings/calendars` URL은 존재하지 않아 클릭 시 404로 떨어졌고, 사용자가 Apple 등록 경로에 도달하지 못했다. ([#555](https://github.com/idean3885/trip-planner/issues/555))
+
+
 ## [2.16.4] - 2026-05-27
 
 ### Fixed
