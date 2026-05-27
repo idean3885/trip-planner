@@ -160,18 +160,31 @@ export default function AboutPage() {
                   MCP / AI CLI 연결
                 </CardTitle>
                 <CardDescription className="text-xs">
-                  trip MCP 서버 — Claude Code, Cursor 등에서 자연어로 일정을
-                  조회·수정. 설치 가이드는 GitHub `mcp/`에서.
+                  trip MCP 서버 — Claude Code·Cursor 등에서 자연어로 일정
+                  조회·수정. 아래 1줄로 설치·등록까지 자동 수행.
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <span className="inline-flex items-center gap-1 text-xs font-medium text-foreground">
-                  설치 가이드 (GitHub)
+                  설치 상세 (GitHub)
                   <ExternalLink className="size-3" aria-hidden />
                 </span>
               </CardContent>
             </Card>
           </a>
+        </div>
+        <div className="rounded-lg border bg-muted/40 p-3 text-xs">
+          <p className="mb-2 font-medium text-foreground">
+            맥북 1줄 설치 (Claude Code MCP 자동 등록)
+          </p>
+          <pre className="overflow-x-auto whitespace-pre rounded bg-background p-2 font-mono text-[11px] leading-relaxed">
+            <code>{`curl -sSL https://raw.githubusercontent.com/idean3885/trip-planner/main/scripts/install.sh | bash`}</code>
+          </pre>
+          <p className="mt-2 text-muted-foreground">
+            설치 중 브라우저가 열리면 Google 로그인만 하세요. 토큰이 자동
+            저장되고 Claude Code에 MCP가 등록됩니다. 이후 Claude에게 자연어로
+            요청하면 일정·항공·숙소를 자동으로 조회·편집합니다.
+          </p>
         </div>
       </section>
 
