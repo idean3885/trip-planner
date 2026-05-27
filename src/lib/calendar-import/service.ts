@@ -164,23 +164,65 @@ export async function runImport(args: RunImportArgs): Promise<ImportResult> {
   };
 }
 
-/** 사용자의 외부 계정에서 import 가능한 캘린더 목록(trip-planner 관리 캘린더 제외). */
-export async function listAvailableExternalCalendars(userId: string) {
+/** 사용자의 외부 계정에서 import 가능한 캘린더 목록 + 진단 정보. */
+export interface ExternalCalendarListing {
+  calendars: Awaited<ReturnType<ExternalCalendarFetcher["listCalendars"]>>;
+  unfilteredCount: number;
+  managedFilteredCount: number;
+  /** provider별 미연결 상태 (token 없음 또는 scope 부족). */
+  notConnected: CalendarProviderId[];
+  /** scope 부족(events-only legacy)으로 막힌 provider. reauth 안내 대상. */
+  scopeInsufficient: CalendarProviderId[];
+  /** provider별 fetch 에러 메시지 (디버깅). */
+  errors: { provider: CalendarProviderId; message: string }[];
+}
+
+export async function listAvailableExternalCalendars(
+  userId: string,
+): Promise<ExternalCalendarListing> {
   const fetchers: ExternalCalendarFetcher[] = [googleImportFetcher, appleImportFetcher];
-  const results = await Promise.all(
-    fetchers.map(async (f) => {
-      if (!(await f.isConnected(userId))) return [];
-      try {
-        return await f.listCalendars(userId);
-      } catch (err) {
-        console.warn(
-          `[calendar-import] listCalendars failed provider=${f.provider} reason=${(err as Error).message}`,
-        );
-        return [];
+  const notConnected: CalendarProviderId[] = [];
+  const scopeInsufficient: CalendarProviderId[] = [];
+  const errors: { provider: CalendarProviderId; message: string }[] = [];
+  const allLists: Awaited<ReturnType<ExternalCalendarFetcher["listCalendars"]>>[] = [];
+
+  for (const f of fetchers) {
+    const connected = await f.isConnected(userId);
+    if (!connected) {
+      notConnected.push(f.provider);
+      // Google: account 자체는 있는데 scope만 부족한 경우를 구분
+      if (f.provider === "GOOGLE") {
+        const account = await prisma.account.findFirst({
+          where: { userId, provider: "google" },
+          select: { access_token: true },
+        });
+        if (account?.access_token) {
+          scopeInsufficient.push(f.provider);
+        }
       }
-    }),
-  );
-  return results.flat().filter((c) => !c.isManagedByTripPlanner);
+      continue;
+    }
+    try {
+      allLists.push(await f.listCalendars(userId));
+    } catch (err) {
+      const message = (err as Error).message;
+      console.warn(
+        `[calendar-import] listCalendars failed provider=${f.provider} reason=${message}`,
+      );
+      errors.push({ provider: f.provider, message });
+    }
+  }
+
+  const flat = allLists.flat();
+  const importable = flat.filter((c) => !c.isManagedByTripPlanner);
+  return {
+    calendars: importable,
+    unfilteredCount: flat.length,
+    managedFilteredCount: flat.length - importable.length,
+    notConnected,
+    scopeInsufficient,
+    errors,
+  };
 }
 
 /** "다시 가져오기" — 매핑 가능 필드만 외부 최신 값으로 덮어쓰기. */

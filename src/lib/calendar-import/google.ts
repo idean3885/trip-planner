@@ -9,6 +9,7 @@
 import { calendar_v3 } from "@googleapis/calendar";
 import { prisma } from "@/lib/prisma";
 import { getCalendarClient } from "@/lib/gcal/client";
+import { hasFullCalendarScope } from "@/lib/gcal/auth";
 import type {
   DateRange,
   ExternalCalendarFetcher,
@@ -82,6 +83,9 @@ export const googleImportFetcher: ExternalCalendarFetcher = {
   provider: "GOOGLE",
 
   async isConnected(userId: string): Promise<boolean> {
+    // import는 calendarList.list 호출이 필요하므로 full calendar scope를 요구한다.
+    // legacy events-only scope만 있는 사용자는 미연결로 분류해 reauth 흐름으로 안내.
+    if (!(await hasFullCalendarScope(userId))) return false;
     const client = await getCalendarClient(userId);
     return client !== null;
   },
