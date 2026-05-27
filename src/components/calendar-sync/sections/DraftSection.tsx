@@ -207,16 +207,10 @@ export default function DraftSection({ tripId, canEdit, onMutated }: Props) {
     return null;
   }
 
+  // draft 0건이면 섹션 자체를 숨긴다. 다이얼로그의 <details> summary가 이미
+  // 가져오기 진입점을 안내하므로 빈 상태 안내는 중복 노이즈.
   if (!drafts || drafts.length === 0) {
-    if (!canEdit) return null;
-    return (
-      <section>
-        <h4 className="mb-2 text-sm font-semibold">외부에서 가져온 일정</h4>
-        <p className="text-xs text-muted-foreground">
-          외부 캘린더에서 가져온 초안이 아직 없습니다. 위 가져오기 섹션에서 시작하세요.
-        </p>
-      </section>
-    );
+    return null;
   }
 
   return (
