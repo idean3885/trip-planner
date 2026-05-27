@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [2.15.0] - 2026-05-27
+
+### Added
+
+- **외부 캘린더 import — 다른 Google·Apple 캘린더의 일정을 ActivityDraft로 가져오기**. 왜: 사용자가 본인의 다른 캘린더에 쌓아둔 여행 일정을 trip-planner에 다시 입력하지 않고 옮기기 위해. trip 상세 사이드 패널의 "외부 캘린더에서 일정 가져오기"에서 캘린더 1개를 선택하면 trip 기간과 겹치는 이벤트가 draft로 들어오고 "외부 캘린더에서 가져옴" 배지로 표시된다. 카테고리·예약 상태·시간대를 채워 정식 Activity로 승격, 외부 변경 시 "다시 가져오기"로 재동기화. 같은 이벤트는 두 번 가져와도 중복 없음(멱등성). ADR 0003 per-trip-shared-calendar 모델은 그대로 유지(외부 → 내부 단방향). ([#527](https://github.com/idean3885/trip-planner/issues/527))
+
+
 ## [2.14.1] - 2026-05-27
 
 ### Added

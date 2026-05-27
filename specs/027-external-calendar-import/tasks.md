@@ -134,7 +134,7 @@ description: "외부 캘린더 import — 작업 목록"
 - [ ] T032 trip 삭제 시 ActivityDraft·ImportRun cascade 동작 통합 테스트 — Prisma onDelete 동작 확인 [artifact: src/app/api/trips/<id>/route.cascade.spec.ts] [why: draft-cascade]
 - [ ] T033 OpenAPI 스펙에 신규 5개 endpoint 추가(operation·security·error 4xx·cost 표기 일관) [artifact: src/lib/openapi.ts::calendarImportPaths] [why: import-api]
 - [ ] T034 [P] /about·/docs OpenAPI 문서 회귀 — 신규 endpoint 표시 확인(spec 014 풀폭 레이아웃 회귀 없음) [artifact: src/app/docs/page.tsx] [why: ui-import-summary]
-- [x] T035 단편 작성 — feat 타입 [artifact: changes/527.feat.md] [why: adr-import-policy]
+- [x] T035 단편 작성 — feat 타입 (release 시점에 towncrier가 CHANGELOG로 흡수해 단편 파일은 삭제됨) [artifact: CHANGELOG.md] [why: adr-import-policy]
 - [ ] T036 quickstart Evidence 실증 — US1·US2·US3 스크린샷 + 자동 테스트 통과 로그 첨부 [artifact: docs/evidence/027-external-calendar-import/] [why: adr-import-policy]
 
 ---
