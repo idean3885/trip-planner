@@ -66,7 +66,7 @@ async function DbTripPage({
     }),
     prisma.tripCalendarLink.findUnique({
       where: { tripId },
-      select: { provider: true },
+      select: { provider: true, calendarName: true },
     }),
   ]);
   if (!member || !trip) notFound();
@@ -130,6 +130,7 @@ async function DbTripPage({
               role={member.role}
               hasCalendarLink={Boolean(calendarLink)}
               calendarProvider={calendarLink?.provider ?? null}
+              calendarName={calendarLink?.calendarName ?? null}
               providerHint={providerHint}
             />
           </div>
@@ -187,6 +188,7 @@ async function DbTripPage({
             role={member.role}
             hasCalendarLink={Boolean(calendarLink)}
             calendarProvider={calendarLink?.provider ?? null}
+            calendarName={calendarLink?.calendarName ?? null}
             providerHint={providerHint}
           />
         </div>

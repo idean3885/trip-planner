@@ -17,8 +17,9 @@ interface Props {
   role: TripRole;
   linked: boolean;
   provider: "GOOGLE" | "APPLE" | null;
+  calendarName: string | null;
   providerHint: "google" | null;
-  onLinkChanged: (next: { linked: boolean; provider: "GOOGLE" | "APPLE" | null }) => void;
+  onLinkChanged: (next: { linked: boolean; provider: "GOOGLE" | "APPLE" | null; name: string | null }) => void;
 }
 
 export default function ProviderSection({
@@ -26,22 +27,25 @@ export default function ProviderSection({
   role,
   linked,
   provider,
+  calendarName,
   providerHint,
 }: Props) {
   const canManage = role === "OWNER";
+  const providerLabel = provider === "APPLE" ? "Apple iCloud" : "Google";
 
   return (
     <section>
-      <h4 className="mb-2 text-sm font-semibold">캘린더 연결</h4>
+      <h4 className="mb-2 text-sm font-semibold">동기화 상태</h4>
 
       {linked ? (
         <div className="rounded-md border bg-muted/30 p-3 text-sm">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2">
             <span>
-              <span className="font-medium">
-                {provider === "APPLE" ? "Apple iCloud" : "Google"} 캘린더
-              </span>
-              <span className="ml-2 text-xs text-muted-foreground">연결됨</span>
+              <span className="font-medium">{providerLabel}</span>
+              {calendarName && (
+                <span className="ml-2 font-medium">· {calendarName}</span>
+              )}
+              <span className="ml-2 text-xs text-muted-foreground">동기화 작동 중</span>
             </span>
             {canManage && (
               <Link
@@ -53,7 +57,7 @@ export default function ProviderSection({
             )}
           </div>
           <p className="mt-2 text-xs text-muted-foreground">
-            여행 일정을 trip-planner에서 추가·수정하면 연결된 캘린더에도 반영됩니다.
+            trip-planner에서 여행 일정을 추가·수정하면 위 캘린더에 자동으로 반영됩니다(별도 조작 없음). 외부 캘린더에 이미 쌓아둔 일정을 가져오고 싶다면 아래 &ldquo;외부 캘린더에서 일정 가져오기&rdquo;를 펼치세요.
           </p>
         </div>
       ) : (

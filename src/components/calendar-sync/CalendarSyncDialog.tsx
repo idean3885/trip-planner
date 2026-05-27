@@ -25,6 +25,7 @@ interface Props {
   role: TripRole;
   initialCalendarLinked: boolean;
   initialCalendarProvider: "GOOGLE" | "APPLE" | null;
+  initialCalendarName: string | null;
   providerHint: "google" | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -35,20 +36,21 @@ export default function CalendarSyncDialog({
   role,
   initialCalendarLinked,
   initialCalendarProvider,
+  initialCalendarName,
   providerHint,
   open,
   onOpenChange,
 }: Props) {
-  // 초기값은 server-rendered SidePanel로부터 받는다. 다이얼로그가 열린 동안의 갱신은
-  // handleLinkChanged·handleDraftMutated 콜백이 처리.
   const [calendarLinked, setCalendarLinked] = useState(initialCalendarLinked);
   const [calendarProvider, setCalendarProvider] = useState(initialCalendarProvider);
+  const [calendarName, setCalendarName] = useState(initialCalendarName);
   const [draftRefreshKey, setDraftRefreshKey] = useState(0);
 
   const handleLinkChanged = useCallback(
-    (next: { linked: boolean; provider: "GOOGLE" | "APPLE" | null }) => {
+    (next: { linked: boolean; provider: "GOOGLE" | "APPLE" | null; name: string | null }) => {
       setCalendarLinked(next.linked);
       setCalendarProvider(next.provider);
+      setCalendarName(next.name);
     },
     [],
   );
@@ -77,16 +79,27 @@ export default function CalendarSyncDialog({
             role={role}
             linked={calendarLinked}
             provider={calendarProvider}
+            calendarName={calendarName}
             providerHint={providerHint}
             onLinkChanged={handleLinkChanged}
           />
 
           {showImport && (
-            <ImportSection
-              tripId={tripId}
-              role={role}
-              onImported={handleDraftMutated}
-            />
+            <details className="rounded-lg border bg-card p-3">
+              <summary className="cursor-pointer text-sm font-semibold">
+                외부 캘린더에서 일정 가져오기 (선택)
+              </summary>
+              <p className="mt-1 text-xs text-muted-foreground">
+                trip-planner 일정은 위 캘린더로 자동 push됩니다. 다른 캘린더에 이미 쌓아둔 일정을 가져오고 싶을 때만 사용하세요.
+              </p>
+              <div className="mt-3">
+                <ImportSection
+                  tripId={tripId}
+                  role={role}
+                  onImported={handleDraftMutated}
+                />
+              </div>
+            </details>
           )}
 
           {showDrafts && (

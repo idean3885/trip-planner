@@ -28,9 +28,10 @@ async function loadClient(userId: string) {
   }
 }
 
-async function loadManagedCalendarUrls(userId: string): Promise<Set<string>> {
+async function loadManagedCalendarUrls(): Promise<Set<string>> {
+  // trip-planner가 만든 캘린더는 사용자 OWNER 여부와 무관하게 import 후보 제외.
   const links = await prisma.tripCalendarLink.findMany({
-    where: { provider: "APPLE", ownerId: userId },
+    where: { provider: "APPLE" },
     select: { calendarId: true },
   });
   return new Set(links.map((l) => l.calendarId));
@@ -47,7 +48,7 @@ export const appleImportFetcher: ExternalCalendarFetcher = {
   async listCalendars(userId: string): Promise<ExternalCalendarRef[]> {
     const client = await loadClient(userId);
     if (!client) return [];
-    const managed = await loadManagedCalendarUrls(userId);
+    const managed = await loadManagedCalendarUrls();
     const calendars = await client.fetchCalendars();
     return calendars
       .filter(
