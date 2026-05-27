@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [2.14.1] - 2026-05-27
+
+### Added
+
+- **OpenAPI 스펙 후속 정합 — operation별 `security` 명시·모든 4xx 응답에 `Error` 스키마 일관 적용·`cost` 타입 `oneOf` (number/string) 정합**. 왜: v2.14.0 후속 follow-up 항목. 각 엔드포인트가 받는 인증을 per-op 단위로 SDK·LLM이 읽고, 4xx 응답을 클라이언트가 일관된 `{error, code}` 구조로 분기하며, DB Decimal 응답이 문자열로 직렬화되는 동작을 스키마가 표현하게 됐다. ([#520](https://github.com/idean3885/trip-planner/issues/520))
+
+### Documentation
+
+- **`/about` 페이지에 MCP 1줄 설치 명령(`curl ... install.sh`)을 코드블록으로 직접 노출**. 왜: 기존에는 GitHub `mcp/` 디렉토리로 외부 링크만 제공해 일반 사용자가 클릭·이동·읽기 단계를 거쳐야 했다. 사이트에서 바로 복사해 붙여넣을 수 있는 명령을 보여 진입 마찰을 줄였다. ([#521](https://github.com/idean3885/trip-planner/issues/521))
+
+
 ## [2.14.0] - 2026-05-26
 
 ### Added
