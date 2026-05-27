@@ -106,11 +106,11 @@ export default function ImportSection({ tripId, role, onImported }: Props) {
       const body = await res.json().catch(() => ({}));
       if (res.status === 409 && body?.error === "external_account_not_linked") {
         toast.error("캘린더 계정 미연결", {
-          description: "설정에서 외부 캘린더 계정을 먼저 연결하세요.",
+          description: "외부 캘린더 계정을 먼저 연결하세요.",
           action: {
-            label: "설정 열기",
+            label: "연결하기",
             onClick: () => {
-              window.location.href = body.settingsPath ?? "/settings/calendars";
+              window.location.href = body.settingsPath ?? `/trips/${tripId}/calendar/connect-apple`;
             },
           },
         });
@@ -185,13 +185,13 @@ export default function ImportSection({ tripId, role, onImported }: Props) {
             <div className="space-y-2 rounded-md border p-3 text-sm">
               <p className="font-medium">Apple 캘린더 미연결</p>
               <p className="text-xs text-muted-foreground">
-                Apple은 OAuth를 지원하지 않습니다. 설정에서 Apple ID와 앱 비밀번호를 등록하세요.
+                Apple은 OAuth를 지원하지 않습니다. Apple ID와 앱 비밀번호를 직접 등록하세요.
               </p>
               <a
-                href="/settings/calendars"
+                href={`/trips/${tripId}/calendar/connect-apple`}
                 className="inline-flex items-center rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90"
               >
-                Apple 연결 설정
+                Apple 연결하기
               </a>
             </div>
           )}
