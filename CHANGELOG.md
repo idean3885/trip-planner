@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [2.16.4] - 2026-05-27
+
+### Fixed
+
+- **캘린더 동기화 다이얼로그**에 Google·Apple 미연결 안내 카드를 provider별로 노출. 왜: 한쪽만 미연결인 경우 다이얼로그에 등록 진입점이 없어 OAuth 미지원인 Apple 등록 경로를 사용자가 찾지 못했다. ([#551](https://github.com/idean3885/trip-planner/issues/551))
+
+
 ## [2.16.3] - 2026-05-27
 
 ### Fixed
