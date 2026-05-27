@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [2.16.3] - 2026-05-27
+
+### Fixed
+
+- **다이얼로그 — draft 0건 빈 상태 섹션 숨김**. 왜: v2.16.2에서 "외부에서 가져온 일정" 섹션이 draft 0건일 때도 빈 안내로 노출돼 노이즈가 됐다. `<details>` summary가 이미 가져오기 진입점을 안내하므로 drafts 0건이면 섹션 자체 숨김. ([#547](https://github.com/idean3885/trip-planner/issues/547))
+
+
 ## [2.16.2] - 2026-05-27
 
 ### Fixed
