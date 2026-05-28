@@ -99,6 +99,10 @@ develop ──●──●──●───●──●──●──●──
 
 ## 작업 규칙
 
+### 용어 정본
+
+도메인·UX·반응형(viewport)·역할·엔티티·상태·동작 용어 정본은 [`docs/glossary.md`](./docs/glossary.md)입니다. 새 용어 도입 시 먼저 등재 후 spec·문서·UI 코드 주석에서 같은 명칭을 사용합니다.
+
 ### speckit 하네스 (spec 010, 이슈 #181)
 
 모든 피처 작업 산출물은 아래 4종 메타태그로 자동 검증된다. 형식 위반은 `validate-metatag-format.sh`가 차단.
