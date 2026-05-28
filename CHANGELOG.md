@@ -9,6 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [2.16.6] - 2026-05-28
+
+### Fixed
+
+- * **Apple 캘린더 자격증명 등록**이 트립 주인이 아닌 동행자도 가능해졌다.
+    왜: 자격증명은 사용자 단위인데 등록 진입점이 주인 권한으로만 열려 있어 동행자만 가진 사용자는 영영 등록할 수 없었다.
+  * **외부 캘린더 미연결 안내** 버튼이 사용자별 캘린더 설정 화면으로 이동한다.
+    왜: 트립 단위 진입점은 주인이 아니면 막혀 있어 안내 따라가도 등록을 마치지 못했다.
+
+  ([#559](https://github.com/idean3885/trip-planner/issues/559))
+
+### Documentation
+
+- * **릴리즈 노트 작성 규칙**이 What/Why만 적도록 강제된다. 구현 디테일은 일체 제외, 도메인 용어로 추상화.
+    왜: 노트 독자는 사용자이지 개발자가 아니므로 파일·함수·내부 동작이 노출되면 의미가 묻힌다. ([#559](https://github.com/idean3885/trip-planner/issues/559))
+
+
 ## [2.16.5] - 2026-05-27
 
 ### Fixed
