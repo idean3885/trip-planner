@@ -60,7 +60,7 @@ develop ──●──●──●───●──●──●──●──
 **개발 (마일스톤 진행 중)**:
 1. feature 브랜치에서 작업 → `changes/<이슈번호>.<타입>.md` 단편 1개 추가 → develop PR → 머지
    - 단편 타입: `breaking` / `feat` / `fix` / `removed` / `docs` / `chore`
-   - **단편 작성 강제 규칙 (v2.16.6+)**: What + Why만. HOW(파일·함수·내부 동작) 일체 금지. 도메인 수준 추상화. `*` 글머리표·**굵게** 가독성. 상세: [`changes/README.md`](changes/README.md) "작성 형식" 섹션. 위반 단편은 release 전 정정 필수.
+   - **단편 작성 강제 규칙 (v2.16.9+)**: What 문장 + 이유 문장. HOW(파일·함수·내부 동작) 일체 금지. 도메인 추상화. 합쇼체 통일(`-합니다`/`-했습니다`/`-됩니다`). `왜:` 라벨 금지. 감정체(과했다·어지럽다 등) 지양. `*` 글머리표·**굵게** 가독성. 상세: [`changes/README.md`](changes/README.md) "작성 형식" 섹션. 위반 단편은 release 전 정정 필수.
    - CI 게이트: 단편 누락 시 `towncrier-fragment-check` 실패. 면제 시 `chore-no-news` 라벨
 2. develop에 머지되면 dev.trip.idean.me에 자동 배포
 3. 마일스톤의 모든 이슈가 develop에 머지될 때까지 반복
