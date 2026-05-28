@@ -45,7 +45,7 @@ export async function POST(_request: Request, { params }: Params) {
     }
     if (err instanceof ExternalAccountNotLinkedError) {
       return NextResponse.json(
-        { error: "external_account_not_linked", settingsPath: `/trips/${tripId}/calendar/connect-apple` },
+        { error: "external_account_not_linked", settingsPath: "/settings/calendars" },
         { status: 409 },
       );
     }
