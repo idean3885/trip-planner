@@ -60,7 +60,7 @@ async function DbTripPage({
   const session = await auth();
   if (!session?.user?.id) redirect("/auth/signin");
 
-  const [member, trip, calendarLink, userTrips] = await Promise.all([
+  const [member, trip, calendarLink] = await Promise.all([
     prisma.tripMember.findUnique({
       where: { tripId_userId: { tripId, userId: session.user.id } },
     }),
@@ -78,11 +78,6 @@ async function DbTripPage({
     prisma.tripCalendarLink.findUnique({
       where: { tripId },
       select: { provider: true, calendarName: true },
-    }),
-    prisma.trip.findMany({
-      where: { tripMembers: { some: { userId: session.user.id } } },
-      select: { id: true, title: true },
-      orderBy: { createdAt: "desc" },
     }),
   ]);
   if (!member || !trip) notFound();
@@ -123,9 +118,9 @@ async function DbTripPage({
         </Link>
       </div>
 
-      {/* spec 026 묶음 B — 데스크탑 ≥1024px에서 본문(2/3) + 사이드(1/3) 다단.
+      {/* spec 031 — 데스크탑 ≥1024px에서 본문 좌(캘린더 50%) / 우(SidePanel 50%) 2분할.
           모바일(<1024px)에서는 grid가 단일 컬럼처럼 동작해 회귀 없음. */}
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)] lg:gap-grid-comfy lg:items-start">
+      <div className="grid gap-6 lg:grid-cols-2 lg:gap-grid-comfy lg:items-start">
         <div className="space-y-6 min-w-0">
           <div>
             <h1 className="text-xl font-semibold tracking-tight">{trip.title}</h1>
@@ -140,6 +135,13 @@ async function DbTripPage({
               )}
             </p>
             <div className="mt-3 flex flex-wrap items-center gap-2">
+              {member.role !== "GUEST" && (
+                <AddDayButton
+                  tripId={tripId}
+                  tripStartDate={period.startDate?.toISOString() ?? ""}
+                  tripEndDate={period.endDate?.toISOString() ?? ""}
+                />
+              )}
               {member.role !== "GUEST" && <InviteButton tripId={tripId} />}
               {member.role === "OWNER" && (
                 <DeleteTripButton tripId={tripId} tripTitle={trip.title} />
@@ -178,24 +180,12 @@ async function DbTripPage({
           </div>
 
           <section className="space-y-3">
-            <div className="flex items-center justify-between gap-2">
-              <h2 className="text-base font-semibold tracking-tight">일정</h2>
-              {member.role !== "GUEST" && (
-                <AddDayButton
-                  tripId={tripId}
-                  // 일정 0건이면 기간 제약 없이 사용자가 자유롭게 첫 일정 선택.
-                  tripStartDate={period.startDate?.toISOString() ?? ""}
-                  tripEndDate={period.endDate?.toISOString() ?? ""}
-                />
-              )}
-            </div>
+            <h2 className="text-base font-semibold tracking-tight">일정</h2>
             <TripDetailLayout
               tripId={tripId}
               tripStart={period.startDate}
               tripEnd={period.endDate}
               days={layoutDays}
-              canEdit={member.role !== "GUEST"}
-              userTrips={userTrips}
             />
           </section>
         </div>
