@@ -87,15 +87,7 @@ export default function SettingsPage() {
         <span aria-hidden>·</span>
         <span className="text-foreground">설정</span>
       </nav>
-      <div className="flex flex-wrap items-baseline justify-between gap-4">
-        <h1 className="text-2xl font-semibold tracking-tight">설정</h1>
-        <Link
-          href="/docs"
-          className="text-sm text-foreground underline-offset-4 hover:underline"
-        >
-          API 문서
-        </Link>
-      </div>
+      <h1 className="text-2xl font-semibold tracking-tight">설정</h1>
 
       <section className="space-y-3">
         <h2 className="text-lg font-semibold">외부 캘린더</h2>
