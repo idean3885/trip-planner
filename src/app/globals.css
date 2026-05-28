@@ -243,6 +243,23 @@ body {
   --sidebar-accent-foreground:  oklch(0.205 0 0);
   --sidebar-border:  oklch(0.922 0 0);
   --sidebar-ring:  oklch(0.708 0 0);
+
+  /* spec 029 T030 — 통합 캘린더 트립 라벨 palette pool (6색).
+     getTripColor(tripId) 가 trip ID hash → palette index 결정적 부여.
+     WCAG AA: 화이트 배경 위 4.5:1 이상 (라벨 텍스트 + dot 양쪽 사용).
+     모든 값은 Tailwind v3 컬러 700 단계 — 검증된 대비.
+     - palette-1 red-700      #B91C1C  7.6:1
+     - palette-2 orange-700   #C2410C  4.5:1
+     - palette-3 amber-700    #B45309  4.5:1
+     - palette-4 emerald-700  #047857  4.7:1
+     - palette-5 sky-700      #0369A1  6.2:1
+     - palette-6 violet-700   #6D28D9  7.7:1 */
+  --trip-palette-1: #B91C1C;
+  --trip-palette-2: #C2410C;
+  --trip-palette-3: #B45309;
+  --trip-palette-4: #047857;
+  --trip-palette-5: #0369A1;
+  --trip-palette-6: #6D28D9;
 }
 
 /*

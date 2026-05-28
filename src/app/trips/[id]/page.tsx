@@ -60,7 +60,7 @@ async function DbTripPage({
   const session = await auth();
   if (!session?.user?.id) redirect("/auth/signin");
 
-  const [member, trip, calendarLink] = await Promise.all([
+  const [member, trip, calendarLink, userTrips] = await Promise.all([
     prisma.tripMember.findUnique({
       where: { tripId_userId: { tripId, userId: session.user.id } },
     }),
@@ -78,6 +78,11 @@ async function DbTripPage({
     prisma.tripCalendarLink.findUnique({
       where: { tripId },
       select: { provider: true, calendarName: true },
+    }),
+    prisma.trip.findMany({
+      where: { tripMembers: { some: { userId: session.user.id } } },
+      select: { id: true, title: true },
+      orderBy: { createdAt: "desc" },
     }),
   ]);
   if (!member || !trip) notFound();
@@ -184,6 +189,7 @@ async function DbTripPage({
               tripEnd={period.endDate}
               days={layoutDays}
               canEdit={member.role !== "GUEST"}
+              userTrips={userTrips}
             />
           </section>
         </div>
