@@ -9,6 +9,7 @@ import { remark } from "remark";
 import remarkGfm from "remark-gfm";
 import html from "remark-html";
 import ActivityList from "@/components/ActivityList";
+import DayDeleteButton from "@/components/DayDeleteButton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 async function markdownToHtml(md: string): Promise<string> {
@@ -72,14 +73,19 @@ async function DbDayPage({ tripId, dayIdNum }: { tripId: number; dayIdNum: numbe
         <span className="text-foreground">DAY {dayNumber}</span>
       </nav>
 
-      <div>
-        <h1 className="text-xl font-semibold tracking-tight">
-          DAY {dayNumber}
-          {day.title && ` — ${day.title}`}
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {formatCalendarDateLong(day.date)}
-        </p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h1 className="text-xl font-semibold tracking-tight">
+            DAY {dayNumber}
+            {day.title && ` — ${day.title}`}
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {formatCalendarDateLong(day.date)}
+          </p>
+        </div>
+        {member.role !== "GUEST" && (
+          <DayDeleteButton tripId={tripId} dayId={day.id} />
+        )}
       </div>
 
       <ActivityList
