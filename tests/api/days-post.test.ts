@@ -7,6 +7,7 @@ const { mockPrisma, mockAuthHelpers } = vi.hoisted(() => ({
       findMany: vi.fn(),
       findUniqueOrThrow: vi.fn(),
       update: vi.fn(),
+      aggregate: vi.fn(),
     },
     trip: {
       findUniqueOrThrow: vi.fn(),
@@ -29,12 +30,6 @@ import { POST } from "@/app/api/trips/[id]/days/route";
 const mockAuth = mockAuthHelpers.getAuthUserId;
 const mockCanEdit = mockAuthHelpers.canEdit;
 
-const TRIP = {
-  id: 1,
-  startDate: new Date("2026-06-01T00:00:00Z"),
-  endDate: new Date("2026-06-30T00:00:00Z"),
-};
-
 function makeRequest(body: object): Request {
   return new Request("http://localhost/api/trips/1/days", {
     method: "POST",
@@ -53,7 +48,11 @@ beforeEach(() => {
     async (cb: (tx: typeof mockPrisma) => unknown) => cb(mockPrisma),
   );
   mockPrisma.day.findMany.mockResolvedValue([]);
-  mockPrisma.trip.findUniqueOrThrow.mockResolvedValue(TRIP);
+  // 기본: insert 직후 derived 가 명목과 일치 (2026-06-01 기준)
+  mockPrisma.day.aggregate.mockResolvedValue({
+    _min: { date: new Date("2026-06-01T00:00:00Z") },
+    _max: { date: new Date("2026-06-30T00:00:00Z") },
+  });
 });
 
 describe("POST /trips/{id}/days", () => {
@@ -99,31 +98,25 @@ describe("POST /trips/{id}/days", () => {
     expect(createArgs.data.sortOrder).toBeUndefined();
   });
 
-  it("Trip 범위 밖 date → expandTripRangeIfNeeded로 자동 확장", async () => {
+  it("Trip 범위 밖 date → derived 가 새 day 까지 포함해 자동 확장 (v3.0.0)", async () => {
     mockAuth.mockResolvedValue("user1");
     mockCanEdit.mockResolvedValue(true);
     mockPrisma.day.create.mockResolvedValue({
       id: 60,
       tripId: 1,
       date: new Date("2026-07-05T00:00:00Z"),
-      sortOrder: 35,
     });
-    mockPrisma.day.findUniqueOrThrow.mockResolvedValue({
-      id: 60,
-      tripId: 1,
-      date: new Date("2026-07-05T00:00:00Z"),
-      sortOrder: 35,
+    // insert 직후 derived: 2026-06-01 ~ 2026-07-05 로 확장됨을 mock 으로 표현
+    mockPrisma.day.aggregate.mockResolvedValue({
+      _min: { date: new Date("2026-06-01T00:00:00Z") },
+      _max: { date: new Date("2026-07-05T00:00:00Z") },
     });
 
     const res = await POST(makeRequest({ date: "2026-07-05" }), params());
     expect(res.status).toBe(201);
-    // Trip endDate가 새 date를 포함하도록 확장됨
-    expect(mockPrisma.trip.update).toHaveBeenCalledWith({
-      where: { id: 1 },
-      data: expect.objectContaining({
-        endDate: expect.any(Date),
-      }),
-    });
+    // v3.0.0 contract — 명목 trip.update 호출이 더 이상 일어나지 않는다.
+    // 기간은 응답 시점에 derived(min/max) 로 자동 계산.
+    expect(mockPrisma.trip.update).not.toHaveBeenCalled();
   });
 
   it("returns 409 when date 중복 (P2002)", async () => {

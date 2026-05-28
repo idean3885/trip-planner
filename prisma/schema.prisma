@@ -81,8 +81,9 @@ model Trip {
   id          Int      @id @default(autoincrement())
   title       String
   description String?  @db.Text
-  startDate   DateTime @map("start_date") @db.Timestamptz(3)
-  endDate     DateTime @map("end_date") @db.Timestamptz(3)
+  // spec 029 T051 (#601, v3.0.0) — 명목 startDate/endDate 컬럼은 contract
+  // 단계에서 제거. 시작·종료 날짜는 등록된 Day 의 min/max 에서 derive 한다
+  // (`src/lib/trip-period.ts::getDerivedPeriod`).
   createdBy   String   @map("created_by")
   updatedBy   String   @map("updated_by")
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)

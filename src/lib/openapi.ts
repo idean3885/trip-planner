@@ -54,6 +54,8 @@ export const openApiSpec = {
     schemas: {
       Trip: {
         type: "object",
+        description:
+          "spec 029 v3.0.0 — `startDate`/`endDate` 는 응답 출처가 등록된 일정의 min/max 일자(derive)다. 일정 0건 trip 은 두 필드가 모두 `null` 로 노출되며 UI 는 \"일정 미정\" 으로 분기한다. 입력 컬럼은 v3.0.0 contract 에서 제거됐다.",
         properties: {
           id: { type: "integer" },
           title: { type: "string" },
@@ -198,6 +200,8 @@ export const openApiSpec = {
         security: apiAuth,
         requestBody: {
           required: true,
+          description:
+            "v3.0.0 contract — `startDate`/`endDate` 입력은 제거됐다. 첫 일정을 추가하면 derived 기간이 자동 설정된다.",
           content: {
             "application/json": {
               schema: {
@@ -206,22 +210,18 @@ export const openApiSpec = {
                 properties: {
                   title: { type: "string" },
                   description: { type: "string" },
-                  startDate: { type: "string", format: "date-time" },
-                  endDate: { type: "string", format: "date-time" },
                 },
               },
               example: {
                 title: "포르투갈·스페인 신혼여행",
                 description: "리스본→포르투→마드리드→세비야→바르셀로나",
-                startDate: "2026-06-07T00:00:00.000Z",
-                endDate: "2026-06-21T00:00:00.000Z",
               },
             },
           },
         },
         responses: {
           "201": { description: "생성된 여행", content: { "application/json": { schema: { $ref: "#/components/schemas/Trip" } } } },
-          "400": { description: "필수 필드 누락", ...errorResponse },
+          "400": { description: "필수 필드 누락 또는 startDate/endDate body 거부", ...errorResponse },
           "401": { description: "미인증", ...errorResponse },
         },
       },
@@ -246,7 +246,8 @@ export const openApiSpec = {
         operationId: "updateTrip",
         tags: ["Trips"],
         summary: "여행 수정",
-        description: "HOST 이상 권한 필요. 전달된 필드만 업데이트.",
+        description:
+          "HOST 이상 권한 필요. 전달된 필드만 업데이트. v3.0.0 contract — `startDate`/`endDate` body 입력은 제거됐다 (일정 추가/삭제로 자동 갱신).",
         security: apiAuth,
         requestBody: {
           content: {
@@ -256,8 +257,6 @@ export const openApiSpec = {
                 properties: {
                   title: { type: "string" },
                   description: { type: "string" },
-                  startDate: { type: "string", format: "date-time" },
-                  endDate: { type: "string", format: "date-time" },
                 },
               },
             },
@@ -265,6 +264,7 @@ export const openApiSpec = {
         },
         responses: {
           "200": { description: "수정된 여행" },
+          "400": { description: "startDate/endDate body 입력 거부 (v3.0.0)", ...errorResponse },
           "401": { description: "미인증", ...errorResponse },
           "403": { description: "권한 부족", ...errorResponse },
           "404": { description: "여행 없음", ...errorResponse },

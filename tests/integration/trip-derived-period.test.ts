@@ -111,14 +111,12 @@ describe("spec 029 T015 — trip 응답이 derived 기간을 노출", () => {
     expect(new Date(body.endDate).toISOString()).toBe(derivedEnd.toISOString());
   });
 
-  it("v2 단건: 일정 0건이면 명목 fallback 응답", async () => {
+  it("v2 단건: 일정 0건이면 startDate/endDate=null (v3.0.0 contract — 명목 컬럼 제거)", async () => {
     mockAuthHelpers.getAuthUserId.mockResolvedValue(userId);
     mockAuthHelpers.getTripMember.mockResolvedValue({ role: "OWNER" });
     mockPrisma.trip.findUnique.mockResolvedValue({
       id: tripId,
       title: "test",
-      startDate: nominalStart,
-      endDate: nominalEnd,
       days: [],
       tripMembers: [],
     });
@@ -129,8 +127,8 @@ describe("spec 029 T015 — trip 응답이 derived 기간을 노출", () => {
 
     const res = await GET_V2_TRIP(new Request("http://localhost"), tripParams());
     const body = await res.json();
-    expect(new Date(body.startDate).toISOString()).toBe(nominalStart.toISOString());
-    expect(new Date(body.endDate).toISOString()).toBe(nominalEnd.toISOString());
+    expect(body.startDate).toBeNull();
+    expect(body.endDate).toBeNull();
   });
 
   it("v1 단건: derived 정책 동일 적용", async () => {

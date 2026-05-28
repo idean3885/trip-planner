@@ -31,14 +31,23 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json();
-  const { title, description, startDate, endDate } = body;
+  const { title, description, startDate, endDate } = body as {
+    title?: string;
+    description?: string;
+    startDate?: unknown;
+    endDate?: unknown;
+  };
 
   if (!title) {
     return NextResponse.json({ error: "제목은 필수입니다" }, { status: 400 });
   }
-  if (!startDate || !endDate) {
+  // spec 029 v3.0.0 contract — Trip 생성 시 기간 입력은 더 이상 받지 않는다.
+  // 첫 일정을 추가하면 derived 기간이 자동 설정된다.
+  if (startDate !== undefined || endDate !== undefined) {
     return NextResponse.json(
-      { error: "startDate / endDate는 필수입니다" },
+      {
+        error: "startDate / endDate 입력은 v3.0.0 부터 제거됐습니다. 여행 생성 후 일정을 추가하면 기간이 자동 설정됩니다.",
+      },
       { status: 400 },
     );
   }
@@ -47,8 +56,6 @@ export async function POST(request: Request) {
     data: {
       title,
       description,
-      startDate: new Date(startDate),
-      endDate: new Date(endDate),
       createdBy: userId,
       updatedBy: userId,
       tripMembers: {
