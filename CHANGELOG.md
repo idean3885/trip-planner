@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [2.16.10] - 2026-05-28
+
+### Documentation
+
+- * **반응형 viewport 분류**를 용어 정본에 추가했습니다. mobile(<1024px)·desktop(≥1024px) 2단을 단일 정본 정의로 두어 spec·UI·문서 어디서나 같은 명칭을 씁니다. ([#577](https://github.com/idean3885/trip-planner/issues/577))
+
+
 ## [2.16.9] - 2026-05-28
 
 ### Fixed
