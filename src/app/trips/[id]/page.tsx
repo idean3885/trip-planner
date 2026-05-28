@@ -131,8 +131,14 @@ async function DbTripPage({
           <div>
             <h1 className="text-xl font-semibold tracking-tight">{trip.title}</h1>
             <p className="mt-1 text-sm text-muted-foreground tabular-nums">
-              {formatCalendarDateFull(period.startDate)} ~{" "}
-              {formatCalendarDateFull(period.endDate)}
+              {period.isDerived ? (
+                <>
+                  {formatCalendarDateFull(period.startDate)} ~{" "}
+                  {formatCalendarDateFull(period.endDate)}
+                </>
+              ) : (
+                <span className="font-medium text-foreground">일정 미정</span>
+              )}
             </p>
             <div className="mt-3 flex flex-wrap items-center gap-2">
               {member.role !== "GUEST" && <InviteButton tripId={tripId} />}

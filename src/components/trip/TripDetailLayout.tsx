@@ -225,14 +225,31 @@ export function TripDetailLayout({
         tripEnd={tripEnd}
       />
     ) : (
-      <SidePlaceholder hasTripPeriod={Boolean(tripStart && tripEnd)} />
+      <SidePlaceholder hasOwnSchedule={days.length > 0} />
     );
+
+  // spec 029 T041 — 본인 trip 의 일정 0건이면 캘린더 상단에 안내. 캘린더
+  // 자체는 노출하되 trip 기간 강조와 dot 없이 오늘만 강조된 상태로 보인다.
+  const emptyNotice =
+    days.length === 0 ? (
+      <Card>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">
+            아직 일정이 등록되지 않았습니다. 일정을 추가하면 캘린더에 기간이
+            강조됩니다.
+          </p>
+        </CardContent>
+      </Card>
+    ) : null;
 
   return (
     <>
       {/* desktop split */}
       <div className="hidden lg:grid lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start lg:gap-6">
-        <div>{calendarView}</div>
+        <div className="space-y-4">
+          {emptyNotice}
+          {calendarView}
+        </div>
         <div className="space-y-4">
           {checkboxes}
           {sidePane}
@@ -242,6 +259,7 @@ export function TripDetailLayout({
       {/* mobile stacked + in-place swap */}
       <div className="space-y-4 lg:hidden">
         {checkboxes}
+        {emptyNotice}
         <div>{calendarView}</div>
         <MobileSwipeShell
           isSwapped={selectedDate !== null}
@@ -265,14 +283,14 @@ export function TripDetailLayout({
   );
 }
 
-function SidePlaceholder({ hasTripPeriod }: { hasTripPeriod: boolean }) {
+function SidePlaceholder({ hasOwnSchedule }: { hasOwnSchedule: boolean }) {
   return (
     <Card>
       <CardContent>
         <p className="text-sm text-muted-foreground">
-          {hasTripPeriod
+          {hasOwnSchedule
             ? "캘린더에서 날짜를 선택하면 그 날의 일정이 표시됩니다."
-            : "일정이 등록되지 않아 캘린더 범위가 정해지지 않았습니다."}
+            : "일정을 추가하면 이 영역에 그 날의 일정이 표시됩니다."}
         </p>
       </CardContent>
     </Card>
