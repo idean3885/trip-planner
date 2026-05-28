@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [2.16.9] - 2026-05-28
+
+### Fixed
+
+- * **일자(Day) 삭제 버튼**을 일자 상세 화면에 추가했습니다. 일자 단위로 정리할 진입점이 화면에 없어 사용자가 일자를 삭제할 수 없던 상태를 해소합니다. ([#571](https://github.com/idean3885/trip-planner/issues/571))
+
+### Documentation
+
+- * **릴리즈 노트 작성 규칙**을 합쇼체 통일·`왜:` 라벨 제거·감정체 지양으로 강화했습니다. 노트 본문이 부자연스러운 한국어로 출력되던 사례를 정리합니다. ([#573](https://github.com/idean3885/trip-planner/issues/573))
+
+
 ## [2.16.8] - 2026-05-28
 
 ### Fixed
