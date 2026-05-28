@@ -42,11 +42,12 @@ export async function GET(request: Request, { params }: Params) {
     return NextResponse.json({ error: "Not Found" }, { status: 404 });
   }
 
-  const period = await getResolvedPeriod(tripId, {
-    startDate: trip.startDate,
-    endDate: trip.endDate,
-  });
-  const days = trip.days.map((d) => withDayNumber(d, period.startDate));
+  const period = await getResolvedPeriod(tripId);
+  // 일정 0건 trip 은 period.startDate=null. UI 가 "일정 미정"으로 분기.
+  // days 배열도 빈 배열이라 withDayNumber 호출이 발생하지 않음.
+  const days = period.startDate
+    ? trip.days.map((d) => withDayNumber(d, period.startDate as Date))
+    : [];
   return NextResponse.json({
     ...trip,
     startDate: period.startDate,
@@ -69,11 +70,20 @@ export async function PUT(request: Request, { params }: Params) {
   }
 
   const body = await request.json();
-  const { title, description, startDate, endDate } = body;
+  const { title, description, startDate, endDate } = body as {
+    title?: string;
+    description?: string;
+    startDate?: unknown;
+    endDate?: unknown;
+  };
 
-  if (startDate === null || endDate === null) {
+  // spec 029 v3.0.0 contract — Trip 기간은 등록된 일정에서 derive 한다.
+  // startDate/endDate body 입력은 더 이상 받지 않으며 명시적으로 거부한다.
+  if (startDate !== undefined || endDate !== undefined) {
     return NextResponse.json(
-      { error: "startDate / endDate는 필수입니다" },
+      {
+        error: "startDate / endDate 입력은 v3.0.0 부터 제거됐습니다. 일정을 추가/삭제하면 자동으로 갱신됩니다.",
+      },
       { status: 400 },
     );
   }
@@ -83,8 +93,6 @@ export async function PUT(request: Request, { params }: Params) {
     data: {
       ...(title !== undefined && { title }),
       ...(description !== undefined && { description }),
-      ...(startDate !== undefined && { startDate: new Date(startDate) }),
-      ...(endDate !== undefined && { endDate: new Date(endDate) }),
       updatedBy: userId,
     },
   });

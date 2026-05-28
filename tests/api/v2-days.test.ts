@@ -30,11 +30,13 @@ function params() {
 }
 
 describe("v2 — GET /api/v2/trips/{id}/days", () => {
-  it("응답에 dayNumber 정수 포함, sortOrder 제외", async () => {
+  it("응답에 dayNumber 정수 포함, sortOrder 제외 (v3.0.0)", async () => {
     mockAuthHelpers.getAuthUserId.mockResolvedValue("user1");
     mockAuthHelpers.getTripMember.mockResolvedValue({ role: "OWNER" });
-    mockPrisma.trip.findUnique.mockResolvedValue({
-      startDate: new Date("2026-06-01T00:00:00Z"),
+    mockPrisma.trip.findUnique.mockResolvedValue({ id: 1 });
+    mockPrisma.day.aggregate.mockResolvedValue({
+      _min: { date: new Date("2026-06-01T00:00:00Z") },
+      _max: { date: new Date("2026-06-03T00:00:00Z") },
     });
     mockPrisma.day.findMany.mockResolvedValue([
       { id: 1, tripId: 1, date: new Date("2026-06-01T00:00:00Z") },

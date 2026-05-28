@@ -57,11 +57,14 @@ describe("GET /days/{dayId}", () => {
     expect(res.status).toBe(404);
   });
 
-  it("returns day with activities + sortOrder dynamically derived", async () => {
+  it("returns day with activities + sortOrder dynamically derived (v3.0.0)", async () => {
     mockAuth.mockResolvedValue("user1");
     mockMember.mockResolvedValue({ role: "HOST" });
-    mockPrisma.trip.findUnique.mockResolvedValue({
-      startDate: new Date("2026-06-01T00:00:00Z"),
+    mockPrisma.trip.findUnique.mockResolvedValue({ id: 1 });
+    // v3.0.0 — derived 기간을 day.aggregate 로 산출
+    mockPrisma.day.aggregate.mockResolvedValue({
+      _min: { date: new Date("2026-06-01T00:00:00Z") },
+      _max: { date: new Date("2026-06-07T00:00:00Z") },
     });
     const day = {
       id: 43,
@@ -78,7 +81,6 @@ describe("GET /days/{dayId}", () => {
     expect(data.id).toBe(43);
     expect(data.activities).toHaveLength(1);
     expect(data.content).toBe("# Day 1");
-    // 06-07 - 06-01 + 1 = 7
     expect(data.sortOrder).toBe(7);
   });
 });

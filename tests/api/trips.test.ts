@@ -60,11 +60,7 @@ describe("POST /api/trips — 생성 (#191)", () => {
     mockPrisma.trip.create.mockResolvedValue({ id: 42, title: "Test" });
 
     const res = await POST(
-      jsonRequest("http://localhost/api/trips", {
-        title: "Test",
-        startDate: "2026-06-01",
-        endDate: "2026-06-10",
-      }),
+      jsonRequest("http://localhost/api/trips", { title: "Test" }),
     );
 
     expect(res.status).toBe(201);
@@ -73,10 +69,14 @@ describe("POST /api/trips — 생성 (#191)", () => {
     expect(callArg.data.createdBy).toBe("user1");
   });
 
-  it("returns 400 when startDate or endDate missing (v2.7.0 NOT NULL)", async () => {
+  it("returns 400 when startDate/endDate body 가 주어지면 (v3.0.0 contract 거부)", async () => {
     mockAuth.mockResolvedValue("user1");
     const res = await POST(
-      jsonRequest("http://localhost/api/trips", { title: "x" }),
+      jsonRequest("http://localhost/api/trips", {
+        title: "x",
+        startDate: "2026-06-01",
+        endDate: "2026-06-10",
+      }),
     );
     expect(res.status).toBe(400);
   });

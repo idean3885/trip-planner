@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthUserId, getTripMember, canEdit } from "@/lib/auth-helpers";
-import { expandTripRangeIfNeeded, withSortOrder } from "@/lib/day-number";
-import { getResolvedPeriod } from "@/lib/trip-period";
+import { withSortOrder } from "@/lib/day-number";
+import { getDerivedPeriodTx, getResolvedPeriod } from "@/lib/trip-period";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -19,7 +19,7 @@ export async function GET(request: Request, { params }: Params) {
     getTripMember(tripId, userId),
     prisma.trip.findUnique({
       where: { id: tripId },
-      select: { startDate: true, endDate: true },
+      select: { id: true },
     }),
     prisma.day.findMany({
       where: { tripId },
@@ -34,11 +34,13 @@ export async function GET(request: Request, { params }: Params) {
     return NextResponse.json({ error: "Not Found" }, { status: 404 });
   }
 
-  const period = await getResolvedPeriod(tripId, {
-    startDate: trip.startDate,
-    endDate: trip.endDate,
-  });
-  return NextResponse.json(days.map((d) => withSortOrder(d, period.startDate)));
+  const period = await getResolvedPeriod(tripId);
+  if (!period.startDate) {
+    return NextResponse.json([]);
+  }
+  return NextResponse.json(
+    days.map((d) => withSortOrder(d, period.startDate as Date)),
+  );
 }
 
 // T029: 일정 추가
@@ -64,11 +66,11 @@ export async function POST(request: Request, { params }: Params) {
   const newDate = new Date(date);
   try {
     const result = await prisma.$transaction(async (tx) => {
-      const { trip } = await expandTripRangeIfNeeded(tx, tripId, newDate);
       const created = await tx.day.create({
         data: { tripId, date: newDate, title, content },
       });
-      return { day: created, tripStartDate: trip.startDate };
+      const derived = await getDerivedPeriodTx(tx, tripId);
+      return { day: created, tripStartDate: derived.startDate! };
     });
     return NextResponse.json(
       withSortOrder(result.day, result.tripStartDate),

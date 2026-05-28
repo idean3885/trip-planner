@@ -87,16 +87,15 @@ async function DbTripPage({
   ]);
   if (!member || !trip) notFound();
 
-  const period = await getResolvedPeriod(tripId, {
-    startDate: trip.startDate,
-    endDate: trip.endDate,
-  });
+  const period = await getResolvedPeriod(tripId);
 
   const layoutDays: LayoutDay[] = trip.days.map((d) => ({
     id: d.id,
     date: d.date.toISOString(),
     title: d.title,
-    dayNumber: computeDayNumber(d.date, period.startDate),
+    // 일정 ≥ 1 건이면 period.startDate non-null. 일정 0 건이면 trip.days
+    // 자체가 빈 배열이라 map 이 실행되지 않으므로 안전.
+    dayNumber: computeDayNumber(d.date, period.startDate as Date),
     activities: d.activities.map<LayoutActivity>((a) => ({
       id: a.id,
       title: a.title,
@@ -131,7 +130,7 @@ async function DbTripPage({
           <div>
             <h1 className="text-xl font-semibold tracking-tight">{trip.title}</h1>
             <p className="mt-1 text-sm text-muted-foreground tabular-nums">
-              {period.isDerived ? (
+              {period.isDerived && period.startDate && period.endDate ? (
                 <>
                   {formatCalendarDateFull(period.startDate)} ~{" "}
                   {formatCalendarDateFull(period.endDate)}
@@ -184,8 +183,9 @@ async function DbTripPage({
               {member.role !== "GUEST" && (
                 <AddDayButton
                   tripId={tripId}
-                  tripStartDate={period.startDate.toISOString()}
-                  tripEndDate={period.endDate.toISOString()}
+                  // 일정 0건이면 기간 제약 없이 사용자가 자유롭게 첫 일정 선택.
+                  tripStartDate={period.startDate?.toISOString() ?? ""}
+                  tripEndDate={period.endDate?.toISOString() ?? ""}
                 />
               )}
             </div>

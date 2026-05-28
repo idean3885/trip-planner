@@ -4,11 +4,13 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+/**
+ * spec 029 v3.0.0 contract — 여행 생성 폼은 제목만 받는다. 기간은 첫 일정을
+ * 추가하면 derived 값으로 자동 설정. 종전 startDate/endDate 입력은 제거.
+ */
 export default function NewTripPage() {
   const router = useRouter();
   const [title, setTitle] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
   const [saving, setSaving] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -20,11 +22,7 @@ export default function NewTripPage() {
       const res = await fetch("/api/trips", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: title.trim(),
-          startDate: startDate || null,
-          endDate: endDate || null,
-        }),
+        body: JSON.stringify({ title: title.trim() }),
       });
 
       if (!res.ok) throw new Error("생성 실패");
@@ -65,31 +63,9 @@ export default function NewTripPage() {
             required
             className={inputClass}
           />
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="mb-1 block text-sm font-medium text-foreground">
-              시작일
-            </label>
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className={inputClass}
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-sm font-medium text-foreground">
-              종료일
-            </label>
-            <input
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className={inputClass}
-            />
-          </div>
+          <p className="mt-2 text-xs text-muted-foreground">
+            기간은 첫 일정을 추가하면 자동으로 설정됩니다.
+          </p>
         </div>
 
         <button

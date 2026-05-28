@@ -38,11 +38,10 @@ export async function GET(request: Request, { params }: Params) {
     return NextResponse.json({ error: "Not Found" }, { status: 404 });
   }
 
-  const period = await getResolvedPeriod(tripId, {
-    startDate: trip.startDate,
-    endDate: trip.endDate,
-  });
-  const days = trip.days.map((d) => withSortOrder(d, period.startDate));
+  const period = await getResolvedPeriod(tripId);
+  const days = period.startDate
+    ? trip.days.map((d) => withSortOrder(d, period.startDate as Date))
+    : [];
   return NextResponse.json({
     ...trip,
     startDate: period.startDate,
@@ -66,11 +65,18 @@ export async function PUT(request: Request, { params }: Params) {
   }
 
   const body = await request.json();
-  const { title, description, startDate, endDate } = body;
+  const { title, description, startDate, endDate } = body as {
+    title?: string;
+    description?: string;
+    startDate?: unknown;
+    endDate?: unknown;
+  };
 
-  if (startDate === null || endDate === null) {
+  if (startDate !== undefined || endDate !== undefined) {
     return NextResponse.json(
-      { error: "startDate / endDate는 필수입니다" },
+      {
+        error: "startDate / endDate 입력은 v3.0.0 부터 제거됐습니다. 일정을 추가/삭제하면 자동으로 갱신됩니다.",
+      },
       { status: 400 },
     );
   }
@@ -80,8 +86,6 @@ export async function PUT(request: Request, { params }: Params) {
     data: {
       ...(title !== undefined && { title }),
       ...(description !== undefined && { description }),
-      ...(startDate !== undefined && { startDate: new Date(startDate) }),
-      ...(endDate !== undefined && { endDate: new Date(endDate) }),
       updatedBy: userId,
     },
   });
