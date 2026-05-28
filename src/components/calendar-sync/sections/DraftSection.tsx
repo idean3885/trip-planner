@@ -179,7 +179,10 @@ export default function DraftSection({ tripId, canEdit, onMutated }: Props) {
         return;
       }
       if (!res.ok) {
-        toast.error("다시 가져오기 실패", { description: `오류 코드 ${res.status}` });
+        const body = await res.json().catch(() => ({}));
+        toast.error("다시 가져오기 실패", {
+          description: body?.message ?? `오류 코드 ${res.status}`,
+        });
         return;
       }
       toast.success("외부 최신 값으로 갱신했습니다.");

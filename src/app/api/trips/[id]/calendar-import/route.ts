@@ -13,6 +13,7 @@ import { userCanImportCalendar } from "@/lib/permissions/activity";
 import {
   runImport,
   ExternalAccountNotLinkedError,
+  EmptyTripPeriodError,
 } from "@/lib/calendar-import/service";
 import type { CalendarProviderId } from "@prisma/client";
 
@@ -73,6 +74,15 @@ export async function POST(request: Request, { params }: Params) {
           settingsPath: "/settings/calendars",
         },
         { status: 409 },
+      );
+    }
+    if (err instanceof EmptyTripPeriodError) {
+      return NextResponse.json(
+        {
+          error: "empty_trip_period",
+          message: "일정 0건이라 기간이 정해지지 않았습니다. 일정을 먼저 추가해 주세요.",
+        },
+        { status: 422 },
       );
     }
     console.error("[calendar-import] internal error", err);

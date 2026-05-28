@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthUserId, getTripMember, canEdit, isOwner } from "@/lib/auth-helpers";
 import { withDayNumber } from "@/lib/day-number";
+import { getResolvedPeriod } from "@/lib/trip-period";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -20,7 +21,12 @@ export async function GET(request: Request, { params }: Params) {
       include: {
         days: {
           orderBy: { date: "asc" },
-          include: { _count: { select: { activities: true } } },
+          include: {
+            // spec 029 #595 — 통합 캘린더 다른 trip 일정 카드 표시용. 기존
+            // _count 필드는 호환 위해 유지(클라이언트가 둘 다 읽을 수 있음).
+            activities: { orderBy: [{ sortOrder: "asc" }, { startTime: "asc" }] },
+            _count: { select: { activities: true } },
+          },
         },
         tripMembers: {
           include: { user: { select: { id: true, name: true, image: true } } },
@@ -36,8 +42,18 @@ export async function GET(request: Request, { params }: Params) {
     return NextResponse.json({ error: "Not Found" }, { status: 404 });
   }
 
-  const days = trip.days.map((d) => withDayNumber(d, trip.startDate));
-  return NextResponse.json({ ...trip, days, myRole: member.role });
+  const period = await getResolvedPeriod(tripId, {
+    startDate: trip.startDate,
+    endDate: trip.endDate,
+  });
+  const days = trip.days.map((d) => withDayNumber(d, period.startDate));
+  return NextResponse.json({
+    ...trip,
+    startDate: period.startDate,
+    endDate: period.endDate,
+    days,
+    myRole: member.role,
+  });
 }
 
 export async function PUT(request: Request, { params }: Params) {

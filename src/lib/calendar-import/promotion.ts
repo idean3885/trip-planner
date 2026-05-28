@@ -46,7 +46,7 @@ export async function promoteDraft(input: PromoteInput): Promise<{ activityId: n
 
   const trip = await prisma.trip.findUnique({
     where: { id: input.tripId },
-    select: { startDate: true, endDate: true },
+    select: { id: true },
   });
   if (!trip) throw new DraftNotPromotableError("trip_not_found");
 
