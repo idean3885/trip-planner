@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [2.16.7] - 2026-05-28
+
+### Fixed
+
+- * **설정 페이지**에 외부 캘린더 진입점이 추가된다.
+    왜: v2.16.6에서 만든 외부 캘린더 설정 화면이 메뉴 어디에도 노출되지 않아 사용자가 직접 주소를 입력해야만 도달할 수 있었다. ([#563](https://github.com/idean3885/trip-planner/issues/563))
+
+
 ## [2.16.6] - 2026-05-28
 
 ### Fixed
