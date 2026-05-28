@@ -49,7 +49,7 @@ function sameLocalDay(a: Date, b: Date): boolean {
   return a.toDateString() === b.toDateString();
 }
 
-const MAX_VISIBLE_DOTS = 3 as const;
+const MAX_VISIBLE_BARS = 3 as const;
 
 export function CalendarView({
   tripStart,
@@ -75,13 +75,16 @@ export function CalendarView({
     ...(extraModifiers ?? {}),
   };
 
+  // spec 031 — 셀 하단에 가로 bar 를 그려 연속 일자를 시각적으로 연결한다.
+  // `after:inset-x-0` 으로 셀 가로 너비 전체를 채우고, 인접 셀 hasActivity 가
+  // 같은 위치/색이면 Google Calendar 멀티데이 이벤트처럼 한 줄로 이어 보인다.
   const modifiersClassNames: Record<string, string> = {
     tripRange: "bg-primary/10",
     ...(isMultiTrip
       ? {}
       : {
           hasActivity:
-            "relative after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:size-1 after:rounded-full after:bg-primary",
+            "relative after:absolute after:bottom-1 after:inset-x-0 after:h-0.5 after:bg-primary",
         }),
     ...(extraModifierClassNames ?? {}),
   };
@@ -122,24 +125,27 @@ function MultiTripDayButton({
     t.dates.some((d) => sameLocalDay(d, date)),
   );
 
+  // spec 031 — 다중 trip 모드 dot → 가로 bar 변경. 셀 가로 너비 전체에 stack 된
+  // bar 가 그려지고, 인접 셀에 같은 trip 이 있으면 같은 색·높이의 bar 가 연결되어
+  // 보인다 (셀 사이 gap 0 가정).
   return (
     <div className="relative w-full">
       <CalendarDayButton {...buttonProps} />
       {matched.length > 0 && (
         <div
           aria-hidden
-          className="pointer-events-none absolute bottom-0.5 left-1/2 flex -translate-x-1/2 items-center gap-0.5"
+          className="pointer-events-none absolute inset-x-0 bottom-0.5 flex flex-col gap-px"
         >
-          {matched.slice(0, MAX_VISIBLE_DOTS).map((t) => (
+          {matched.slice(0, MAX_VISIBLE_BARS).map((t) => (
             <span
               key={t.tripId}
-              className="size-1 rounded-full"
+              className="h-0.5 w-full"
               style={{ backgroundColor: getTripColor(t.tripId).cssVar }}
             />
           ))}
-          {matched.length > MAX_VISIBLE_DOTS && (
+          {matched.length > MAX_VISIBLE_BARS && (
             <span className="text-[0.5rem] leading-none text-muted-foreground">
-              +{matched.length - MAX_VISIBLE_DOTS}
+              +{matched.length - MAX_VISIBLE_BARS}
             </span>
           )}
         </div>
