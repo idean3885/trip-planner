@@ -21,7 +21,12 @@ export async function GET(request: Request, { params }: Params) {
       include: {
         days: {
           orderBy: { date: "asc" },
-          include: { _count: { select: { activities: true } } },
+          include: {
+            // spec 029 #595 — 통합 캘린더 다른 trip 일정 카드 표시용. 기존
+            // _count 필드는 호환 위해 유지(클라이언트가 둘 다 읽을 수 있음).
+            activities: { orderBy: [{ sortOrder: "asc" }, { startTime: "asc" }] },
+            _count: { select: { activities: true } },
+          },
         },
         tripMembers: {
           include: { user: { select: { id: true, name: true, image: true } } },
