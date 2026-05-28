@@ -5,13 +5,18 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { computeDayNumber } from "@/lib/day-number";
 import { getResolvedPeriod } from "@/lib/trip-period";
-import { formatCalendarDateFull, formatCalendarDate } from "@/lib/date-utils";
+import { formatCalendarDateFull } from "@/lib/date-utils";
 import InviteButton from "@/components/InviteButton";
 import DeleteTripButton from "@/components/DeleteTripButton";
 import LeaveTripButton from "@/components/LeaveTripButton";
 import AddDayButton from "@/components/AddDayButton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import SidePanel from "./SidePanel";
+import {
+  TripDetailLayout,
+  type LayoutActivity,
+  type LayoutDay,
+} from "@/components/trip/TripDetailLayout";
 import { remark } from "remark";
 import remarkGfm from "remark-gfm";
 import html from "remark-html";
@@ -62,7 +67,12 @@ async function DbTripPage({
     prisma.trip.findUnique({
       where: { id: tripId },
       include: {
-        days: { orderBy: { date: "asc" } },
+        days: {
+          orderBy: { date: "asc" },
+          include: {
+            activities: { orderBy: [{ sortOrder: "asc" }, { startTime: "asc" }] },
+          },
+        },
       },
     }),
     prisma.tripCalendarLink.findUnique({
@@ -76,6 +86,22 @@ async function DbTripPage({
     startDate: trip.startDate,
     endDate: trip.endDate,
   });
+
+  const layoutDays: LayoutDay[] = trip.days.map((d) => ({
+    id: d.id,
+    date: d.date.toISOString(),
+    title: d.title,
+    dayNumber: computeDayNumber(d.date, period.startDate),
+    activities: d.activities.map<LayoutActivity>((a) => ({
+      id: a.id,
+      title: a.title,
+      category: a.category,
+      startTime: a.startTime ? a.startTime.toISOString() : null,
+      endTime: a.endTime ? a.endTime.toISOString() : null,
+      location: a.location,
+      reservationStatus: a.reservationStatus,
+    })),
+  }));
 
   const descriptionHtml = trip.description
     ? await markdownToHtml(trip.description)
@@ -152,39 +178,13 @@ async function DbTripPage({
                 />
               )}
             </div>
-            <div className="space-y-2">
-              {trip.days.map((day) => (
-                <Link
-                  key={day.id}
-                  href={`/trips/${trip.id}/day/${day.id}`}
-                  className="group block"
-                >
-                  <Card size="sm" className="transition-all group-hover:ring-foreground/20 group-hover:-translate-y-px">
-                    <CardContent className="flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <span className="inline-flex items-center rounded-md bg-foreground px-2 py-0.5 text-xs font-medium text-background shrink-0 tabular-nums">
-                          DAY {computeDayNumber(day.date, period.startDate)}
-                        </span>
-                        {day.title && (
-                          <span className="text-sm text-foreground truncate">
-                            {day.title}
-                          </span>
-                        )}
-                      </div>
-                      <span className="text-xs text-muted-foreground tabular-nums shrink-0">
-                        {formatCalendarDate(day.date)}
-                      </span>
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))}
-
-              {trip.days.length === 0 && (
-                <p className="py-8 text-center text-sm text-muted-foreground">
-                  일정이 없습니다.
-                </p>
-              )}
-            </div>
+            <TripDetailLayout
+              tripId={tripId}
+              tripStart={period.startDate}
+              tripEnd={period.endDate}
+              days={layoutDays}
+              canEdit={member.role !== "GUEST"}
+            />
           </section>
         </div>
 
