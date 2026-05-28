@@ -28,7 +28,7 @@ export default async function TripsIndexPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold tracking-tight">우리의 여행</h1>
+        <h1 className="text-xl font-semibold tracking-tight">여행 목록</h1>
         <Button nativeButton={false} render={<Link href="/trips/new" />}>
           새 여행
         </Button>
