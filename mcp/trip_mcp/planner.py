@@ -7,6 +7,16 @@ from trip_mcp.web_client import api_request
 logger = logging.getLogger("trip-mcp-server")
 
 
+def _format_period(trip: dict) -> str:
+    """spec 029 v3.0.0 — trip 응답의 startDate/endDate 가 null 인 경우(일정 0건)
+    "일정 미정" 으로 노출. 둘 다 있으면 "<start> ~ <end>" 표시."""
+    start = trip.get("startDate")
+    end = trip.get("endDate")
+    if not start or not end:
+        return "일정 미정"
+    return f"{start} ~ {end}"
+
+
 def register_planner_tools(mcp: FastMCP) -> None:
     """일정 관리 도구 12개를 FastMCP 서버에 등록한다."""
 
@@ -28,10 +38,11 @@ def register_planner_tools(mcp: FastMCP) -> None:
         for trip in result:
             members = trip.get("tripMembers", [])
             day_count = trip.get("_count", {}).get("days", 0)
+            period = _format_period(trip)
             formatted.append(
                 f"ID: {trip['id']}\n"
                 f"제목: {trip['title']}\n"
-                f"기간: {trip.get('startDate', 'N/A')} ~ {trip.get('endDate', 'N/A')}\n"
+                f"기간: {period}\n"
                 f"멤버: {len(members)}명 | 일자: {day_count}일"
             )
         return "\n---\n".join(formatted)
@@ -51,7 +62,7 @@ def register_planner_tools(mcp: FastMCP) -> None:
         parts = [
             f"제목: {result.get('title', 'Unknown')}",
             f"설명: {result.get('description', '없음')}",
-            f"기간: {result.get('startDate', 'N/A')} ~ {result.get('endDate', 'N/A')}",
+            f"기간: {_format_period(result)}",
             f"내 역할: {result.get('myRole', 'N/A')}",
         ]
 

@@ -1,12 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthUserId, getTripMember, canEdit } from "@/lib/auth-helpers";
-import {
-  computeDayNumber,
-  expandTripRangeIfNeeded,
-  withDayNumber,
-} from "@/lib/day-number";
-import { getResolvedPeriod } from "@/lib/trip-period";
+import { computeDayNumber, withDayNumber } from "@/lib/day-number";
+import { getDerivedPeriodTx, getResolvedPeriod } from "@/lib/trip-period";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -22,7 +18,7 @@ export async function GET(request: Request, { params }: Params) {
     getTripMember(tripId, userId),
     prisma.trip.findUnique({
       where: { id: tripId },
-      select: { startDate: true, endDate: true },
+      select: { id: true },
     }),
     prisma.day.findMany({
       where: { tripId },
@@ -37,13 +33,13 @@ export async function GET(request: Request, { params }: Params) {
     return NextResponse.json({ error: "Not Found" }, { status: 404 });
   }
 
-  const period = await getResolvedPeriod(tripId, {
-    startDate: trip.startDate,
-    endDate: trip.endDate,
-  });
-
+  const period = await getResolvedPeriod(tripId);
+  if (!period.startDate) {
+    // 일정 0건 trip 은 days 도 빈 배열이라 dayNumber 계산 불필요.
+    return NextResponse.json([]);
+  }
   return NextResponse.json(
-    days.map((d) => withDayNumber(d, period.startDate)),
+    days.map((d) => withDayNumber(d, period.startDate as Date)),
   );
 }
 
@@ -69,11 +65,12 @@ export async function POST(request: Request, { params }: Params) {
 
   try {
     const day = await prisma.$transaction(async (tx) => {
-      const { trip } = await expandTripRangeIfNeeded(tx, tripId, newDate);
-      const dayNumber = computeDayNumber(newDate, trip.startDate);
       const created = await tx.day.create({
         data: { tripId, date: newDate, title, content },
       });
+      const derived = await getDerivedPeriodTx(tx, tripId);
+      // 방금 insert 한 day 가 포함된 derived 이므로 startDate 는 항상 non-null.
+      const dayNumber = computeDayNumber(created.date, derived.startDate!);
       return { ...created, dayNumber };
     });
     return NextResponse.json(day, { status: 201 });

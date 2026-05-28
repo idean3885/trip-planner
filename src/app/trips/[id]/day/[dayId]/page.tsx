@@ -50,17 +50,15 @@ async function DbDayPage({ tripId, dayIdNum }: { tripId: number; dayIdNum: numbe
     prisma.day.findUnique({
       where: { id: dayIdNum, tripId },
       include: {
-        trip: { select: { title: true, startDate: true, endDate: true } },
+        trip: { select: { title: true } },
         activities: { orderBy: [{ sortOrder: "asc" }, { startTime: "asc" }] },
       },
     }),
   ]);
   if (!member || !day) notFound();
-  const period = await getResolvedPeriod(tripId, {
-    startDate: day.trip.startDate,
-    endDate: day.trip.endDate,
-  });
-  const dayNumber = computeDayNumber(day.date, period.startDate);
+  const period = await getResolvedPeriod(tripId);
+  // day 가 존재하므로 derived 는 ≥ 1 건 → startDate non-null.
+  const dayNumber = computeDayNumber(day.date, period.startDate!);
 
   const contentHtml = day.content ? await markdownToHtml(day.content) : "";
 

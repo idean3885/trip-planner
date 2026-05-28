@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthUserId, getTripMember, canEdit } from "@/lib/auth-helpers";
-import { expandTripRangeIfNeeded, withSortOrder } from "@/lib/day-number";
-import { getResolvedPeriod } from "@/lib/trip-period";
+import { withSortOrder } from "@/lib/day-number";
+import { getDerivedPeriodTx, getResolvedPeriod } from "@/lib/trip-period";
 
 type Params = { params: Promise<{ id: string; dayId: string }> };
 
@@ -22,7 +22,7 @@ export async function GET(request: Request, { params }: Params) {
   const [trip, day] = await Promise.all([
     prisma.trip.findUnique({
       where: { id: tripId },
-      select: { startDate: true, endDate: true },
+      select: { id: true },
     }),
     prisma.day.findUnique({
       where: { id: parseInt(dayId), tripId },
@@ -35,11 +35,8 @@ export async function GET(request: Request, { params }: Params) {
     return NextResponse.json({ error: "Not Found" }, { status: 404 });
   }
 
-  const period = await getResolvedPeriod(tripId, {
-    startDate: trip.startDate,
-    endDate: trip.endDate,
-  });
-  return NextResponse.json(withSortOrder(day, period.startDate));
+  const period = await getResolvedPeriod(tripId);
+  return NextResponse.json(withSortOrder(day, period.startDate!));
 }
 
 // T030: 일정 수정
@@ -60,11 +57,8 @@ export async function PUT(request: Request, { params }: Params) {
 
   try {
     const result = await prisma.$transaction(async (tx) => {
-      let tripStart: Date;
       if (date !== undefined) {
         const newDate = new Date(date);
-        const { trip } = await expandTripRangeIfNeeded(tx, tripId, newDate);
-        tripStart = trip.startDate;
         await tx.day.update({
           where: { id: parseInt(dayId), tripId },
           data: {
@@ -74,11 +68,6 @@ export async function PUT(request: Request, { params }: Params) {
           },
         });
       } else {
-        const trip = await tx.trip.findUniqueOrThrow({
-          where: { id: tripId },
-          select: { startDate: true },
-        });
-        tripStart = trip.startDate;
         await tx.day.update({
           where: { id: parseInt(dayId), tripId },
           data: {
@@ -90,7 +79,8 @@ export async function PUT(request: Request, { params }: Params) {
       const fresh = await tx.day.findUniqueOrThrow({
         where: { id: parseInt(dayId) },
       });
-      return { day: fresh, tripStart };
+      const derived = await getDerivedPeriodTx(tx, tripId);
+      return { day: fresh, tripStart: derived.startDate! };
     });
     return NextResponse.json(withSortOrder(result.day, result.tripStart));
   } catch (e: unknown) {

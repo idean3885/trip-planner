@@ -8,6 +8,7 @@ const { mockPrisma, mockAuthHelpers } = vi.hoisted(() => ({
       findMany: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),
+      aggregate: vi.fn(),
     },
     trip: {
       findUniqueOrThrow: vi.fn(),
@@ -31,18 +32,15 @@ import { PUT, DELETE } from "@/app/api/trips/[id]/days/[dayId]/route";
 const mockAuth = mockAuthHelpers.getAuthUserId;
 const mockCanEdit = mockAuthHelpers.canEdit;
 
-const TRIP = {
-  id: 1,
-  startDate: new Date("2026-06-01T00:00:00Z"),
-  endDate: new Date("2026-06-30T00:00:00Z"),
-};
-
 beforeEach(() => {
   mockPrisma.$transaction.mockImplementation(
     async (cb: (tx: typeof mockPrisma) => unknown) => cb(mockPrisma),
   );
   mockPrisma.day.findMany.mockResolvedValue([]);
-  mockPrisma.trip.findUniqueOrThrow.mockResolvedValue(TRIP);
+  mockPrisma.day.aggregate.mockResolvedValue({
+    _min: { date: new Date("2026-06-01T00:00:00Z") },
+    _max: { date: new Date("2026-06-30T00:00:00Z") },
+  });
 });
 
 function makeRequest(body?: object, method = "PUT"): Request {
@@ -64,7 +62,10 @@ describe("PUT /days/{dayId}", () => {
       async (cb: (tx: typeof mockPrisma) => unknown) => cb(mockPrisma),
     );
     mockPrisma.day.findMany.mockResolvedValue([]);
-    mockPrisma.trip.findUniqueOrThrow.mockResolvedValue(TRIP);
+    mockPrisma.day.aggregate.mockResolvedValue({
+      _min: { date: new Date("2026-06-01T00:00:00Z") },
+      _max: { date: new Date("2026-06-30T00:00:00Z") },
+    });
   });
 
   it("returns 401 when not authenticated", async () => {
@@ -98,11 +99,13 @@ describe("PUT /days/{dayId}", () => {
     expect(data.title).toBe("Updated");
     // 응답에 sortOrder 동적 부착됨
     expect(data.sortOrder).toBe(7);
-    // date 미변경이어도 startDate 조회 위해 trip.findUniqueOrThrow 1회 호출
-    expect(mockPrisma.trip.findUniqueOrThrow).toHaveBeenCalled();
+    // v3.0.0 contract — trip.findUniqueOrThrow 가 더 이상 호출되지 않음.
+    // derived 기간은 day.aggregate 로 직접 산출.
+    expect(mockPrisma.trip.findUniqueOrThrow).not.toHaveBeenCalled();
+    expect(mockPrisma.day.aggregate).toHaveBeenCalled();
   });
 
-  it("date 변경 시 expandTripRangeIfNeeded 경유 (sortOrder 컬럼 쓰기 없음)", async () => {
+  it("date 변경 시 derived 가 새 date 까지 포함해 갱신 (sortOrder 컬럼 쓰기 없음, v3.0.0)", async () => {
     mockAuth.mockResolvedValue("user1");
     mockCanEdit.mockResolvedValue(true);
     const updated = {
@@ -119,13 +122,13 @@ describe("PUT /days/{dayId}", () => {
       params(),
     );
     expect(res.status).toBe(200);
-    expect(mockPrisma.trip.findUniqueOrThrow).toHaveBeenCalled();
-    // sortOrder 컬럼은 더 이상 쓰지 않음
+    // v3.0.0 contract — trip 명목 update 호출 없음
+    expect(mockPrisma.trip.update).not.toHaveBeenCalled();
+    expect(mockPrisma.day.aggregate).toHaveBeenCalled();
     const updateCall = mockPrisma.day.update.mock.calls[0]?.[0] as {
       data: Record<string, unknown>;
     };
     expect(updateCall.data.sortOrder).toBeUndefined();
-    // 응답엔 동적 부착됨
     const data = await res.json();
     expect(data.sortOrder).toBe(7);
   });
@@ -173,7 +176,10 @@ describe("DELETE /days/{dayId}", () => {
       async (cb: (tx: typeof mockPrisma) => unknown) => cb(mockPrisma),
     );
     mockPrisma.day.findMany.mockResolvedValue([]);
-    mockPrisma.trip.findUniqueOrThrow.mockResolvedValue(TRIP);
+    mockPrisma.day.aggregate.mockResolvedValue({
+      _min: { date: new Date("2026-06-01T00:00:00Z") },
+      _max: { date: new Date("2026-06-30T00:00:00Z") },
+    });
   });
 
   it("returns 401 when not authenticated", async () => {
