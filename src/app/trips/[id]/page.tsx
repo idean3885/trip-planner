@@ -4,6 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { computeDayNumber } from "@/lib/day-number";
+import { getResolvedPeriod } from "@/lib/trip-period";
 import { formatCalendarDateFull, formatCalendarDate } from "@/lib/date-utils";
 import InviteButton from "@/components/InviteButton";
 import DeleteTripButton from "@/components/DeleteTripButton";
@@ -71,6 +72,11 @@ async function DbTripPage({
   ]);
   if (!member || !trip) notFound();
 
+  const period = await getResolvedPeriod(tripId, {
+    startDate: trip.startDate,
+    endDate: trip.endDate,
+  });
+
   const descriptionHtml = trip.description
     ? await markdownToHtml(trip.description)
     : null;
@@ -94,8 +100,8 @@ async function DbTripPage({
           <div>
             <h1 className="text-xl font-semibold tracking-tight">{trip.title}</h1>
             <p className="mt-1 text-sm text-muted-foreground tabular-nums">
-              {formatCalendarDateFull(trip.startDate)} ~{" "}
-              {formatCalendarDateFull(trip.endDate)}
+              {formatCalendarDateFull(period.startDate)} ~{" "}
+              {formatCalendarDateFull(period.endDate)}
             </p>
             <div className="mt-3 flex flex-wrap items-center gap-2">
               {member.role !== "GUEST" && <InviteButton tripId={tripId} />}
@@ -141,8 +147,8 @@ async function DbTripPage({
               {member.role !== "GUEST" && (
                 <AddDayButton
                   tripId={tripId}
-                  tripStartDate={trip.startDate.toISOString()}
-                  tripEndDate={trip.endDate.toISOString()}
+                  tripStartDate={period.startDate.toISOString()}
+                  tripEndDate={period.endDate.toISOString()}
                 />
               )}
             </div>
@@ -157,7 +163,7 @@ async function DbTripPage({
                     <CardContent className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-3 min-w-0">
                         <span className="inline-flex items-center rounded-md bg-foreground px-2 py-0.5 text-xs font-medium text-background shrink-0 tabular-nums">
-                          DAY {computeDayNumber(day.date, trip.startDate)}
+                          DAY {computeDayNumber(day.date, period.startDate)}
                         </span>
                         {day.title && (
                           <span className="text-sm text-foreground truncate">

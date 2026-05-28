@@ -43,7 +43,7 @@
 - `[multi-step: N]` — plan bullet의 다단 매핑 태스크 수
 - `[migration-type: schema-only | data-migration]` — 마이그레이션 산출물 구분
 
-본 피처는 Prisma 스키마 변경(`Trip.startDate`·`endDate` 처리)을 포함하므로 expand-and-contract 패턴이 적용됩니다(메모 [project_expand_contract_pattern] 정합).
+본 피처는 영속 스키마 변경(`Trip.startDate`·`endDate` 처리)을 포함하므로 expand-and-contract 패턴이 적용됩니다(메모 [project_expand_contract_pattern] 정합).
 
 ## User Scenarios & Testing *(mandatory)*
 

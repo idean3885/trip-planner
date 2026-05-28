@@ -11,6 +11,7 @@
 
 import type { CalendarProviderId } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { getDerivedPeriod } from "@/lib/trip-period";
 import { googleImportFetcher } from "./google";
 import { appleImportFetcher } from "./apple";
 import { findExistingDraftIds, ignoreUniqueViolation } from "./idempotency";
@@ -26,6 +27,13 @@ const FAILED_TITLES_LIMIT = 3;
 export class ExternalAccountNotLinkedError extends Error {
   constructor(public readonly provider: CalendarProviderId) {
     super(`External account for provider ${provider} is not linked`);
+  }
+}
+
+/** spec 029 FR-015 — 일정 0건 trip은 derived 기간이 없어 import 범위가 비어 차단. */
+export class EmptyTripPeriodError extends Error {
+  constructor(public readonly tripId: number) {
+    super(`Trip ${tripId} has no days — derived period is undefined`);
   }
 }
 
@@ -59,14 +67,20 @@ export async function runImport(args: RunImportArgs): Promise<ImportResult> {
     throw new ExternalAccountNotLinkedError(args.provider);
   }
 
-  // 2) trip 기간 조회
-  const trip = await prisma.trip.findUnique({
+  // 2) trip 존재 확인 + derived 기간 (v2.18.0 migrate — FR-015)
+  const tripExists = await prisma.trip.findUnique({
     where: { id: args.tripId },
-    select: { startDate: true, endDate: true },
+    select: { id: true },
   });
-  if (!trip) {
+  if (!tripExists) {
     throw new Error(`Trip ${args.tripId} not found`);
   }
+  const derived = await getDerivedPeriod(args.tripId);
+  if (!derived.startDate || !derived.endDate) {
+    throw new EmptyTripPeriodError(args.tripId);
+  }
+  const periodStart = derived.startDate;
+  const periodEnd = derived.endDate;
 
   // 3) ImportRun 헤더 먼저 생성 (draft FK 참조 대상)
   const importRun = await prisma.importRun.create({
@@ -83,7 +97,7 @@ export async function runImport(args: RunImportArgs): Promise<ImportResult> {
     externalEvents = await fetcher.listEvents(
       args.triggeredByUserId,
       args.externalCalendarId,
-      { start: trip.startDate, end: trip.endDate },
+      { start: periodStart, end: periodEnd },
     );
   } catch (err) {
     await prisma.importRun.update({
@@ -95,7 +109,7 @@ export async function runImport(args: RunImportArgs): Promise<ImportResult> {
 
   // 4) trip 기간 필터(추가 안전망 — fetcher가 timeMin/timeMax를 정확히 처리한다 가정)
   const candidates = externalEvents.filter((ev) =>
-    overlapsTrip(ev, { startDate: trip.startDate, endDate: trip.endDate }),
+    overlapsTrip(ev, { startDate: periodStart, endDate: periodEnd }),
   );
 
   // 5) 이미 import된 이벤트 식별
@@ -248,16 +262,20 @@ export async function refreshDraft(args: {
   if (!(await fetcher.isConnected(args.triggeredByUserId))) {
     throw new ExternalAccountNotLinkedError(draft.provider);
   }
-  const trip = await prisma.trip.findUnique({
+  const tripExists = await prisma.trip.findUnique({
     where: { id: draft.tripId },
-    select: { startDate: true, endDate: true },
+    select: { id: true },
   });
-  if (!trip) throw new Error("trip_not_found");
+  if (!tripExists) throw new Error("trip_not_found");
+  const derived = await getDerivedPeriod(draft.tripId);
+  if (!derived.startDate || !derived.endDate) {
+    throw new EmptyTripPeriodError(draft.tripId);
+  }
 
   const events = await fetcher.listEvents(
     args.triggeredByUserId,
     draft.externalCalendarId,
-    { start: trip.startDate, end: trip.endDate },
+    { start: derived.startDate, end: derived.endDate },
   );
   const fresh = events.find((e) => e.externalEventId === draft.externalEventId);
   if (!fresh) return { refreshed: false };

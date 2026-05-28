@@ -4,6 +4,7 @@ import { Lightbulb } from "lucide-react";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { computeDayNumber } from "@/lib/day-number";
+import { getResolvedPeriod } from "@/lib/trip-period";
 import { formatCalendarDateLong } from "@/lib/date-utils";
 import { remark } from "remark";
 import remarkGfm from "remark-gfm";
@@ -49,13 +50,17 @@ async function DbDayPage({ tripId, dayIdNum }: { tripId: number; dayIdNum: numbe
     prisma.day.findUnique({
       where: { id: dayIdNum, tripId },
       include: {
-        trip: { select: { title: true, startDate: true } },
+        trip: { select: { title: true, startDate: true, endDate: true } },
         activities: { orderBy: [{ sortOrder: "asc" }, { startTime: "asc" }] },
       },
     }),
   ]);
   if (!member || !day) notFound();
-  const dayNumber = computeDayNumber(day.date, day.trip.startDate);
+  const period = await getResolvedPeriod(tripId, {
+    startDate: day.trip.startDate,
+    endDate: day.trip.endDate,
+  });
+  const dayNumber = computeDayNumber(day.date, period.startDate);
 
   const contentHtml = day.content ? await markdownToHtml(day.content) : "";
 
