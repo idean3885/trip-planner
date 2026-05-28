@@ -6,14 +6,14 @@ v3.0.0 release(spec 029 contract와 동시)에 모두 implement됩니다.
 
 ## install·등록·검증 흐름
 
-- [ ] T001 install.sh 1줄 진입점 — OS·의존성 진단·다운로드·OAuth listener trigger 단계 분기 [artifact: install.sh] [why: install-entry]
-- [ ] T002 trip.idean.me 정적 라우트 `/install` 서빙 — Vercel rewrite 또는 public 폴더 [artifact: vercel.json|public/install.sh] [why: install-entry]
-- [ ] T003 Node OAuth listener — localhost:0 바인딩 + 콜백 수령 + PAT 발급 API 호출 + keychain 저장 [artifact: scripts/bootstrap/oauth-listener.mjs] [why: oauth-listener]
-- [ ] T004 OAuth listener 단위 테스트 — 콜백 1회 수령·state mismatch·timeout 케이스 [artifact: scripts/bootstrap/oauth-listener.test.mjs] [why: oauth-listener]
-- [ ] T005 OAuth 콜백 API route — `/oauth/authorize` GET + `/oauth/callback` redirect 처리 [artifact: src/app/api/tokens/oauth-callback/route.ts] [why: oauth-listener]
-- [ ] T006 PAT 자동 발급 — `/api/tokens` POST 흐름 재사용 + device name 자동 설정 [artifact: src/app/api/tokens/route.ts] [why: oauth-listener]
-- [ ] T007 MCP client 등록 명령 — Claude Code(`claude mcp add -s user`) + Cursor·Desktop fallback [artifact: install.sh] [why: mcp-register]
-- [ ] T008 동작 검증 ping — `list_trips` MCP 도구 1건 호출 + 응답 검증 [artifact: scripts/bootstrap/verify-install.sh] [why: install-verify]
+- [x] T001 install.sh 1줄 진입점 — 런타임 진단(Node·런타임·uv) + 패키지 설치(uv tool install) + listener spawn + Keychain/파일 저장 + claude mcp add + ping. 표준 종료 코드(0/1/2/3/4) [artifact: scripts/bootstrap/install-v3.sh] [why: install-entry]
+- [x] T002 trip.idean.me 정적 라우트 — `/install` (install-v3.sh) + `/install/oauth-listener` (listener mjs). Next route handler 가 파일을 그대로 응답하며 stale-while-revalidate 캐시 [artifact: src/app/install/route.ts] [why: install-entry]
+- [x] T003 Node OAuth listener — localhost:0 바인딩 + 32 hex state nonce + 콜백 fragment → /token POST 변환 + state 검증 + 표준 종료 코드 [artifact: scripts/bootstrap/oauth-listener.mjs] [why: oauth-listener]
+- [x] T004 OAuth listener 단위 테스트 — 콜백 수령·state mismatch·invalid token·timeout 4 경로 [artifact: tests/bootstrap/oauth-listener.test.ts] [why: oauth-listener]
+- [x] T005 Bootstrap 페이지 — `/bootstrap?port=&state=` Server Component. 세션 미인증 시 /auth/signin redirect, 인증 시 PAT 자동 발급 + localhost listener fragment redirect (서버 로그·referrer 미노출) [artifact: src/app/bootstrap/page.tsx] [why: oauth-listener]
+- [x] T006 PAT 자동 발급 — 기존 `createPAT` 헬퍼 재사용. device label 은 User-Agent 에서 macOS/Windows/Linux 분기 + 발급 일자 (별도 라우트 신설 없이 Bootstrap 페이지 안에서 직접 발급) [artifact: src/app/bootstrap/page.tsx::deviceLabelFromHeaders] [why: oauth-listener]
+- [x] T007 MCP client 등록 — install-v3.sh 가 `claude mcp add -s user trip --env TRIP_API_TOKEN ...` 실행. Cursor·Desktop fallback 은 spec 030 patch (T007-cont) [artifact: scripts/bootstrap/install-v3.sh] [why: mcp-register]
+- [x] T008 동작 검증 ping — install-v3.sh 가 `uvx trip-planner-mcp --verify` 호출 (별도 verify-install.sh 신설 대신 main 패키지 entry 활용). 실패 시 stderr 안내 + exit 1 [artifact: scripts/bootstrap/install-v3.sh] [why: install-verify]
 
 ## 자동 update 흐름
 
