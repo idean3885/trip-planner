@@ -1,8 +1,8 @@
 "use client";
 
 /**
- * spec 029 T023 + T030~T033 통합 — 여행 상세 캘린더 + 일정 리스트 + 사이드
- * 트립 체크박스 레이아웃.
+ * spec 029 T023 + T030~T033 + #595 통합 — 여행 상세 캘린더 + 일정 리스트 +
+ * 사이드 트립 체크박스 + 다중 trip 색 dot + trip 라벨 통합.
  *
  * desktop (≥1024px): 좌 캘린더 + 우 사이드(트립 체크박스 + 일정 리스트) split.
  * mobile (<1024px): 상단(체크박스 + 캘린더) + 하단 stacked. 하단은
@@ -11,9 +11,10 @@
  * 사용자 prefs: 체크된 trip ID 는 localStorage(`user-prefs.readCheckedTripIds`)에
  * 보존. 마운트 시 prefs 복원, 토글 시 즉시 저장. 현재 trip 만 default 체크.
  *
- * v2.18.0 범위 한계: 다른 trip 의 일정 날짜는 캘린더 dot 단일 색 union 으로
- * 노출(이번 trip 과 동일 색). 색별 분리 dot + 일정 카드의 trip 라벨은 별도
- * follow-up 이슈에서 처리.
+ * 다중 trip 모드(체크된 trip ≥ 2):
+ *   - 캘린더: trip 별 색 dot 분리 노출 (`CalendarView.tripsDays`)
+ *   - 사이드 일정 카드: 각 trip 별 라벨 + 일정 표시 (`DayActivitiesPane.groups`)
+ *   - 다른 trip 의 days+activities 는 GET /api/v2/trips/<id> lazy fetch
  *
  * viewport 분기점은 lg(1024px). `docs/glossary.md` 정본 따름.
  */
@@ -24,8 +25,12 @@ import type { ActivityCategory, ReservationStatus } from "@prisma/client";
 import { formatCalendarDate } from "@/lib/date-utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { readCheckedTripIds, writeCheckedTripIds } from "@/lib/user-prefs";
-import { CalendarView } from "./CalendarView";
-import { DayActivitiesPane, type PaneDay } from "./DayActivitiesPane";
+import { CalendarView, type TripDayGroup } from "./CalendarView";
+import {
+  DayActivitiesPane,
+  type DayActivitiesGroup,
+  type PaneActivity,
+} from "./DayActivitiesPane";
 import { MobileSwipeShell } from "./MobileSwipeShell";
 import { TripCheckboxes, type TripCheckboxOption } from "./TripCheckboxes";
 
@@ -117,16 +122,18 @@ export function TripDetailLayout({
   );
 
   /**
-   * 다른 trip 의 일정 날짜 캐시. 체크 on 시 lazy fetch, off 시 캐시 유지(다시
-   * 켤 때 즉시 표시). 캐시 키 = tripId.
+   * 다른 trip 의 trip 메타 + days(+activities) 캐시. #595 에서 단순 dates 만
+   * 받던 캐시를 trip 단건 응답(`GET /api/v2/trips/<id>`)으로 확장 — 사이드
+   * 일정 카드에 trip 라벨 + 활동 통합 노출 위함. off 시 캐시 유지(재체크 즉시
+   * 표시). 캐시 키 = tripId.
    */
-  const [otherTripDates, setOtherTripDates] = useState<Map<number, Date[]>>(
-    () => new Map(),
-  );
+  const [otherTripsCache, setOtherTripsCache] = useState<
+    Map<number, { title: string; days: LayoutDay[] }>
+  >(() => new Map());
 
   useEffect(() => {
     const toFetch = Array.from(checkedTripIds).filter(
-      (id) => id !== tripId && !otherTripDates.has(id),
+      (id) => id !== tripId && !otherTripsCache.has(id),
     );
     if (toFetch.length === 0) return;
 
@@ -134,17 +141,33 @@ export function TripDetailLayout({
     Promise.all(
       toFetch.map(async (id) => {
         try {
-          const res = await fetch(`/api/v2/trips/${id}/days`);
+          const res = await fetch(`/api/v2/trips/${id}`);
           if (!res.ok) return null;
-          const data: { date: string }[] = await res.json();
-          return [id, data.map((d) => new Date(d.date))] as const;
+          const data: {
+            title: string;
+            days: {
+              id: number;
+              date: string;
+              title: string | null;
+              dayNumber: number;
+              activities: PaneActivity[];
+            }[];
+          } = await res.json();
+          const layoutDays: LayoutDay[] = data.days.map((d) => ({
+            id: d.id,
+            date: d.date,
+            title: d.title,
+            dayNumber: d.dayNumber,
+            activities: d.activities ?? [],
+          }));
+          return [id, { title: data.title, days: layoutDays }] as const;
         } catch {
           return null;
         }
       }),
     ).then((results) => {
       if (cancelled) return;
-      setOtherTripDates((prev) => {
+      setOtherTripsCache((prev) => {
         const next = new Map(prev);
         for (const r of results) {
           if (r) next.set(r[0], r[1]);
@@ -156,41 +179,100 @@ export function TripDetailLayout({
     return () => {
       cancelled = true;
     };
-  }, [checkedTripIds, tripId, otherTripDates]);
+  }, [checkedTripIds, tripId, otherTripsCache]);
 
   const ownDayDates = useMemo(
     () => days.map((d) => new Date(d.date)),
     [days],
   );
 
-  /** 캘린더에 표시할 일정 날짜 union — 현재 trip + 체크된 다른 trip. */
+  /** 캘린더에 표시할 일정 날짜 union — 단일 trip 모드 fallback 용. */
   const daysDates = useMemo(() => {
     const out = [...ownDayDates];
     for (const id of checkedTripIds) {
       if (id === tripId) continue;
-      const dates = otherTripDates.get(id);
-      if (dates) out.push(...dates);
+      const cached = otherTripsCache.get(id);
+      if (cached) out.push(...cached.days.map((d) => new Date(d.date)));
     }
     return out;
-  }, [ownDayDates, checkedTripIds, tripId, otherTripDates]);
+  }, [ownDayDates, checkedTripIds, tripId, otherTripsCache]);
 
-  const selectedLayoutDay: LayoutDay | undefined = selectedDate
-    ? days.find((d) => sameLocalDay(new Date(d.date), selectedDate))
-    : undefined;
-
-  const selectedDay: PaneDay | null = selectedLayoutDay
-    ? {
-        id: selectedLayoutDay.id,
-        title: selectedLayoutDay.title,
-        activities: selectedLayoutDay.activities,
+  /**
+   * 다중 trip 모드(체크된 trip ≥ 2)일 때 CalendarView 에 trip 별 dates 를
+   * 분리 전달해 색 dot 노출. 단일 trip 모드는 빈 배열 → CalendarView 가
+   * hasActivity 단일 dot 으로 자동 fallback.
+   */
+  const tripsDaysForCalendar = useMemo<TripDayGroup[]>(() => {
+    if (checkedTripIds.size < 2) return [];
+    const out: TripDayGroup[] = [];
+    if (checkedTripIds.has(tripId)) {
+      out.push({ tripId, dates: ownDayDates });
+    }
+    for (const id of checkedTripIds) {
+      if (id === tripId) continue;
+      const cached = otherTripsCache.get(id);
+      if (cached) {
+        out.push({ tripId: id, dates: cached.days.map((d) => new Date(d.date)) });
       }
-    : null;
+    }
+    return out;
+  }, [checkedTripIds, tripId, ownDayDates, otherTripsCache]);
+
+  /** 선택 날짜에 해당하는 trip 별 day 그룹. DayActivitiesPane 입력. */
+  const dayGroups = useMemo<DayActivitiesGroup[]>(() => {
+    if (!selectedDate) return [];
+    const out: DayActivitiesGroup[] = [];
+    for (const id of checkedTripIds) {
+      if (id === tripId) {
+        const ownDay = days.find((d) =>
+          sameLocalDay(new Date(d.date), selectedDate),
+        );
+        out.push({
+          tripId,
+          tripTitle: userTrips.find((t) => t.id === tripId)?.title ?? "여행",
+          day: ownDay
+            ? {
+                id: ownDay.id,
+                title: ownDay.title,
+                activities: ownDay.activities,
+              }
+            : null,
+        });
+      } else {
+        const cached = otherTripsCache.get(id);
+        if (!cached) continue;
+        const matched = cached.days.find((d) =>
+          sameLocalDay(new Date(d.date), selectedDate),
+        );
+        out.push({
+          tripId: id,
+          tripTitle: cached.title,
+          day: matched
+            ? {
+                id: matched.id,
+                title: matched.title,
+                activities: matched.activities,
+              }
+            : null,
+        });
+      }
+    }
+    return out;
+  }, [
+    selectedDate,
+    checkedTripIds,
+    tripId,
+    days,
+    userTrips,
+    otherTripsCache,
+  ]);
 
   const calendarView = (
     <CalendarView
       tripStart={tripStart}
       tripEnd={tripEnd}
       daysDates={daysDates}
+      tripsDays={tripsDaysForCalendar}
       selected={selectedDate ?? undefined}
       onSelect={(d) => setSelectedDate(d ?? null)}
     />
@@ -217,9 +299,9 @@ export function TripDetailLayout({
   const sidePane =
     selectedDate && tripStart && tripEnd ? (
       <DayActivitiesPane
-        tripId={tripId}
+        currentTripId={tripId}
         selectedDate={selectedDate}
-        day={selectedDay}
+        groups={dayGroups}
         canEdit={canEdit}
         tripStart={tripStart}
         tripEnd={tripEnd}
@@ -268,9 +350,9 @@ export function TripDetailLayout({
           swapView={
             selectedDate && tripStart && tripEnd ? (
               <DayActivitiesPane
-                tripId={tripId}
+                currentTripId={tripId}
                 selectedDate={selectedDate}
-                day={selectedDay}
+                groups={dayGroups}
                 canEdit={canEdit}
                 tripStart={tripStart}
                 tripEnd={tripEnd}
