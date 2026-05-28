@@ -97,6 +97,19 @@ export default function SettingsPage() {
         </Link>
       </div>
 
+      <section className="space-y-3">
+        <h2 className="text-lg font-semibold">외부 캘린더</h2>
+        <p className="text-sm text-foreground/80">
+          Apple iCloud 등 외부 캘린더 자격증명을 등록·갱신합니다. 트립 단위 공유 캘린더 생성은 트립 상세에서 별도로 진행합니다.
+        </p>
+        <Link
+          href="/settings/calendars"
+          className="inline-flex items-center rounded-md border border-border bg-background px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted"
+        >
+          캘린더 설정 열기
+        </Link>
+      </section>
+
       <section className="space-y-4">
         <h2 className="text-lg font-semibold">API 토큰</h2>
         <p className="text-sm text-foreground/80">
