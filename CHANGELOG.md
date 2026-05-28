@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [2.17.0] - 2026-05-28
+
+### Added
+
+- * **여행 기간 자동 계산 인프라**를 도입했습니다. 등록된 일정에서 시작·종료 날짜를 매번 계산하는 헬퍼가 추가되어 후속 release에서 표시·외부 캘린더 연동·여행 헤더가 실제 일정과 정합하게 갱신될 준비를 마쳤습니다. ([#584](https://github.com/idean3885/trip-planner/issues/584))
+
+
 ## [2.16.10] - 2026-05-28
 
 ### Documentation
