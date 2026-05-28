@@ -6,7 +6,10 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const { mockPrisma, mockAuthHelpers } = vi.hoisted(() => ({
   mockPrisma: {
-    day: { findMany: vi.fn() },
+    day: {
+      findMany: vi.fn(),
+      aggregate: vi.fn().mockResolvedValue({ _min: { date: null }, _max: { date: null } }),
+    },
     trip: { findUnique: vi.fn() },
   },
   mockAuthHelpers: {

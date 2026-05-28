@@ -29,3 +29,32 @@ export async function getDerivedPeriod(tripId: number): Promise<DerivedPeriod> {
     endDate: result._max.date ?? null,
   };
 }
+
+export interface ResolvedPeriod {
+  startDate: Date;
+  endDate: Date;
+  /** true면 derived 값, false면 fallback(명목) 값. */
+  isDerived: boolean;
+}
+
+/**
+ * v2.18.0 migrate — derived 우선, 일정 0건이면 명목 fallback 반환.
+ *
+ * 호출자는 trip 쿼리 시 fallback으로 쓸 명목 startDate/endDate를 함께 select해
+ * 본 함수에 전달한다. v3.0.0(contract)에서 명목 컬럼이 DROP될 때 fallback 인자
+ * 제거 + 반환 타입을 `DerivedPeriod` (null 가능)로 좁힌다.
+ */
+export async function getResolvedPeriod(
+  tripId: number,
+  fallback: { startDate: Date; endDate: Date },
+): Promise<ResolvedPeriod> {
+  const derived = await getDerivedPeriod(tripId);
+  if (derived.startDate && derived.endDate) {
+    return {
+      startDate: derived.startDate,
+      endDate: derived.endDate,
+      isDerived: true,
+    };
+  }
+  return { startDate: fallback.startDate, endDate: fallback.endDate, isDerived: false };
+}

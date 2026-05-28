@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthUserId, getTripMember, canEdit, isOwner } from "@/lib/auth-helpers";
 import { withSortOrder } from "@/lib/day-number";
+import { getResolvedPeriod } from "@/lib/trip-period";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -37,8 +38,18 @@ export async function GET(request: Request, { params }: Params) {
     return NextResponse.json({ error: "Not Found" }, { status: 404 });
   }
 
-  const days = trip.days.map((d) => withSortOrder(d, trip.startDate));
-  return NextResponse.json({ ...trip, days, myRole: member.role });
+  const period = await getResolvedPeriod(tripId, {
+    startDate: trip.startDate,
+    endDate: trip.endDate,
+  });
+  const days = trip.days.map((d) => withSortOrder(d, period.startDate));
+  return NextResponse.json({
+    ...trip,
+    startDate: period.startDate,
+    endDate: period.endDate,
+    days,
+    myRole: member.role,
+  });
 }
 
 // T026: 여행 수정

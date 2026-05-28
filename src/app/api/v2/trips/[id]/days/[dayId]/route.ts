@@ -6,6 +6,7 @@ import {
   expandTripRangeIfNeeded,
   withDayNumber,
 } from "@/lib/day-number";
+import { getResolvedPeriod } from "@/lib/trip-period";
 
 type Params = { params: Promise<{ id: string; dayId: string }> };
 
@@ -25,7 +26,7 @@ export async function GET(request: Request, { params }: Params) {
   const [trip, day] = await Promise.all([
     prisma.trip.findUnique({
       where: { id: tripId },
-      select: { startDate: true },
+      select: { startDate: true, endDate: true },
     }),
     prisma.day.findUnique({
       where: { id: parseInt(dayId), tripId },
@@ -39,7 +40,11 @@ export async function GET(request: Request, { params }: Params) {
     return NextResponse.json({ error: "Not Found" }, { status: 404 });
   }
 
-  return NextResponse.json(withDayNumber(day, trip.startDate));
+  const period = await getResolvedPeriod(tripId, {
+    startDate: trip.startDate,
+    endDate: trip.endDate,
+  });
+  return NextResponse.json(withDayNumber(day, period.startDate));
 }
 
 export async function PUT(request: Request, { params }: Params) {

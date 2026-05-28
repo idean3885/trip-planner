@@ -17,7 +17,7 @@ vi.mock("@/lib/prisma", () => ({
   },
 }));
 
-import { getDerivedPeriod } from "@/lib/trip-period";
+import { getDerivedPeriod, getResolvedPeriod } from "@/lib/trip-period";
 
 beforeEach(() => {
   aggregateMock.mockReset();
@@ -66,6 +66,31 @@ describe("getDerivedPeriod", () => {
       where: { tripId: 42 },
       _min: { date: true },
       _max: { date: true },
+    });
+  });
+});
+
+describe("getResolvedPeriod", () => {
+  const fallback = {
+    startDate: new Date("2026-06-01T00:00:00Z"),
+    endDate: new Date("2026-06-30T00:00:00Z"),
+  };
+
+  it("derived 값이 있으면 derived를 반환하고 isDerived=true", async () => {
+    const min = new Date("2026-06-07T00:00:00Z");
+    const max = new Date("2026-06-21T00:00:00Z");
+    aggregateMock.mockResolvedValue({ _min: { date: min }, _max: { date: max } });
+    const result = await getResolvedPeriod(1, fallback);
+    expect(result).toEqual({ startDate: min, endDate: max, isDerived: true });
+  });
+
+  it("일정 0건이면 fallback 반환하고 isDerived=false", async () => {
+    aggregateMock.mockResolvedValue({ _min: { date: null }, _max: { date: null } });
+    const result = await getResolvedPeriod(1, fallback);
+    expect(result).toEqual({
+      startDate: fallback.startDate,
+      endDate: fallback.endDate,
+      isDerived: false,
     });
   });
 });

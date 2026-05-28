@@ -13,6 +13,7 @@ import {
   refreshDraft,
   DraftRefreshConflictError,
   ExternalAccountNotLinkedError,
+  EmptyTripPeriodError,
 } from "@/lib/calendar-import/service";
 
 type Params = { params: Promise<{ id: string; draftId: string }> };
@@ -47,6 +48,15 @@ export async function POST(_request: Request, { params }: Params) {
       return NextResponse.json(
         { error: "external_account_not_linked", settingsPath: "/settings/calendars" },
         { status: 409 },
+      );
+    }
+    if (err instanceof EmptyTripPeriodError) {
+      return NextResponse.json(
+        {
+          error: "empty_trip_period",
+          message: "일정 0건이라 기간이 정해지지 않았습니다. 일정을 먼저 추가해 주세요.",
+        },
+        { status: 422 },
       );
     }
     if ((err as Error).message === "draft_not_found") {
