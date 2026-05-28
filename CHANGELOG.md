@@ -9,6 +9,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [3.0.0] - 2026-05-28
+
+### Breaking
+
+- * **여행 생성·수정 시 기간 입력이 제거**됩니다(BREAKING). 여행을 만들 때 시작·종료 날짜를 직접 지정하지 않고 제목만 입력하면 됩니다. 첫 일정을 추가하는 순간 여행 기간이 자동으로 설정되어 사용자가 두 정보(명목 기간·실제 일정 범위)를 동시에 관리하던 마찰이 사라집니다.
+  * **여행 API 응답의 기간이 일정에서 자동 계산된 값으로 통일**됩니다(BREAKING). 일정 0건 여행은 기간이 `null` 로 응답되며 화면은 "일정 미정" 으로 표시됩니다. 기존 명목 기간 컬럼은 데이터베이스에서 영구 제거됩니다.
+  * **외부 API 호출에 `startDate`/`endDate` 입력은 거부**됩니다(400). `POST /api/trips`, `PUT /api/trips/<id>`, `PUT /api/v2/trips/<id>` 모두 같은 정책입니다. v2.x 까지 보낸 클라이언트는 본 필드만 빼고 다시 호출하면 됩니다.
+
+  ([#601](https://github.com/idean3885/trip-planner/issues/601))
+
+### Added
+
+- * **MCP 설치를 1줄 명령으로 끝낼 수 있습니다.** `curl -fsSL https://trip.idean.me/install | bash` 한 줄이면 런타임 진단·패키지 설치·브라우저 인증·MCP 등록·동작 검증까지 자동으로 진행됩니다. 협력자가 설치 단계에서 막혀 도구를 못 쓰던 마찰이 사라집니다.
+  * **브라우저 인증이 한 번이면 끝**입니다. install 스크립트가 로컬에 임시 리스너를 띄우고 사용자가 브라우저에서 한 번만 동의하면 자동으로 인증 토큰이 발급·저장됩니다. 토큰 평문은 브라우저 주소창과 서버 로그 어디에도 남지 않도록 fragment 로만 전달됩니다.
+  * **인증 토큰은 macOS Keychain 에 안전하게 저장**됩니다. Linux 환경은 토큰 파일을 사용자 전용 권한(0600)으로 저장하며, 두 환경 모두 외부 프로세스가 토큰 평문을 읽을 수 없습니다.
+
+  ([#602](https://github.com/idean3885/trip-planner/issues/602))
+
+
 ## [2.18.0] - 2026-05-28
 
 ### Added
