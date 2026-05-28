@@ -73,6 +73,35 @@
 | **동의** | consent | OAuth scope 부여. |
 | **권한** | ACL / access role | 외부 캘린더 상의 역할(reader/writer). |
 
+## UI 시스템 — Viewport 분류 (반응형)
+
+분류 기준은 viewport(브라우저 창) 폭입니다. 기기 종류가 아닌 폭으로 분기합니다 (태블릿 가로·폴더블·desktop 창 축소가 같은 viewport 폭이면 같은 카테고리로 처리합니다).
+
+| 명칭 | viewport 폭 | 레이아웃 적용 |
+|---|---|---|
+| `mobile` | <1024px | stacked (세로 적층) |
+| `desktop` | ≥1024px | split (좌·우 분할) 가능 |
+
+* 명명은 일반 카테고리(mobile/desktop) 차용이지만 정의는 viewport 폭 범위입니다.
+* `<1024px`에는 일반 스마트폰·태블릿 세로·desktop 창 축소가 모두 포함됩니다. UI는 이들을 구분하지 않습니다.
+* 1인 개발·디자이너 1인 환경에서 다단계 breakpoint 분기는 유지보수 비용이 커서 2단으로 단순화합니다.
+
+### 디자인 토큰과의 관계
+
+`specs/026-responsive-layout`은 디자인 토큰 차원에서 4단(`breakpoint-mobile` / `-tablet` / `-desktop` / `-wide`)을 정의합니다. grid·container max-width·gap 같은 토큰은 4단을 그대로 참조합니다. 다만 **레이아웃 분기점(stacked↔split)은 1024px 단일**입니다.
+
+* spec 026의 `tablet` 토큰은 디자인 토큰 차원에서만 존재합니다 (gap·padding 등). 레이아웃 분기점으로는 쓰지 않습니다.
+* spec 026의 `wide` 토큰은 desktop 안의 컨테이너 max-width 적용 시점입니다.
+
+### Tailwind 매핑
+
+| 본 정본 명칭 | Tailwind prefix |
+|---|---|
+| `mobile` | 기본 클래스 (no prefix) |
+| `desktop` | `lg:` (≥1024px) |
+
+`md:`(≥768px)는 spec 026의 디자인 토큰 차원 분기에 쓰일 수 있지만 레이아웃 분기에는 쓰지 않습니다.
+
 ## 사용 원칙
 
 1. **사용자 화면의 한국어가 정본이다.** UI 카피가 바뀌면 본 사전도 같은 PR에서 동시 업데이트한다.
