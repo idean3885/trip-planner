@@ -25,6 +25,22 @@ export default async function TripsIndexPage() {
     orderBy: { createdAt: "desc" },
   });
 
+  // spec 029 T040 — trip 목록 카드는 derived 기간 노출. 일정 0건은 "일정 미정".
+  // N+1 회피를 위해 groupBy 1회로 trip별 min/max date 일괄 조회.
+  const tripIds = trips.map((t) => t.id);
+  const periods =
+    tripIds.length > 0
+      ? await prisma.day.groupBy({
+          by: ["tripId"],
+          where: { tripId: { in: tripIds } },
+          _min: { date: true },
+          _max: { date: true },
+        })
+      : [];
+  const periodByTripId = new Map(
+    periods.map((p) => [p.tripId, { start: p._min.date, end: p._max.date }]),
+  );
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -43,6 +59,11 @@ export default async function TripsIndexPage() {
               : trip.tripMembers[0]?.role === "HOST"
                 ? "호스트"
                 : "게스트";
+          const period = periodByTripId.get(trip.id);
+          // _count.days > 0 면 groupBy 결과의 min/max 가 항상 채워지지만, Prisma
+          // 타입은 `Date | null` 이라 옵셔널 체인을 같이 둬 타입 안전 확보.
+          const hasSchedule =
+            trip._count.days > 0 && period?.start && period?.end;
           return (
             <Link key={trip.id} href={`/trips/${trip.id}`} className="group block">
               <Card className="transition-all group-hover:ring-foreground/20 group-hover:-translate-y-px">
@@ -51,11 +72,13 @@ export default async function TripsIndexPage() {
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                    {trip.startDate && trip.endDate && (
+                    {hasSchedule ? (
                       <span className="tabular-nums">
-                        {formatCalendarDateFull(trip.startDate)} ~{" "}
-                        {formatCalendarDateFull(trip.endDate)}
+                        {formatCalendarDateFull(period.start!)} ~{" "}
+                        {formatCalendarDateFull(period.end!)}
                       </span>
+                    ) : (
+                      <span className="font-medium text-foreground">일정 미정</span>
                     )}
                     <span aria-hidden>·</span>
                     <span>{trip._count.days}일</span>
