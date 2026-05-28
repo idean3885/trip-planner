@@ -22,7 +22,12 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 
 interface AppleConnectWizardProps {
-  tripId: number;
+  /**
+   * trip 컨텍스트 ID. 없으면 user-level 자격증명만 등록(validate)하고 trip 공유
+   * 캘린더 생성(connect)은 호출하지 않는다. `/settings/calendars` 진입점이
+   * 이 모드를 사용한다.
+   */
+  tripId?: number;
   /** 사용자 세션 이메일 — Apple ID에 자동 prefill. 사용자가 수정 가능. */
   prefillEmail?: string;
   /** 재인증 모드 — true면 Apple ID 필드 disabled + 캘린더 재생성 안 함. */
@@ -106,7 +111,15 @@ export default function AppleConnectWizard({
 
       if (reauth) {
         toast.success("Apple 자격증명이 갱신되었습니다.");
-        router.push(`/trips/${tripId}`);
+        if (tripId !== undefined) {
+          router.push(`/trips/${tripId}`);
+        }
+        router.refresh();
+        return;
+      }
+
+      if (tripId === undefined) {
+        toast.success("Apple 자격증명이 등록되었습니다.");
         router.refresh();
         return;
       }

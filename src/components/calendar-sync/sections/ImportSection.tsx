@@ -110,7 +110,7 @@ export default function ImportSection({ tripId, role, onImported }: Props) {
           action: {
             label: "연결하기",
             onClick: () => {
-              window.location.href = body.settingsPath ?? `/trips/${tripId}/calendar/connect-apple`;
+              window.location.href = body.settingsPath ?? "/settings/calendars";
             },
           },
         });
@@ -188,7 +188,7 @@ export default function ImportSection({ tripId, role, onImported }: Props) {
                 Apple은 OAuth를 지원하지 않습니다. Apple ID와 앱 비밀번호를 직접 등록하세요.
               </p>
               <a
-                href={`/trips/${tripId}/calendar/connect-apple`}
+                href="/settings/calendars"
                 className="inline-flex items-center rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90"
               >
                 Apple 연결하기
