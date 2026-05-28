@@ -9,9 +9,9 @@
 
 ## Coverage Targets
 
-- 데이터 모델 expand — `Trip` 모델에 derived 계산 헬퍼 노출 + 명목 컬럼은 첫 일정 추가 전까지 fallback으로만 사용 [why: trip-derived-expand] [multi-step: 2] [migration-type: schema-only]
+- 데이터 모델 expand — `Trip` 모델에 derived 계산 헬퍼 노출 + 명목 컬럼은 첫 일정 추가 전까지 fallback으로만 사용 [why: trip-derived-expand] [multi-step: 2]
 - 데이터 모델 migrate — 코드 전체(`computeDayNumber`, 외부 캘린더 import·push 기간, OpenAPI 응답)를 derived 사용으로 전환 [why: trip-derived-migrate] [multi-step: 3]
-- 데이터 모델 contract — 명목 컬럼(`Trip.startDate`/`endDate`) 제거 + 마이그레이션 [why: trip-derived-contract] [migration-type: schema-only]
+- 데이터 모델 contract — 명목 컬럼(`Trip.startDate`/`endDate`) 제거 + 마이그레이션 [why: trip-derived-contract]
 - 월별 미니 캘린더 (트립 기간 강조 + 오늘 강조 + 월 이동) [why: calendar-view-month] [multi-step: 2]
 - desktop split 레이아웃 (캘린더 + 사이드 일정 리스트 동시 노출) [why: calendar-desktop-split]
 - mobile stacked + in-place swap (캘린더 상단 + 하단 리스트, 좌 스와이프 뒤로) [why: calendar-mobile-stacked] [multi-step: 2]
