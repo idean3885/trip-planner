@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [2.16.8] - 2026-05-28
+
+### Fixed
+
+- * **여행 목록 페이지**의 큰 제목이 헤더 로고와 중복되지 않도록 정리된다.
+    왜: 화면 상단에 같은 문구가 두 번 나타나 시각 노이즈를 일으켰다.
+  * **설정 페이지**의 API 문서 링크가 3중 노출에서 정리된다.
+    왜: 같은 링크가 페이지 상단·본문·푸터 세 곳에 동시에 나타나 과했다.
+
+  ([#567](https://github.com/idean3885/trip-planner/issues/567))
+
+
 ## [2.16.7] - 2026-05-28
 
 ### Fixed
