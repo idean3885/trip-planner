@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [3.3.0] - 2026-05-30
+
+### Added
+
+- * **외부 캘린더에서 가져온 일정을 체크박스로 골라 한 번에 가져옵니다.** 가져온 시점에는 저장하지 않고, 시간이 정해지지 않은 일정에 시작 시간을 일괄로 넣거나 타임존을 일괄로 맞추고 개별로 다듬은 뒤 확정할 때 정식 일정이 됩니다.
+  * **확정 버튼과 일괄 설정을 화면 위에 고정**해 가져온 일정이 많아도 아래로 스크롤하지 않고 처리합니다. 좁은 화면에서도 가로 스크롤 없이 봅니다.
+
+  ([#626](https://github.com/idean3885/trip-planner/issues/626))
+
+### Fixed
+
+- * **애플 캘린더 연결 화면의 Apple ID 입력란에서 로그인 이메일 자동 채움을 없앴습니다.** 애플 ID와 무관한 값(구글 계정 이메일 등)이 미리 채워져 잘못된 안내를 주던 문제를 정리했습니다. 이미 등록된 애플 ID가 있을 때만 재등록 편의로 채웁니다. ([#627](https://github.com/idean3885/trip-planner/issues/627))
+
+
 ## [3.2.0] - 2026-05-30
 
 ### Added

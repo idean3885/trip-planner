@@ -4,7 +4,8 @@
  * /trips/[id]/calendar/connect-apple
  *   ?apple_reauth=1 → 재인증 모드 (Apple ID 필드 disabled, 캘린더 재생성 안 함)
  *
- * 사용자 세션 이메일을 prefillEmail로 위자드에 전달. 위자드는 단일 화면 +
+ * Apple ID 입력란은 비워서 시작한다 — 로그인 이메일(구글 계정 등)은 Apple ID
+ * 유추 근거가 아니므로 prefill 하지 않는다(#627). 위자드는 단일 화면 +
  * collapsible 가이드 + dash 자동 포맷팅 + toast 완료(v2.11.5).
  */
 
@@ -32,11 +33,7 @@ export default async function ConnectAppleCalendarPage({
 
   return (
     <main className="container mx-auto py-8">
-      <AppleConnectWizard
-        tripId={tripId}
-        prefillEmail={session.user.email ?? undefined}
-        reauth={isReauth}
-      />
+      <AppleConnectWizard tripId={tripId} reauth={isReauth} />
     </main>
   );
 }

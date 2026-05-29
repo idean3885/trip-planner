@@ -21,6 +21,14 @@ export interface PromoteInput {
   startTimezone: string;
   endTimezone: string;
   location?: string | null;
+  /**
+   * spec 033 — 확정 전 클라이언트 미리보기에서 보정한 시작·종료 시각(부동 시간).
+   * 주면 draft 의 원본 시각 대신 이 값으로 Activity 를 만든다. draft 행 자체는
+   * 수정하지 않는다(가져온 시점 미저장 원칙). 헌법 VII: 값은 벽시계(floating)이며
+   * 타임존은 라벨이라 시각 숫자를 바꾸지 않는다.
+   */
+  startTime?: Date;
+  endTime?: Date;
 }
 
 export class DraftNotPromotableError extends Error {
@@ -50,8 +58,12 @@ export async function promoteDraft(input: PromoteInput): Promise<{ activityId: n
   });
   if (!trip) throw new DraftNotPromotableError("trip_not_found");
 
-  // Day 매칭/생성
-  const dayDate = startOfUtcDay(draft.startTime);
+  // spec 033 — 보정 시각(override)이 있으면 그 값으로, 없으면 draft 원본으로.
+  const effStartTime = input.startTime ?? draft.startTime;
+  const effEndTime = input.endTime ?? draft.endTime;
+
+  // Day 매칭/생성 — 보정된 시작 시각의 일자 기준.
+  const dayDate = startOfUtcDay(effStartTime);
   let dayId = draft.dayId;
   if (!dayId) {
     const existing = await prisma.day.findUnique({
@@ -77,9 +89,9 @@ export async function promoteDraft(input: PromoteInput): Promise<{ activityId: n
         dayId: finalDayId,
         category: input.category,
         title: draft.title,
-        startTime: draft.startTime,
+        startTime: effStartTime,
         startTimezone: input.startTimezone,
-        endTime: draft.endTime,
+        endTime: effEndTime,
         endTimezone: input.endTimezone,
         location: input.location ?? draft.locationText,
         memo: draft.description,
