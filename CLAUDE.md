@@ -9,6 +9,11 @@
 
 ## Git 워크플로우 규칙
 
+### 필수: devex:flow 경유 (하네스 게이트)
+- 이 레포의 모든 코드 변경은 반드시 `devex:flow`로 진행하여 하네스 게이트(speckit·towncrier·교차검증·대외비 가드)를 경유한다. 워크트리 직접 편집·플로우 우회 금지.
+- 워크트리 분기는 devex:flow가 자동 처리한다. 로컬에 남은 워크트리·탐색 디렉토리는 탐색용이며 작업 본류로 쓰지 않는다.
+- 의존성은 단방향: trip-planner가 devex를 참조한다. devex 플러그인에는 trip-planner를 일절 참조시키지 않는다(퍼블릭 범용 유지).
+
 ### 필수: feature → develop PR
 - 모든 코드 변경은 feature 브랜치 → develop PR로 진행한다
 - main, develop 브랜치에 직접 push 금지 (`enforce_admins: true`)

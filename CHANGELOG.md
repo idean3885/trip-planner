@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [3.1.2] - 2026-05-29
+
+### Chore
+
+- * **화면 분할 레이아웃의 회귀 테스트 가드**가 현재 사양만 정확히 검증하도록 정정했습니다. 사양이 바뀐 뒤에도 옛 기준을 함께 통과시키던 느슨함이 회귀를 놓칠 수 있었습니다.
+  * **미리보기 배포 봇의 변경 요청 알림**을 끕니다. 변경마다 반복 게시되던 알림 소음을 줄여 검토에 집중하기 위함입니다.
+
+  ([#616](https://github.com/idean3885/trip-planner/issues/616))
+
+
 ## [3.1.1] - 2026-05-29
 
 ### Fixed

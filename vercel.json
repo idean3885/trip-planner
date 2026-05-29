@@ -1,3 +1,6 @@
 {
-  "regions": ["sin1"]
+  "regions": ["sin1"],
+  "github": {
+    "silent": true
+  }
 }

@@ -25,11 +25,10 @@ const sidePanelSrc = readFileSync(SIDE_PANEL_PATH, "utf8");
 const layoutSrc = readFileSync(LAYOUT_PATH, "utf8");
 
 describe("trip 상세 데스크탑 다단 분기 (spec 026/B + spec 031)", () => {
-  it("페이지 wrapper에 lg: 그리드 분기 클래스가 존재한다 — spec 031 좌·우 50:50", () => {
+  it("페이지 wrapper에 lg:grid-cols-2 분기 클래스가 존재한다 — spec 031 좌·우 50:50", () => {
     // spec 031 (#608) — `minmax(0,2fr)_minmax(280px,1fr)` 비대칭 → 좌·우 균등
-    // `lg:grid-cols-2` 로 단순화. 회귀 방지: 두 컬럼 분기 자체가 사라지면
-    // fail. 정확한 분기 토큰은 plan 단계에서 결정되므로 둘 중 하나라도 일치.
-    expect(pageSrc).toMatch(/lg:grid-cols-2|lg:grid-cols-\[minmax\(0,2fr\)/);
+    // `lg:grid-cols-2` 로 단순화 (page.tsx:123). 데스크탑 2분할이 사라지면 fail.
+    expect(pageSrc).toContain("lg:grid-cols-2");
   });
 
   it("페이지가 SidePanel 컴포넌트를 사용한다", () => {
@@ -56,6 +55,7 @@ describe("trip 상세 데스크탑 다단 분기 (spec 026/B + spec 031)", () =>
   it("모바일(<lg) 흐름은 단일 컬럼 — lg prefix 없이는 grid-cols-* 지정 없음", () => {
     // 페이지 wrapper에 grid는 정의되지만 cols는 lg에서만 분기.
     // sm:/md: prefix로 grid-cols가 잡혀있지 않은지 확인 (회귀 방지).
-    expect(pageSrc).not.toMatch(/(?:sm|md):grid-cols-\[/);
+    // 숫자·대괄호 두 형태 모두 차단 (sibling list-grid.test.ts 와 정합).
+    expect(pageSrc).not.toMatch(/(?:sm|md):grid-cols-/);
   });
 });
