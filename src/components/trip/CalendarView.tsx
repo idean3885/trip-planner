@@ -1,20 +1,29 @@
 "use client";
 
 /**
- * spec 029 T021 + #595 T034 — 월별 미니 캘린더.
+ * spec 029 T021 + #595 T034 + spec 032 — 월별 미니 캘린더.
  *
  * 여행 derived 기간(start ~ end) 강조 + 오늘 강조 + 일정이 있는 날짜 dot.
  * `tripsDays` 가 주어지면 통합 캘린더 모드로 동작 — 각 trip 의 색 dot 을
  * 날짜 칸 하단에 같이 표시하기 위해 DayButton 을 custom render 한다. 단일
  * trip 사용 시 `tripsDays` 를 비워두면 hasActivity 단일 dot 으로 동작한다.
+ *
+ * spec 032 추가:
+ * - `desktopFull` — 데스크탑 좌측 컬럼을 꽉 채우도록 폭/셀 크기를 확대한다.
+ * - `enableMobileCompact` — 모바일에서 위로 스와이프 시 선택 주 1줄(주간
+ *   스트립)로 압축, 아래로 스와이프 시 월 표시로 복귀한다. react-day-picker
+ *   가 주간 표시를 직접 제공하지 않아 주간 스트립을 별도로 렌더한다.
  */
 
 import * as React from "react";
+import { useMemo, useState } from "react";
 import { ko } from "react-day-picker/locale";
 import type { Matcher } from "react-day-picker";
+import { useSwipeable } from "react-swipeable";
 
 import { Calendar, CalendarDayButton } from "@/components/ui/calendar";
 import { getTripColor } from "@/lib/trip-palette";
+import { cn } from "@/lib/utils";
 
 export interface TripDayGroup {
   tripId: number;
@@ -42,6 +51,10 @@ export interface CalendarViewProps {
   extraModifiers?: Record<string, Matcher | Matcher[]>;
   /** extraModifiers와 짝을 이루는 className. */
   extraModifierClassNames?: Record<string, string>;
+  /** spec 032 — 데스크탑 좌측 컬럼을 꽉 채우도록 폭·셀 확대. */
+  desktopFull?: boolean;
+  /** spec 032 — 모바일 위/아래 스와이프로 월↔주 압축 토글 활성화. */
+  enableMobileCompact?: boolean;
   className?: string;
 }
 
@@ -50,6 +63,18 @@ function sameLocalDay(a: Date, b: Date): boolean {
 }
 
 const MAX_VISIBLE_BARS = 3 as const;
+const WEEKDAY_LABELS = ["일", "월", "화", "수", "목", "금", "토"] as const;
+
+/** date 가 속한 주(일요일 시작)의 7일을 반환. */
+export function getWeekDays(date: Date): Date[] {
+  const sunday = new Date(date);
+  sunday.setDate(date.getDate() - date.getDay());
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(sunday);
+    d.setDate(sunday.getDate() + i);
+    return d;
+  });
+}
 
 export function CalendarView({
   tripStart,
@@ -60,6 +85,8 @@ export function CalendarView({
   onSelect,
   extraModifiers,
   extraModifierClassNames,
+  desktopFull,
+  enableMobileCompact,
   className,
 }: CalendarViewProps) {
   const isMultiTrip = (tripsDays?.length ?? 0) > 0;
@@ -99,7 +126,8 @@ export function CalendarView({
       }
     : undefined;
 
-  return (
+  // spec 032 — 데스크탑 확대: w-full + 셀 크기를 키워 좌측 컬럼을 채운다.
+  const monthCalendar = (
     <Calendar
       mode="single"
       locale={ko}
@@ -109,8 +137,130 @@ export function CalendarView({
       modifiers={modifiers}
       modifiersClassNames={modifiersClassNames}
       components={components}
-      className={className}
+      className={cn(
+        desktopFull && "w-full [--cell-size:--spacing(10)]",
+        className,
+      )}
     />
+  );
+
+  if (!enableMobileCompact) {
+    return monthCalendar;
+  }
+
+  return (
+    <MobileCompactCalendar
+      monthCalendar={monthCalendar}
+      tripStart={tripStart}
+      tripEnd={tripEnd}
+      daysDates={daysDates}
+      selected={selected}
+      onSelect={onSelect}
+    />
+  );
+}
+
+/**
+ * spec 032 — 모바일 월↔주 압축. 위로 스와이프 시 선택 주 1줄(주간 스트립),
+ * 아래로 스와이프 시 월 표시로 복귀한다. 선택 날짜가 바뀌면 압축 상태는
+ * 유지하며 주만 새 날짜의 주로 따라간다.
+ */
+function MobileCompactCalendar({
+  monthCalendar,
+  tripStart,
+  tripEnd,
+  daysDates,
+  selected,
+  onSelect,
+}: {
+  monthCalendar: React.ReactNode;
+  tripStart: Date | null;
+  tripEnd: Date | null;
+  daysDates: Date[];
+  selected?: Date;
+  onSelect?: (date: Date | undefined) => void;
+}) {
+  const [view, setView] = useState<"month" | "week">("month");
+  const handlers = useSwipeable({
+    onSwipedUp: () => setView("week"),
+    onSwipedDown: () => setView("month"),
+    preventScrollOnSwipe: false,
+    trackMouse: false,
+  });
+
+  return (
+    <div {...handlers} data-calendar-view={view}>
+      {view === "month" ? (
+        monthCalendar
+      ) : (
+        <WeekStrip
+          selected={selected ?? new Date()}
+          tripStart={tripStart}
+          tripEnd={tripEnd}
+          daysDates={daysDates}
+          onSelect={onSelect}
+        />
+      )}
+    </div>
+  );
+}
+
+function WeekStrip({
+  selected,
+  tripStart,
+  tripEnd,
+  daysDates,
+  onSelect,
+}: {
+  selected: Date;
+  tripStart: Date | null;
+  tripEnd: Date | null;
+  daysDates: Date[];
+  onSelect?: (date: Date | undefined) => void;
+}) {
+  const week = useMemo(() => getWeekDays(selected), [selected]);
+
+  return (
+    <div className="flex w-full gap-1 py-1" role="grid" aria-label="선택 주">
+      {week.map((d) => {
+        const isSelected = sameLocalDay(d, selected);
+        const hasActivity = daysDates.some((x) => sameLocalDay(x, d));
+        const inRange =
+          tripStart && tripEnd ? d >= tripStart && d <= tripEnd : false;
+        return (
+          <button
+            key={d.toISOString()}
+            type="button"
+            onClick={() => onSelect?.(d)}
+            aria-pressed={isSelected}
+            className={cn(
+              "flex flex-1 flex-col items-center gap-0.5 rounded-md py-1.5 text-sm transition-colors",
+              isSelected
+                ? "bg-primary text-primary-foreground"
+                : inRange
+                  ? "bg-primary/10 text-foreground"
+                  : "text-foreground hover:bg-muted",
+            )}
+          >
+            <span className="text-[0.65rem] opacity-70">
+              {WEEKDAY_LABELS[d.getDay()]}
+            </span>
+            <span className="tabular-nums">{d.getDate()}</span>
+            <span
+              aria-hidden
+              className={cn(
+                "h-0.5 w-4 rounded-full",
+                hasActivity
+                  ? isSelected
+                    ? "bg-primary-foreground"
+                    : "bg-primary"
+                  : "bg-transparent",
+              )}
+            />
+          </button>
+        );
+      })}
+    </div>
   );
 }
 
