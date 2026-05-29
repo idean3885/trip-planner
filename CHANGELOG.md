@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [3.4.0] - 2026-05-30
+
+### Added
+
+- * **예약 상태에 "예약 완료"를 추가했습니다.** 온라인 등으로 이미 예약을 마친 일정을 그 상태로 표시합니다. 예약이 필요한지(필수·권장·현장·불필요)만 나타내던 것에 더해, 이미 끝낸 예약을 구분합니다.
+  * 일정 폼·카드, 외부 일정 가져오기, 외부 캘린더 연동, API와 MCP 도구에서 모두 "예약 완료"를 다룹니다.
+
+  ([#632](https://github.com/idean3885/trip-planner/issues/632))
+- * **동기화 타임존 선택 목록에 스페인·포르투갈 등 여행지 타임존을 더했습니다.** 여행지에서 쓰는 시간대를 골라 일정 시각을 현지 기준으로 맞춥니다. 화면마다 달랐던 타임존 목록을 하나로 모아 어디서나 같게 보입니다. ([#633](https://github.com/idean3885/trip-planner/issues/633))
+
+
 ## [3.3.0] - 2026-05-30
 
 ### Added
