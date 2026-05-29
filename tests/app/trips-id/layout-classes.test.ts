@@ -77,4 +77,17 @@ describe("trip 상세 레이아웃 (spec 032 — 캘린더 중심 단일 화면)
   it("글로벌 layout 이 데스크탑에서 wide 토큰 폭으로 확장된다", () => {
     expect(globalLayoutSrc).toMatch(/lg:max-w-wide/);
   });
+
+  it("헤더 로고는 좁은 화면에서 짓눌리지 않게 shrink-0 + whitespace-nowrap 을 쓴다(#641)", () => {
+    // 13 mini(375px) 에서 로고가 한 글자씩 세로로 접히던 회귀 가드.
+    expect(globalLayoutSrc).toMatch(/shrink-0 whitespace-nowrap/);
+  });
+
+  it("AuthButton 이메일은 sm 미만에서 숨겨 헤더 가로 넘침을 막는다(#641)", () => {
+    const authSrc = readFileSync(
+      resolve(REPO_ROOT, "src/components/AuthButton.tsx"),
+      "utf8",
+    );
+    expect(authSrc).toMatch(/hidden[^"]*sm:inline-block/);
+  });
 });

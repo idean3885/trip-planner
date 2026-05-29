@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [3.4.2] - 2026-05-30
+
+### Fixed
+
+- * **모바일 캘린더에서 위아래로 쓸어 월·주 보기를 바꿀 수 있습니다.** 좁은 화면에서 세로 쓸기(스와이프)가 화면 스크롤에 묻혀 동작하지 않던 문제를 고쳤습니다. 탭 버튼도 그대로 씁니다.
+  * **좁은 화면(아이폰 13 미니 등)에서 상단 머리말의 가로 넘침을 없앴습니다.** 제목이 한 글자씩 세로로 접히고 로그아웃 버튼이 화면 밖으로 잘리던 문제를 정리했습니다.
+
+  ([#641](https://github.com/idean3885/trip-planner/issues/641))
+
+
 ## [3.4.1] - 2026-05-30
 
 ### Fixed
