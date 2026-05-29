@@ -75,6 +75,7 @@ const RESERVATION_LABEL: Record<ReservationStatus, string> = {
   RECOMMENDED: "사전 예약 권장",
   ON_SITE: "현장 구매",
   NOT_NEEDED: "예약 불필요",
+  RESERVED: "예약 완료",
 };
 
 interface ActivityCardProps {

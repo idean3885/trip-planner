@@ -153,7 +153,7 @@ export const openApiSpec = {
           reservationStatus: {
             type: "string",
             nullable: true,
-            enum: ["REQUIRED", "RECOMMENDED", "ON_SITE", "NOT_NEEDED"],
+            enum: ["REQUIRED", "RECOMMENDED", "ON_SITE", "NOT_NEEDED", "RESERVED"],
           },
           sortOrder: {
             type: "integer",
@@ -422,7 +422,7 @@ export const openApiSpec = {
                   memo: { type: "string" },
                   cost: { $ref: "#/components/schemas/Cost" },
                   currency: { type: "string" },
-                  reservationStatus: { type: "string", enum: ["REQUIRED", "RECOMMENDED", "ON_SITE", "NOT_NEEDED"] },
+                  reservationStatus: { type: "string", enum: ["REQUIRED", "RECOMMENDED", "ON_SITE", "NOT_NEEDED", "RESERVED"] },
                   sortOrder: { type: "integer" },
                 },
               },
@@ -507,7 +507,7 @@ export const openApiSpec = {
                   memo: { type: "string" },
                   cost: { $ref: "#/components/schemas/Cost" },
                   currency: { type: "string" },
-                  reservationStatus: { type: "string", enum: ["REQUIRED", "RECOMMENDED", "ON_SITE", "NOT_NEEDED"] },
+                  reservationStatus: { type: "string", enum: ["REQUIRED", "RECOMMENDED", "ON_SITE", "NOT_NEEDED", "RESERVED"] },
                   sortOrder: { type: "integer" },
                 },
               },

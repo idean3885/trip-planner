@@ -135,6 +135,7 @@ enum ReservationStatus {
   RECOMMENDED
   ON_SITE
   NOT_NEEDED
+  RESERVED
 }
 
 model Activity {

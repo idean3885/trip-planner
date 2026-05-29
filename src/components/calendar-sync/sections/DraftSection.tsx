@@ -30,6 +30,7 @@ import type {
   CalendarProviderId,
   ReservationStatus,
 } from "@prisma/client";
+import { TIMEZONE_OPTIONS } from "@/lib/timezones";
 
 interface DraftDTO {
   id: number;
@@ -71,18 +72,7 @@ const RESERVATION_OPTIONS: { value: ReservationStatus; label: string }[] = [
   { value: "RECOMMENDED", label: "사전 예약 권장" },
   { value: "ON_SITE", label: "현장 구매" },
   { value: "NOT_NEEDED", label: "예약 불필요" },
-];
-const TIMEZONE_OPTIONS = [
-  "Asia/Seoul",
-  "Asia/Tokyo",
-  "Asia/Taipei",
-  "Asia/Singapore",
-  "Asia/Bangkok",
-  "Europe/Paris",
-  "Europe/London",
-  "America/New_York",
-  "America/Los_Angeles",
-  "UTC",
+  { value: "RESERVED", label: "예약 완료" },
 ];
 
 const pad = (n: number) => String(n).padStart(2, "0");
