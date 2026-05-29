@@ -11,7 +11,8 @@ import DeleteTripButton from "@/components/DeleteTripButton";
 import LeaveTripButton from "@/components/LeaveTripButton";
 import AddDayButton from "@/components/AddDayButton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import SidePanel from "./SidePanel";
+import MemberList from "@/components/MemberList";
+import CalendarSyncEntryCard from "@/components/calendar-sync/CalendarSyncEntryCard";
 import {
   TripDetailLayout,
   type LayoutActivity,
@@ -96,9 +97,15 @@ async function DbTripPage({
       title: a.title,
       category: a.category,
       startTime: a.startTime ? a.startTime.toISOString() : null,
+      startTimezone: a.startTimezone ?? null,
       endTime: a.endTime ? a.endTime.toISOString() : null,
+      endTimezone: a.endTimezone ?? null,
       location: a.location,
+      memo: a.memo,
+      cost: a.cost ? a.cost.toString() : null,
+      currency: a.currency,
       reservationStatus: a.reservationStatus,
+      sortOrder: a.sortOrder,
     })),
   }));
 
@@ -118,89 +125,71 @@ async function DbTripPage({
         </Link>
       </div>
 
-      {/* spec 031 — 데스크탑 ≥1024px에서 본문 좌(캘린더 50%) / 우(SidePanel 50%) 2분할.
-          모바일(<1024px)에서는 grid가 단일 컬럼처럼 동작해 회귀 없음. */}
-      <div className="grid gap-6 lg:grid-cols-2 lg:gap-grid-comfy lg:items-start">
-        <div className="space-y-6 min-w-0">
-          <div>
-            <h1 className="text-xl font-semibold tracking-tight">{trip.title}</h1>
-            <p className="mt-1 text-sm text-muted-foreground tabular-nums">
-              {period.isDerived && period.startDate && period.endDate ? (
-                <>
-                  {formatCalendarDateFull(period.startDate)} ~{" "}
-                  {formatCalendarDateFull(period.endDate)}
-                </>
-              ) : (
-                <span className="font-medium text-foreground">일정 미정</span>
-              )}
-            </p>
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              {member.role !== "GUEST" && (
-                <AddDayButton
-                  tripId={tripId}
-                  tripStartDate={period.startDate?.toISOString() ?? ""}
-                  tripEndDate={period.endDate?.toISOString() ?? ""}
-                />
-              )}
-              {member.role !== "GUEST" && <InviteButton tripId={tripId} />}
-              {member.role === "OWNER" && (
-                <DeleteTripButton tripId={tripId} tripTitle={trip.title} />
-              )}
-              {member.role !== "OWNER" && (
-                <LeaveTripButton tripId={tripId} tripTitle={trip.title} />
-              )}
-            </div>
-          </div>
-
-          {descriptionHtml && (
-            <Card>
-              <CardHeader>
-                <CardTitle>여행 개요</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div
-                  className="prose prose-sm max-w-none"
-                  dangerouslySetInnerHTML={{ __html: descriptionHtml }}
-                />
-              </CardContent>
-            </Card>
+      {/* spec 032 — 캘린더 중심 단일 화면. 헤더(제목·기간·액션)는 본문 상단
+          단독으로 두고, 캘린더·동기화·동행자·선택 일정의 좌우/세로 배치는
+          TripDetailLayout 이 viewport 별로 처리한다. */}
+      <div>
+        <h1 className="text-xl font-semibold tracking-tight">{trip.title}</h1>
+        <p className="mt-1 text-sm text-muted-foreground tabular-nums">
+          {period.isDerived && period.startDate && period.endDate ? (
+            <>
+              {formatCalendarDateFull(period.startDate)} ~{" "}
+              {formatCalendarDateFull(period.endDate)}
+            </>
+          ) : (
+            <span className="font-medium text-foreground">일정 미정</span>
           )}
-
-          {/* spec 026 hotfix v2.13.1 — 모바일에서는 캘린더·멤버 패널을 본문 흐름 안(개요 ~ 일정 사이)에 둔다.
-              v2.12.x 위치를 회복. 데스크탑에서는 우측 사이드 cell에서 노출(아래 lg:block). */}
-          <div className="lg:hidden space-y-6">
-            <SidePanel
+        </p>
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          {member.role !== "GUEST" && (
+            <AddDayButton
               tripId={tripId}
-              role={member.role}
-              hasCalendarLink={Boolean(calendarLink)}
-              calendarProvider={calendarLink?.provider ?? null}
-              calendarName={calendarLink?.calendarName ?? null}
-              providerHint={providerHint}
+              tripStartDate={period.startDate?.toISOString() ?? ""}
+              tripEndDate={period.endDate?.toISOString() ?? ""}
             />
-          </div>
-
-          <section className="space-y-3">
-            <h2 className="text-base font-semibold tracking-tight">일정</h2>
-            <TripDetailLayout
-              tripId={tripId}
-              tripStart={period.startDate}
-              tripEnd={period.endDate}
-              days={layoutDays}
-            />
-          </section>
+          )}
+          {member.role !== "GUEST" && <InviteButton tripId={tripId} />}
+          {member.role === "OWNER" && (
+            <DeleteTripButton tripId={tripId} tripTitle={trip.title} />
+          )}
+          {member.role !== "OWNER" && (
+            <LeaveTripButton tripId={tripId} tripTitle={trip.title} />
+          )}
         </div>
+      </div>
 
-        <div className="hidden lg:block">
-          <SidePanel
+      {descriptionHtml && (
+        <Card>
+          <CardHeader>
+            <CardTitle>여행 개요</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div
+              className="prose prose-sm max-w-none"
+              dangerouslySetInnerHTML={{ __html: descriptionHtml }}
+            />
+          </CardContent>
+        </Card>
+      )}
+
+      <TripDetailLayout
+        tripId={tripId}
+        tripStart={period.startDate}
+        tripEnd={period.endDate}
+        days={layoutDays}
+        canEdit={member.role !== "GUEST"}
+        syncCard={
+          <CalendarSyncEntryCard
             tripId={tripId}
             role={member.role}
-            hasCalendarLink={Boolean(calendarLink)}
+            calendarLinked={Boolean(calendarLink)}
             calendarProvider={calendarLink?.provider ?? null}
             calendarName={calendarLink?.calendarName ?? null}
             providerHint={providerHint}
           />
-        </div>
-      </div>
+        }
+        memberList={<MemberList tripId={tripId} />}
+      />
     </div>
   );
 }
