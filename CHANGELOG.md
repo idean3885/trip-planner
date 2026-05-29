@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [3.1.1] - 2026-05-29
+
+### Fixed
+
+- * **테스트 자동 검증의 간헐 실패**를 해소했습니다. 같은 commit 을 다시 돌릴 필요 없이 CI 결과를 한 번에 받습니다. ([#581](https://github.com/idean3885/trip-planner/issues/581))
+
+
 ## [3.1.0] - 2026-05-29
 
 ### Added
