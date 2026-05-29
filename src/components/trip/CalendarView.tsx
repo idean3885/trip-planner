@@ -16,10 +16,9 @@
  */
 
 import * as React from "react";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { ko } from "react-day-picker/locale";
 import type { Matcher } from "react-day-picker";
-import { useSwipeable } from "react-swipeable";
 
 import { Calendar, CalendarDayButton } from "@/components/ui/calendar";
 import { getTripColor } from "@/lib/trip-palette";
@@ -181,20 +180,33 @@ function MobileCompactCalendar({
   onSelect?: (date: Date | undefined) => void;
 }) {
   const [view, setView] = useState<"month" | "week">("month");
-  // 사용자 기대 방향: 아래로 스와이프 → 주(접기), 위로 스와이프 → 월(펼치기).
-  // preventScrollOnSwipe 를 켜야 세로 스와이프가 페이지 스크롤에 먹히지 않고
-  // 제스처로 등록된다(#637). delta 로 가벼운 탭은 걸러 오작동을 막는다.
-  const handlers = useSwipeable({
-    onSwipedDown: () => setView("week"),
-    onSwipedUp: () => setView("month"),
-    preventScrollOnSwipe: true,
-    trackTouch: true,
-    trackMouse: false,
-    delta: 30,
-  });
+  const touchStartY = useRef<number | null>(null);
+
+  // 세로 스와이프로 월↔주를 전환한다. react-swipeable 은 iOS Safari 가 세로
+  // 제스처를 페이지 스크롤로 먼저 가져가 감지가 어려웠다(#637). 컨테이너에
+  // touch-action: pan-x(`touch-pan-x`) 를 줘 브라우저가 세로 제스처를 가로채지
+  // 않게 하고, touchstart↔touchend 의 Y 변화량으로 직접 판정한다.
+  // 아래로(+) → 주(접기), 위로(−) → 월(펼치기). 기준 미달은 탭으로 간주해 무시.
+  const SWIPE_THRESHOLD = 40;
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartY.current = e.touches[0]?.clientY ?? null;
+  };
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    const start = touchStartY.current;
+    touchStartY.current = null;
+    if (start == null) return;
+    const dy = (e.changedTouches[0]?.clientY ?? start) - start;
+    if (dy > SWIPE_THRESHOLD) setView("week");
+    else if (dy < -SWIPE_THRESHOLD) setView("month");
+  };
 
   return (
-    <div {...handlers} data-calendar-view={view}>
+    <div
+      data-calendar-view={view}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      className="touch-pan-x"
+    >
       {view === "month" ? (
         monthCalendar
       ) : (
