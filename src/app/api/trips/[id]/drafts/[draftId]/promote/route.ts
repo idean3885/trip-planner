@@ -29,6 +29,7 @@ const RESERVATION_STATUSES: ReservationStatus[] = [
   "RECOMMENDED",
   "ON_SITE",
   "NOT_NEEDED",
+  "RESERVED",
 ];
 
 interface PromoteRequestBody {

@@ -99,4 +99,14 @@ describe("POST /drafts/promote-batch", () => {
     const res = await POST(req({ items: [{ draftId: 1, ...VALID }] }), params);
     expect(res.status).toBe(403);
   });
+
+  it("RESERVED(예약 완료) 를 허용한다 (#632)", async () => {
+    const res = await POST(
+      req({ items: [{ draftId: 1, ...VALID, reservationStatus: "RESERVED" }] }),
+      params,
+    );
+    const data = await res.json();
+    expect(data.promoted).toHaveLength(1);
+    expect(data.failed).toHaveLength(0);
+  });
 });

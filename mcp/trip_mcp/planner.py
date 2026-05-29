@@ -215,7 +215,7 @@ def register_planner_tools(mcp: FastMCP) -> None:
             memo: 메모 (선택)
             cost: 예상 비용 (0이면 미입력, 선택)
             currency: 통화 코드 (기본 EUR)
-            reservation_status: 예약 상태 (REQUIRED, RECOMMENDED, ON_SITE, NOT_NEEDED, 선택)
+            reservation_status: 예약 상태 (REQUIRED, RECOMMENDED, ON_SITE, NOT_NEEDED, RESERVED, 선택)
         """
         body: dict = {"category": category, "title": title, "currency": currency}
         if start_time:
@@ -286,7 +286,7 @@ def register_planner_tools(mcp: FastMCP) -> None:
             cost: 변경할 비용 (0이면 변경하지 않음)
             currency: 변경할 통화 코드
             category: 변경할 유형 (SIGHTSEEING, DINING, TRANSPORT, ACCOMMODATION, SHOPPING, OTHER)
-            reservation_status: 변경할 예약 상태 (REQUIRED, RECOMMENDED, ON_SITE, NOT_NEEDED)
+            reservation_status: 변경할 예약 상태 (REQUIRED, RECOMMENDED, ON_SITE, NOT_NEEDED, RESERVED)
         """
         body: dict = {}
         if title:
