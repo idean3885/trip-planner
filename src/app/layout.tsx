@@ -30,11 +30,11 @@ export default function RootLayout({
     <html lang="ko">
       <body className={`${inter.className} flex min-h-screen flex-col bg-background text-foreground`}>
         <SessionProvider>
-          <header className="mx-auto flex w-full max-w-2xl items-center justify-between gap-4 px-4 pt-4 lg:max-w-wide">
+          <header className="mx-auto flex w-full max-w-2xl items-center justify-between gap-2 px-4 pt-4 sm:gap-4 lg:max-w-wide">
             <div className="flex items-center gap-6">
               <Link
                 href="/"
-                className="text-sm font-semibold text-foreground/80 hover:text-foreground"
+                className="shrink-0 whitespace-nowrap text-sm font-semibold text-foreground/80 hover:text-foreground"
               >
                 우리의 여행
               </Link>
