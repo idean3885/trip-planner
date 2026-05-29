@@ -21,6 +21,7 @@ const RESERVATION_OPTIONS: { value: ReservationStatus | ""; label: string }[] = 
   { value: "RECOMMENDED", label: "사전 예약 권장" },
   { value: "ON_SITE", label: "현장 구매" },
   { value: "NOT_NEEDED", label: "불필요" },
+  { value: "RESERVED", label: "예약 완료" },
 ];
 
 // shadcn Input(src/components/ui/input.tsx)의 핵심 클래스와 동기화.
