@@ -114,6 +114,28 @@ describe("DraftSection (spec 033)", () => {
     expect(screen.getByRole("button", { name: /0건 가져오기/ })).toBeDisabled();
   });
 
+  it("지역 표시 일괄은 '기록' 어휘 + 시각 불변 안내를 노출한다(#637 부동 시간 프레이밍)", async () => {
+    render(<DraftSection tripId={1} canEdit onMutated={vi.fn()} />);
+    await waitFor(() => expect(screen.getByText("리스본 도착")).toBeInTheDocument());
+    // "적용"이 아니라 "기록" — 변환이 아니라 어느 지역 시간인지 기록.
+    expect(screen.getByRole("button", { name: "기록" })).toBeInTheDocument();
+    // 라벨은 "지역 표시", 시각 불변 안내 노출.
+    expect(screen.getByText("지역 표시")).toBeInTheDocument();
+    expect(screen.getByText(/시각은 그대로 둡니다/)).toBeInTheDocument();
+  });
+
+  it("지역 표시 기록은 표시 시각 숫자를 바꾸지 않는다(헌법 VII)", async () => {
+    render(<DraftSection tripId={1} canEdit onMutated={vi.fn()} />);
+    await waitFor(() => expect(screen.getByText("리스본 도착")).toBeInTheDocument());
+    expect(screen.getByText(/09:00/)).toBeInTheDocument(); // 기록 전
+    fireEvent.click(screen.getByRole("button", { name: "기록" }));
+    // 기록 후에도 벽시계 숫자 그대로(09:00) — 환산 없음.
+    expect(screen.getByText(/09:00/)).toBeInTheDocument();
+    expect(mockToast.success).toHaveBeenCalledWith(
+      expect.stringContaining("지역 시간으로 기록"),
+    );
+  });
+
   it("종일(시간 미정) draft 항목 컨테이너가 가로 넘침 방지 클래스를 쓴다", async () => {
     const { container } = render(<DraftSection tripId={1} canEdit onMutated={vi.fn()} />);
     await waitFor(() => expect(screen.getByText("호텔 체크인")).toBeInTheDocument());

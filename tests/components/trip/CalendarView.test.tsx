@@ -6,7 +6,7 @@
  * 로 시작한다(위로 스와이프 전).
  */
 import { describe, it, expect, vi } from "vitest";
-import { render } from "@testing-library/react";
+import { render, fireEvent, screen } from "@testing-library/react";
 import { CalendarView, getWeekDays } from "@/components/trip/CalendarView";
 
 vi.mock("next/navigation", () => ({
@@ -41,6 +41,29 @@ describe("CalendarView 모바일 압축", () => {
         enableMobileCompact
       />,
     );
+    expect(
+      container.querySelector('[data-calendar-view="month"]'),
+    ).not.toBeNull();
+  });
+
+  it("명시적 탭 토글로 월↔주를 전환한다(#637 — 스와이프 대체 경로)", () => {
+    const { container } = render(
+      <CalendarView
+        tripStart={new Date(2026, 5, 7)}
+        tripEnd={new Date(2026, 5, 21)}
+        daysDates={[new Date(2026, 5, 9)]}
+        selected={new Date(2026, 5, 9)}
+        onSelect={vi.fn()}
+        enableMobileCompact
+      />,
+    );
+    // 월 표시에서 "주간만 보기" 탭 → 주 표시.
+    fireEvent.click(screen.getByRole("button", { name: "주간만 보기" }));
+    expect(
+      container.querySelector('[data-calendar-view="week"]'),
+    ).not.toBeNull();
+    // 주 표시에서 "월 전체 보기" 탭 → 월 표시 복귀.
+    fireEvent.click(screen.getByRole("button", { name: "월 전체 보기" }));
     expect(
       container.querySelector('[data-calendar-view="month"]'),
     ).not.toBeNull();

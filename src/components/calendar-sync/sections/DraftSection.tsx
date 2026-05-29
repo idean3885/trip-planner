@@ -194,6 +194,7 @@ export default function DraftSection({ tripId, canEdit, onMutated }: Props) {
   }, [drafts, batchStartTime]);
 
   // 시간 있는 draft 의 타임존 라벨만 일괄 교체(시각 숫자 유지, 헌법 VII).
+  // 변환이 아니라 기록 — 시각 숫자는 그대로 두고 "어느 지역 시간인지"만 남긴다.
   const applyBatchTimezone = useCallback(() => {
     if (!drafts) return;
     setOverrides((prev) => {
@@ -208,7 +209,7 @@ export default function DraftSection({ tripId, canEdit, onMutated }: Props) {
         };
         count++;
       }
-      toast.success(`시간 있는 ${count}건의 타임존을 ${batchTimezone}로 맞췄습니다.`);
+      toast.success(`시간 있는 ${count}건을 ${batchTimezone} 지역 시간으로 기록했습니다. 시각은 그대로입니다.`);
       return next;
     });
   }, [drafts, batchTimezone]);
@@ -282,38 +283,45 @@ export default function DraftSection({ tripId, canEdit, onMutated }: Props) {
           )}
         </div>
         {canEdit && (
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-xs">
-            <label className="flex items-center gap-1.5">
-              <input type="checkbox" checked={allSelected} onChange={toggleAll} />
-              전체 선택 ({selected.size}/{drafts.length})
-            </label>
-            <span className="flex items-center gap-1">
-              <span className="text-muted-foreground">시간 미정 일괄</span>
-              <input
-                type="time"
-                value={batchStartTime}
-                onChange={(e) => setBatchStartTime(e.target.value)}
-                className="rounded border border-border bg-background px-1.5 py-0.5 tabular-nums"
-              />
-              <Button variant="outline" size="sm" className="h-7 px-2" onClick={applyBatchStartTime}>
-                적용
-              </Button>
-            </span>
-            <span className="flex items-center gap-1">
-              <span className="text-muted-foreground">타임존 일괄</span>
-              <select
-                value={batchTimezone}
-                onChange={(e) => setBatchTimezone(e.target.value)}
-                className="rounded border border-border bg-background px-1.5 py-0.5"
-              >
-                {TIMEZONE_OPTIONS.map((tz) => (
-                  <option key={tz} value={tz}>{tz}</option>
-                ))}
-              </select>
-              <Button variant="outline" size="sm" className="h-7 px-2" onClick={applyBatchTimezone}>
-                적용
-              </Button>
-            </span>
+          <div className="space-y-1.5">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-xs">
+              <label className="flex items-center gap-1.5">
+                <input type="checkbox" checked={allSelected} onChange={toggleAll} />
+                전체 선택 ({selected.size}/{drafts.length})
+              </label>
+              <span className="flex min-w-0 items-center gap-1">
+                <span className="text-muted-foreground">시간 미정 일괄</span>
+                <input
+                  type="time"
+                  value={batchStartTime}
+                  onChange={(e) => setBatchStartTime(e.target.value)}
+                  className="min-w-0 rounded border border-border bg-background px-1.5 py-0.5 tabular-nums"
+                />
+                <Button variant="outline" size="sm" className="h-7 px-2" onClick={applyBatchStartTime}>
+                  적용
+                </Button>
+              </span>
+              <span className="flex min-w-0 items-center gap-1">
+                <span className="text-muted-foreground">지역 표시</span>
+                <select
+                  value={batchTimezone}
+                  onChange={(e) => setBatchTimezone(e.target.value)}
+                  className="min-w-0 rounded border border-border bg-background px-1.5 py-0.5"
+                  aria-label="이 시각이 어느 지역 시간인지"
+                >
+                  {TIMEZONE_OPTIONS.map((tz) => (
+                    <option key={tz} value={tz}>{tz}</option>
+                  ))}
+                </select>
+                <Button variant="outline" size="sm" className="h-7 px-2" onClick={applyBatchTimezone}>
+                  기록
+                </Button>
+              </span>
+            </div>
+            {/* 부동 시간(헌법 VII) — 시각은 안 바뀌고 "어디 시간인지"만 기록한다는 안내. */}
+            <p className="text-[0.7rem] leading-snug text-muted-foreground">
+              시각은 그대로 둡니다. 이 시각이 어느 지역 시간인지만 기록해, 나중에 일정을 볼 때 “이거 어디 시간이지?”를 바로 알 수 있게 합니다.
+            </p>
           </div>
         )}
       </div>
@@ -386,7 +394,7 @@ export default function DraftSection({ tripId, canEdit, onMutated }: Props) {
                     </Select>
                   </label>
                   <label className="block text-xs">
-                    <span className="mb-1 block font-medium">타임존</span>
+                    <span className="mb-1 block font-medium">지역 표시</span>
                     <select
                       value={ov.startTimezone}
                       onChange={(e) => updateOverride(d.id, { startTimezone: e.target.value, endTimezone: e.target.value })}

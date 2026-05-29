@@ -16,7 +16,7 @@ function Linkify({ text }: { text: string }) {
             href={part}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-foreground underline underline-offset-2 hover:opacity-80"
+            className="break-all text-foreground underline underline-offset-2 hover:opacity-80"
           >
             {part}
           </a>
@@ -125,9 +125,9 @@ export default function ActivityCard({
     <Card size="sm" className="group gap-2">
       <CardContent className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
+          <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5">
             <span
-              className={`inline-block rounded-md px-1.5 py-0.5 text-[11px] font-semibold ${CATEGORY_COLOR[activity.category]}`}
+              className={`inline-block shrink-0 rounded-md px-1.5 py-0.5 text-[11px] font-semibold ${CATEGORY_COLOR[activity.category]}`}
             >
               {CATEGORY_LABEL[activity.category]}
             </span>
@@ -137,21 +137,21 @@ export default function ActivityCard({
               </span>
             )}
           </div>
-          <p className="mt-1 text-sm font-medium text-foreground">
+          <p className="mt-1 break-words text-sm font-medium text-foreground">
             {activity.title}
           </p>
           {activity.location && (
-            <p className="mt-0.5 text-xs text-muted-foreground">
+            <p className="mt-0.5 break-words text-xs text-muted-foreground">
               {activity.location}
             </p>
           )}
           {activity.memo && (
-            <p className="mt-1 text-xs text-muted-foreground">
+            <p className="mt-1 break-words text-xs text-muted-foreground">
               <Linkify text={activity.memo} />
             </p>
           )}
         </div>
-        <div className="flex flex-col items-end gap-1 text-right">
+        <div className="flex shrink-0 flex-col items-end gap-1 text-right">
           {cost !== null && cost > 0 && (
             <span className="text-sm font-medium text-foreground tabular-nums">
               {cost.toLocaleString()} {activity.currency}

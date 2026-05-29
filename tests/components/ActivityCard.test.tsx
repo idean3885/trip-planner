@@ -194,4 +194,22 @@ describe("ActivityCard", () => {
       unmount();
     });
   });
+
+  it("긴 제목·위치·메모는 줄바꿈 클래스로 가로 넘침을 막는다(#637, 375px)", () => {
+    const longTitle = "신혼여행리스본1박2일HotelLXRossio체크인후호시우광장도보이동";
+    const longLoc = "Rua-da-Assuncao-52-Rossio-1100-044-Lisboa-Portugal-Baixa-Pombalina";
+    render(
+      <ActivityCard
+        activity={makeActivity({
+          title: longTitle,
+          location: longLoc,
+          memo: "예약: https://www.google.com/maps/place/Hotel+LX+Rossio/very/long/path",
+        })}
+      />
+    );
+    expect(screen.getByText(longTitle).className).toMatch(/break-words/);
+    expect(screen.getByText(longLoc).className).toMatch(/break-words/);
+    // 메모 안 URL 링크는 break-all 로 끊어 넘침 방지.
+    expect(screen.getByRole("link").className).toMatch(/break-all/);
+  });
 });
