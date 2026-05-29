@@ -1,20 +1,16 @@
 <!--
 Sync Impact Report
-- Version change: 1.1.0 → 1.2.0
+- Version change: 1.2.0 → 1.3.0
 - Modified principles: none
 - Added principles:
-  - V. Cross-Domain Integrity: 도메인 간 단방향 참조, 원천 소유권, 명시적 계약
-  - VI. Role-Based Access Control: 역할 기반 권한 매트릭스, 7개 행위 정의
-- Added sections:
-  - Domain Ownership 테이블
-  - Permission Matrix 테이블
-  - Prohibited Cross-Domain Access 목록
+  - VII. Calendar Time Model (부동 시간): 여행 일정 시간은 타임존 비부착 floating time. 표시 숫자 불변, 타임존은 라벨, 절대시간 모델 미사용.
+- Added sections: none
 - Removed sections: none
 - Templates requiring updates:
-  - .specify/templates/plan-template.md ✅ (Constitution Check에서 V, VI 자동 검증)
-  - .specify/templates/spec-template.md ✅ (FR 작성 시 권한 매트릭스 참조)
-  - .specify/templates/tasks-template.md ✅ (no changes needed)
+  - .specify/templates/plan-template.md ✅ (Constitution Check에서 시간 모델 참조)
+  - docs/glossary.md ✅ (시간 섹션에 부동 시간 등재)
 - Follow-up TODOs: none
+- Rationale: 시간 개념은 프로젝트 전역 공통 사상이라 개별 spec/CLAUDE.md 지침이 아닌 헌법 정본으로 둔다. spec 033(외부 캘린더 가져오기)에서 타임존 일괄의 근거.
 -->
 
 # Trip Planner Constitution
@@ -97,6 +93,14 @@ Sync Impact Report
 | 여행 삭제 | O | X | X |
 | 주인 양도 | O (→HOST) | X | X |
 
+### VII. Calendar Time Model (부동 시간)
+
+여행 일정의 시간은 타임존을 부착하지 않는 부동 시간(floating time, RFC 5545)으로 다룬다. 기재된 벽시계 값(예: 5/8 09:00)은 불변이며, 보는 사람의 위치와 무관하게 같은 숫자로 표시한다. 이는 프로젝트 전역의 시간 사상이며 표시·가져오기·내보내기 전부에 적용된다.
+
+- 표시 시각은 저장된 벽시계 값을 그대로 노출한다. 관찰자 타임존으로 환산하지 않는다. `#232` floating-time 관행이 이 원칙의 구현이다.
+- 타임존 필드(`startTimezone`/`endTimezone`)는 표시 숫자를 바꾸지 않는 라벨이다. 그 벽시계가 어느 지역 기준인지를 가리키며, 외부 캘린더 연동에서 단일 순간(UTC)으로 환산할 때만 쓰인다.
+- 일정을 절대시간(UTC 단일 순간)으로 저장·표시하지 않는다. 절대시간 모델은 관찰자 위치에 따라 표시 숫자가 달라져 여행 일정의 현지 기준 표기와 어긋난다.
+
 ## Constraints
 
 - **타겟 사용자**: 개발자 1명(개발/운영) + 비개발자 동행자 2~5명(열람/사용)
@@ -122,4 +126,4 @@ Sync Impact Report
 - **버전 정책**: MAJOR.MINOR.PATCH (원칙 삭제/재정의 = MAJOR, 원칙 추가/확장 = MINOR, 문구 수정 = PATCH)
 - **준수 확인**: 각 specify/plan/tasks 단계에서 헌법 원칙 위반 여부를 검증한다. 특히 V(크로스 도메인)와 VI(권한)은 스펙의 FR 작성 시 필수 검증 대상이다.
 
-**Version**: 1.2.0 | **Ratified**: 2026-03-22 | **Last Amended**: 2026-04-17
+**Version**: 1.3.0 | **Ratified**: 2026-03-22 | **Last Amended**: 2026-05-30
