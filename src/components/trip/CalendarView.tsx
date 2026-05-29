@@ -181,11 +181,16 @@ function MobileCompactCalendar({
   onSelect?: (date: Date | undefined) => void;
 }) {
   const [view, setView] = useState<"month" | "week">("month");
+  // 사용자 기대 방향: 아래로 스와이프 → 주(접기), 위로 스와이프 → 월(펼치기).
+  // preventScrollOnSwipe 를 켜야 세로 스와이프가 페이지 스크롤에 먹히지 않고
+  // 제스처로 등록된다(#637). delta 로 가벼운 탭은 걸러 오작동을 막는다.
   const handlers = useSwipeable({
-    onSwipedUp: () => setView("week"),
-    onSwipedDown: () => setView("month"),
-    preventScrollOnSwipe: false,
+    onSwipedDown: () => setView("week"),
+    onSwipedUp: () => setView("month"),
+    preventScrollOnSwipe: true,
+    trackTouch: true,
     trackMouse: false,
+    delta: 30,
   });
 
   return (
@@ -201,6 +206,15 @@ function MobileCompactCalendar({
           onSelect={onSelect}
         />
       )}
+      {/* 스와이프가 어려운 환경에서도 월↔주 전환을 보장하는 명시적 탭 토글(#637). */}
+      <button
+        type="button"
+        onClick={() => setView((v) => (v === "month" ? "week" : "month"))}
+        aria-pressed={view === "week"}
+        className="mt-1 flex w-full items-center justify-center rounded-md py-1.5 text-xs text-muted-foreground transition-colors hover:bg-muted"
+      >
+        {view === "month" ? "주간만 보기" : "월 전체 보기"}
+      </button>
     </div>
   );
 }

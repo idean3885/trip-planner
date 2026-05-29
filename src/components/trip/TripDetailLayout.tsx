@@ -14,9 +14,10 @@
  */
 
 import { useCallback, useMemo, useState, type ReactNode } from "react";
-import { Ellipsis } from "lucide-react";
+import { ChevronDown, Ellipsis } from "lucide-react";
 import type { ActivityCategory, ReservationStatus } from "@prisma/client";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { CalendarView } from "./CalendarView";
 import { DayActivitiesPane, type DayCreatedPayload } from "./DayActivitiesPane";
 
@@ -170,7 +171,14 @@ export function TripDetailLayout({
               className="gap-1 text-sm text-muted-foreground"
             >
               <Ellipsis className="size-4" aria-hidden />
-              자세히
+              {detailOpen ? "닫기" : "자세히"}
+              <ChevronDown
+                className={cn(
+                  "size-4 transition-transform",
+                  detailOpen && "rotate-180",
+                )}
+                aria-hidden
+              />
             </Button>
           </div>
           <CalendarView
@@ -182,13 +190,15 @@ export function TripDetailLayout({
             enableMobileCompact
           />
         </div>
-        {panel}
+        {/* 자세히 콘텐츠는 토글 버튼·캘린더 바로 아래에 노출한다. 선택 일정
+            패널 아래에 두면 화면 밖이라 토글이 무반응처럼 보였다(#637). */}
         {detailOpen && (
           <div className="space-y-6">
             {syncCard}
             {memberList}
           </div>
         )}
+        {panel}
       </div>
     </>
   );
