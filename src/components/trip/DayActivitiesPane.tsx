@@ -1,82 +1,102 @@
 "use client";
 
 /**
- * spec 029 T022 + #595 T035 — 선택된 날짜의 일정 리스트 pane.
+ * spec 032 — 선택된 날짜의 일정 패널 (인라인 CRUD).
  *
- * desktop split 의 사이드 영역과 mobile stacked 의 하단 영역에서 같은
- * 컴포넌트를 재사용한다. 다중 trip 모드에서는 `groups` 에 trip 별 일정을
- * 묶어 넘기면 각 trip 의 색 라벨 + 일정 카드를 분리 노출한다. 단일 trip
- * 모드는 groups 길이 1 로 호출 — 라벨은 자동으로 숨겨진다.
- *
- * 일정 0건 day 처리: 현재 trip 의 day 가 null 이면 "이 날짜에 일정이
- * 없습니다" + AddDayButton(권한자). 다른 trip 의 null day 는 노이즈라 skip.
+ * 데스크탑 우측 하단 / 모바일 캘린더 아래에서 같은 컴포넌트를 재사용한다.
+ * 선택 날짜에 매칭 Day 가 있으면 `ActivityList` 로 활동을 추가·수정·삭제하고,
+ * Day 가 없으면 "일정 추가" 버튼으로 먼저 Day 를 생성(`POST /days`)한 뒤
+ * 부모(`TripDetailLayout`)의 days 상태에 반영한다. 페이지 이동은 없다.
  */
 
-import Link from "next/link";
+import { useState } from "react";
+import { toast } from "sonner";
 import type { ActivityCategory, ReservationStatus } from "@prisma/client";
 import { formatCalendarDate } from "@/lib/date-utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import AddDayButton from "@/components/AddDayButton";
-import { getTripColor } from "@/lib/trip-palette";
+import { Button } from "@/components/ui/button";
+import ActivityList from "@/components/ActivityList";
 
-export interface PaneActivity {
+export interface PanelActivity {
   id: number;
-  title: string;
   category: ActivityCategory;
+  title: string;
   startTime: string | null;
+  startTimezone?: string | null;
   endTime: string | null;
+  endTimezone?: string | null;
   location: string | null;
+  memo: string | null;
+  cost: string | null;
+  currency: string;
   reservationStatus: ReservationStatus | null;
+  sortOrder: number;
 }
 
-export interface PaneDay {
+export interface PanelDay {
   id: number;
-  title: string | null;
-  activities: PaneActivity[];
+  activities: PanelActivity[];
 }
 
-export interface DayActivitiesGroup {
-  tripId: number;
-  tripTitle: string;
-  /** 선택 날짜에 해당 trip 에 등록된 Day. 없으면 null. */
-  day: PaneDay | null;
+export interface DayCreatedPayload {
+  id: number;
+  date: string;
 }
 
 export interface DayActivitiesPaneProps {
-  /** 사용자가 현재 보고 있는 trip 의 ID. AddDayButton 노출 분기에 사용. */
-  currentTripId: number;
+  tripId: number;
   /** 캘린더에서 선택된 날짜. */
   selectedDate: Date;
-  /** trip 별 일정 그룹. 단일 trip 모드는 길이 1. */
-  groups: DayActivitiesGroup[];
-  /** 편집 권한 (GUEST=false). 현재 trip 기준. */
+  /** 선택 날짜에 매칭되는 Day. 없으면 null. */
+  day: PanelDay | null;
+  /** 편집 권한 (GUEST=false). */
   canEdit: boolean;
-  /** 현재 trip 의 derived 기간 — AddDayButton 날짜 범위 제약. */
-  tripStart: Date;
-  tripEnd: Date;
+  /** 빈 날짜에서 Day 가 새로 생성되면 부모 days 상태에 반영하는 콜백. */
+  onDayCreated: (day: DayCreatedPayload) => void;
 }
 
-function formatHHMM(value: string | null): string {
-  if (!value) return "";
-  const d = new Date(value);
-  return `${String(d.getUTCHours()).padStart(2, "0")}:${String(d.getUTCMinutes()).padStart(2, "0")}`;
+/** Date 를 로컬 기준 YYYY-MM-DD 로 변환 (floating-time 관행 #232). */
+function toYmd(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
 }
 
 export function DayActivitiesPane({
-  currentTripId,
+  tripId,
   selectedDate,
-  groups,
+  day,
   canEdit,
-  tripStart,
-  tripEnd,
+  onDayCreated,
 }: DayActivitiesPaneProps) {
-  const isMulti = groups.length >= 2;
-  // 다중 trip 모드는 day 있는 그룹만 표시(다른 trip 의 빈 day 는 노이즈 skip).
-  const visibleGroups = isMulti
-    ? groups.filter((g) => g.day !== null)
-    : groups;
-  const currentGroup = groups.find((g) => g.tripId === currentTripId);
-  const currentEmpty = !currentGroup?.day;
+  const [busy, setBusy] = useState(false);
+
+  async function handleCreateDay() {
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/trips/${tripId}/days`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ date: toYmd(selectedDate) }),
+      });
+      if (!res.ok) {
+        const body = (await res.json().catch(() => ({}))) as { error?: string };
+        toast.error(
+          body.error === "duplicate_date"
+            ? "이미 해당 날짜의 일정이 있습니다"
+            : "일정 추가에 실패했습니다",
+        );
+        return;
+      }
+      const created = (await res.json()) as { id: number; date: string };
+      onDayCreated({ id: created.id, date: created.date });
+    } catch {
+      toast.error("일정 추가 중 오류가 발생했습니다");
+    } finally {
+      setBusy(false);
+    }
+  }
 
   return (
     <Card>
@@ -85,101 +105,32 @@ export function DayActivitiesPane({
           {formatCalendarDate(selectedDate)}
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        {visibleGroups.length === 0 ? (
-          <div className="space-y-2">
+      <CardContent>
+        {day ? (
+          <ActivityList
+            tripId={tripId}
+            dayId={day.id}
+            activities={day.activities}
+            canEdit={canEdit}
+          />
+        ) : (
+          <div className="space-y-3">
             <p className="text-sm text-muted-foreground">
               이 날짜에 등록된 일정이 없습니다.
             </p>
             {canEdit && (
-              <AddDayButton
-                tripId={currentTripId}
-                tripStartDate={tripStart.toISOString()}
-                tripEndDate={tripEnd.toISOString()}
-              />
-            )}
-          </div>
-        ) : (
-          <ul className="space-y-4">
-            {visibleGroups.map((g) =>
-              g.day ? (
-                <li key={g.tripId} className="space-y-2">
-                  {isMulti && (
-                    <TripLabel tripId={g.tripId} title={g.tripTitle} />
-                  )}
-                  <Link
-                    href={`/trips/${g.tripId}/day/${g.day.id}`}
-                    className="block text-sm font-medium text-foreground hover:underline"
-                  >
-                    {g.day.title || "일정 상세 보기"}
-                  </Link>
-                  {g.day.activities.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">
-                      일정이 등록되지 않았습니다.
-                    </p>
-                  ) : (
-                    <ul className="space-y-2">
-                      {g.day.activities.map((a) => (
-                        <li
-                          key={a.id}
-                          className="flex items-center justify-between gap-2 text-sm"
-                        >
-                          <div className="min-w-0">
-                            <div className="truncate text-foreground">
-                              {a.title}
-                            </div>
-                            {a.location && (
-                              <div className="truncate text-xs text-muted-foreground">
-                                {a.location}
-                              </div>
-                            )}
-                          </div>
-                          {a.startTime && (
-                            <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
-                              {formatHHMM(a.startTime)}
-                            </span>
-                          )}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </li>
-              ) : null,
-            )}
-          </ul>
-        )}
-
-        {/* 다중 trip 모드에서 현재 trip 만 비어 있으면 안내 + (편집 권한자만) 추가 버튼.
-            GUEST 도 안내 텍스트는 노출 — 어느 여행이 비어 있는지 인지하게 함. */}
-        {isMulti && currentEmpty && visibleGroups.length > 0 && (
-          <div className="border-t border-border pt-3 space-y-2">
-            <p className="text-xs text-muted-foreground">
-              현재 여행에는 이 날짜에 일정이 없습니다.
-            </p>
-            {canEdit && (
-              <AddDayButton
-                tripId={currentTripId}
-                tripStartDate={tripStart.toISOString()}
-                tripEndDate={tripEnd.toISOString()}
-              />
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleCreateDay}
+                disabled={busy}
+              >
+                + 일정 추가
+              </Button>
             )}
           </div>
         )}
       </CardContent>
     </Card>
-  );
-}
-
-function TripLabel({ tripId, title }: { tripId: number; title: string }) {
-  const color = getTripColor(tripId);
-  return (
-    <span className="inline-flex items-center gap-1.5 text-xs">
-      <span
-        aria-hidden
-        className="size-2 rounded-full"
-        style={{ backgroundColor: color.cssVar }}
-      />
-      <span className="font-medium text-muted-foreground">{title}</span>
-    </span>
   );
 }

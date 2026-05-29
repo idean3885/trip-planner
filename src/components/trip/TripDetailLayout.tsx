@@ -1,34 +1,39 @@
 "use client";
 
 /**
- * spec 031 — 여행 상세 좌-캘린더 단독 레이아웃.
+ * spec 032 — 여행 상세 캘린더 중심 단일 화면 오케스트레이터.
  *
- * 데스크탑 ≥1024px에서 본문 좌측 셀에 캘린더만 노출한다. spec 029 Stage 2의
- * 가운데 sidePane(트립 체크박스 + 선택 날짜 일정 패널 + placeholder)은 제거.
- * 캘린더 셀 클릭 시 해당 일자의 Day 페이지로 즉시 이동한다.
+ * 캘린더 셀 클릭 시 페이지 이동 없이 `selectedDate` 만 갱신하고, 선택 날짜의
+ * 일정을 같은 화면 패널(`DayActivitiesPane`)에서 조회·추가·수정·삭제한다.
+ * 빈 날짜에 첫 일정이 추가돼 Day 가 새로 생기면 `days` 상태에 반영해 캘린더의
+ * 일정 표시와 패널이 같은 소스로 갱신된다.
  *
- * 모바일(<1024px)은 기존과 동일하게 캘린더 + Day 카드 목록을 세로로 쌓는다.
- *
- * 다중 trip 통합 표시(체크박스·색 dot/bar 분리)는 본 피처 범위 외 — 후속
- * 사이클에서 SidePanel 내 토글 등 다른 동선으로 재배치 검토.
+ * - 데스크탑(≥1024px): 좌(캘린더 확대 + 동기화 카드) / 우(동행자 + 선택 일정).
+ * - 모바일(<1024px): sticky 캘린더(위로 스와이프 시 선택 주로 압축) + 선택
+ *   일정. 동기화·동행자는 캘린더 상단 바의 "자세히" 로 한 단계 뒤에 둔다.
  */
 
-import { useCallback, useMemo } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useCallback, useMemo, useState, type ReactNode } from "react";
+import { Ellipsis } from "lucide-react";
 import type { ActivityCategory, ReservationStatus } from "@prisma/client";
-import { formatCalendarDate } from "@/lib/date-utils";
-import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { CalendarView } from "./CalendarView";
+import { DayActivitiesPane, type DayCreatedPayload } from "./DayActivitiesPane";
 
 export interface LayoutActivity {
   id: number;
   title: string;
   category: ActivityCategory;
   startTime: string | null;
+  startTimezone: string | null;
   endTime: string | null;
+  endTimezone: string | null;
   location: string | null;
+  memo: string | null;
+  cost: string | null;
+  currency: string;
   reservationStatus: ReservationStatus | null;
+  sortOrder: number;
 }
 
 export interface LayoutDay {
@@ -44,119 +49,147 @@ export interface TripDetailLayoutProps {
   tripStart: Date | null;
   tripEnd: Date | null;
   days: LayoutDay[];
+  canEdit: boolean;
+  /** 외부 캘린더 동기화 카드 (서버에서 만든 노드). */
+  syncCard: ReactNode;
+  /** 동행자 목록 (서버에서 만든 노드). */
+  memberList: ReactNode;
 }
 
 /**
- * 두 Date 가 같은 "달력일" 인지 비교한다. 브라우저 로컬 timezone 기준이라
- * Day.date(`Timestamptz`)가 UTC 자정 저장 + UTC- 권역 사용자 환경에서 하루
- * 어긋날 수 있다. CLAUDE.md 의 "floating-time 관행 #232" 그대로 단순화 채택.
+ * 두 Date 가 같은 "달력일" 인지 비교. floating-time 관행 #232 그대로 단순화.
  */
 function sameLocalDay(a: Date, b: Date): boolean {
   return a.toDateString() === b.toDateString();
+}
+
+/**
+ * 진입 시 초기 선택 날짜 — 여행 기간 안에 오늘이 있으면 오늘, 없으면 여행
+ * 첫날(일정 0건이면 오늘).
+ */
+export function computeInitialSelected(
+  tripStart: Date | null,
+  tripEnd: Date | null,
+): Date {
+  const today = new Date();
+  if (tripStart && tripEnd && today >= tripStart && today <= tripEnd) {
+    return today;
+  }
+  return tripStart ?? today;
 }
 
 export function TripDetailLayout({
   tripId,
   tripStart,
   tripEnd,
-  days,
+  days: initialDays,
+  canEdit,
+  syncCard,
+  memberList,
 }: TripDetailLayoutProps) {
-  const router = useRouter();
+  const [days, setDays] = useState<LayoutDay[]>(initialDays);
+  const [selectedDate, setSelectedDate] = useState<Date>(() =>
+    computeInitialSelected(tripStart, tripEnd),
+  );
+  const [detailOpen, setDetailOpen] = useState(false);
 
   const daysDates = useMemo(
     () => days.map((d) => new Date(d.date)),
     [days],
   );
 
-  const handleSelectDate = useCallback(
-    (date: Date | undefined) => {
-      if (!date) return;
-      const matched = days.find((d) => sameLocalDay(new Date(d.date), date));
-      if (!matched) return;
-      router.push(`/trips/${tripId}/day/${matched.id}`);
-    },
-    [days, router, tripId],
-  );
+  const selectedDay = useMemo(() => {
+    const matched = days.find((d) =>
+      sameLocalDay(new Date(d.date), selectedDate),
+    );
+    return matched ? { id: matched.id, activities: matched.activities } : null;
+  }, [days, selectedDate]);
 
-  const calendarView = (
-    <CalendarView
-      tripStart={tripStart}
-      tripEnd={tripEnd}
-      daysDates={daysDates}
-      onSelect={handleSelectDate}
+  const handleSelectDate = useCallback((date: Date | undefined) => {
+    if (date) setSelectedDate(date);
+  }, []);
+
+  const handleDayCreated = useCallback((created: DayCreatedPayload) => {
+    setDays((prev) =>
+      [
+        ...prev,
+        {
+          id: created.id,
+          date: created.date,
+          title: null,
+          dayNumber: 0,
+          activities: [] as LayoutActivity[],
+        },
+      ].sort(
+        (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+      ),
+    );
+  }, []);
+
+  const panel = (
+    <DayActivitiesPane
+      tripId={tripId}
+      selectedDate={selectedDate}
+      day={selectedDay}
+      canEdit={canEdit}
+      onDayCreated={handleDayCreated}
     />
   );
 
-  const emptyNotice =
-    days.length === 0 ? (
-      <Card>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
-            아직 일정이 등록되지 않았습니다. 일정을 추가하면 캘린더에 기간이
-            강조됩니다.
-          </p>
-        </CardContent>
-      </Card>
-    ) : null;
-
   return (
-    <div className="space-y-4">
-      {emptyNotice}
-      {calendarView}
-      {/* 모바일에서만 Day 카드 목록을 캘린더 아래에 노출 (데스크탑은 셀 클릭으로 진입). */}
-      <div className="lg:hidden">
-        <DayList tripId={tripId} days={days} />
+    <>
+      {/* 데스크탑 ≥1024px — 좌(캘린더+동기화) / 우(동행자+선택 일정) 2분할. */}
+      <div className="hidden lg:grid lg:grid-cols-2 lg:gap-grid-comfy lg:items-start">
+        <div className="min-w-0 space-y-6">
+          <CalendarView
+            tripStart={tripStart}
+            tripEnd={tripEnd}
+            daysDates={daysDates}
+            selected={selectedDate}
+            onSelect={handleSelectDate}
+            desktopFull
+          />
+          {syncCard}
+        </div>
+        <div className="min-w-0 space-y-6">
+          {memberList}
+          {panel}
+        </div>
       </div>
-    </div>
-  );
-}
 
-function DayList({
-  tripId,
-  days,
-}: {
-  tripId: number;
-  days: LayoutDay[];
-}) {
-  if (days.length === 0) {
-    return (
-      <Card>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
-            등록된 일정이 없습니다.
-          </p>
-        </CardContent>
-      </Card>
-    );
-  }
-  return (
-    <ul className="space-y-2">
-      {days.map((day) => (
-        <li key={day.id}>
-          <Link
-            href={`/trips/${tripId}/day/${day.id}`}
-            className="group block"
-          >
-            <Card size="sm" className="transition-all group-hover:ring-foreground/20">
-              <CardContent className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3 min-w-0">
-                  <span className="inline-flex items-center rounded-md bg-foreground px-2 py-0.5 text-xs font-medium text-background shrink-0 tabular-nums">
-                    DAY {day.dayNumber}
-                  </span>
-                  {day.title && (
-                    <span className="text-sm text-foreground truncate">
-                      {day.title}
-                    </span>
-                  )}
-                </div>
-                <span className="text-xs text-muted-foreground tabular-nums shrink-0">
-                  {formatCalendarDate(new Date(day.date))}
-                </span>
-              </CardContent>
-            </Card>
-          </Link>
-        </li>
-      ))}
-    </ul>
+      {/* 모바일 <1024px — sticky 캘린더 + 선택 일정. 동기화·동행자는 자세히. */}
+      <div className="space-y-4 lg:hidden">
+        <div className="sticky top-0 z-20 -mx-4 bg-background px-4 pb-2 pt-1">
+          <div className="flex justify-end">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setDetailOpen((v) => !v)}
+              aria-expanded={detailOpen}
+              className="gap-1 text-sm text-muted-foreground"
+            >
+              <Ellipsis className="size-4" aria-hidden />
+              자세히
+            </Button>
+          </div>
+          <CalendarView
+            tripStart={tripStart}
+            tripEnd={tripEnd}
+            daysDates={daysDates}
+            selected={selectedDate}
+            onSelect={handleSelectDate}
+            enableMobileCompact
+          />
+        </div>
+        {panel}
+        {detailOpen && (
+          <div className="space-y-6">
+            {syncCard}
+            {memberList}
+          </div>
+        )}
+      </div>
+    </>
   );
 }

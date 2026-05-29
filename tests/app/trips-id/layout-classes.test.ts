@@ -1,15 +1,16 @@
 /**
- * spec 026 묶음 B + spec 031 — trip 상세 페이지의 데스크탑 다단 분기 클래스
- * 정적 검증.
+ * spec 026 묶음 B + spec 031 → spec 032 — trip 상세 페이지 레이아웃 정적 검증.
  *
- * 컴포넌트는 server async + Prisma 의존이라 mount 테스트 비용이 크다.
- * 대신 소스 파일을 직접 읽어 분기 클래스가 살아있는지 정적으로 보장.
- * 이 테스트가 깨지면 누군가 데스크탑 분기를 회귀시킨 것.
+ * 컴포넌트는 server async + Prisma 의존이라 mount 비용이 크다. 소스 파일을
+ * 직접 읽어 핵심 분기/배치가 살아있는지 정적으로 보장한다.
  *
- * spec 031 변경: 본문 grid 가 `minmax(0,2fr)_minmax(280px,1fr)` 비대칭에서
- * 좌·우 50:50 `lg:grid-cols-2` 로 단순화됨 (이슈 #608). 모바일은 본문 안
- * SidePanel 위치(lg:hidden) 유지, 데스크탑 SidePanel 은 우측 셀에서
- * (hidden lg:block) 노출. 두 위치 패턴은 spec 026 묶음 B 그대로 승계.
+ * spec 032 변경:
+ * - SidePanel(동기화+동행자 묶음) 해체 → page.tsx 가 CalendarSyncEntryCard·
+ *   MemberList 를 직접 만들어 TripDetailLayout 의 syncCard·memberList prop 으로
+ *   전달. 좌우/세로 배치는 TripDetailLayout 이 viewport 별로 처리.
+ * - 데스크탑 2분할 grid 가 page.tsx → TripDetailLayout 으로 이동(lg:grid-cols-2).
+ * - Day 상세 페이지(/trips/[id]/day/[dayId])는 redirect 로 축소.
+ * - DayList 제거.
  */
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
@@ -17,45 +18,63 @@ import { resolve } from "node:path";
 
 const REPO_ROOT = resolve(__dirname, "../../..");
 const PAGE_PATH = resolve(REPO_ROOT, "src/app/trips/[id]/page.tsx");
-const SIDE_PANEL_PATH = resolve(REPO_ROOT, "src/app/trips/[id]/SidePanel.tsx");
-const LAYOUT_PATH = resolve(REPO_ROOT, "src/app/layout.tsx");
+const LAYOUT_COMPONENT_PATH = resolve(
+  REPO_ROOT,
+  "src/components/trip/TripDetailLayout.tsx",
+);
+const DAY_PAGE_PATH = resolve(REPO_ROOT, "src/app/trips/[id]/day/[dayId]/page.tsx");
+const GLOBAL_LAYOUT_PATH = resolve(REPO_ROOT, "src/app/layout.tsx");
 
 const pageSrc = readFileSync(PAGE_PATH, "utf8");
-const sidePanelSrc = readFileSync(SIDE_PANEL_PATH, "utf8");
-const layoutSrc = readFileSync(LAYOUT_PATH, "utf8");
+const layoutComponentSrc = readFileSync(LAYOUT_COMPONENT_PATH, "utf8");
+const dayPageSrc = readFileSync(DAY_PAGE_PATH, "utf8");
+const globalLayoutSrc = readFileSync(GLOBAL_LAYOUT_PATH, "utf8");
 
-describe("trip 상세 데스크탑 다단 분기 (spec 026/B + spec 031)", () => {
-  it("페이지 wrapper에 lg:grid-cols-2 분기 클래스가 존재한다 — spec 031 좌·우 50:50", () => {
-    // spec 031 (#608) — `minmax(0,2fr)_minmax(280px,1fr)` 비대칭 → 좌·우 균등
-    // `lg:grid-cols-2` 로 단순화 (page.tsx:123). 데스크탑 2분할이 사라지면 fail.
-    expect(pageSrc).toContain("lg:grid-cols-2");
+describe("trip 상세 레이아웃 (spec 032 — 캘린더 중심 단일 화면)", () => {
+  it("page.tsx 는 해체된 SidePanel 을 더 이상 import 하지 않는다", () => {
+    expect(pageSrc).not.toMatch(/from "\.\/SidePanel"/);
   });
 
-  it("페이지가 SidePanel 컴포넌트를 사용한다", () => {
-    expect(pageSrc).toContain('from "./SidePanel"');
-    expect(pageSrc).toMatch(/<SidePanel\b/);
+  it("page.tsx 는 동기화 카드·동행자를 직접 만들어 TripDetailLayout 에 prop 으로 넘긴다", () => {
+    expect(pageSrc).toContain("CalendarSyncEntryCard");
+    expect(pageSrc).toContain("MemberList");
+    expect(pageSrc).toMatch(/<TripDetailLayout[\s\S]+syncCard=/);
+    expect(pageSrc).toMatch(/<TripDetailLayout[\s\S]+memberList=/);
   });
 
-  it("hotfix v2.13.1 — 모바일은 본문 안(lg:hidden) 인라인, 데스크탑은 사이드 cell(hidden lg:block)에 SidePanel 두 위치", () => {
-    expect(pageSrc).toMatch(/lg:hidden[\s\S]+<SidePanel/);
-    expect(pageSrc).toMatch(/hidden lg:block[\s\S]+<SidePanel/);
+  it("데스크탑 2분할 grid 는 TripDetailLayout 으로 이동했다 — lg:grid-cols-2", () => {
+    // spec 031 까지 page.tsx 본문 wrapper 에 있던 lg:grid-cols-2 가
+    // TripDetailLayout 내부 데스크탑 분기로 이동. 좌(캘린더+동기화)/우(동행자+일정).
+    expect(layoutComponentSrc).toContain("lg:grid-cols-2");
+    expect(pageSrc).not.toMatch(/lg:grid-cols-2/);
   });
 
-  it("SidePanel은 캘린더 패널 3종과 MemberList를 한 컴포넌트로 묶는다", () => {
-    expect(sidePanelSrc).toContain("CalendarProviderChoice");
-    expect(sidePanelSrc).toContain("GCalLinkPanel");
-    expect(sidePanelSrc).toContain("AppleEntryCard");
-    expect(sidePanelSrc).toContain("MemberList");
+  it("TripDetailLayout 은 캘린더 확대(desktopFull)와 모바일 압축(enableMobileCompact)을 쓴다", () => {
+    expect(layoutComponentSrc).toContain("desktopFull");
+    expect(layoutComponentSrc).toContain("enableMobileCompact");
   });
 
-  it("글로벌 layout이 데스크탑에서 wide 토큰 폭으로 확장된다", () => {
-    expect(layoutSrc).toMatch(/lg:max-w-wide/);
+  it("TripDetailLayout 은 모바일에서 캘린더를 sticky 로 고정한다", () => {
+    expect(layoutComponentSrc).toMatch(/sticky top-0/);
   });
 
-  it("모바일(<lg) 흐름은 단일 컬럼 — lg prefix 없이는 grid-cols-* 지정 없음", () => {
-    // 페이지 wrapper에 grid는 정의되지만 cols는 lg에서만 분기.
-    // sm:/md: prefix로 grid-cols가 잡혀있지 않은지 확인 (회귀 방지).
-    // 숫자·대괄호 두 형태 모두 차단 (sibling list-grid.test.ts 와 정합).
+  it("DayList 가 제거됐다 — TripDetailLayout 에 DayList 정의·참조가 없다", () => {
+    expect(layoutComponentSrc).not.toMatch(/DayList/);
+  });
+
+  it("Day 상세 페이지는 redirect 로 축소됐다", () => {
+    expect(dayPageSrc).toContain('from "next/navigation"');
+    expect(dayPageSrc).toMatch(/redirect\(`\/trips\/\$\{id\}`\)/);
+    // 더 이상 ActivityList 를 직접 렌더하지 않는다(인라인 패널로 이동).
+    expect(dayPageSrc).not.toContain("ActivityList");
+  });
+
+  it("모바일(<lg) 흐름은 단일 컬럼 — sm/md prefix grid-cols 분기 없음", () => {
     expect(pageSrc).not.toMatch(/(?:sm|md):grid-cols-/);
+    expect(layoutComponentSrc).not.toMatch(/(?:sm|md):grid-cols-/);
+  });
+
+  it("글로벌 layout 이 데스크탑에서 wide 토큰 폭으로 확장된다", () => {
+    expect(globalLayoutSrc).toMatch(/lg:max-w-wide/);
   });
 });
