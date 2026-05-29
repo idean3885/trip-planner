@@ -68,7 +68,9 @@ export default async function CalendarsSettingsPage() {
           <p className="text-sm text-muted-foreground">아직 등록된 자격증명이 없습니다.</p>
         )}
 
-        <AppleConnectWizard prefillEmail={session.user.email ?? undefined} />
+        {/* 재등록 편의로 이미 등록된 Apple ID 만 prefill. 로그인 이메일은 채우지
+            않는다(Apple ID 유추 근거 아님, #627). */}
+        <AppleConnectWizard prefillEmail={cred?.appleId ?? undefined} />
       </section>
     </main>
   );

@@ -28,7 +28,7 @@ interface AppleConnectWizardProps {
    * 이 모드를 사용한다.
    */
   tripId?: number;
-  /** 사용자 세션 이메일 — Apple ID에 자동 prefill. 사용자가 수정 가능. */
+  /** 유추 가능한 Apple ID(예: 이미 등록된 값)만 prefill. 로그인 이메일은 넣지 않는다(#627). */
   prefillEmail?: string;
   /** 재인증 모드 — true면 Apple ID 필드 disabled + 캘린더 재생성 안 함. */
   reauth?: boolean;
@@ -253,7 +253,7 @@ export default function AppleConnectWizard({
             placeholder="xxxx-xxxx-xxxx-xxxx"
             autoComplete="off"
             spellCheck={false}
-            autoFocus={!!prefillEmail || reauth}
+            autoFocus={!reauth}
             disabled={submitting}
             required
           />
