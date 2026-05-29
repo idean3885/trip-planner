@@ -1,22 +1,22 @@
 "use client";
 
 /**
- * spec 028 섹션 3 — draft 목록·승격·refresh·삭제.
+ * spec 028 섹션 3 → spec 033 — 외부에서 가져온 일정(draft) 선택·일괄 보정·일괄 확정.
  *
- * v2.15.1 `DraftListPanel` 의 동작을 inline 흡수. 같은 다이얼로그 내부에서 승격 폼이
- * 펼쳐지며 별도 모달 없음.
+ * 가져온 draft 목록을 체크박스로 전체/부분 선택하고(진입 시 전체 선택), 상단 sticky
+ * 헤더의 확정 버튼으로 선택분을 한 번에 정식 일정으로 승격한다. 헤더 바로 아래에 시간
+ * 미정 일괄 시작·타임존 일괄을 둔다. 보정값은 클라이언트 상태로만 들고 있다가(가져온
+ * 시점 미저장) 확정 시 promote-batch 로 전송한다.
+ *
+ * 헌법 VII(부동 시간): 표시 시각은 저장된 벽시계 값(`getUTC*`)을 그대로 노출한다.
+ * 타임존 일괄은 라벨만 교체하고 시각 숫자를 바꾸지 않는다. 시간 미정 일괄 시작은 그
+ * 날짜에 벽시계 시작 값을 부여한다.
  */
 
-import { useCallback, useEffect, useState } from "react";
-import { Loader2, MoreHorizontal } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   Select,
   SelectContent,
@@ -48,6 +48,16 @@ interface DraftDTO {
   status: ActivityDraftStatus;
 }
 
+interface ItemOverride {
+  category: ActivityCategory;
+  reservationStatus: ReservationStatus;
+  startTimezone: string;
+  endTimezone: string;
+  /** 보정된 부동 시각(ISO). undefined 면 draft 원본 사용. */
+  startTime?: string;
+  endTime?: string;
+}
+
 const CATEGORY_OPTIONS: { value: ActivityCategory; label: string }[] = [
   { value: "SIGHTSEEING", label: "관광" },
   { value: "DINING", label: "식사" },
@@ -75,21 +85,39 @@ const TIMEZONE_OPTIONS = [
   "UTC",
 ];
 
-function formatRange(start: string, end: string, isAllDay: boolean): string {
-  if (isAllDay) {
-    return new Intl.DateTimeFormat("ko-KR", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    }).format(new Date(start));
-  }
-  const fmt = new Intl.DateTimeFormat("ko-KR", {
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-  return `${fmt.format(new Date(start))} ~ ${fmt.format(new Date(end))}`;
+const pad = (n: number) => String(n).padStart(2, "0");
+
+/** 헌법 VII — 벽시계 값을 그대로 표시(관찰자 타임존 환산 없음). */
+function formatHHMM(iso: string): string {
+  const d = new Date(iso);
+  return `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`;
+}
+function formatMonthDay(iso: string): string {
+  const d = new Date(iso);
+  return `${pad(d.getUTCMonth() + 1)}/${pad(d.getUTCDate())}`;
+}
+
+/** 같은 날짜에 벽시계 HH:MM 을 부여한 부동 시각 ISO 를 만든다. */
+function withFloatingTime(baseIso: string, hhmm: string): string {
+  const base = new Date(baseIso);
+  const [h, m] = hhmm.split(":").map((v) => parseInt(v, 10));
+  return new Date(
+    Date.UTC(base.getUTCFullYear(), base.getUTCMonth(), base.getUTCDate(), h, m),
+  ).toISOString();
+}
+/** start 기준 +1시간 부동 시각. */
+function plusOneHour(iso: string): string {
+  const d = new Date(iso);
+  return new Date(d.getTime() + 60 * 60 * 1000).toISOString();
+}
+
+function defaultOverride(d: DraftDTO): ItemOverride {
+  return {
+    category: "SIGHTSEEING",
+    reservationStatus: "NOT_NEEDED",
+    startTimezone: d.startTimezone ?? "Asia/Seoul",
+    endTimezone: d.endTimezone ?? d.startTimezone ?? "Asia/Seoul",
+  };
 }
 
 interface Props {
@@ -101,13 +129,12 @@ interface Props {
 export default function DraftSection({ tripId, canEdit, onMutated }: Props) {
   const [drafts, setDrafts] = useState<DraftDTO[] | null>(null);
   const [loading, setLoading] = useState(true);
-  const [promoteTarget, setPromoteTarget] = useState<DraftDTO | null>(null);
+  const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [overrides, setOverrides] = useState<Record<number, ItemOverride>>({});
+  const [batchStartTime, setBatchStartTime] = useState("09:00");
+  const [batchTimezone, setBatchTimezone] = useState("Asia/Seoul");
+  const [editingId, setEditingId] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
-
-  const [category, setCategory] = useState<ActivityCategory>("SIGHTSEEING");
-  const [reservationStatus, setReservationStatus] = useState<ReservationStatus>("NOT_NEEDED");
-  const [startTz, setStartTz] = useState<string>("Asia/Seoul");
-  const [endTz, setEndTz] = useState<string>("Asia/Seoul");
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -115,12 +142,13 @@ export default function DraftSection({ tripId, canEdit, onMutated }: Props) {
       const res = await fetch(`/api/trips/${tripId}/drafts?status=PENDING`, {
         cache: "no-store",
       });
-      if (!res.ok) {
-        setDrafts([]);
-        return;
-      }
-      const data = await res.json();
-      setDrafts(data.drafts as DraftDTO[]);
+      const list: DraftDTO[] = res.ok ? (await res.json()).drafts : [];
+      setDrafts(list);
+      // 진입 시 전체 선택 + 기본 override.
+      setSelected(new Set(list.map((d) => d.id)));
+      setOverrides(
+        Object.fromEntries(list.map((d) => [d.id, defaultOverride(d)])),
+      );
     } finally {
       setLoading(false);
     }
@@ -130,219 +158,273 @@ export default function DraftSection({ tripId, canEdit, onMutated }: Props) {
     refresh();
   }, [refresh]);
 
-  const openPromote = useCallback((d: DraftDTO) => {
-    if (!canEdit) return;
-    setPromoteTarget(d);
-    setCategory("SIGHTSEEING");
-    setReservationStatus("NOT_NEEDED");
-    setStartTz(d.startTimezone ?? "Asia/Seoul");
-    setEndTz(d.endTimezone ?? d.startTimezone ?? "Asia/Seoul");
-  }, [canEdit]);
+  const allSelected = useMemo(
+    () => drafts !== null && drafts.length > 0 && selected.size === drafts.length,
+    [drafts, selected],
+  );
 
-  const handlePromote = useCallback(async () => {
-    if (!promoteTarget) return;
+  const toggleAll = useCallback(() => {
+    if (!drafts) return;
+    setSelected((prev) =>
+      prev.size === drafts.length ? new Set() : new Set(drafts.map((d) => d.id)),
+    );
+  }, [drafts]);
+
+  const toggleOne = useCallback((id: number) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const updateOverride = useCallback(
+    (id: number, partial: Partial<ItemOverride>) => {
+      setOverrides((prev) => ({ ...prev, [id]: { ...prev[id], ...partial } }));
+    },
+    [],
+  );
+
+  // 시간 미정(종일) draft 에만 일괄 시작 시각 부여. 시간 있는 draft 불변.
+  const applyBatchStartTime = useCallback(() => {
+    if (!drafts) return;
+    setOverrides((prev) => {
+      const next = { ...prev };
+      let count = 0;
+      for (const d of drafts) {
+        if (!d.isAllDay) continue;
+        const start = withFloatingTime(d.startTime, batchStartTime);
+        next[d.id] = { ...next[d.id], startTime: start, endTime: plusOneHour(start) };
+        count++;
+      }
+      toast.success(`시간 미정 ${count}건에 시작 시간을 적용했습니다.`);
+      return next;
+    });
+  }, [drafts, batchStartTime]);
+
+  // 시간 있는 draft 의 타임존 라벨만 일괄 교체(시각 숫자 유지, 헌법 VII).
+  const applyBatchTimezone = useCallback(() => {
+    if (!drafts) return;
+    setOverrides((prev) => {
+      const next = { ...prev };
+      let count = 0;
+      for (const d of drafts) {
+        if (d.isAllDay) continue;
+        next[d.id] = {
+          ...next[d.id],
+          startTimezone: batchTimezone,
+          endTimezone: batchTimezone,
+        };
+        count++;
+      }
+      toast.success(`시간 있는 ${count}건의 타임존을 ${batchTimezone}로 맞췄습니다.`);
+      return next;
+    });
+  }, [drafts, batchTimezone]);
+
+  const handleConfirm = useCallback(async () => {
+    if (!drafts) return;
+    const items = drafts
+      .filter((d) => selected.has(d.id))
+      .map((d) => {
+        const ov = overrides[d.id] ?? defaultOverride(d);
+        return {
+          draftId: d.id,
+          category: ov.category,
+          reservationStatus: ov.reservationStatus,
+          startTimezone: ov.startTimezone,
+          endTimezone: ov.endTimezone,
+          startTime: ov.startTime,
+          endTime: ov.endTime,
+        };
+      });
+    if (items.length === 0) return;
+
     setSubmitting(true);
     try {
-      const res = await fetch(`/api/trips/${tripId}/drafts/${promoteTarget.id}/promote`, {
+      const res = await fetch(`/api/trips/${tripId}/drafts/promote-batch`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          category,
-          reservationStatus,
-          startTimezone: startTz,
-          endTimezone: endTz,
-        }),
+        body: JSON.stringify({ items }),
       });
-      if (res.status === 422) {
-        const body = await res.json();
-        toast.error("필수 입력 누락", { description: `필드: ${body.fields.join(", ")}` });
-        return;
-      }
       if (!res.ok) {
-        toast.error("승격 실패", { description: `오류 코드 ${res.status}` });
+        toast.error("가져오기 실패", { description: `오류 코드 ${res.status}` });
         return;
       }
-      toast.success("정식 일정으로 승격했습니다.");
-      setPromoteTarget(null);
+      const data = (await res.json()) as {
+        promoted: { draftId: number }[];
+        failed: { draftId: number | null }[];
+      };
+      if (data.promoted.length > 0) {
+        toast.success(`${data.promoted.length}건을 일정으로 가져왔습니다.`);
+      }
+      if (data.failed.length > 0) {
+        toast.error(`${data.failed.length}건은 가져오지 못했습니다.`);
+      }
       await refresh();
       onMutated();
     } finally {
       setSubmitting(false);
     }
-  }, [category, endTz, onMutated, promoteTarget, refresh, reservationStatus, startTz, tripId]);
+  }, [drafts, selected, overrides, tripId, refresh, onMutated]);
 
-  const handleRefreshDraft = useCallback(
-    async (d: DraftDTO) => {
-      const res = await fetch(`/api/trips/${tripId}/drafts/${d.id}/refresh`, { method: "POST" });
-      if (res.status === 404) {
-        toast.error("외부 이벤트가 없어졌습니다.");
-        return;
-      }
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        toast.error("다시 가져오기 실패", {
-          description: body?.message ?? `오류 코드 ${res.status}`,
-        });
-        return;
-      }
-      toast.success("외부 최신 값으로 갱신했습니다.");
-      await refresh();
-    },
-    [refresh, tripId],
-  );
-
-  const handleDelete = useCallback(
-    async (d: DraftDTO) => {
-      if (!confirm("이 초안을 삭제할까요? 외부 캘린더의 이벤트는 그대로 유지됩니다.")) return;
-      const res = await fetch(`/api/trips/${tripId}/drafts/${d.id}`, { method: "DELETE" });
-      if (res.ok) {
-        toast.success("초안을 삭제했습니다.");
-        await refresh();
-        onMutated();
-      } else {
-        toast.error("삭제 실패", { description: `오류 코드 ${res.status}` });
-      }
-    },
-    [onMutated, refresh, tripId],
-  );
-
-  if (loading && drafts === null) {
-    return null;
-  }
-
-  // draft 0건이면 섹션 자체를 숨긴다. 다이얼로그의 <details> summary가 이미
-  // 가져오기 진입점을 안내하므로 빈 상태 안내는 중복 노이즈.
-  if (!drafts || drafts.length === 0) {
-    return null;
-  }
+  if (loading && drafts === null) return null;
+  if (!drafts || drafts.length === 0) return null;
 
   return (
-    <section>
-      <h4 className="mb-2 text-sm font-semibold">외부에서 가져온 일정 ({drafts.length})</h4>
-      <p className="mb-3 text-xs text-muted-foreground">
-        {canEdit
-          ? "초안 클릭 → 카테고리·예약 상태·시간대를 채우면 정식 일정으로 승격됩니다."
-          : "주인·호스트가 정식 일정으로 승격하기 전 단계의 초안입니다."}
-      </p>
-      <ul className="space-y-2">
-        {drafts.map((d) => (
-          <li
-            key={d.id}
-            className="flex items-start justify-between gap-2 rounded-md border border-dashed bg-muted/30 px-3 py-2"
-          >
-            <button
-              className="flex-1 text-left disabled:cursor-not-allowed"
-              onClick={() => openPromote(d)}
-              disabled={!canEdit}
-            >
-              <div className="text-sm font-medium opacity-80">{d.title}</div>
-              <div className="text-xs text-muted-foreground">
-                {formatRange(d.startTime, d.endTime, d.isAllDay)}
-                {d.locationText ? ` · ${d.locationText}` : ""}
-              </div>
-              <div className="mt-1 inline-flex items-center rounded bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
-                외부 캘린더에서 가져옴
-              </div>
-            </button>
-            {canEdit && (
-              <DropdownMenu>
-                <DropdownMenuTrigger>
-                  <span className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-accent" aria-label="더보기">
-                    <MoreHorizontal className="size-4" />
-                  </span>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => handleRefreshDraft(d)}>
-                    다시 가져오기
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleDelete(d)} className="text-destructive">
-                    삭제
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
-          </li>
-        ))}
-      </ul>
-
-      {/* inline 승격 폼 — 같은 다이얼로그 내부에서 펼침 */}
-      {promoteTarget && canEdit && (
-        <div className="mt-4 rounded-md border bg-card p-3">
-          <div className="mb-2 text-sm font-semibold">정식 일정으로 만들기</div>
-          <div className="mb-1 text-xs text-muted-foreground">{promoteTarget.title}</div>
-          <div className="space-y-3 text-sm">
-            <label className="block">
-              <span className="mb-1 block text-xs font-medium">카테고리</span>
-              <Select value={category} onValueChange={(v) => v && setCategory(v as ActivityCategory)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {CATEGORY_OPTIONS.map((o) => (
-                    <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </label>
-            <label className="block">
-              <span className="mb-1 block text-xs font-medium">예약 상태</span>
-              <Select
-                value={reservationStatus}
-                onValueChange={(v) => v && setReservationStatus(v as ReservationStatus)}
-              >
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {RESERVATION_OPTIONS.map((o) => (
-                    <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </label>
-            <div className="grid grid-cols-2 gap-2">
-              <label className="block">
-                <span className="mb-1 block text-xs font-medium">시작 시간대</span>
-                <Select value={startTz} onValueChange={(v) => v && setStartTz(v)}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {TIMEZONE_OPTIONS.map((tz) => (
-                      <SelectItem key={tz} value={tz}>{tz}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </label>
-              <label className="block">
-                <span className="mb-1 block text-xs font-medium">종료 시간대</span>
-                <Select value={endTz} onValueChange={(v) => v && setEndTz(v)}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {TIMEZONE_OPTIONS.map((tz) => (
-                      <SelectItem key={tz} value={tz}>{tz}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </label>
-            </div>
-          </div>
-          <div className="mt-3 flex justify-end gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setPromoteTarget(null)}
-              disabled={submitting}
-            >
-              취소
-            </Button>
-            <Button size="sm" onClick={handlePromote} disabled={submitting}>
+    <section className="min-w-0">
+      {/* 상단 sticky — 확정 버튼 + 일괄 설정. 목록만 스크롤된다. */}
+      <div className="sticky top-0 z-10 -mx-1 mb-3 space-y-2 bg-background px-1 pb-2 pt-1">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h4 className="text-sm font-semibold">외부에서 가져온 일정 ({drafts.length})</h4>
+          {canEdit && (
+            <Button size="sm" onClick={handleConfirm} disabled={submitting || selected.size === 0}>
               {submitting ? (
                 <>
                   <Loader2 className="mr-2 size-4 animate-spin" />
-                  승격 중…
+                  가져오는 중…
                 </>
               ) : (
-                "승격"
+                `${selected.size}건 가져오기`
               )}
             </Button>
-          </div>
+          )}
         </div>
-      )}
+        {canEdit && (
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-xs">
+            <label className="flex items-center gap-1.5">
+              <input type="checkbox" checked={allSelected} onChange={toggleAll} />
+              전체 선택 ({selected.size}/{drafts.length})
+            </label>
+            <span className="flex items-center gap-1">
+              <span className="text-muted-foreground">시간 미정 일괄</span>
+              <input
+                type="time"
+                value={batchStartTime}
+                onChange={(e) => setBatchStartTime(e.target.value)}
+                className="rounded border border-border bg-background px-1.5 py-0.5 tabular-nums"
+              />
+              <Button variant="outline" size="sm" className="h-7 px-2" onClick={applyBatchStartTime}>
+                적용
+              </Button>
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="text-muted-foreground">타임존 일괄</span>
+              <select
+                value={batchTimezone}
+                onChange={(e) => setBatchTimezone(e.target.value)}
+                className="rounded border border-border bg-background px-1.5 py-0.5"
+              >
+                {TIMEZONE_OPTIONS.map((tz) => (
+                  <option key={tz} value={tz}>{tz}</option>
+                ))}
+              </select>
+              <Button variant="outline" size="sm" className="h-7 px-2" onClick={applyBatchTimezone}>
+                적용
+              </Button>
+            </span>
+          </div>
+        )}
+      </div>
+
+      <ul className="space-y-2">
+        {drafts.map((d) => {
+          const ov = overrides[d.id] ?? defaultOverride(d);
+          const effStart = ov.startTime ?? d.startTime;
+          const timeLabel = d.isAllDay && !ov.startTime
+            ? "종일"
+            : `${formatHHMM(effStart)} · ${ov.startTimezone}`;
+          return (
+            <li
+              key={d.id}
+              className="rounded-md border border-dashed bg-muted/30 px-3 py-2"
+            >
+              {/* 모바일 가로 스크롤 방지 — flex-wrap + min-w-0 + break-words */}
+              <div className="flex min-w-0 flex-wrap items-start gap-x-2 gap-y-1">
+                {canEdit && (
+                  <input
+                    type="checkbox"
+                    checked={selected.has(d.id)}
+                    onChange={() => toggleOne(d.id)}
+                    className="mt-1 shrink-0"
+                    aria-label={`${d.title} 선택`}
+                  />
+                )}
+                <div className="min-w-0 flex-1">
+                  <div className="break-words text-sm font-medium">{d.title}</div>
+                  <div className="break-words text-xs text-muted-foreground">
+                    {formatMonthDay(effStart)} {timeLabel}
+                    {d.locationText ? ` · ${d.locationText}` : ""}
+                  </div>
+                </div>
+                {canEdit && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 shrink-0 px-2 text-xs"
+                    onClick={() => setEditingId(editingId === d.id ? null : d.id)}
+                  >
+                    수정
+                  </Button>
+                )}
+              </div>
+
+              {/* 개별 수정 — 그 항목 override 만 덮어쓴다. */}
+              {editingId === d.id && canEdit && (
+                <div className="mt-2 grid grid-cols-1 gap-2 border-t pt-2 sm:grid-cols-2">
+                  <label className="block text-xs">
+                    <span className="mb-1 block font-medium">카테고리</span>
+                    <Select value={ov.category} onValueChange={(v) => v && updateOverride(d.id, { category: v as ActivityCategory })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {CATEGORY_OPTIONS.map((o) => (
+                          <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </label>
+                  <label className="block text-xs">
+                    <span className="mb-1 block font-medium">예약 상태</span>
+                    <Select value={ov.reservationStatus} onValueChange={(v) => v && updateOverride(d.id, { reservationStatus: v as ReservationStatus })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {RESERVATION_OPTIONS.map((o) => (
+                          <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </label>
+                  <label className="block text-xs">
+                    <span className="mb-1 block font-medium">타임존</span>
+                    <select
+                      value={ov.startTimezone}
+                      onChange={(e) => updateOverride(d.id, { startTimezone: e.target.value, endTimezone: e.target.value })}
+                      className="w-full rounded border border-border bg-background px-2 py-1"
+                    >
+                      {TIMEZONE_OPTIONS.map((tz) => (
+                        <option key={tz} value={tz}>{tz}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="block text-xs">
+                    <span className="mb-1 block font-medium">시작 시각</span>
+                    <input
+                      type="time"
+                      value={formatHHMM(effStart)}
+                      onChange={(e) => {
+                        const start = withFloatingTime(effStart, e.target.value);
+                        updateOverride(d.id, { startTime: start, endTime: plusOneHour(start) });
+                      }}
+                      className="w-full rounded border border-border bg-background px-2 py-1 tabular-nums"
+                    />
+                  </label>
+                </div>
+              )}
+            </li>
+          );
+        })}
+      </ul>
     </section>
   );
 }
