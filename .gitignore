@@ -42,6 +42,12 @@ test-results/
 
 # OMC state
 .omc/
+
+# devex 사용량/플로우 추적 상태 (로컬)
+.devex/
+
+# Claude worktrees (linked worktree, 로컬 전용)
+.claude/worktrees/
 node_modules/
 .next/
 next-env.d.ts
