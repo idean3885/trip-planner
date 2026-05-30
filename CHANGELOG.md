@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [3.7.2] - 2026-05-30
+
+### Fixed
+
+- * **스와이프 영역의 글자·내용이 또렷하게 보입니다.** 넘김을 부드럽게 하려고 둔 화면 합성 처리가 그 부분을 흐릿하게 만들던 것을 없앴습니다. 부드러움은 그대로입니다. ([#677](https://github.com/idean3885/trip-planner/issues/677))
+
+
 ## [3.7.1] - 2026-05-30
 
 ### Fixed
