@@ -7,6 +7,8 @@ import { getDerivedPeriodTx, getResolvedPeriod } from "@/lib/trip-period";
 type Params = { params: Promise<{ id: string }> };
 
 // T029: 일정 목록 (v1 — sortOrder 응답 동적 부착, MCP 호환)
+// #669: activities 쿼리가 있으면 from/to 범위 Day 의 활동까지 포함해 응답한다
+// (여행 상세 일정 윈도우 로딩). 쿼리가 없으면 기존 경량 목록(인덱스) 그대로.
 export async function GET(request: Request, { params }: Params) {
   const { id } = await params;
   const tripId = parseInt(id);
@@ -15,18 +17,15 @@ export async function GET(request: Request, { params }: Params) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const [member, trip, days] = await Promise.all([
-    getTripMember(tripId, userId),
-    prisma.trip.findUnique({
-      where: { id: tripId },
-      select: { id: true },
-    }),
-    prisma.day.findMany({
-      where: { tripId },
-      orderBy: { date: "asc" },
-    }),
-  ]);
+  const url = new URL(request.url);
+  const wantActivities = url.searchParams.get("activities") != null;
+  const from = url.searchParams.get("from");
+  const to = url.searchParams.get("to");
 
+  const [member, trip] = await Promise.all([
+    getTripMember(tripId, userId),
+    prisma.trip.findUnique({ where: { id: tripId }, select: { id: true } }),
+  ]);
   if (!member) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
@@ -34,7 +33,44 @@ export async function GET(request: Request, { params }: Params) {
     return NextResponse.json({ error: "Not Found" }, { status: 404 });
   }
 
-  const period = await getResolvedPeriod(tripId);
+  // 윈도우 모드 — 범위 내 Day 의 활동을 client 캐시 형태로 응답.
+  if (wantActivities) {
+    const dateFilter =
+      from && to ? { date: { gte: new Date(from), lte: new Date(to) } } : {};
+    const days = await prisma.day.findMany({
+      where: { tripId, ...dateFilter },
+      orderBy: { date: "asc" },
+      include: {
+        activities: { orderBy: [{ sortOrder: "asc" }, { startTime: "asc" }] },
+      },
+    });
+    return NextResponse.json(
+      days.map((d) => ({
+        id: d.id,
+        date: d.date.toISOString(),
+        activities: d.activities.map((a) => ({
+          id: a.id,
+          title: a.title,
+          category: a.category,
+          startTime: a.startTime ? a.startTime.toISOString() : null,
+          startTimezone: a.startTimezone ?? null,
+          endTime: a.endTime ? a.endTime.toISOString() : null,
+          endTimezone: a.endTimezone ?? null,
+          location: a.location,
+          memo: a.memo,
+          cost: a.cost ? a.cost.toString() : null,
+          currency: a.currency,
+          reservationStatus: a.reservationStatus,
+          sortOrder: a.sortOrder,
+        })),
+      })),
+    );
+  }
+
+  const [days, period] = await Promise.all([
+    prisma.day.findMany({ where: { tripId }, orderBy: { date: "asc" } }),
+    getResolvedPeriod(tripId),
+  ]);
   if (!period.startDate) {
     return NextResponse.json([]);
   }

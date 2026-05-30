@@ -5,6 +5,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { computeDayNumber } from "@/lib/day-number";
 import { getResolvedPeriod } from "@/lib/trip-period";
+import { windowYmds, ACTIVITY_WINDOW_RADIUS } from "@/lib/activity-window";
 import { formatCalendarDateFull } from "@/lib/date-utils";
 import InviteButton from "@/components/InviteButton";
 import DeleteTripButton from "@/components/DeleteTripButton";
@@ -16,7 +17,7 @@ import CalendarSyncEntryCard from "@/components/calendar-sync/CalendarSyncEntryC
 import {
   TripDetailLayout,
   type LayoutActivity,
-  type LayoutDay,
+  type LayoutDayIndex,
 } from "@/components/trip/TripDetailLayout";
 import { remark } from "remark";
 import remarkGfm from "remark-gfm";
@@ -65,16 +66,10 @@ async function DbTripPage({
     prisma.tripMember.findUnique({
       where: { tripId_userId: { tripId, userId: session.user.id } },
     }),
+    // #669 — 인덱스만(활동 제외). 활동은 선택일 윈도우만 따로 받는다.
     prisma.trip.findUnique({
       where: { id: tripId },
-      include: {
-        days: {
-          orderBy: { date: "asc" },
-          include: {
-            activities: { orderBy: [{ sortOrder: "asc" }, { startTime: "asc" }] },
-          },
-        },
-      },
+      include: { days: { orderBy: { date: "asc" } } },
     }),
     prisma.tripCalendarLink.findUnique({
       where: { tripId },
@@ -85,14 +80,38 @@ async function DbTripPage({
 
   const period = await getResolvedPeriod(tripId);
 
-  const layoutDays: LayoutDay[] = trip.days.map((d) => ({
+  // 날짜 인덱스 — 캘린더 점·기간·날짜→Day 매핑용(활동 본문 없음). 일정 0건이면
+  // trip.days 가 빈 배열이라 map 이 실행되지 않으므로 startDate as Date 안전.
+  const dayIndex: LayoutDayIndex[] = trip.days.map((d) => ({
     id: d.id,
     date: d.date.toISOString(),
     title: d.title,
-    // 일정 ≥ 1 건이면 period.startDate non-null. 일정 0 건이면 trip.days
-    // 자체가 빈 배열이라 map 이 실행되지 않으므로 안전.
     dayNumber: computeDayNumber(d.date, period.startDate as Date),
-    activities: d.activities.map<LayoutActivity>((a) => ({
+  }));
+
+  // #669 — 진입 시 선택일 ±N일 활동만 로드. 나머지는 client 가 이동하며 프리페치.
+  // 서버 기준 초기 선택일(클라이언트 computeInitialSelected 와 동일 규칙)로 윈도우.
+  const today = new Date();
+  const serverSelected =
+    period.startDate &&
+    period.endDate &&
+    today >= period.startDate &&
+    today <= period.endDate
+      ? today
+      : (period.startDate ?? today);
+  const win = windowYmds(serverSelected, ACTIVITY_WINDOW_RADIUS);
+  const windowDays = await prisma.day.findMany({
+    where: {
+      tripId,
+      date: { gte: new Date(win[0]), lte: new Date(win[win.length - 1]) },
+    },
+    include: {
+      activities: { orderBy: [{ sortOrder: "asc" }, { startTime: "asc" }] },
+    },
+  });
+  const initialActivities: Record<number, LayoutActivity[]> = {};
+  for (const d of windowDays) {
+    initialActivities[d.id] = d.activities.map<LayoutActivity>((a) => ({
       id: a.id,
       title: a.title,
       category: a.category,
@@ -106,8 +125,8 @@ async function DbTripPage({
       currency: a.currency,
       reservationStatus: a.reservationStatus,
       sortOrder: a.sortOrder,
-    })),
-  }));
+    }));
+  }
 
   const descriptionHtml = trip.description
     ? await markdownToHtml(trip.description)
@@ -176,7 +195,8 @@ async function DbTripPage({
         tripId={tripId}
         tripStart={period.startDate}
         tripEnd={period.endDate}
-        days={layoutDays}
+        days={dayIndex}
+        initialActivities={initialActivities}
         canEdit={member.role !== "GUEST"}
         syncCard={
           <CalendarSyncEntryCard
