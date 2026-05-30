@@ -69,7 +69,9 @@ describe("CalendarView 모바일 압축", () => {
     ).not.toBeNull();
   });
 
-  it("세로 스와이프로 월↔주를 동적으로 전환한다(#641)", () => {
+  it("세로 스와이프용 touch-action 제약을 두지 않는다 — 캘린더 영역 정상 스크롤(#649)", () => {
+    // touch-action: pan-x 가 sticky 캘린더 위에서 페이지 세로 스크롤을 막던
+    // 치명적 회귀(#649)를 제거했다. 컨테이너에 touch-pan-x 클래스가 없어야 한다.
     const { container } = render(
       <CalendarView
         tripStart={new Date(2026, 5, 7)}
@@ -80,40 +82,8 @@ describe("CalendarView 모바일 압축", () => {
         enableMobileCompact
       />,
     );
-    const swipeArea = container.querySelector("[data-calendar-view]")!;
-    // 아래로 스와이프(Δy +60 > 임계 40) → 주.
-    fireEvent.touchStart(swipeArea, { touches: [{ clientY: 100 }] });
-    fireEvent.touchEnd(swipeArea, { changedTouches: [{ clientY: 160 }] });
-    expect(
-      container.querySelector('[data-calendar-view="week"]'),
-    ).not.toBeNull();
-    // 위로 스와이프(Δy −60) → 월.
-    fireEvent.touchStart(swipeArea, { touches: [{ clientY: 160 }] });
-    fireEvent.touchEnd(swipeArea, { changedTouches: [{ clientY: 100 }] });
-    expect(
-      container.querySelector('[data-calendar-view="month"]'),
-    ).not.toBeNull();
-    // 임계 미만(Δy +20)은 탭으로 간주 — 전환 없음(월 유지).
-    fireEvent.touchStart(swipeArea, { touches: [{ clientY: 100 }] });
-    fireEvent.touchEnd(swipeArea, { changedTouches: [{ clientY: 120 }] });
-    expect(
-      container.querySelector('[data-calendar-view="month"]'),
-    ).not.toBeNull();
-  });
-
-  it("스와이프 컨테이너는 touch-action: pan-x(touch-pan-x)로 세로 제스처를 직접 받는다(#641)", () => {
-    const { container } = render(
-      <CalendarView
-        tripStart={new Date(2026, 5, 7)}
-        tripEnd={new Date(2026, 5, 21)}
-        daysDates={[new Date(2026, 5, 9)]}
-        selected={new Date(2026, 5, 9)}
-        onSelect={vi.fn()}
-        enableMobileCompact
-      />,
-    );
-    expect(
-      container.querySelector("[data-calendar-view]")?.className,
-    ).toMatch(/touch-pan-x/);
+    const area = container.querySelector("[data-calendar-view]");
+    expect(area).not.toBeNull();
+    expect(area?.className ?? "").not.toMatch(/touch-pan-x/);
   });
 });
