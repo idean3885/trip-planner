@@ -60,7 +60,10 @@ export function SwipeCarousel({
     onCommitRef.current = onCommit;
   }, [onCommit]);
 
-  const handleSelect = useCallback(() => {
+  // 커밋은 select(스냅 목표가 바뀌는 즉시 — 드래그 도중에도 발생)가 아니라
+  // settle(스냅 애니메이션이 완전히 멈춘 뒤)에서 한다. 무거운 재렌더가 스냅
+  // 애니메이션 도중에 끼어들어 프레임이 끊기던 것을 모션이 끝난 뒤로 미룬다(#661).
+  const handleSettle = useCallback(() => {
     if (!emblaApi) return;
     const i = emblaApi.selectedScrollSnap();
     if (i === 1) return; // 가운데 — 변화 없음
@@ -69,17 +72,17 @@ export function SwipeCarousel({
 
   useEffect(() => {
     if (!emblaApi) return;
-    emblaApi.on("select", handleSelect);
+    emblaApi.on("settle", handleSettle);
     return () => {
-      emblaApi.off("select", handleSelect);
+      emblaApi.off("settle", handleSettle);
     };
-  }, [emblaApi, handleSelect]);
+  }, [emblaApi, handleSettle]);
 
   // 커밋으로 anchorKey 가 바뀌어 슬라이드가 새 기준으로 재렌더되면, paint 전에
-  // 가운데로 즉시 복귀(jump=true)해 점프가 보이지 않게 한다.
+  // 가운데로 즉시 복귀(jump=true)해 점프가 보이지 않게 한다. 슬라이드 크기·개수는
+  // 그대로라 reInit(전체 재측정, 비용 큼)은 불필요 — scrollTo 만으로 충분(#661).
   useIsoLayoutEffect(() => {
     if (!emblaApi) return;
-    emblaApi.reInit();
     emblaApi.scrollTo(1, true);
   }, [emblaApi, anchorKey]);
 
@@ -90,7 +93,9 @@ export function SwipeCarousel({
       role="group"
       aria-label={ariaLabel}
     >
-      <div className="flex">
+      {/* will-change-transform — 트랙을 합성 레이어로 올려 드래그/스냅을 GPU 에서
+          처리해 끊김을 줄인다(#661). */}
+      <div className="flex will-change-transform">
         {([-1, 0, 1] as const).map((off) => (
           <div
             key={off}
