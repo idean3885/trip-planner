@@ -18,7 +18,7 @@ function formatTime(value: string | null | undefined): string {
   return value;
 }
 
-interface Activity {
+export interface Activity {
   id: number;
   category: ActivityCategory;
   title: string;
@@ -39,6 +39,8 @@ interface ActivityListProps {
   dayId: number;
   activities: Activity[];
   canEdit: boolean;
+  /** CRUD 결과를 상위 캐시에 반영하는 콜백(#669 윈도우 로딩). */
+  onActivitiesChange?: (next: Activity[]) => void;
 }
 
 export default function ActivityList({
@@ -46,6 +48,7 @@ export default function ActivityList({
   dayId,
   activities: initialActivities,
   canEdit,
+  onActivitiesChange,
 }: ActivityListProps) {
   const router = useRouter();
   const [activities, setActivities] = useState(initialActivities);
@@ -53,6 +56,12 @@ export default function ActivityList({
   const [editingId, setEditingId] = useState<number | null>(null);
 
   const apiBase = `/api/trips/${tripId}/days/${dayId}/activities`;
+
+  // 로컬 상태 갱신 + 상위 캐시 통지(#669). 날짜를 오가도 편집이 캐시에 남는다.
+  function commit(next: Activity[]) {
+    setActivities(next);
+    onActivitiesChange?.(next);
+  }
 
   /**
    * 브라우저의 IANA 타임존 감지(#341). Activity 저장 시 startTime/endTime과
@@ -99,7 +108,7 @@ export default function ActivityList({
         return;
       }
       const created = await res.json();
-      setActivities((prev) => [...prev, created]);
+      commit([...activities, created]);
       setShowForm(false);
     } catch {
       toast.error("활동 생성 중 오류가 발생했습니다");
@@ -133,9 +142,7 @@ export default function ActivityList({
         return;
       }
       const updated = await res.json();
-      setActivities((prev) =>
-        prev.map((a) => (a.id === activityId ? updated : a))
-      );
+      commit(activities.map((a) => (a.id === activityId ? updated : a)));
       setEditingId(null);
     } catch {
       toast.error("활동 수정 중 오류가 발생했습니다");
@@ -151,7 +158,7 @@ export default function ActivityList({
         toast.error("활동 삭제에 실패했습니다");
         return;
       }
-      setActivities((prev) => prev.filter((a) => a.id !== activityId));
+      commit(activities.filter((a) => a.id !== activityId));
     } catch {
       toast.error("활동 삭제 중 오류가 발생했습니다");
     }
@@ -167,7 +174,7 @@ export default function ActivityList({
 
     const reordered = [...activities];
     [reordered[idx], reordered[swapIdx]] = [reordered[swapIdx], reordered[idx]];
-    setActivities(reordered);
+    commit(reordered);
 
     const orderedIds = reordered.map((a) => a.id);
     await fetch(apiBase, {

@@ -448,4 +448,28 @@ describe("ActivityList", () => {
       expect(callBody.orderedIds).toEqual([2, 1]);
     });
   });
+
+  it("삭제 시 onActivitiesChange 로 상위 캐시에 변경을 통지한다(#669)", async () => {
+    const onActivitiesChange = vi.fn();
+    const activities = [
+      makeActivity({ id: 1, sortOrder: 0 }),
+      makeActivity({ id: 2, title: "Second", sortOrder: 1 }),
+    ];
+    mockFetch.mockResolvedValue({ ok: true, json: async () => ({}) });
+    render(
+      <ActivityList
+        tripId={1}
+        dayId={1}
+        activities={activities}
+        canEdit
+        onActivitiesChange={onActivitiesChange}
+      />,
+    );
+    fireEvent.click(screen.getAllByText("삭제")[0]);
+    await waitFor(() => expect(onActivitiesChange).toHaveBeenCalled());
+    const lastArg = onActivitiesChange.mock.calls.at(-1)?.[0] as {
+      id: number;
+    }[];
+    expect(lastArg.map((a) => a.id)).toEqual([2]);
+  });
 });

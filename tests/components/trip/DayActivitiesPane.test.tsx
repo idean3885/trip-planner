@@ -109,6 +109,24 @@ describe("DayActivitiesPane", () => {
     expect(body.date).toBe("2026-06-09");
   });
 
+  it("Day 는 있으나 활동 미로딩(activities=null)이면 스켈레톤을 보인다(#669)", () => {
+    render(
+      <DayActivitiesPane
+        tripId={1}
+        selectedDate={SELECTED}
+        day={{ id: 10, activities: null }}
+        canEdit={false}
+        onDayCreated={vi.fn()}
+      />,
+    );
+    expect(
+      screen.getByRole("status", { name: "일정 불러오는 중" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("이 날짜에 등록된 일정이 없습니다."),
+    ).not.toBeInTheDocument();
+  });
+
   it("다른 날짜(다른 Day)로 바뀌면 그 날짜의 일정으로 갱신된다(#645 key 리셋)", () => {
     const mk = (id: number, title: string) => ({
       id,
