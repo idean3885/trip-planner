@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [3.6.1] - 2026-05-30
+
+### Fixed
+
+- * **스와이프로 기간을 넘길 때 끊김을 줄였습니다.** 화면이 바뀌는 무거운 처리를 손을 뗀 뒤로 미루고, 불필요한 재계산을 없애 넘김이 더 부드럽습니다. ([#661](https://github.com/idean3885/trip-planner/issues/661))
+
+
 ## [3.6.0] - 2026-05-30
 
 ### Added
