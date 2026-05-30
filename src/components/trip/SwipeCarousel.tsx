@@ -103,7 +103,12 @@ export function SwipeCarousel({
           <div
             key={off}
             aria-hidden={off !== 0}
-            className={cn("min-w-0 shrink-0 grow-0 basis-full", slideClassName)}
+            // contain-layout — 슬라이드별 레이아웃을 격리해 한 칸 변경이 옆 칸
+            // 레이아웃 재계산으로 번지지 않게 한다(#673). 색·크기 토큰과 무관.
+            className={cn(
+              "min-w-0 shrink-0 grow-0 basis-full [contain:layout]",
+              slideClassName,
+            )}
           >
             {renderSlide(off)}
           </div>

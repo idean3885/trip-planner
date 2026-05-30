@@ -9,7 +9,7 @@
  * 부모(`TripDetailLayout`)의 days 상태에 반영한다. 페이지 이동은 없다.
  */
 
-import { useState } from "react";
+import { memo, useState } from "react";
 import { toast } from "sonner";
 import { formatCalendarDate } from "@/lib/date-utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,17 +26,19 @@ export interface DayActivitiesPaneProps {
   tripId: number;
   /** 캘린더에서 선택된 날짜. */
   selectedDate: Date;
+  /** 선택 날짜의 Day id. null = Day 미생성(빈 날짜). */
+  dayId: number | null;
   /**
-   * 선택 날짜의 Day. null = Day 미생성(빈 날짜). activities null = Day 는 있으나
-   * 아직 활동을 안 받음(윈도우 밖 → 스켈레톤, #669).
+   * 그 Day 의 활동(캐시 참조). null = Day 는 있으나 아직 활동 미로딩(스켈레톤,
+   * #669). 참조가 그대로면 memo 가 재렌더를 건너뛴다(#673).
    */
-  day: { id: number; activities: Activity[] | null } | null;
+  activities: Activity[] | null;
   /** 편집 권한 (GUEST=false). */
   canEdit: boolean;
   /** 빈 날짜에서 Day 가 새로 생성되면 부모 인덱스에 반영하는 콜백. */
   onDayCreated: (day: DayCreatedPayload) => void;
-  /** 활동 CRUD 결과를 상위 캐시에 반영(#669). */
-  onActivitiesChange?: (next: Activity[]) => void;
+  /** 활동 CRUD 결과를 상위 캐시에 반영(#669). dayId 동반 단일 안정 핸들러(#673). */
+  onActivitiesChange?: (dayId: number, next: Activity[]) => void;
 }
 
 /** Date 를 로컬 기준 YYYY-MM-DD 로 변환 (floating-time 관행 #232). */
@@ -47,10 +49,13 @@ function toYmd(date: Date): string {
   return `${y}-${m}-${d}`;
 }
 
-export function DayActivitiesPane({
+// React.memo — 다른 날짜의 일정이 프리페치로 도착해도, 이 패널의 dayId·activities
+// 참조가 그대로면 재렌더를 건너뛴다(#673). props 는 모두 안정 참조로 전달된다.
+export const DayActivitiesPane = memo(function DayActivitiesPane({
   tripId,
   selectedDate,
-  day,
+  dayId,
+  activities,
   canEdit,
   onDayCreated,
   onActivitiesChange,
@@ -91,7 +96,7 @@ export function DayActivitiesPane({
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {day === null ? (
+        {dayId === null ? (
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">
               이 날짜에 등록된 일정이 없습니다.
@@ -107,20 +112,20 @@ export function DayActivitiesPane({
               </Button>
             )}
           </div>
-        ) : day.activities === null ? (
+        ) : activities === null ? (
           // #669 — Day 는 있으나 아직 활동을 안 받음(윈도우 밖). 도착하면 채워진다.
           <div className="space-y-2" role="status" aria-label="일정 불러오는 중">
             <Skeleton className="h-16 w-full rounded-md" />
             <Skeleton className="h-16 w-full rounded-md" />
           </div>
         ) : (
-          // key={day.id} — 날짜를 바꾸면 ActivityList 를 새 Day 의 활동으로
-          // 다시 마운트한다(#645). 활동은 상위 캐시에서 오고 CRUD 는 캐시로 통지(#669).
+          // key={dayId} — 날짜를 바꾸면 ActivityList 를 새 Day 의 활동으로 다시
+          // 마운트한다(#645). 활동은 상위 캐시에서 오고 CRUD 는 캐시로 통지(#669).
           <ActivityList
-            key={day.id}
+            key={dayId}
             tripId={tripId}
-            dayId={day.id}
-            activities={day.activities}
+            dayId={dayId}
+            activities={activities}
             canEdit={canEdit}
             onActivitiesChange={onActivitiesChange}
           />
@@ -128,4 +133,4 @@ export function DayActivitiesPane({
       </CardContent>
     </Card>
   );
-}
+});
