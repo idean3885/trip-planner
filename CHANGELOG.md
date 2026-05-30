@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [3.5.0] - 2026-05-30
+
+### Fixed
+
+- * **모바일 캘린더에서 좌우로 쓸어 기간을 넘깁니다.** 주 보기는 이전·다음 주로, 월 보기는 이전·다음 달로 이동합니다.
+  * **하단 일정 영역을 좌우로 쓸면 하루씩 이전·다음 날로 넘어갑니다.** 위아래 스크롤은 그대로 동작합니다.
+  * **일정을 누르면 그 자리에서 수정 화면이 펼쳐집니다.** 수정·삭제 버튼이 데스크탑에서만 보여 모바일에서 닿지 않던 문제를 함께 고쳤습니다.
+
+  ([#653](https://github.com/idean3885/trip-planner/issues/653))
+
+
 ## [3.4.4] - 2026-05-30
 
 ### Fixed
