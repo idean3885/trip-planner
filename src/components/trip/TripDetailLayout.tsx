@@ -32,9 +32,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { useHorizontalSwipe } from "@/lib/use-horizontal-swipe";
 import { CalendarView } from "./CalendarView";
 import { DayActivitiesPane, type DayCreatedPayload } from "./DayActivitiesPane";
+import { SwipeCarousel } from "./SwipeCarousel";
 import { TripDetailExtras } from "./TripDetailExtras";
 
 export interface LayoutActivity {
@@ -121,23 +121,17 @@ export function TripDetailLayout({
     [days],
   );
 
-  const selectedDay = useMemo(() => {
-    const matched = days.find((d) =>
-      sameLocalDay(new Date(d.date), selectedDate),
-    );
-    return matched ? { id: matched.id, activities: matched.activities } : null;
-  }, [days, selectedDate]);
+  const dayForDate = useCallback(
+    (date: Date) => {
+      const matched = days.find((d) => sameLocalDay(new Date(d.date), date));
+      return matched ? { id: matched.id, activities: matched.activities } : null;
+    },
+    [days],
+  );
 
   const handleSelectDate = useCallback((date: Date | undefined) => {
     if (date) setSelectedDate(date);
   }, []);
-
-  // #653 — 하단 일정 섹션 좌우 스와이프로 하루씩 이동. 가로 제스처라 세로
-  // 스크롤은 그대로(touch-pan-y).
-  const daySwipe = useHorizontalSwipe(
-    () => setSelectedDate((d) => addDays(d, 1)), // 왼쪽 → 다음 날
-    () => setSelectedDate((d) => addDays(d, -1)), // 오른쪽 → 이전 날
-  );
 
   useEffect(() => {
     // 최초 마운트에서는 스크롤하지 않는다(이미 상단).
@@ -173,12 +167,13 @@ export function TripDetailLayout({
     );
   }, []);
 
-  const panel = (
+  // 특정 날짜의 일정 패널. interactive=false(핍 슬라이드)는 읽기 전용으로 둔다.
+  const renderPanel = (date: Date, interactive: boolean) => (
     <DayActivitiesPane
       tripId={tripId}
-      selectedDate={selectedDate}
-      day={selectedDay}
-      canEdit={canEdit}
+      selectedDate={date}
+      day={dayForDate(date)}
+      canEdit={interactive && canEdit}
       onDayCreated={handleDayCreated}
     />
   );
@@ -200,7 +195,7 @@ export function TripDetailLayout({
         </div>
         <div className="min-w-0 space-y-6">
           {memberList}
-          {panel}
+          {renderPanel(selectedDate, true)}
         </div>
       </div>
 
@@ -244,8 +239,17 @@ export function TripDetailLayout({
             enableMobileCompact
           />
         </div>
-        <div ref={mobilePanelRef} className="touch-pan-y" {...daySwipe}>
-          {panel}
+        {/* #657 — 하단 일정도 이전·현재·다음 날 3슬라이드로 드래그-팔로우 스와이프.
+            핍 슬라이드(±1일)는 읽기 전용. 정착 시 선택 날짜를 하루 옮긴다. */}
+        <div ref={mobilePanelRef}>
+          <SwipeCarousel
+            ariaLabel="선택 날짜 일정"
+            anchorKey={selectedDate.toDateString()}
+            onCommit={(dir) => setSelectedDate((d) => addDays(d, dir))}
+            renderSlide={(off) =>
+              renderPanel(addDays(selectedDate, off), off === 0)
+            }
+          />
         </div>
       </div>
     </>
