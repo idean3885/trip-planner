@@ -108,4 +108,42 @@ describe("DayActivitiesPane", () => {
     const body = JSON.parse(mockFetch.mock.calls[0][1].body);
     expect(body.date).toBe("2026-06-09");
   });
+
+  it("다른 날짜(다른 Day)로 바뀌면 그 날짜의 일정으로 갱신된다(#645 key 리셋)", () => {
+    const mk = (id: number, title: string) => ({
+      id,
+      category: "SIGHTSEEING" as ActivityCategory,
+      title,
+      startTime: null,
+      endTime: null,
+      location: null,
+      memo: null,
+      cost: null,
+      currency: "EUR",
+      reservationStatus: null,
+      sortOrder: 1,
+    });
+    const { rerender } = render(
+      <DayActivitiesPane
+        tripId={1}
+        selectedDate={new Date(2026, 5, 8)}
+        day={{ id: 10, activities: [mk(1, "리스본 도착")] }}
+        canEdit={false}
+        onDayCreated={vi.fn()}
+      />,
+    );
+    expect(screen.getByText("리스본 도착")).toBeInTheDocument();
+    // 다른 날짜(다른 Day id) 선택 → 새 일정만 보이고 이전 일정은 사라진다.
+    rerender(
+      <DayActivitiesPane
+        tripId={1}
+        selectedDate={new Date(2026, 5, 9)}
+        day={{ id: 11, activities: [mk(2, "포르투 이동")] }}
+        canEdit={false}
+        onDayCreated={vi.fn()}
+      />,
+    );
+    expect(screen.getByText("포르투 이동")).toBeInTheDocument();
+    expect(screen.queryByText("리스본 도착")).not.toBeInTheDocument();
+  });
 });
