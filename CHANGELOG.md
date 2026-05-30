@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [3.6.2] - 2026-05-30
+
+### Fixed
+
+- * **스와이프 달력·일정의 가운데 칸이 화면에 정확히 채워집니다.** 넘긴 뒤 가운데가 살짝 밀려 왼쪽에 이전 기간이 비치던 문제를 고쳤습니다. ([#665](https://github.com/idean3885/trip-planner/issues/665))
+
+
 ## [3.6.1] - 2026-05-30
 
 ### Fixed
