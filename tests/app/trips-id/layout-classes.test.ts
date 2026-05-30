@@ -90,4 +90,27 @@ describe("trip 상세 레이아웃 (spec 032 — 캘린더 중심 단일 화면)
     );
     expect(authSrc).toMatch(/hidden[^"]*sm:inline-block/);
   });
+
+  it("모바일 '자세히'는 펼침이 아니라 Dialog + TripDetailExtras 로 연다(#645)", () => {
+    expect(layoutComponentSrc).toContain("TripDetailExtras");
+    expect(layoutComponentSrc).toContain("DialogTrigger");
+    expect(layoutComponentSrc).toContain("DialogContent");
+  });
+
+  it("데스크탑 월간 캘린더는 셀 크기를 키워 폭을 더 채운다(#645)", () => {
+    const calSrc = readFileSync(
+      resolve(REPO_ROOT, "src/components/trip/CalendarView.tsx"),
+      "utf8",
+    );
+    // desktopFull 셀 크기가 기존 10 보다 큰 14 로 상향.
+    expect(calSrc).toMatch(/desktopFull &&[^;]*--cell-size:--spacing\(14\)/);
+  });
+
+  it("월↔주 스와이프 컨테이너는 자식까지 touch-pan-x 로 세로 제스처를 받는다(#645)", () => {
+    const calSrc = readFileSync(
+      resolve(REPO_ROOT, "src/components/trip/CalendarView.tsx"),
+      "utf8",
+    );
+    expect(calSrc).toMatch(/\[&_\*\]:touch-pan-x/);
+  });
 });
