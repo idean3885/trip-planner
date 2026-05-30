@@ -106,11 +106,12 @@ describe("trip 상세 레이아웃 (spec 032 — 캘린더 중심 단일 화면)
     expect(calSrc).toMatch(/desktopFull &&[^;]*--cell-size:--spacing\(14\)/);
   });
 
-  it("월↔주 스와이프 컨테이너는 자식까지 touch-pan-x 로 세로 제스처를 받는다(#645)", () => {
+  it("캘린더에 세로 스크롤을 막는 touch-action 제약이 없다(#649 치명 회귀 제거)", () => {
     const calSrc = readFileSync(
       resolve(REPO_ROOT, "src/components/trip/CalendarView.tsx"),
       "utf8",
     );
-    expect(calSrc).toMatch(/\[&_\*\]:touch-pan-x/);
+    // touch-pan-x 가 sticky 캘린더 위 페이지 스크롤을 막던 회귀 제거. 재유입 가드.
+    expect(calSrc).not.toMatch(/touch-pan-x/);
   });
 });

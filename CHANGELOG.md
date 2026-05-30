@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [3.4.4] - 2026-05-30
+
+### Fixed
+
+- * **모바일에서 캘린더 위에 손가락을 대고 쓸어도 화면이 정상 스크롤됩니다.** 캘린더 영역에서 세로 스크롤이 막혀 캘린더 밖을 잡아야만 내려가던 문제를 고쳤습니다. 월·주 보기 전환은 캘린더 아래 버튼으로 합니다. ([#649](https://github.com/idean3885/trip-planner/issues/649))
+
+
 ## [3.4.3] - 2026-05-30
 
 ### Fixed

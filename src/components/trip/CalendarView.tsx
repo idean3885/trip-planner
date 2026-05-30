@@ -16,7 +16,7 @@
  */
 
 import * as React from "react";
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { ko } from "react-day-picker/locale";
 import type { Matcher } from "react-day-picker";
 
@@ -183,36 +183,13 @@ function MobileCompactCalendar({
   onSelect?: (date: Date | undefined) => void;
 }) {
   const [view, setView] = useState<"month" | "week">("month");
-  const touchStartY = useRef<number | null>(null);
 
-  // 세로 스와이프로 월↔주를 전환한다. react-swipeable 은 iOS Safari 가 세로
-  // 제스처를 페이지 스크롤로 먼저 가져가 감지가 어려웠다(#637). 컨테이너에
-  // touch-action: pan-x(`touch-pan-x`) 를 줘 브라우저가 세로 제스처를 가로채지
-  // 않게 하고, touchstart↔touchend 의 Y 변화량으로 직접 판정한다.
-  // 아래로(+) → 주(접기), 위로(−) → 월(펼치기). 기준 미달은 탭으로 간주해 무시.
-  const SWIPE_THRESHOLD = 40;
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartY.current = e.touches[0]?.clientY ?? null;
-  };
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    const start = touchStartY.current;
-    touchStartY.current = null;
-    if (start == null) return;
-    const dy = (e.changedTouches[0]?.clientY ?? start) - start;
-    if (dy > SWIPE_THRESHOLD) setView("week");
-    else if (dy < -SWIPE_THRESHOLD) setView("month");
-  };
-
+  // 월↔주 전환은 탭 토글 버튼으로만 한다. 세로 스와이프 제스처는 일단 보류(#649).
+  // 이전엔 스와이프 감지를 위해 touch-action: pan-x 를 줬는데, sticky 캘린더 위에서
+  // 손가락을 대고 페이지를 스크롤하는 것까지 막아 치명적 회귀가 났다(#649).
+  // touch-action 제약·스와이프 핸들러를 제거해 캘린더 영역에서도 정상 스크롤되게 한다.
   return (
-    <div
-      data-calendar-view={view}
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
-      // touch-action 은 제스처 시작 요소 기준이라, 날짜 셀·주간 버튼(자식)에서
-      // 시작한 세로 스와이프가 브라우저 스크롤로 새 위로 스와이프(주→월)가
-      // 동작하지 않았다(#645). 자식 전체에 pan-x 를 줘 세로 제스처를 직접 받는다.
-      className="touch-pan-x [&_*]:touch-pan-x"
-    >
+    <div data-calendar-view={view}>
       {view === "month" ? (
         monthCalendar
       ) : (
