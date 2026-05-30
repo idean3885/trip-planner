@@ -96,9 +96,10 @@ export function SwipeCarousel({
       role="group"
       aria-label={ariaLabel}
     >
-      {/* will-change-transform — 트랙을 합성 레이어로 올려 드래그/스냅을 GPU 에서
-          처리해 끊김을 줄인다(#661). */}
-      <div className="flex will-change-transform">
+      {/* will-change-transform 제거(#677) — 합성 레이어 고정이 그 위 텍스트·내용을
+          낮은 해상도로 래스터해 흐릿했다. 끊김 완화는 재렌더 축소·레이아웃 격리(#673)로
+          처리되므로 합성 고정은 불필요. */}
+      <div className="flex">
         {([-1, 0, 1] as const).map((off) => (
           <div
             key={off}
