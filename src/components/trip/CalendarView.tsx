@@ -17,11 +17,13 @@
 
 import * as React from "react";
 import { useMemo, useState } from "react";
+import { addDays, addMonths } from "date-fns";
 import { ko } from "react-day-picker/locale";
 import type { Matcher } from "react-day-picker";
 
 import { Calendar, CalendarDayButton } from "@/components/ui/calendar";
 import { getTripColor } from "@/lib/trip-palette";
+import { useHorizontalSwipe } from "@/lib/use-horizontal-swipe";
 import { cn } from "@/lib/utils";
 
 export interface TripDayGroup {
@@ -115,7 +117,19 @@ export function CalendarView({
     ...(extraModifierClassNames ?? {}),
   };
 
-  const defaultMonth = selected ?? tripStart ?? undefined;
+  // #653 — 좌우 스와이프/네비로 표시 월을 바꾸려면 month 를 제어해야 한다.
+  // 선택 날짜가 바뀌면(날짜 탭·주 스와이프·일 스와이프) 표시 월도 그 달로 맞춘다.
+  // effect 대신 렌더 중 조정(React 권장 "prop 변화 시 state 보정") 패턴을 쓴다.
+  const [displayMonth, setDisplayMonth] = useState<Date>(
+    () => selected ?? tripStart ?? new Date(),
+  );
+  const [syncedSelected, setSyncedSelected] = useState<Date | undefined>(
+    selected,
+  );
+  if (selected && selected !== syncedSelected) {
+    setSyncedSelected(selected);
+    setDisplayMonth(selected);
+  }
 
   const components = isMultiTrip
     ? {
@@ -135,7 +149,8 @@ export function CalendarView({
       locale={ko}
       selected={selected}
       onSelect={onSelect}
-      defaultMonth={defaultMonth}
+      month={displayMonth}
+      onMonthChange={setDisplayMonth}
       modifiers={modifiers}
       modifiersClassNames={modifiersClassNames}
       components={components}
@@ -158,6 +173,8 @@ export function CalendarView({
       daysDates={daysDates}
       selected={selected}
       onSelect={onSelect}
+      displayMonth={displayMonth}
+      onMonthChange={setDisplayMonth}
     />
   );
 }
@@ -174,6 +191,8 @@ function MobileCompactCalendar({
   daysDates,
   selected,
   onSelect,
+  displayMonth,
+  onMonthChange,
 }: {
   monthCalendar: React.ReactNode;
   tripStart: Date | null;
@@ -181,15 +200,30 @@ function MobileCompactCalendar({
   daysDates: Date[];
   selected?: Date;
   onSelect?: (date: Date | undefined) => void;
+  displayMonth: Date;
+  onMonthChange: (month: Date) => void;
 }) {
   const [view, setView] = useState<"month" | "week">("month");
 
-  // 월↔주 전환은 탭 토글 버튼으로만 한다. 세로 스와이프 제스처는 일단 보류(#649).
-  // 이전엔 스와이프 감지를 위해 touch-action: pan-x 를 줬는데, sticky 캘린더 위에서
-  // 손가락을 대고 페이지를 스크롤하는 것까지 막아 치명적 회귀가 났다(#649).
-  // touch-action 제약·스와이프 핸들러를 제거해 캘린더 영역에서도 정상 스크롤되게 한다.
+  // 월↔주 전환은 탭 토글 버튼으로 한다(세로 스와이프는 보류 #649).
+  // #653 — 좌우(가로) 스와이프로 기간 이동: 월 뷰는 달을, 주 뷰는 주(선택일 ±7)를
+  // 옮긴다. touch-action: pan-y(`touch-pan-y`)로 세로 스크롤은 그대로 두므로
+  // #649 회귀가 재발하지 않는다.
+  const swipe = useHorizontalSwipe(
+    () => {
+      // 왼쪽으로 쓸기 → 다음 기간.
+      if (view === "month") onMonthChange(addMonths(displayMonth, 1));
+      else if (selected) onSelect?.(addDays(selected, 7));
+    },
+    () => {
+      // 오른쪽으로 쓸기 → 이전 기간.
+      if (view === "month") onMonthChange(addMonths(displayMonth, -1));
+      else if (selected) onSelect?.(addDays(selected, -7));
+    },
+  );
+
   return (
-    <div data-calendar-view={view}>
+    <div data-calendar-view={view} className="touch-pan-y" {...swipe}>
       {view === "month" ? (
         monthCalendar
       ) : (

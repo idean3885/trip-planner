@@ -22,6 +22,7 @@ import {
   type ReactNode,
 } from "react";
 import { Ellipsis } from "lucide-react";
+import { addDays } from "date-fns";
 import type { ActivityCategory, ReservationStatus } from "@prisma/client";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,6 +32,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { useHorizontalSwipe } from "@/lib/use-horizontal-swipe";
 import { CalendarView } from "./CalendarView";
 import { DayActivitiesPane, type DayCreatedPayload } from "./DayActivitiesPane";
 import { TripDetailExtras } from "./TripDetailExtras";
@@ -129,6 +131,13 @@ export function TripDetailLayout({
   const handleSelectDate = useCallback((date: Date | undefined) => {
     if (date) setSelectedDate(date);
   }, []);
+
+  // #653 — 하단 일정 섹션 좌우 스와이프로 하루씩 이동. 가로 제스처라 세로
+  // 스크롤은 그대로(touch-pan-y).
+  const daySwipe = useHorizontalSwipe(
+    () => setSelectedDate((d) => addDays(d, 1)), // 왼쪽 → 다음 날
+    () => setSelectedDate((d) => addDays(d, -1)), // 오른쪽 → 이전 날
+  );
 
   useEffect(() => {
     // 최초 마운트에서는 스크롤하지 않는다(이미 상단).
@@ -235,7 +244,9 @@ export function TripDetailLayout({
             enableMobileCompact
           />
         </div>
-        <div ref={mobilePanelRef}>{panel}</div>
+        <div ref={mobilePanelRef} className="touch-pan-y" {...daySwipe}>
+          {panel}
+        </div>
       </div>
     </>
   );

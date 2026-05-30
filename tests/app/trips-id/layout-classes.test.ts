@@ -114,4 +114,11 @@ describe("trip 상세 레이아웃 (spec 032 — 캘린더 중심 단일 화면)
     // touch-pan-x 가 sticky 캘린더 위 페이지 스크롤을 막던 회귀 제거. 재유입 가드.
     expect(calSrc).not.toMatch(/touch-pan-x/);
   });
+
+  it("하단 일정 패널은 가로 스와이프(touch-pan-y)로 하루씩 이동한다(#653)", () => {
+    expect(layoutComponentSrc).toContain("useHorizontalSwipe");
+    // 세로 스크롤 보존(pan-y)만 쓰고 pan-x(세로 차단)는 쓰지 않는다.
+    expect(layoutComponentSrc).toMatch(/touch-pan-y/);
+    expect(layoutComponentSrc).not.toMatch(/touch-pan-x/);
+  });
 });
