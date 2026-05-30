@@ -203,6 +203,18 @@ describe("ActivityCard", () => {
     expect(onEdit).toHaveBeenCalledOnce();
   });
 
+  it("본문에서 Enter/Space 키로도 수정이 열린다(#653 키보드 접근성)", () => {
+    const onEdit = vi.fn();
+    render(<ActivityCard activity={makeActivity()} canEdit onEdit={onEdit} />);
+    const body = screen.getByRole("button", { name: /벨렝 탑 방문 수정/ });
+    fireEvent.keyDown(body, { key: "Enter" });
+    fireEvent.keyDown(body, { key: " " });
+    expect(onEdit).toHaveBeenCalledTimes(2);
+    // 다른 키는 무시.
+    fireEvent.keyDown(body, { key: "a" });
+    expect(onEdit).toHaveBeenCalledTimes(2);
+  });
+
   it("메모 안 링크 클릭은 수정 진입을 막는다(stopPropagation, #653)", () => {
     const onEdit = vi.fn();
     render(
