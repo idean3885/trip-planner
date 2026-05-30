@@ -16,6 +16,7 @@ function Linkify({ text }: { text: string }) {
             href={part}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
             className="break-all text-foreground underline underline-offset-2 hover:opacity-80"
           >
             {part}
@@ -121,9 +122,30 @@ export default function ActivityCard({
 
   const cost = activity.cost ? Number(activity.cost) : null;
 
+  const editable = canEdit && Boolean(onEdit);
+
   return (
     <Card size="sm" className="group gap-2">
-      <CardContent className="flex items-start justify-between gap-2">
+      {/* 본문 탭 → 그 자리에서 인라인 수정 폼이 펼쳐진다(#653). 수정 버튼이
+          데스크탑 호버에서만 보여 모바일에서 닿지 않던 문제를 본문 전체를
+          탭 대상으로 만들어 해결. 메모 안 링크는 stopPropagation 으로 분리. */}
+      <CardContent
+        className={`flex items-start justify-between gap-2${editable ? " cursor-pointer" : ""}`}
+        role={editable ? "button" : undefined}
+        tabIndex={editable ? 0 : undefined}
+        aria-label={editable ? `${activity.title} 수정` : undefined}
+        onClick={editable ? onEdit : undefined}
+        onKeyDown={
+          editable
+            ? (e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  onEdit?.();
+                }
+              }
+            : undefined
+        }
+      >
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5">
             <span
@@ -166,7 +188,7 @@ export default function ActivityCard({
       </CardContent>
 
       {canEdit && (
-        <CardFooter className="flex items-center justify-between opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
+        <CardFooter className="flex items-center justify-between opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100 lg:focus-within:opacity-100">
           <div className="flex gap-1">
             <button
               onClick={onMoveUp}

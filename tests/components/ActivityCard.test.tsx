@@ -195,6 +195,46 @@ describe("ActivityCard", () => {
     });
   });
 
+  it("본문을 누르면 onEdit(인라인 수정)이 열린다(#653 — 모바일 호버 부재 대응)", () => {
+    const onEdit = vi.fn();
+    render(<ActivityCard activity={makeActivity()} canEdit onEdit={onEdit} />);
+    // 본문이 role=button 으로 탭 대상. footer "편집" 과 구분되는 "수정" 라벨.
+    fireEvent.click(screen.getByRole("button", { name: /벨렝 탑 방문 수정/ }));
+    expect(onEdit).toHaveBeenCalledOnce();
+  });
+
+  it("본문에서 Enter/Space 키로도 수정이 열린다(#653 키보드 접근성)", () => {
+    const onEdit = vi.fn();
+    render(<ActivityCard activity={makeActivity()} canEdit onEdit={onEdit} />);
+    const body = screen.getByRole("button", { name: /벨렝 탑 방문 수정/ });
+    fireEvent.keyDown(body, { key: "Enter" });
+    fireEvent.keyDown(body, { key: " " });
+    expect(onEdit).toHaveBeenCalledTimes(2);
+    // 다른 키는 무시.
+    fireEvent.keyDown(body, { key: "a" });
+    expect(onEdit).toHaveBeenCalledTimes(2);
+  });
+
+  it("메모 안 링크 클릭은 수정 진입을 막는다(stopPropagation, #653)", () => {
+    const onEdit = vi.fn();
+    render(
+      <ActivityCard
+        activity={makeActivity({ memo: "예약 https://example.com 확인" })}
+        canEdit
+        onEdit={onEdit}
+      />,
+    );
+    fireEvent.click(screen.getByRole("link"));
+    expect(onEdit).not.toHaveBeenCalled();
+  });
+
+  it("편집 권한이 없으면 본문이 버튼이 아니다(#653)", () => {
+    render(<ActivityCard activity={makeActivity()} />);
+    expect(
+      screen.queryByRole("button", { name: /수정/ }),
+    ).not.toBeInTheDocument();
+  });
+
   it("긴 제목·위치·메모는 줄바꿈 클래스로 가로 넘침을 막는다(#637, 375px)", () => {
     const longTitle = "신혼여행리스본1박2일HotelLXRossio체크인후호시우광장도보이동";
     const longLoc = "Rua-da-Assuncao-52-Rossio-1100-044-Lisboa-Portugal-Baixa-Pombalina";
