@@ -11,32 +11,11 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import type { ActivityCategory, ReservationStatus } from "@prisma/client";
 import { formatCalendarDate } from "@/lib/date-utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import ActivityList from "@/components/ActivityList";
-
-export interface PanelActivity {
-  id: number;
-  category: ActivityCategory;
-  title: string;
-  startTime: string | null;
-  startTimezone?: string | null;
-  endTime: string | null;
-  endTimezone?: string | null;
-  location: string | null;
-  memo: string | null;
-  cost: string | null;
-  currency: string;
-  reservationStatus: ReservationStatus | null;
-  sortOrder: number;
-}
-
-export interface PanelDay {
-  id: number;
-  activities: PanelActivity[];
-}
+import { Skeleton } from "@/components/ui/skeleton";
+import ActivityList, { type Activity } from "@/components/ActivityList";
 
 export interface DayCreatedPayload {
   id: number;
@@ -47,12 +26,17 @@ export interface DayActivitiesPaneProps {
   tripId: number;
   /** 캘린더에서 선택된 날짜. */
   selectedDate: Date;
-  /** 선택 날짜에 매칭되는 Day. 없으면 null. */
-  day: PanelDay | null;
+  /**
+   * 선택 날짜의 Day. null = Day 미생성(빈 날짜). activities null = Day 는 있으나
+   * 아직 활동을 안 받음(윈도우 밖 → 스켈레톤, #669).
+   */
+  day: { id: number; activities: Activity[] | null } | null;
   /** 편집 권한 (GUEST=false). */
   canEdit: boolean;
-  /** 빈 날짜에서 Day 가 새로 생성되면 부모 days 상태에 반영하는 콜백. */
+  /** 빈 날짜에서 Day 가 새로 생성되면 부모 인덱스에 반영하는 콜백. */
   onDayCreated: (day: DayCreatedPayload) => void;
+  /** 활동 CRUD 결과를 상위 캐시에 반영(#669). */
+  onActivitiesChange?: (next: Activity[]) => void;
 }
 
 /** Date 를 로컬 기준 YYYY-MM-DD 로 변환 (floating-time 관행 #232). */
@@ -69,6 +53,7 @@ export function DayActivitiesPane({
   day,
   canEdit,
   onDayCreated,
+  onActivitiesChange,
 }: DayActivitiesPaneProps) {
   const [busy, setBusy] = useState(false);
 
@@ -106,18 +91,7 @@ export function DayActivitiesPane({
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {day ? (
-          // key={day.id} — 날짜를 바꾸면 ActivityList 를 새 Day 의 활동으로
-          // 다시 마운트한다. 이게 없으면 내부 useState(initialActivities) 가 첫
-          // 진입 값을 붙들어 다른 날짜를 눌러도 일정이 그대로였다(#645).
-          <ActivityList
-            key={day.id}
-            tripId={tripId}
-            dayId={day.id}
-            activities={day.activities}
-            canEdit={canEdit}
-          />
-        ) : (
+        {day === null ? (
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">
               이 날짜에 등록된 일정이 없습니다.
@@ -133,6 +107,23 @@ export function DayActivitiesPane({
               </Button>
             )}
           </div>
+        ) : day.activities === null ? (
+          // #669 — Day 는 있으나 아직 활동을 안 받음(윈도우 밖). 도착하면 채워진다.
+          <div className="space-y-2" role="status" aria-label="일정 불러오는 중">
+            <Skeleton className="h-16 w-full rounded-md" />
+            <Skeleton className="h-16 w-full rounded-md" />
+          </div>
+        ) : (
+          // key={day.id} — 날짜를 바꾸면 ActivityList 를 새 Day 의 활동으로
+          // 다시 마운트한다(#645). 활동은 상위 캐시에서 오고 CRUD 는 캐시로 통지(#669).
+          <ActivityList
+            key={day.id}
+            tripId={tripId}
+            dayId={day.id}
+            activities={day.activities}
+            canEdit={canEdit}
+            onActivitiesChange={onActivitiesChange}
+          />
         )}
       </CardContent>
     </Card>

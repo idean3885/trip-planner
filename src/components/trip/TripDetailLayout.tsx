@@ -24,6 +24,10 @@ import {
 import { Ellipsis } from "lucide-react";
 import { addDays } from "date-fns";
 import type { ActivityCategory, ReservationStatus } from "@prisma/client";
+import {
+  ACTIVITY_WINDOW_RADIUS,
+  missingFetchRange,
+} from "@/lib/activity-window";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -53,19 +57,22 @@ export interface LayoutActivity {
   sortOrder: number;
 }
 
-export interface LayoutDay {
+/** 날짜 인덱스 — 활동 본문 없이 캘린더 점·기간·날짜→Day 매핑에 쓴다(#669). */
+export interface LayoutDayIndex {
   id: number;
   date: string;
   title: string | null;
   dayNumber: number;
-  activities: LayoutActivity[];
 }
 
 export interface TripDetailLayoutProps {
   tripId: number;
   tripStart: Date | null;
   tripEnd: Date | null;
-  days: LayoutDay[];
+  /** 날짜 인덱스(전체). 활동 본문은 windowed 캐시로 따로 받는다. */
+  days: LayoutDayIndex[];
+  /** 진입 시 받은 선택일 윈도우의 활동(dayId → activities). */
+  initialActivities: Record<number, LayoutActivity[]>;
   canEdit: boolean;
   /** 외부 캘린더 동기화 카드 (서버에서 만든 노드). */
   syncCard: ReactNode;
@@ -100,11 +107,15 @@ export function TripDetailLayout({
   tripStart,
   tripEnd,
   days: initialDays,
+  initialActivities,
   canEdit,
   syncCard,
   memberList,
 }: TripDetailLayoutProps) {
-  const [days, setDays] = useState<LayoutDay[]>(initialDays);
+  const [dayIndex, setDayIndex] = useState<LayoutDayIndex[]>(initialDays);
+  const [activitiesByDayId, setActivitiesByDayId] = useState<
+    Record<number, LayoutActivity[]>
+  >(initialActivities);
   const [selectedDate, setSelectedDate] = useState<Date>(() =>
     computeInitialSelected(tripStart, tripEnd),
   );
@@ -115,18 +126,68 @@ export function TripDetailLayout({
   const mobileStickyRef = useRef<HTMLDivElement>(null);
   const mobilePanelRef = useRef<HTMLDivElement>(null);
   const didMountRef = useRef(false);
+  // #669 — 윈도우 프리페치 중복 요청 방지(같은 범위 동시 요청 차단).
+  const inFlightRef = useRef<Set<string>>(new Set());
 
   const daysDates = useMemo(
-    () => days.map((d) => new Date(d.date)),
-    [days],
+    () => dayIndex.map((d) => new Date(d.date)),
+    [dayIndex],
   );
 
+  // #669 — 선택일 윈도우(±N)에서 아직 캐시에 없는 Day 의 활동을 백그라운드로
+  // 받아 캐시에 채운다. 캐시가 채워지면 effect 가 재실행돼 missingFetchRange 가
+  // null 을 돌려 더 받지 않는다(루프 없음).
+  useEffect(() => {
+    const loadedIds = new Set(
+      Object.keys(activitiesByDayId).map((k) => Number(k)),
+    );
+    const range = missingFetchRange(
+      selectedDate,
+      ACTIVITY_WINDOW_RADIUS,
+      dayIndex,
+      loadedIds,
+    );
+    if (!range) return;
+    const key = `${range.from}_${range.to}`;
+    if (inFlightRef.current.has(key)) return;
+    inFlightRef.current.add(key);
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(
+          `/api/trips/${tripId}/days?activities=1&from=${range.from}&to=${range.to}`,
+          { cache: "no-store" },
+        );
+        if (!res.ok || cancelled) return;
+        const fetched = (await res.json()) as {
+          id: number;
+          activities: LayoutActivity[];
+        }[];
+        if (cancelled) return;
+        setActivitiesByDayId((prev) => {
+          const next = { ...prev };
+          for (const d of fetched) next[d.id] = d.activities;
+          return next;
+        });
+      } finally {
+        inFlightRef.current.delete(key);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [tripId, selectedDate, dayIndex, activitiesByDayId]);
+
+  // 날짜 → Day. 없으면 null(Day 미생성). activities null = 아직 로딩 안 됨(스켈레톤).
   const dayForDate = useCallback(
     (date: Date) => {
-      const matched = days.find((d) => sameLocalDay(new Date(d.date), date));
-      return matched ? { id: matched.id, activities: matched.activities } : null;
+      const matched = dayIndex.find((d) =>
+        sameLocalDay(new Date(d.date), date),
+      );
+      if (!matched) return null;
+      return { id: matched.id, activities: activitiesByDayId[matched.id] ?? null };
     },
-    [days],
+    [dayIndex, activitiesByDayId],
   );
 
   const handleSelectDate = useCallback((date: Date | undefined) => {
@@ -151,32 +212,45 @@ export function TripDetailLayout({
   }, [selectedDate]);
 
   const handleDayCreated = useCallback((created: DayCreatedPayload) => {
-    setDays((prev) =>
+    setDayIndex((prev) =>
       [
         ...prev,
-        {
-          id: created.id,
-          date: created.date,
-          title: null,
-          dayNumber: 0,
-          activities: [] as LayoutActivity[],
-        },
-      ].sort(
-        (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
-      ),
+        { id: created.id, date: created.date, title: null, dayNumber: 0 },
+      ].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()),
     );
+    // 새 Day 는 빈 활동으로 캐시에 둔다(로딩 완료 상태).
+    setActivitiesByDayId((prev) => ({ ...prev, [created.id]: [] }));
   }, []);
 
-  // 특정 날짜의 일정 패널. interactive=false(핍 슬라이드)는 읽기 전용으로 둔다.
-  const renderPanel = (date: Date, interactive: boolean) => (
-    <DayActivitiesPane
-      tripId={tripId}
-      selectedDate={date}
-      day={dayForDate(date)}
-      canEdit={interactive && canEdit}
-      onDayCreated={handleDayCreated}
-    />
+  // 활동 CRUD 결과를 캐시에 반영해 날짜를 오가도 일관되게 유지한다(#669).
+  // ActivityList 의 Activity(느슨한 cost union)를 캐시 LayoutActivity 로 받는다 —
+  // 런타임 값은 동일(렌더는 cost 를 Number/String 로 방어 처리).
+  const handleActivitiesChange = useCallback(
+    (dayId: number, next: LayoutActivity[]) => {
+      setActivitiesByDayId((prev) => ({ ...prev, [dayId]: next }));
+    },
+    [],
   );
+
+  // 특정 날짜의 일정 패널. interactive=false(핍 슬라이드)는 읽기 전용으로 둔다.
+  const renderPanel = (date: Date, interactive: boolean) => {
+    const entry = dayForDate(date);
+    return (
+      <DayActivitiesPane
+        tripId={tripId}
+        selectedDate={date}
+        day={entry}
+        canEdit={interactive && canEdit}
+        onDayCreated={handleDayCreated}
+        onActivitiesChange={
+          interactive && entry
+            ? (next) =>
+                handleActivitiesChange(entry.id, next as unknown as LayoutActivity[])
+            : undefined
+        }
+      />
+    );
+  };
 
   return (
     <>
