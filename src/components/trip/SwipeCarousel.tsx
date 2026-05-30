@@ -79,10 +79,13 @@ export function SwipeCarousel({
   }, [emblaApi, handleSettle]);
 
   // 커밋으로 anchorKey 가 바뀌어 슬라이드가 새 기준으로 재렌더되면, paint 전에
-  // 가운데로 즉시 복귀(jump=true)해 점프가 보이지 않게 한다. 슬라이드 크기·개수는
-  // 그대로라 reInit(전체 재측정, 비용 큼)은 불필요 — scrollTo 만으로 충분(#661).
+  // 슬라이드 위치를 다시 측정(reInit)하고 가운데로 즉시 복귀(jump=true)한다.
+  // 재측정이 없으면 스냅 좌표가 옛 값으로 남아 가운데가 어긋나 이전 슬라이드가
+  // 왼쪽에 삐져나온다(#665). reInit 은 settle(모션 종료) 뒤에 일어나므로 넘김
+  // 애니메이션 도중 끊김(#661)은 재발하지 않는다.
   useIsoLayoutEffect(() => {
     if (!emblaApi) return;
+    emblaApi.reInit();
     emblaApi.scrollTo(1, true);
   }, [emblaApi, anchorKey]);
 
