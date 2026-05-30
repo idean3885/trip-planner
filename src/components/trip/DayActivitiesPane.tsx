@@ -107,7 +107,11 @@ export function DayActivitiesPane({
       </CardHeader>
       <CardContent>
         {day ? (
+          // key={day.id} — 날짜를 바꾸면 ActivityList 를 새 Day 의 활동으로
+          // 다시 마운트한다. 이게 없으면 내부 useState(initialActivities) 가 첫
+          // 진입 값을 붙들어 다른 날짜를 눌러도 일정이 그대로였다(#645).
           <ActivityList
+            key={day.id}
             tripId={tripId}
             dayId={day.id}
             activities={day.activities}

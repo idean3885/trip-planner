@@ -13,13 +13,27 @@
  *   일정. 동기화·동행자는 캘린더 상단 바의 "자세히" 로 한 단계 뒤에 둔다.
  */
 
-import { useCallback, useMemo, useState, type ReactNode } from "react";
-import { ChevronDown, Ellipsis } from "lucide-react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
+import { Ellipsis } from "lucide-react";
 import type { ActivityCategory, ReservationStatus } from "@prisma/client";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { CalendarView } from "./CalendarView";
 import { DayActivitiesPane, type DayCreatedPayload } from "./DayActivitiesPane";
+import { TripDetailExtras } from "./TripDetailExtras";
 
 export interface LayoutActivity {
   id: number;
@@ -94,6 +108,12 @@ export function TripDetailLayout({
   );
   const [detailOpen, setDetailOpen] = useState(false);
 
+  // #645 — 다른 날짜를 누르면 모바일 일정 목록 스크롤을 맨 위로 되돌린다.
+  // sticky 캘린더 높이만큼 빼서 패널 머리가 캘린더 바로 아래에 오게 한다.
+  const mobileStickyRef = useRef<HTMLDivElement>(null);
+  const mobilePanelRef = useRef<HTMLDivElement>(null);
+  const didMountRef = useRef(false);
+
   const daysDates = useMemo(
     () => days.map((d) => new Date(d.date)),
     [days],
@@ -109,6 +129,23 @@ export function TripDetailLayout({
   const handleSelectDate = useCallback((date: Date | undefined) => {
     if (date) setSelectedDate(date);
   }, []);
+
+  useEffect(() => {
+    // 최초 마운트에서는 스크롤하지 않는다(이미 상단).
+    if (!didMountRef.current) {
+      didMountRef.current = true;
+      return;
+    }
+    const sticky = mobileStickyRef.current;
+    const panel = mobilePanelRef.current;
+    if (!sticky || !panel) return;
+    // 데스크탑(lg:hidden)에서는 sticky 가 display:none → offsetHeight 0 → 스킵.
+    const stickyH = sticky.offsetHeight;
+    if (stickyH === 0) return;
+    const target =
+      panel.getBoundingClientRect().top + window.scrollY - stickyH - 8;
+    window.scrollTo({ top: Math.max(0, target), behavior: "smooth" });
+  }, [selectedDate]);
 
   const handleDayCreated = useCallback((created: DayCreatedPayload) => {
     setDays((prev) =>
@@ -158,28 +195,36 @@ export function TripDetailLayout({
         </div>
       </div>
 
-      {/* 모바일 <1024px — sticky 캘린더 + 선택 일정. 동기화·동행자는 자세히. */}
+      {/* 모바일 <1024px — sticky 캘린더 + 선택 일정. 동기화·동행자는 자세히
+          다이얼로그(열기/닫기) 안에서만 본다(#645). */}
       <div className="space-y-4 lg:hidden">
-        <div className="sticky top-0 z-20 -mx-4 bg-background px-4 pb-2 pt-1">
+        <div
+          ref={mobileStickyRef}
+          className="sticky top-0 z-20 -mx-4 bg-background px-4 pb-2 pt-1"
+        >
           <div className="flex justify-end">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => setDetailOpen((v) => !v)}
-              aria-expanded={detailOpen}
-              className="gap-1 text-sm text-muted-foreground"
-            >
-              <Ellipsis className="size-4" aria-hidden />
-              {detailOpen ? "닫기" : "자세히"}
-              <ChevronDown
-                className={cn(
-                  "size-4 transition-transform",
-                  detailOpen && "rotate-180",
-                )}
-                aria-hidden
-              />
-            </Button>
+            <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
+              <DialogTrigger
+                render={
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="gap-1 text-sm text-muted-foreground"
+                  />
+                }
+              >
+                <Ellipsis className="size-4" aria-hidden />
+                자세히
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>여행 정보</DialogTitle>
+                </DialogHeader>
+                {/* 동행자(위) + 외부 캘린더 동기화(아래)를 한 묶음으로. */}
+                <TripDetailExtras members={memberList} sync={syncCard} />
+              </DialogContent>
+            </Dialog>
           </div>
           <CalendarView
             tripStart={tripStart}
@@ -190,15 +235,7 @@ export function TripDetailLayout({
             enableMobileCompact
           />
         </div>
-        {/* 자세히 콘텐츠는 토글 버튼·캘린더 바로 아래에 노출한다. 선택 일정
-            패널 아래에 두면 화면 밖이라 토글이 무반응처럼 보였다(#637). */}
-        {detailOpen && (
-          <div className="space-y-6">
-            {syncCard}
-            {memberList}
-          </div>
-        )}
-        {panel}
+        <div ref={mobilePanelRef}>{panel}</div>
       </div>
     </>
   );

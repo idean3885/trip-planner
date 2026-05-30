@@ -125,7 +125,10 @@ export function CalendarView({
       }
     : undefined;
 
-  // spec 032 — 데스크탑 확대: w-full + 셀 크기를 키워 좌측 컬럼을 채운다.
+  // spec 032 — 데스크탑 확대: 셀 크기를 키워 좌측 컬럼을 채운다(#645).
+  // 셀은 정사각이라 셀 크기가 곧 세로 길이도 결정한다 — 너무 키우면 캘린더가
+  // 화면을 잡아먹어 방해가 되므로 14(=3.5rem)로 상한을 둔다. 한 토큰만 조절하면
+  // 가로 채움/세로 길이 균형을 바꿀 수 있다.
   const monthCalendar = (
     <Calendar
       mode="single"
@@ -137,7 +140,7 @@ export function CalendarView({
       modifiersClassNames={modifiersClassNames}
       components={components}
       className={cn(
-        desktopFull && "w-full [--cell-size:--spacing(10)]",
+        desktopFull && "mx-auto w-full [--cell-size:--spacing(14)]",
         className,
       )}
     />
@@ -205,7 +208,10 @@ function MobileCompactCalendar({
       data-calendar-view={view}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
-      className="touch-pan-x"
+      // touch-action 은 제스처 시작 요소 기준이라, 날짜 셀·주간 버튼(자식)에서
+      // 시작한 세로 스와이프가 브라우저 스크롤로 새 위로 스와이프(주→월)가
+      // 동작하지 않았다(#645). 자식 전체에 pan-x 를 줘 세로 제스처를 직접 받는다.
+      className="touch-pan-x [&_*]:touch-pan-x"
     >
       {view === "month" ? (
         monthCalendar
