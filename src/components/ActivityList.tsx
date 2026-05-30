@@ -39,8 +39,11 @@ interface ActivityListProps {
   dayId: number;
   activities: Activity[];
   canEdit: boolean;
-  /** CRUD 결과를 상위 캐시에 반영하는 콜백(#669 윈도우 로딩). */
-  onActivitiesChange?: (next: Activity[]) => void;
+  /**
+   * CRUD 결과를 상위 캐시에 반영하는 콜백(#669). dayId 를 함께 넘겨 상위가
+   * 패널마다 클로저를 새로 만들지 않고 단일 안정 핸들러를 쓰게 한다(#673 memo).
+   */
+  onActivitiesChange?: (dayId: number, next: Activity[]) => void;
 }
 
 export default function ActivityList({
@@ -60,7 +63,7 @@ export default function ActivityList({
   // 로컬 상태 갱신 + 상위 캐시 통지(#669). 날짜를 오가도 편집이 캐시에 남는다.
   function commit(next: Activity[]) {
     setActivities(next);
-    onActivitiesChange?.(next);
+    onActivitiesChange?.(dayId, next);
   }
 
   /**

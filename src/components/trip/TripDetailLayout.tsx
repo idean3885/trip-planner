@@ -36,6 +36,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import type { Activity } from "@/components/ActivityList";
 import { CalendarView } from "./CalendarView";
 import { DayActivitiesPane, type DayCreatedPayload } from "./DayActivitiesPane";
 import { SwipeCarousel } from "./SwipeCarousel";
@@ -222,32 +223,41 @@ export function TripDetailLayout({
     setActivitiesByDayId((prev) => ({ ...prev, [created.id]: [] }));
   }, []);
 
-  // 활동 CRUD 결과를 캐시에 반영해 날짜를 오가도 일관되게 유지한다(#669).
+  // 활동 CRUD 결과를 캐시에 반영해 날짜를 오가도 일관되게 유지한다(#669). dayId
+  // 동반 단일 안정 핸들러 — 패널마다 새 클로저를 안 만들어 memo 가 산다(#673).
   // ActivityList 의 Activity(느슨한 cost union)를 캐시 LayoutActivity 로 받는다 —
   // 런타임 값은 동일(렌더는 cost 를 Number/String 로 방어 처리).
   const handleActivitiesChange = useCallback(
-    (dayId: number, next: LayoutActivity[]) => {
-      setActivitiesByDayId((prev) => ({ ...prev, [dayId]: next }));
+    (dayId: number, next: Activity[]) => {
+      setActivitiesByDayId((prev) => ({
+        ...prev,
+        [dayId]: next as unknown as LayoutActivity[],
+      }));
     },
     [],
   );
 
+  // 모바일 캐러셀의 이전·현재·다음 날짜를 selectedDate 기준으로 메모이즈 —
+  // 핍 슬라이드 날짜가 매 렌더 새 Date 가 되어 memo 가 깨지던 것을 막는다(#673).
+  const mobileDates = useMemo(
+    () => [addDays(selectedDate, -1), selectedDate, addDays(selectedDate, 1)],
+    [selectedDate],
+  );
+
   // 특정 날짜의 일정 패널. interactive=false(핍 슬라이드)는 읽기 전용으로 둔다.
+  // dayId·activities(캐시 참조)·안정 핸들러만 넘겨 DayActivitiesPane memo 가
+  // 무관한 프리페치 재렌더를 건너뛰게 한다(#673).
   const renderPanel = (date: Date, interactive: boolean) => {
     const entry = dayForDate(date);
     return (
       <DayActivitiesPane
         tripId={tripId}
         selectedDate={date}
-        day={entry}
+        dayId={entry?.id ?? null}
+        activities={entry?.activities ?? null}
         canEdit={interactive && canEdit}
         onDayCreated={handleDayCreated}
-        onActivitiesChange={
-          interactive && entry
-            ? (next) =>
-                handleActivitiesChange(entry.id, next as unknown as LayoutActivity[])
-            : undefined
-        }
+        onActivitiesChange={interactive ? handleActivitiesChange : undefined}
       />
     );
   };
@@ -320,9 +330,7 @@ export function TripDetailLayout({
             ariaLabel="선택 날짜 일정"
             anchorKey={selectedDate.toDateString()}
             onCommit={(dir) => setSelectedDate((d) => addDays(d, dir))}
-            renderSlide={(off) =>
-              renderPanel(addDays(selectedDate, off), off === 0)
-            }
+            renderSlide={(off) => renderPanel(mobileDates[off + 1], off === 0)}
           />
         </div>
       </div>

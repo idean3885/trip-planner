@@ -32,7 +32,8 @@ describe("DayActivitiesPane", () => {
       <DayActivitiesPane
         tripId={1}
         selectedDate={SELECTED}
-        day={null}
+        dayId={null}
+        activities={null}
         canEdit={false}
         onDayCreated={vi.fn()}
       />,
@@ -45,24 +46,22 @@ describe("DayActivitiesPane", () => {
       <DayActivitiesPane
         tripId={1}
         selectedDate={SELECTED}
-        day={{
-          id: 10,
-          activities: [
-            {
-              id: 1,
-              category: "SIGHTSEEING" as ActivityCategory,
-              title: "벨렝 탑",
-              startTime: null,
-              endTime: null,
-              location: null,
-              memo: null,
-              cost: null,
-              currency: "EUR",
-              reservationStatus: null,
-              sortOrder: 0,
-            },
-          ],
-        }}
+        dayId={10}
+        activities={[
+          {
+            id: 1,
+            category: "SIGHTSEEING" as ActivityCategory,
+            title: "벨렝 탑",
+            startTime: null,
+            endTime: null,
+            location: null,
+            memo: null,
+            cost: null,
+            currency: "EUR",
+            reservationStatus: null,
+            sortOrder: 0,
+          },
+        ]}
         canEdit={false}
         onDayCreated={vi.fn()}
       />,
@@ -75,7 +74,8 @@ describe("DayActivitiesPane", () => {
       <DayActivitiesPane
         tripId={1}
         selectedDate={SELECTED}
-        day={null}
+        dayId={null}
+        activities={null}
         canEdit={false}
         onDayCreated={vi.fn()}
       />,
@@ -93,7 +93,8 @@ describe("DayActivitiesPane", () => {
       <DayActivitiesPane
         tripId={1}
         selectedDate={SELECTED}
-        day={null}
+        dayId={null}
+        activities={null}
         canEdit
         onDayCreated={onDayCreated}
       />,
@@ -114,7 +115,8 @@ describe("DayActivitiesPane", () => {
       <DayActivitiesPane
         tripId={1}
         selectedDate={SELECTED}
-        day={{ id: 10, activities: null }}
+        dayId={10}
+        activities={null}
         canEdit={false}
         onDayCreated={vi.fn()}
       />,
@@ -145,7 +147,8 @@ describe("DayActivitiesPane", () => {
       <DayActivitiesPane
         tripId={1}
         selectedDate={new Date(2026, 5, 8)}
-        day={{ id: 10, activities: [mk(1, "리스본 도착")] }}
+        dayId={10}
+        activities={[mk(1, "리스본 도착")]}
         canEdit={false}
         onDayCreated={vi.fn()}
       />,
@@ -156,7 +159,8 @@ describe("DayActivitiesPane", () => {
       <DayActivitiesPane
         tripId={1}
         selectedDate={new Date(2026, 5, 9)}
-        day={{ id: 11, activities: [mk(2, "포르투 이동")] }}
+        dayId={11}
+        activities={[mk(2, "포르투 이동")]}
         canEdit={false}
         onDayCreated={vi.fn()}
       />,

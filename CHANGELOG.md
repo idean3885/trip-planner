@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [3.7.1] - 2026-05-30
+
+### Fixed
+
+- * **날짜를 넘길 때 화면을 다시 그리는 양을 줄여 더 부드럽게 넘어갑니다.** 다른 날짜 일정이 들어와도 보고 있는 칸은 다시 그리지 않고, 한 칸의 변경이 옆 칸 재계산으로 번지지 않게 했습니다. 외형은 그대로입니다. ([#673](https://github.com/idean3885/trip-planner/issues/673))
+
+
 ## [3.7.0] - 2026-05-30
 
 ### Added

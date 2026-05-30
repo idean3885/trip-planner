@@ -467,9 +467,12 @@ describe("ActivityList", () => {
     );
     fireEvent.click(screen.getAllByText("삭제")[0]);
     await waitFor(() => expect(onActivitiesChange).toHaveBeenCalled());
-    const lastArg = onActivitiesChange.mock.calls.at(-1)?.[0] as {
-      id: number;
-    }[];
-    expect(lastArg.map((a) => a.id)).toEqual([2]);
+    // (dayId, next) 시그니처 — dayId 먼저, 남은 활동 배열이 둘째 인자.
+    const lastCall = onActivitiesChange.mock.calls.at(-1) as [
+      number,
+      { id: number }[],
+    ];
+    expect(lastCall[0]).toBe(1); // dayId
+    expect(lastCall[1].map((a) => a.id)).toEqual([2]);
   });
 });
