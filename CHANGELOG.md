@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [3.6.0] - 2026-05-30
+
+### Added
+
+- * **캘린더와 일정을 손가락으로 끌어 넘깁니다.** 누른 채 좌우로 움직이면 앞뒤 기간이 따라 보이고, 손을 떼면 가장 가까운 쪽으로 부드럽게 넘어갑니다. 월 달력은 달 단위, 주 달력은 주 단위, 하단 일정은 하루 단위로 이동합니다. 위아래 스크롤은 그대로 동작합니다. ([#657](https://github.com/idean3885/trip-planner/issues/657))
+
+
 ## [3.5.0] - 2026-05-30
 
 ### Fixed
