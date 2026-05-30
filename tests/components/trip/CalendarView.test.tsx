@@ -69,10 +69,8 @@ describe("CalendarView 모바일 압축", () => {
     ).not.toBeNull();
   });
 
-  it("세로 스와이프용 touch-action 제약을 두지 않는다 — 캘린더 영역 정상 스크롤(#649)", () => {
-    // touch-action: pan-x 가 sticky 캘린더 위에서 페이지 세로 스크롤을 막던
-    // 치명적 회귀(#649)를 제거했다. 컨테이너에 touch-pan-x 클래스가 없어야 한다.
-    const { container } = render(
+  it("월/주를 스와이프 캐러셀로 렌더한다 — 주 뷰는 앞뒤 핍 3슬라이드(#657)", () => {
+    render(
       <CalendarView
         tripStart={new Date(2026, 5, 7)}
         tripEnd={new Date(2026, 5, 21)}
@@ -82,54 +80,18 @@ describe("CalendarView 모바일 압축", () => {
         enableMobileCompact
       />,
     );
-    const area = container.querySelector("[data-calendar-view]");
-    expect(area).not.toBeNull();
-    expect(area?.className ?? "").not.toMatch(/touch-pan-x/);
-  });
-
-  it("스와이프 컨테이너는 touch-pan-y 로 세로 스크롤을 보존한다(#653/#649)", () => {
-    const { container } = render(
-      <CalendarView
-        tripStart={new Date(2026, 5, 7)}
-        tripEnd={new Date(2026, 5, 21)}
-        daysDates={[new Date(2026, 5, 9)]}
-        selected={new Date(2026, 5, 9)}
-        onSelect={vi.fn()}
-        enableMobileCompact
-      />,
-    );
-    expect(
-      container.querySelector("[data-calendar-view]")?.className,
-    ).toMatch(/touch-pan-y/);
-  });
-
-  it("주 뷰에서 좌우 스와이프로 ±7일(주 단위) 이동한다(#653)", () => {
-    const onSelect = vi.fn();
-    const { container } = render(
-      <CalendarView
-        tripStart={new Date(2026, 5, 7)}
-        tripEnd={new Date(2026, 5, 21)}
-        daysDates={[new Date(2026, 5, 9)]}
-        selected={new Date(2026, 5, 9)}
-        onSelect={onSelect}
-        enableMobileCompact
-      />,
-    );
+    // 월 뷰: '월 달력' 캐러셀.
+    expect(screen.getByRole("group", { name: "월 달력" })).toBeInTheDocument();
+    // 탭 토글 → 주 뷰: '주 달력' 캐러셀 + 이전·현재·다음 3주 스트립.
     fireEvent.click(screen.getByRole("button", { name: "주간만 보기" }));
-    const area = container.querySelector('[data-calendar-view="week"]')!;
-    // 왼쪽으로 쓸기(dx -100) → 다음 주(06-09 +7 = 06-16).
-    fireEvent.touchStart(area, { touches: [{ clientX: 200, clientY: 100 }] });
-    fireEvent.touchEnd(area, { changedTouches: [{ clientX: 100, clientY: 100 }] });
-    const last = onSelect.mock.calls.at(-1)?.[0] as Date;
-    expect(last.getDate()).toBe(16);
-    // 오른쪽으로 쓸기(dx +100) → 이전 주(06-09 −7 = 06-02).
-    fireEvent.touchStart(area, { touches: [{ clientX: 100, clientY: 100 }] });
-    fireEvent.touchEnd(area, { changedTouches: [{ clientX: 200, clientY: 100 }] });
-    const prev = onSelect.mock.calls.at(-1)?.[0] as Date;
-    expect(prev.getDate()).toBe(2);
+    expect(screen.getByRole("group", { name: "주 달력" })).toBeInTheDocument();
+    // 이전·현재·다음 3주(핍 2개는 aria-hidden → hidden:true 로 포함해 카운트).
+    expect(
+      screen.getAllByRole("grid", { name: "선택 주", hidden: true }),
+    ).toHaveLength(3);
   });
 
-  it("월 뷰에서 좌우 스와이프로 표시 달을 이동한다(#653)", () => {
+  it("캘린더 어디에도 세로 스크롤을 막는 touch-pan-x 가 없다(#649 회귀 가드)", () => {
     const { container } = render(
       <CalendarView
         tripStart={new Date(2026, 5, 7)}
@@ -140,10 +102,6 @@ describe("CalendarView 모바일 압축", () => {
         enableMobileCompact
       />,
     );
-    const area = container.querySelector('[data-calendar-view="month"]')!;
-    // 왼쪽으로 쓸기 → 다음 달(7월) 캡션 노출.
-    fireEvent.touchStart(area, { touches: [{ clientX: 200, clientY: 100 }] });
-    fireEvent.touchEnd(area, { changedTouches: [{ clientX: 100, clientY: 100 }] });
-    expect(container.textContent).toMatch(/7월/);
+    expect(container.querySelector("[class*='touch-pan-x']")).toBeNull();
   });
 });

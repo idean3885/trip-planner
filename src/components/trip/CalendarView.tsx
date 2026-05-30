@@ -23,8 +23,8 @@ import type { Matcher } from "react-day-picker";
 
 import { Calendar, CalendarDayButton } from "@/components/ui/calendar";
 import { getTripColor } from "@/lib/trip-palette";
-import { useHorizontalSwipe } from "@/lib/use-horizontal-swipe";
 import { cn } from "@/lib/utils";
+import { SwipeCarousel } from "./SwipeCarousel";
 
 export interface TripDayGroup {
   tripId: number;
@@ -143,14 +143,16 @@ export function CalendarView({
   // 셀은 정사각이라 셀 크기가 곧 세로 길이도 결정한다 — 너무 키우면 캘린더가
   // 화면을 잡아먹어 방해가 되므로 14(=3.5rem)로 상한을 둔다. 한 토큰만 조절하면
   // 가로 채움/세로 길이 균형을 바꿀 수 있다.
-  const monthCalendar = (
+  // 한 달치 캘린더 렌더러. 캐러셀은 이전·현재·다음 달을 같은 렌더러로 그린다.
+  // withNav=false(핍 슬라이드)는 prev/next 화살표를 비활성(컨트롤드, 핸들러 없음).
+  const renderMonth = (month: Date, withNav: boolean) => (
     <Calendar
       mode="single"
       locale={ko}
       selected={selected}
       onSelect={onSelect}
-      month={displayMonth}
-      onMonthChange={setDisplayMonth}
+      month={month}
+      onMonthChange={withNav ? setDisplayMonth : undefined}
       modifiers={modifiers}
       modifiersClassNames={modifiersClassNames}
       components={components}
@@ -162,12 +164,12 @@ export function CalendarView({
   );
 
   if (!enableMobileCompact) {
-    return monthCalendar;
+    return renderMonth(displayMonth, true);
   }
 
   return (
     <MobileCompactCalendar
-      monthCalendar={monthCalendar}
+      renderMonth={renderMonth}
       tripStart={tripStart}
       tripEnd={tripEnd}
       daysDates={daysDates}
@@ -185,7 +187,7 @@ export function CalendarView({
  * 유지하며 주만 새 날짜의 주로 따라간다.
  */
 function MobileCompactCalendar({
-  monthCalendar,
+  renderMonth,
   tripStart,
   tripEnd,
   daysDates,
@@ -194,7 +196,7 @@ function MobileCompactCalendar({
   displayMonth,
   onMonthChange,
 }: {
-  monthCalendar: React.ReactNode;
+  renderMonth: (month: Date, withNav: boolean) => React.ReactNode;
   tripStart: Date | null;
   tripEnd: Date | null;
   daysDates: Date[];
@@ -204,35 +206,38 @@ function MobileCompactCalendar({
   onMonthChange: (month: Date) => void;
 }) {
   const [view, setView] = useState<"month" | "week">("month");
+  const selectedSafe = selected ?? new Date();
 
-  // 월↔주 전환은 탭 토글 버튼으로 한다(세로 스와이프는 보류 #649).
-  // #653 — 좌우(가로) 스와이프로 기간 이동: 월 뷰는 달을, 주 뷰는 주(선택일 ±7)를
-  // 옮긴다. touch-action: pan-y(`touch-pan-y`)로 세로 스크롤은 그대로 두므로
-  // #649 회귀가 재발하지 않는다.
-  const swipe = useHorizontalSwipe(
-    () => {
-      // 왼쪽으로 쓸기 → 다음 기간.
-      if (view === "month") onMonthChange(addMonths(displayMonth, 1));
-      else if (selected) onSelect?.(addDays(selected, 7));
-    },
-    () => {
-      // 오른쪽으로 쓸기 → 이전 기간.
-      if (view === "month") onMonthChange(addMonths(displayMonth, -1));
-      else if (selected) onSelect?.(addDays(selected, -7));
-    },
-  );
-
+  // #657 — 드래그-팔로우 + 앞뒤 핍 스와이프(embla). 월 뷰는 달을, 주 뷰는 주를
+  // 이전·현재·다음 3슬라이드로 끌어 넘긴다. 정착하면 기준을 옮기고 가운데로 복귀.
+  // embla 가 세로 제스처를 통과시키고 SwipeCarousel 이 touch-pan-y 도 줘 세로
+  // 페이지 스크롤은 그대로(#649 회귀 방지).
   return (
-    <div data-calendar-view={view} className="touch-pan-y" {...swipe}>
+    <div data-calendar-view={view}>
       {view === "month" ? (
-        monthCalendar
+        <SwipeCarousel
+          ariaLabel="월 달력"
+          anchorKey={`m${displayMonth.getFullYear()}-${displayMonth.getMonth()}`}
+          onCommit={(dir) => onMonthChange(addMonths(displayMonth, dir))}
+          renderSlide={(off) =>
+            renderMonth(addMonths(displayMonth, off), off === 0)
+          }
+        />
       ) : (
-        <WeekStrip
-          selected={selected ?? new Date()}
-          tripStart={tripStart}
-          tripEnd={tripEnd}
-          daysDates={daysDates}
-          onSelect={onSelect}
+        <SwipeCarousel
+          ariaLabel="주 달력"
+          anchorKey={`w${selectedSafe.toDateString()}`}
+          onCommit={(dir) => onSelect?.(addDays(selectedSafe, dir * 7))}
+          renderSlide={(off) => (
+            <WeekStrip
+              weekOf={addDays(selectedSafe, off * 7)}
+              selected={off === 0 ? selectedSafe : undefined}
+              tripStart={tripStart}
+              tripEnd={tripEnd}
+              daysDates={daysDates}
+              onSelect={onSelect}
+            />
+          )}
         />
       )}
       {/* 스와이프가 어려운 환경에서도 월↔주 전환을 보장하는 명시적 탭 토글(#637). */}
@@ -249,24 +254,28 @@ function MobileCompactCalendar({
 }
 
 function WeekStrip({
+  weekOf,
   selected,
   tripStart,
   tripEnd,
   daysDates,
   onSelect,
 }: {
-  selected: Date;
+  /** 표시할 주(이 날짜가 속한 주). 핍 슬라이드는 선택일과 다른 주를 그린다. */
+  weekOf: Date;
+  /** 강조할 선택일. 핍 슬라이드는 undefined → 강조 없음. */
+  selected?: Date;
   tripStart: Date | null;
   tripEnd: Date | null;
   daysDates: Date[];
   onSelect?: (date: Date | undefined) => void;
 }) {
-  const week = useMemo(() => getWeekDays(selected), [selected]);
+  const week = useMemo(() => getWeekDays(weekOf), [weekOf]);
 
   return (
     <div className="flex w-full gap-1 py-1" role="grid" aria-label="선택 주">
       {week.map((d) => {
-        const isSelected = sameLocalDay(d, selected);
+        const isSelected = selected ? sameLocalDay(d, selected) : false;
         const hasActivity = daysDates.some((x) => sameLocalDay(x, d));
         const inRange =
           tripStart && tripEnd ? d >= tripStart && d <= tripEnd : false;
