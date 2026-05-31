@@ -16,7 +16,7 @@
 
 ### Evidence
 
-- 자동 테스트: `tests/components/trip/TripDetailLayout.test.tsx` — 일정 패널이 `snap-start snap-always scroll-mt-[var(--trip-cal-h)]` 정지점 클래스를 갖는 구조를 검증(거동이 아닌 구조).
+- 자동 테스트: `tests/components/trip/TripDetailLayout.test.tsx` — 일정 캐러셀 렌더·데스크탑 무영향 구조를 검증(GSAP snap 거동은 jsdom 미검증).
 - 수동 체크리스트(trip.idean.me 실기기):
   - [ ] US1-1 헤더만 올라가 캘린더 고정 확인
   - [ ] US1-2 빠른 fling이 경계를 넘지 않음 확인
@@ -34,7 +34,7 @@
 
 ### Evidence
 
-- 자동 테스트: `tests/components/trip/TripDetailLayout.test.tsx` — 일정 패널 정지점 클래스와 캘린더 sticky 구조를 검증.
+- 자동 테스트: `tests/components/trip/TripDetailLayout.test.tsx` — 캐러셀 렌더와 캘린더 sticky 구조를 검증.
 - 수동 체크리스트(trip.idean.me 실기기):
   - [ ] US2-1 캘린더 고정 중 일정만 스크롤 확인
   - [ ] US2-2 일정 최상단 경계 멈춤 + 추가 제스처로 헤더 복귀 확인

@@ -79,18 +79,14 @@ describe("TripDetailLayout 모바일 상단 (#684)", () => {
     expect(await screen.findByText("여행 정보")).toBeInTheDocument();
   });
 
-  // spec 037 — 단일 스크롤 + 캘린더 경계 1회 멈춤: 일정 패널 상단에만 정지점
-  // (snap-start snap-always)을 두고 scroll-margin-top 으로 sticky 캘린더 아래에
-  // 정렬한다. 좌우 스와이프(touch-pan-y)가 공존하고, 데스크탑 2분할이 함께 렌더된다.
-  // (스크롤 단계 분리·경계 멈춤 거동은 jsdom 미검증 → 실기기 정본.)
-  it("일정 패널은 캘린더 경계 정지점이다 (snap-start snap-always + scroll-mt)", () => {
-    const { container } = renderLayout();
-    const panel = container.querySelector(".snap-start.snap-always");
-    expect(panel).not.toBeNull();
-    // 정지 위치를 캘린더 높이(--trip-cal-h)만큼 내려 sticky 캘린더 아래에 맞춘다.
-    expect((panel as HTMLElement).className).toContain(
-      "scroll-mt-[var(--trip-cal-h)]",
-    );
+  // spec 037 — 단일 스크롤 + 캘린더 경계 1회 멈춤(GSAP ScrollTrigger). 경계 멈춤
+  // 거동은 스크롤·레이아웃 엔진이 필요해 jsdom 미검증 → 실기기 정본. 여기서는
+  // 일정 패널·캐러셀이 렌더되고 좌우 스와이프(touch-pan-y)가 유지되는 구조만 본다.
+  it("선택 날짜 일정 캐러셀이 렌더된다", () => {
+    renderLayout();
+    expect(
+      screen.getByRole("group", { name: "선택 날짜 일정" }),
+    ).toBeInTheDocument();
   });
 
   it("일정 캐러셀은 touch-pan-y 로 세로 스크롤을 컨테이너에 위임한다", () => {

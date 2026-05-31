@@ -22,6 +22,11 @@ import {
   type ReactNode,
 } from "react";
 import { addDays } from "date-fns";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useGSAP } from "@gsap/react";
+
+gsap.registerPlugin(useGSAP, ScrollTrigger);
 import type { ActivityCategory, ReservationStatus } from "@prisma/client";
 import {
   ACTIVITY_WINDOW_RADIUS,
@@ -213,29 +218,39 @@ export function TripDetailLayout({
     window.scrollTo({ top: Math.max(0, target), behavior: "smooth" });
   }, [selectedDate]);
 
-  // spec 037 — sticky 캘린더 높이를 측정해 --trip-cal-h 로 노출한다. 일정 패널의
-  // scroll-margin-top(scroll-mt-[var(--trip-cal-h)])이 이 값을 써서, snap 이 걸릴
-  // 때 패널 상단이 sticky 캘린더 바로 아래에 정렬된다. 또 html 에 .trip-snap 을
-  // 붙여 모바일 단일 스크롤 + 캘린더 경계 snap 을 켠다(globals.css). 월↔주 토글로
-  // 캘린더 높이가 바뀌면 변수도 갱신한다. 데스크탑(lg:hidden)은 offsetHeight 0 → 스킵.
-  useEffect(() => {
+  // spec 037 — 모바일 단일 스크롤 + 캘린더 경계 1회 멈춤(GSAP ScrollTrigger).
+  // CSS scroll-snap 은 "오버슈트 후 복귀"라 사용자가 본 되돌림을 못 없앤다(v3.8.x).
+  // GSAP snap 으로 헤더가 사라지고 캘린더가 sticky 고정되는 경계(sticky.offsetTop)
+  // 한 지점에서만 정지시키고, 그 이후 일정 구간은 정지점을 두지 않아 자유 스크롤한다.
+  // duration 을 짧게 둬 "벽"에 가깝게 한다. 모바일(<1024px)에서만 matchMedia 로
+  // 켜고, 데스크탑·다른 페이지에는 영향이 없도록 cleanup 에서 revert 한다.
+  useGSAP(() => {
     const sticky = mobileStickyRef.current;
     if (!sticky) return;
-    const root = document.documentElement;
-    root.classList.add("trip-snap");
-    const apply = () => {
-      const h = sticky.offsetHeight;
-      if (h > 0) root.style.setProperty("--trip-cal-h", `${h}px`);
-    };
-    apply();
-    const ro = new ResizeObserver(apply);
-    ro.observe(sticky);
-    return () => {
-      ro.disconnect();
-      root.classList.remove("trip-snap");
-      root.style.removeProperty("--trip-cal-h");
-    };
-  }, []);
+    const mm = gsap.matchMedia();
+    mm.add("(max-width: 1023px)", () => {
+      const st = ScrollTrigger.create({
+        snap: {
+          snapTo: (value) => {
+            const max = ScrollTrigger.maxScroll(window);
+            const boundary = sticky.offsetTop;
+            if (max <= 0 || boundary <= 0) return value;
+            const scroll = value * max;
+            // 헤더 구간(0~경계)에서만 0 또는 경계로 정지. 일정 구간은 자유.
+            if (scroll < boundary) {
+              return (scroll < boundary / 2 ? 0 : boundary) / max;
+            }
+            return value;
+          },
+          duration: 0.12,
+          ease: "power2.out",
+          directional: false,
+        },
+      });
+      return () => st.kill();
+    });
+    return () => mm.revert();
+  });
 
   const handleDayCreated = useCallback((created: DayCreatedPayload) => {
     setDayIndex((prev) =>
@@ -349,15 +364,10 @@ export function TripDetailLayout({
         </div>
         {/* #657 — 하단 일정도 이전·현재·다음 날 3슬라이드로 드래그-팔로우 스와이프.
             핍 슬라이드(±1일)는 읽기 전용. 정착 시 선택 날짜를 하루 옮긴다.
-            spec 037 — 단일 document 스크롤(어디를 만지든 동일). 이 패널 상단에만
-            정지점을 둔다(snap-start). scroll-mt-[--trip-cal-h]로 정지 위치를 sticky
-            캘린더 바로 아래에 맞춰, 헤더가 사라지고 캘린더가 고정되는 경계에서 한 번
-            멈춘다(snap-always: 빠른 fling 도 이 지점을 건너뛰지 못함). 일정 목록
-            내부는 정지점이 없어 자유 스크롤이다. 좌우 스와이프는 touch-pan-y 로 공존. */}
-        <div
-          ref={mobilePanelRef}
-          className="snap-start snap-always scroll-mt-[var(--trip-cal-h)]"
-        >
+            spec 037 — 단일 document 스크롤(어디를 만지든 동일). 캘린더 경계 1회
+            멈춤은 GSAP ScrollTrigger(위 useGSAP)가 처리한다. 좌우 스와이프는
+            SwipeCarousel 의 touch-pan-y 로 세로를 document 에 위임해 공존한다. */}
+        <div ref={mobilePanelRef}>
           <SwipeCarousel
             ariaLabel="선택 날짜 일정"
             anchorKey={selectedDate.toDateString()}

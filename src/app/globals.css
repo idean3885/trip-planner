@@ -280,22 +280,3 @@ body {
     @apply font-sans;
   }
 }
-
-/*
- * spec 037 — 모바일 트립 상세 단일 스크롤 + 캘린더 경계 1회 멈춤.
- * 화면 전체가 하나의 document 스크롤이라 손가락 위치와 무관하게 동일하게
- * 스크롤된다. 일정 패널 상단 한 곳에만 정지점을 두어(scroll-snap-stop:always)
- * 헤더가 사라져 캘린더가 sticky 고정되는 경계에서 한 번 멈춘다. 일정 목록
- * 내부는 정지점이 없어 자유 스크롤이다.
- *
- * scroll-behavior:auto — 전역 html 의 smooth 가 snap 복귀를 느리게 만들던 것을
- * (v3.8.1) 막는다. auto 로 두면 snap 이 즉시 끝나 네이티브 속도를 유지한다.
- * 발동은 모바일(<1024px)로 제한하고, TripDetailLayout 이 떠 있는 동안에만 html
- * 에 .trip-snap 을 붙인다(정지점 없는 다른 페이지에는 영향 없음).
- */
-@media (max-width: 1023px) {
-  html.trip-snap {
-    scroll-snap-type: y proximity;
-    scroll-behavior: auto;
-  }
-}
