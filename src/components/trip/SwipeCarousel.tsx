@@ -60,10 +60,14 @@ export function SwipeCarousel({
     onCommitRef.current = onCommit;
   }, [onCommit]);
 
-  // 커밋은 select(스냅 목표가 바뀌는 즉시 — 드래그 도중에도 발생)가 아니라
-  // settle(스냅 애니메이션이 완전히 멈춘 뒤)에서 한다. 무거운 재렌더가 스냅
-  // 애니메이션 도중에 끼어들어 프레임이 끊기던 것을 모션이 끝난 뒤로 미룬다(#661).
-  const handleSettle = useCallback(() => {
+  // 커밋은 select(스냅 목표가 확정되는 즉시)에서 한다. settle(애니 종료 뒤)로
+  // 미뤘던 것(#661)을 되돌린 것으로, 이유는 두 가지다(#682·#683):
+  //   - 미로딩 날짜로 스와이프해도 데이터 도착·모션 종료를 기다리지 않고 즉시
+  //     기준 날짜를 옮겨야 한다(#682). settle 대기 중에는 가운데로 튕겨 보였다.
+  //   - 캘린더 선택 강조가 일정 이동과 같은 타이밍에 갱신되어야 한다(#683).
+  // #661 의 끊김(무거운 재렌더가 스냅 애니에 끼어듦)은 #673(DayActivitiesPane
+  // memo·안정 props·레이아웃 격리)로 재렌더 비용을 줄여 완화됐다.
+  const handleSelect = useCallback(() => {
     if (!emblaApi) return;
     const i = emblaApi.selectedScrollSnap();
     if (i === 1) return; // 가운데 — 변화 없음
@@ -72,11 +76,11 @@ export function SwipeCarousel({
 
   useEffect(() => {
     if (!emblaApi) return;
-    emblaApi.on("settle", handleSettle);
+    emblaApi.on("select", handleSelect);
     return () => {
-      emblaApi.off("settle", handleSettle);
+      emblaApi.off("select", handleSelect);
     };
-  }, [emblaApi, handleSettle]);
+  }, [emblaApi, handleSelect]);
 
   // 커밋으로 anchorKey 가 바뀌어 슬라이드가 새 기준으로 재렌더되면, paint 전에
   // 슬라이드 위치를 다시 측정(reInit)하고 가운데로 즉시 복귀(jump=true)한다.

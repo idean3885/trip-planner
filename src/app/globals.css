@@ -280,3 +280,16 @@ body {
     @apply font-sans;
   }
 }
+
+/*
+ * #681 — 모바일 트립 상세에서만 document 스크롤에 scroll-snap(proximity)을 켠다.
+ * TripDetailLayout 이 마운트되는 동안에만 html 에 .trip-snap 을 붙이고, 실제
+ * 발동은 모바일(<1024px)로 제한한다. 정지점은 일정 패널의 scroll-margin-top
+ * (=캘린더 높이 var(--trip-cal-h))으로, 패널 상단이 sticky 캘린더 바로 아래에
+ * 정렬된다. proximity 라 일정 목록 내부 스크롤은 끌어당기지 않는다.
+ */
+@media (max-width: 1023px) {
+  html.trip-snap {
+    scroll-snap-type: y proximity;
+  }
+}

@@ -8,6 +8,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { DayActivitiesPane } from "@/components/trip/DayActivitiesPane";
+import { formatCalendarDate } from "@/lib/date-utils";
 import type { ActivityCategory } from "@prisma/client";
 
 vi.mock("next/navigation", () => ({
@@ -167,5 +168,39 @@ describe("DayActivitiesPane", () => {
     );
     expect(screen.getByText("포르투 이동")).toBeInTheDocument();
     expect(screen.queryByText("리스본 도착")).not.toBeInTheDocument();
+  });
+
+  it("showDateHeader=false 면 날짜 헤더를 렌더하지 않는다(#681 모바일 중복 제거)", () => {
+    const label = formatCalendarDate(SELECTED);
+    const { rerender } = render(
+      <DayActivitiesPane
+        tripId={1}
+        selectedDate={SELECTED}
+        dayId={null}
+        activities={null}
+        canEdit={false}
+        onDayCreated={vi.fn()}
+      />,
+    );
+    // 기본(데스크탑)은 날짜 헤더를 유지한다.
+    expect(screen.getByText(label)).toBeInTheDocument();
+
+    // 모바일(showDateHeader=false)은 날짜 헤더를 숨기고 본문만 남긴다.
+    rerender(
+      <DayActivitiesPane
+        tripId={1}
+        selectedDate={SELECTED}
+        dayId={null}
+        activities={null}
+        canEdit={false}
+        onDayCreated={vi.fn()}
+        showDateHeader={false}
+      />,
+    );
+    expect(screen.queryByText(label)).not.toBeInTheDocument();
+    // 본문(빈 날짜 안내)은 그대로 보인다.
+    expect(
+      screen.getByText("이 날짜에 등록된 일정이 없습니다."),
+    ).toBeInTheDocument();
   });
 });

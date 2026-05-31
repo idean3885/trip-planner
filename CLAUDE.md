@@ -210,6 +210,8 @@ develop ──●──●──●───●──●──●──●──
 - Neon Postgres (Production `neondb` / Preview·Dev `neondb_dev`). Prisma 마이그레이션 1건(schema-only): `ActivityDraft` 추가 + `(calendarId, externalEventId)` 유니크 인덱스. (027-external-calendar-import)
 - TypeScript 5.x, Node.js 20+ (Next.js 16). + Next.js 16 (App Router), React 19, shadcn/ui `Dialog`/`Button`/`Select`/`DropdownMenu`, Tailwind CSS v4. **신규 의존성 도입 없음**. (028-calendar-sync-dialog)
 - 변경 없음. UI-only 피처. (028-calendar-sync-dialog)
+- TypeScript 5.x, Node.js 20+ + Next.js 16 (App Router), React 19, Tailwind CSS v4(`@theme` CSS-first), shadcn/ui(vendored), embla-carousel-react, lucide-react. 본 피처에서 신규 의존성 도입 없음. (036-mobile-detail-interaction)
+- N/A (UI 전용, 영속 데이터 스키마 변경 없음) (036-mobile-detail-interaction)
 
 ## Recent Changes
 - 001-ax-travel-planning: Added Python 3.14 + FastMCP, httpx, python-dotenv, pytes
