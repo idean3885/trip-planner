@@ -200,16 +200,34 @@ export function TripDetailLayout({
       didMountRef.current = true;
       return;
     }
-    const sticky = mobileStickyRef.current;
+    // #645 → spec 037 — 다른 날짜를 누르면 모바일 일정 영역을 맨 위로 되돌린다.
+    // 일정이 document 가 아니라 자체 overflow 영역이라 window 가 아닌 패널을
+    // 스크롤한다. 데스크탑(lg:hidden)은 display:none 이라 scrollTo 가 무해하다.
     const panel = mobilePanelRef.current;
-    if (!sticky || !panel) return;
-    // 데스크탑(lg:hidden)에서는 sticky 가 display:none → offsetHeight 0 → 스킵.
-    const stickyH = sticky.offsetHeight;
-    if (stickyH === 0) return;
-    const target =
-      panel.getBoundingClientRect().top + window.scrollY - stickyH - 8;
-    window.scrollTo({ top: Math.max(0, target), behavior: "smooth" });
+    if (!panel) return;
+    panel.scrollTo({ top: 0, behavior: "smooth" });
   }, [selectedDate]);
+
+  // spec 037 — 모바일 일정 영역을 캘린더 고정 후 가용 높이로 채우기 위해 sticky
+  // 캘린더 영역 높이를 측정해 CSS 변수(--trip-cal-h)로 노출한다. 일정 영역
+  // height = 100dvh - 캘린더 높이. 월↔주 토글로 높이가 바뀌면 갱신한다. 데스크탑
+  // (lg:hidden)에서는 offsetHeight 0 이라 변수를 건드리지 않는다.
+  useEffect(() => {
+    const sticky = mobileStickyRef.current;
+    if (!sticky) return;
+    const root = document.documentElement;
+    const apply = () => {
+      const h = sticky.offsetHeight;
+      if (h > 0) root.style.setProperty("--trip-cal-h", `${h}px`);
+    };
+    apply();
+    const ro = new ResizeObserver(apply);
+    ro.observe(sticky);
+    return () => {
+      ro.disconnect();
+      root.style.removeProperty("--trip-cal-h");
+    };
+  }, []);
 
   const handleDayCreated = useCallback((created: DayCreatedPayload) => {
     setDayIndex((prev) =>
@@ -323,9 +341,17 @@ export function TripDetailLayout({
         </div>
         {/* #657 — 하단 일정도 이전·현재·다음 날 3슬라이드로 드래그-팔로우 스와이프.
             핍 슬라이드(±1일)는 읽기 전용. 정착 시 선택 날짜를 하루 옮긴다.
-            #692 — scroll-snap 을 철회했다. 캘린더는 위 sticky 로 상단 고정된 채
-            유지되고, 일정은 그 아래에서 네이티브 관성 그대로 흐른다(정지점 없음). */}
-        <div ref={mobilePanelRef}>
+            spec 037 — 일정 영역을 자체 세로 스크롤 컨테이너로 둔다(중첩 스크롤).
+            height = 100dvh - 캘린더 높이(--trip-cal-h)라, 헤더가 document 스크롤로
+            사라져 캘린더가 sticky 고정되면 이 영역이 화면을 꽉 채운다(1단계). 이후
+            영역 안에서만 일정이 스크롤되고(2단계), overscroll-contain 이 경계에서
+            바깥(document)으로의 스크롤 연쇄를 끊어 한 번 멈춘다. 좌우 스와이프는
+            SwipeCarousel 의 touch-pan-y 가 세로를 이 컨테이너에 위임해 공존한다. */}
+        <div
+          ref={mobilePanelRef}
+          className="overflow-y-auto overscroll-contain"
+          style={{ height: "calc(100dvh - var(--trip-cal-h, 18rem))" }}
+        >
           <SwipeCarousel
             ariaLabel="선택 날짜 일정"
             anchorKey={selectedDate.toDateString()}
