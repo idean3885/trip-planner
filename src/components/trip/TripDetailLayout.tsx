@@ -21,7 +21,6 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { Ellipsis } from "lucide-react";
 import { addDays } from "date-fns";
 import type { ActivityCategory, ReservationStatus } from "@prisma/client";
 import {
@@ -212,6 +211,31 @@ export function TripDetailLayout({
     window.scrollTo({ top: Math.max(0, target), behavior: "smooth" });
   }, [selectedDate]);
 
+  // #681 — 모바일에서 캘린더 sticky 경계를 스크롤 정지 지점으로 만든다.
+  // document 스크롤에 scroll-snap(proximity)을 켜고, 일정 패널 상단이 sticky
+  // 캘린더 아래에 정렬되도록 scroll-padding-top 을 캘린더 높이(--trip-cal-h)로
+  // 맞춘다. 클래스는 이 화면이 떠 있는 동안에만 붙이고(라우트 한정), 실제 snap
+  // 발동 폭은 globals.css 의 max-width 미디어쿼리가 모바일로 제한한다. 정렬점이
+  // 없는 다른 페이지에는 proximity 가 영향을 주지 않는다.
+  useEffect(() => {
+    const sticky = mobileStickyRef.current;
+    if (!sticky) return;
+    const root = document.documentElement;
+    root.classList.add("trip-snap");
+    const applyHeight = () => {
+      const h = sticky.offsetHeight;
+      if (h > 0) root.style.setProperty("--trip-cal-h", `${h}px`);
+    };
+    applyHeight();
+    const ro = new ResizeObserver(applyHeight);
+    ro.observe(sticky);
+    return () => {
+      ro.disconnect();
+      root.classList.remove("trip-snap");
+      root.style.removeProperty("--trip-cal-h");
+    };
+  }, []);
+
   const handleDayCreated = useCallback((created: DayCreatedPayload) => {
     setDayIndex((prev) =>
       [
@@ -247,7 +271,11 @@ export function TripDetailLayout({
   // 특정 날짜의 일정 패널. interactive=false(핍 슬라이드)는 읽기 전용으로 둔다.
   // dayId·activities(캐시 참조)·안정 핸들러만 넘겨 DayActivitiesPane memo 가
   // 무관한 프리페치 재렌더를 건너뛰게 한다(#673).
-  const renderPanel = (date: Date, interactive: boolean) => {
+  const renderPanel = (
+    date: Date,
+    interactive: boolean,
+    showDateHeader = true,
+  ) => {
     const entry = dayForDate(date);
     return (
       <DayActivitiesPane
@@ -258,6 +286,7 @@ export function TripDetailLayout({
         canEdit={interactive && canEdit}
         onDayCreated={handleDayCreated}
         onActivitiesChange={interactive ? handleActivitiesChange : undefined}
+        showDateHeader={showDateHeader}
       />
     );
   };
@@ -294,15 +323,9 @@ export function TripDetailLayout({
             <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
               <DialogTrigger
                 render={
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="gap-1 text-sm text-muted-foreground"
-                  />
+                  <Button type="button" variant="outline" size="sm" />
                 }
               >
-                <Ellipsis className="size-4" aria-hidden />
                 자세히
               </DialogTrigger>
               <DialogContent>
@@ -324,13 +347,18 @@ export function TripDetailLayout({
           />
         </div>
         {/* #657 — 하단 일정도 이전·현재·다음 날 3슬라이드로 드래그-팔로우 스와이프.
-            핍 슬라이드(±1일)는 읽기 전용. 정착 시 선택 날짜를 하루 옮긴다. */}
-        <div ref={mobilePanelRef}>
+            핍 슬라이드(±1일)는 읽기 전용. 정착 시 선택 날짜를 하루 옮긴다.
+            #681 — snap-start: 아래로 스크롤하면 이 패널 상단이 캘린더 바로 아래
+            (scroll-padding-top=캘린더 높이)에 정렬돼, 캘린더 고정 경계에서 한 번
+            멈춘다. 위로 스크롤은 이 지점을 벗어나야(=일정 최상단) 캘린더가 풀린다. */}
+        <div ref={mobilePanelRef} className="snap-start scroll-mt-[var(--trip-cal-h)]">
           <SwipeCarousel
             ariaLabel="선택 날짜 일정"
             anchorKey={selectedDate.toDateString()}
             onCommit={(dir) => setSelectedDate((d) => addDays(d, dir))}
-            renderSlide={(off) => renderPanel(mobileDates[off + 1], off === 0)}
+            renderSlide={(off) =>
+              renderPanel(mobileDates[off + 1], off === 0, false)
+            }
           />
         </div>
       </div>
