@@ -39,6 +39,11 @@ export interface DayActivitiesPaneProps {
   onDayCreated: (day: DayCreatedPayload) => void;
   /** 활동 CRUD 결과를 상위 캐시에 반영(#669). dayId 동반 단일 안정 핸들러(#673). */
   onActivitiesChange?: (dayId: number, next: Activity[]) => void;
+  /**
+   * 상단 날짜 헤더 표시 여부(#681). 모바일은 캘린더 강조와 중복이라 숨긴다.
+   * 데스크탑 2분할은 우측 일정에 날짜 맥락이 필요해 기본값(true)으로 유지한다.
+   */
+  showDateHeader?: boolean;
 }
 
 /** Date 를 로컬 기준 YYYY-MM-DD 로 변환 (floating-time 관행 #232). */
@@ -59,6 +64,7 @@ export const DayActivitiesPane = memo(function DayActivitiesPane({
   canEdit,
   onDayCreated,
   onActivitiesChange,
+  showDateHeader = true,
 }: DayActivitiesPaneProps) {
   const [busy, setBusy] = useState(false);
 
@@ -90,11 +96,13 @@ export const DayActivitiesPane = memo(function DayActivitiesPane({
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="text-sm font-medium tabular-nums">
-          {formatCalendarDate(selectedDate)}
-        </CardTitle>
-      </CardHeader>
+      {showDateHeader && (
+        <CardHeader>
+          <CardTitle className="text-sm font-medium tabular-nums">
+            {formatCalendarDate(selectedDate)}
+          </CardTitle>
+        </CardHeader>
+      )}
       <CardContent>
         {dayId === null ? (
           <div className="space-y-3">
