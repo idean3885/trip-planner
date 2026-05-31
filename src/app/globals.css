@@ -280,23 +280,3 @@ body {
     @apply font-sans;
   }
 }
-
-/*
- * #681 — 모바일 트립 상세에서만 document 스크롤에 scroll-snap(proximity)을 켠다.
- * TripDetailLayout 이 마운트되는 동안에만 html 에 .trip-snap 을 붙이고, 실제
- * 발동은 모바일(<1024px)로 제한한다. 정지점은 일정 패널의 scroll-margin-top
- * (=캘린더 높이 var(--trip-cal-h))으로, 패널 상단이 sticky 캘린더 바로 아래에
- * 정렬된다. proximity 라 일정 목록 내부 스크롤은 끌어당기지 않는다.
- *
- * #688 — scroll-behavior 를 auto 로 오버라이드한다. 전역 html 의 smooth 가
- * snap 복귀에까지 적용돼 정지점으로 천천히 미끄러지며 네이티브 관성 속도를
- * 가로막았다(답답함). auto 로 두면 빠른 스크롤을 그대로 유지하고, 경계 정지는
- * 일정 패널의 scroll-snap-stop:always(snap-always) 가 책임진다. 날짜 전환용
- * scrollTo({behavior:"smooth"}) 는 인라인 지정이라 영향받지 않는다.
- */
-@media (max-width: 1023px) {
-  html.trip-snap {
-    scroll-snap-type: y proximity;
-    scroll-behavior: auto;
-  }
-}

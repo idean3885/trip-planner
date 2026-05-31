@@ -211,31 +211,6 @@ export function TripDetailLayout({
     window.scrollTo({ top: Math.max(0, target), behavior: "smooth" });
   }, [selectedDate]);
 
-  // #681 — 모바일에서 캘린더 sticky 경계를 스크롤 정지 지점으로 만든다.
-  // document 스크롤에 scroll-snap(proximity)을 켜고, 일정 패널 상단이 sticky
-  // 캘린더 아래에 정렬되도록 scroll-padding-top 을 캘린더 높이(--trip-cal-h)로
-  // 맞춘다. 클래스는 이 화면이 떠 있는 동안에만 붙이고(라우트 한정), 실제 snap
-  // 발동 폭은 globals.css 의 max-width 미디어쿼리가 모바일로 제한한다. 정렬점이
-  // 없는 다른 페이지에는 proximity 가 영향을 주지 않는다.
-  useEffect(() => {
-    const sticky = mobileStickyRef.current;
-    if (!sticky) return;
-    const root = document.documentElement;
-    root.classList.add("trip-snap");
-    const applyHeight = () => {
-      const h = sticky.offsetHeight;
-      if (h > 0) root.style.setProperty("--trip-cal-h", `${h}px`);
-    };
-    applyHeight();
-    const ro = new ResizeObserver(applyHeight);
-    ro.observe(sticky);
-    return () => {
-      ro.disconnect();
-      root.classList.remove("trip-snap");
-      root.style.removeProperty("--trip-cal-h");
-    };
-  }, []);
-
   const handleDayCreated = useCallback((created: DayCreatedPayload) => {
     setDayIndex((prev) =>
       [
@@ -348,13 +323,9 @@ export function TripDetailLayout({
         </div>
         {/* #657 — 하단 일정도 이전·현재·다음 날 3슬라이드로 드래그-팔로우 스와이프.
             핍 슬라이드(±1일)는 읽기 전용. 정착 시 선택 날짜를 하루 옮긴다.
-            #681 — snap-start: 아래로 스크롤하면 이 패널 상단이 캘린더 바로 아래
-            (scroll-padding-top=캘린더 높이)에 정렬돼, 캘린더 고정 경계에서 한 번
-            멈춘다. 위로 스크롤은 이 지점을 벗어나야(=일정 최상단) 캘린더가 풀린다.
-            #688 — snap-always(scroll-snap-stop:always): proximity 만으로는 빠른
-            fling 스크롤이 이 정지점을 무시하고 지나쳤다. always 로 한 번의 제스처가
-            경계를 건너뛰지 못하게 강제해, 빠른 속도로 내려도 여기서 한 번 멈춘다. */}
-        <div ref={mobilePanelRef} className="snap-start snap-always scroll-mt-[var(--trip-cal-h)]">
+            #692 — scroll-snap 을 철회했다. 캘린더는 위 sticky 로 상단 고정된 채
+            유지되고, 일정은 그 아래에서 네이티브 관성 그대로 흐른다(정지점 없음). */}
+        <div ref={mobilePanelRef}>
           <SwipeCarousel
             ariaLabel="선택 날짜 일정"
             anchorKey={selectedDate.toDateString()}
