@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [3.8.1] - 2026-05-31
+
+### Fixed
+
+- * **모바일 트립 상세의 캘린더 고정 경계 스크롤 정지**가 빠르게 내릴 때도 한 번 멈춥니다. 이전에는 스크롤 속도만 전체적으로 줄어든 채 경계를 그대로 지나쳤습니다. ([#688](https://github.com/idean3885/trip-planner/issues/688))
+
+
 ## [3.8.0] - 2026-05-31
 
 ### Added
