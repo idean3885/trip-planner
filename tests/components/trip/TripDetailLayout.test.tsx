@@ -78,4 +78,26 @@ describe("TripDetailLayout 모바일 상단 (#684)", () => {
     fireEvent.click(screen.getByRole("button", { name: "자세히" }));
     expect(await screen.findByText("여행 정보")).toBeInTheDocument();
   });
+
+  // spec 037 — 단일 스크롤 + 캘린더 경계 1회 멈춤(GSAP ScrollTrigger). 경계 멈춤
+  // 거동은 스크롤·레이아웃 엔진이 필요해 jsdom 미검증 → 실기기 정본. 여기서는
+  // 일정 패널·캐러셀이 렌더되고 좌우 스와이프(touch-pan-y)가 유지되는 구조만 본다.
+  it("선택 날짜 일정 캐러셀이 렌더된다", () => {
+    renderLayout();
+    expect(
+      screen.getByRole("group", { name: "선택 날짜 일정" }),
+    ).toBeInTheDocument();
+  });
+
+  it("일정 캐러셀은 touch-pan-y 로 세로 스크롤을 컨테이너에 위임한다", () => {
+    renderLayout();
+    const carousel = screen.getByRole("group", { name: "선택 날짜 일정" });
+    expect(carousel.className).toContain("touch-pan-y");
+  });
+
+  it("데스크탑 2분할 레이아웃이 함께 렌더된다 (모바일 변경 무영향)", () => {
+    const { container } = renderLayout();
+    // 데스크탑 그리드(hidden lg:grid)가 그대로 존재.
+    expect(container.querySelector(".lg\\:grid")).not.toBeNull();
+  });
 });
