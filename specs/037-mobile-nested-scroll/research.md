@@ -1,41 +1,39 @@
-# Research: 모바일 트립 상세 단일 스크롤 + 캘린더 경계 1회 멈춤
+# Research: 모바일 트립 상세 단일 스크롤 + 캘린더 경계 1회 멈춤 (GSAP)
 
 **Feature**: 037-mobile-nested-scroll
 **Date**: 2026-05-31
 
-## 결정 1 — 단일 스크롤 + 캘린더 경계 1점 scroll-snap
+## 결정 1 — GSAP ScrollTrigger snap (단일 스크롤 유지)
 
-**Decision**: 모바일(<1024px) 트립 상세를 단일 document 스크롤로 두고, 캘린더는 `position: sticky`로 상단 고정한다. 일정 패널 상단 **한 곳에만** 정지점(`scroll-snap-align: start` + `scroll-snap-stop: always`)을 두고, 스크롤 컨테이너(html)에 `scroll-snap-type: y proximity`와 `scroll-behavior: auto`를 모바일 한정으로 적용한다. 정지 위치는 `scroll-margin-top`을 캘린더 높이(`--trip-cal-h`)로 맞춘다.
+**Decision**: 모바일(<1024px) 트립 상세를 단일 document 스크롤로 두고 캘린더는 `position: sticky`로 고정한다. 헤더가 사라져 캘린더가 고정되는 경계(`sticky.offsetTop`) 한 지점에서만 GSAP `ScrollTrigger`의 `snap`으로 멈춘다. `snapTo`는 헤더 구간(0~경계)에서만 0 또는 경계로 보내고, 경계 이후 일정 구간은 현재 위치를 그대로 반환해 자유 스크롤을 보존한다. `gsap.matchMedia("(max-width: 1023px)")`로 모바일에서만 켜고, cleanup에서 revert한다.
 
 **Rationale**:
-- 사용자 요구의 핵심은 "어느 영역을 스크롤해도 동일" = **단일 스크롤**이다. 손가락이 헤더·캘린더·일정 어디 위에 있든 같은 document 스크롤이 움직인다.
-- 단계 멈춤은 "캘린더가 고정되는 경계 한 지점"에서만 필요하다. 일정 패널 상단에 정지점 하나를 두고 `scroll-snap-stop: always`로 빠른 fling 도 이 지점을 건너뛰지 못하게 한다. 일정 목록 내부는 정지점이 없어 자유 스크롤이다.
-- `scroll-behavior: auto`가 핵심이다. v3.8.1에서 snap 이 느렸던 원인은 전역 `scroll-behavior: smooth`가 snap 복귀에 적용돼 정지점으로 천천히 미끄러진 것이었다. auto 로 두면 snap 이 즉시 끝나 네이티브 속도를 유지한다(이 조합은 직전 세 버전에서 시도되지 않았다).
+- 사용자 요구: ① 어디를 스크롤해도 동일(단일 스크롤) ② 캘린더 경계에서 벽처럼 멈춤 ③ 네이티브 속도.
+- CSS scroll-snap은 ②를 줄 수 없다 — "스크롤이 멈춘 뒤 가까운 점으로 당김(오버슈트 후 복귀)"이 정의된 동작이라, 사용자가 dev에서 본 "지나쳤다 되돌아옴"이 그것이다. snap-back은 제거 불가.
+- GSAP `ScrollTrigger.snap`은 `snapTo`를 함수로 줄 수 있어 "헤더 구간만 정지점, 일정 구간은 자유"를 프로그래밍할 수 있다. `duration`을 짧게(0.12) 둬 복귀를 최소화해 "벽"에 가깝게 만든다.
+- 단일 document 스크롤을 그대로 쓰므로 "어디를 만지든 동일"이 유지된다(중첩 스크롤의 손가락 위치 문제 없음).
 
 **Alternatives considered**:
-- **중첩 스크롤(일정 자체 overflow 영역 + `overscroll-behavior: contain`)** — 본 피처 1차 구현(037 초안)으로 dev 검증했으나, 손가락이 일정 영역 위/밖이냐에 따라 스크롤 주체가 갈려 "어디를 스크롤해도 동일"을 위배했다. 캘린더 sticky 높이에 따라 일정 영역 높이가 달라져 동작도 들쭉날쭉했다. 철회.
-- **scroll-snap mandatory** — 일정 목록 중간 스크롤까지 정지점으로 끌어당겨 자유 스크롤을 방해. proximity + 단일 정지점으로 대체.
-- **JS 스크롤 하이재킹** — 네이티브 관성·고무줄을 깨고 기기별 편차 큼(#649 전례). 기각.
+- **CSS scroll-snap (proximity/mandatory/snap-stop)** — v3.8.0~v3.8.2 + 037 1차. snap-back으로 "지나쳤다 복귀". 기각.
+- **중첩 스크롤(overscroll-contain)** — 손가락 위치마다 스크롤 주체가 갈려 "어디든 동일" 위배. 기각(037 2차 철회).
+- **GSAP normalizeScroll** — 모바일 스크롤을 JS 스레드로 가져와 pin 지터를 막지만 네이티브 관성을 JS가 대체해 속도감이 바뀐다. 1차로는 쓰지 않고, 지터가 심하면 그때 검토.
+- **CSS scroll-driven animations** — 스크롤 연동 시각효과지 "스크롤을 멈추는 벽"이 아니라 요구와 다름. 기각.
 
-## 결정 2 — 기존 화면 순서 유지 (레이아웃 재구성 없음)
+## 결정 2 — 기존 화면 순서 유지
 
-**Decision**: `page.tsx`의 여행 헤더(제목·기간·액션) → `TripDetailLayout`의 캘린더(sticky) → 일정 순서를 그대로 둔다. 헤더를 컨테이너 안으로 옮기거나 데스크탑 전용으로 분기하지 않는다.
-
-**Rationale**: 단일 document 스크롤이므로 기존 DOM 순서가 이미 "헤더 → 캘린더(sticky) → 일정"이다. 헤더가 document 스크롤로 사라지고 캘린더가 `sticky top-0`에 고정되는 흐름이 자연히 1단계가 된다. 변경은 `TripDetailLayout.tsx`(정지점·높이 측정·snap 클래스)와 `globals.css`(trip-snap 미디어쿼리)에 한정된다.
+**Decision**: `page.tsx`의 여행 헤더 → 캘린더(sticky) → 일정 순서를 그대로 둔다. 단일 document 스크롤이라 헤더가 사라지고 캘린더가 고정되는 흐름이 자연히 1단계다. 변경은 `TripDetailLayout.tsx`(GSAP 등록·snap)와 `globals.css`(이전 trip-snap 제거)에 한정.
 
 ## 결정 3 — 좌우 날짜 스와이프 공존
 
-**Decision**: 일정 영역의 `SwipeCarousel`(embla)은 현행 `touch-pan-y`를 유지한다. 세로 제스처는 document 스크롤로, 가로 제스처는 embla로 간다.
-
-**Rationale**: `touch-pan-y`가 "가로만 처리, 세로는 브라우저(document)에 위임"하므로 단일 스크롤과 그대로 공존한다. 큰 영역에 좁은 `touch-action`을 강제하지 않는다(#649 회귀 방지).
+**Decision**: `SwipeCarousel`(embla)은 현행 `touch-pan-y`를 유지한다. 세로 제스처는 document 스크롤로, 가로는 embla로. GSAP snap은 스크롤 종료 시점에만 개입하므로 가로 스와이프와 충돌하지 않는다.
 
 ## 결정 4 — 검증은 실기기 정본
 
-**Decision**: 단계 멈춤·경계 거동은 실기기(모바일 브라우저, dev.trip.idean.me / 프리뷰) 수동 확인을 정본으로 둔다. 자동 테스트(vitest+jsdom)는 레이아웃 구조(정지점 클래스·snap 클래스·데스크탑 무영향)만 검증한다.
-
-**Rationale**: jsdom에는 스크롤·레이아웃·scroll-snap 엔진이 없다. 브라우저별(특히 iOS Safari) snap·고무줄 동작 편차가 있어 실기기가 필수다.
+**Decision**: snap 거동·속도감은 실기기(모바일 브라우저) 수동 확인이 정본. 자동 테스트(vitest+jsdom)는 컴포넌트 렌더·데스크탑 무영향·`touch-pan-y` 유지만 검증한다(ScrollTrigger는 스크롤·레이아웃 엔진이 필요해 jsdom 미검증).
 
 ## 미해결/리스크 (실기기로 확인)
 
-- `scroll-snap-stop: always` + `scroll-behavior: auto` 조합이 iOS Safari·Chrome Android에서 "빠른 속도 유지 + 경계 1회 멈춤"을 실제로 주는지. (직전 세 버전 철회 이력 — 같은 증상 재발 시 정지점/타입 재조정 또는 멈춤 포기 검토.)
-- proximity 정지점이 너무 약해 fling 에서 무시되면 `snap-stop: always`로 보강되는지, 아니면 여전히 약한지.
+- GSAP snap의 `duration: 0.12`가 "벽"으로 충분히 즉각적인지, 아니면 여전히 복귀가 보이는지. 보이면 duration 추가 단축 또는 onUpdate 클램프 검토.
+- 모바일 빠른 fling에서 ScrollTrigger snap의 지터 여부. 심하면 `normalizeScroll` 도입(관성 트레이드오프) 검토.
+- GSAP 모듈 레벨 `registerPlugin`의 SSR(Next 서버 렌더) 안전성 — `"use client"` + `useGSAP`이 가드하나 Vercel 빌드로 확인.
+- iOS Safari 위치 오보고로 인한 경계 흔들림.
