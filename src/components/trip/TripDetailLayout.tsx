@@ -350,8 +350,11 @@ export function TripDetailLayout({
             핍 슬라이드(±1일)는 읽기 전용. 정착 시 선택 날짜를 하루 옮긴다.
             #681 — snap-start: 아래로 스크롤하면 이 패널 상단이 캘린더 바로 아래
             (scroll-padding-top=캘린더 높이)에 정렬돼, 캘린더 고정 경계에서 한 번
-            멈춘다. 위로 스크롤은 이 지점을 벗어나야(=일정 최상단) 캘린더가 풀린다. */}
-        <div ref={mobilePanelRef} className="snap-start scroll-mt-[var(--trip-cal-h)]">
+            멈춘다. 위로 스크롤은 이 지점을 벗어나야(=일정 최상단) 캘린더가 풀린다.
+            #688 — snap-always(scroll-snap-stop:always): proximity 만으로는 빠른
+            fling 스크롤이 이 정지점을 무시하고 지나쳤다. always 로 한 번의 제스처가
+            경계를 건너뛰지 못하게 강제해, 빠른 속도로 내려도 여기서 한 번 멈춘다. */}
+        <div ref={mobilePanelRef} className="snap-start snap-always scroll-mt-[var(--trip-cal-h)]">
           <SwipeCarousel
             ariaLabel="선택 날짜 일정"
             anchorKey={selectedDate.toDateString()}
