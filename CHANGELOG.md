@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [3.9.0] - 2026-05-31
+
+### Added
+
+- * **모바일 트립 상세의 스크롤이 캘린더 경계에서 한 번 멈춥니다.** 위 영역을 스크롤해 캘린더가 상단에 고정되는 지점에서 한 번 멈추고, 그다음부터는 일정이 이어서 스크롤됩니다. 캘린더로 날짜를 고르는 흐름과 일정을 읽는 흐름이 한 번의 스크롤로 뒤섞이지 않습니다. ([#696](https://github.com/idean3885/trip-planner/issues/696))
+
+
 ## [3.8.2] - 2026-05-31
 
 ### Fixed
