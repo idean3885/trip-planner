@@ -78,4 +78,29 @@ describe("TripDetailLayout 모바일 상단 (#684)", () => {
     fireEvent.click(screen.getByRole("button", { name: "자세히" }));
     expect(await screen.findByText("여행 정보")).toBeInTheDocument();
   });
+
+  // spec 037 — 중첩 스크롤: 일정 영역이 자체 세로 스크롤 컨테이너이고, 좌우
+  // 스와이프(touch-pan-y)가 공존하며, 데스크탑 2분할이 함께 렌더된다.
+  // (스크롤 단계 분리·경계 멈춤 거동은 jsdom 미검증 → 실기기 정본.)
+  it("일정 영역은 자체 세로 스크롤 컨테이너다 (overflow-y-auto + overscroll-contain)", () => {
+    const { container } = renderLayout();
+    const panel = container.querySelector(
+      ".overflow-y-auto.overscroll-contain",
+    );
+    expect(panel).not.toBeNull();
+    // 높이 = 100dvh - 캘린더 높이(--trip-cal-h)
+    expect((panel as HTMLElement).style.height).toContain("var(--trip-cal-h");
+  });
+
+  it("일정 캐러셀은 touch-pan-y 로 세로 스크롤을 컨테이너에 위임한다", () => {
+    renderLayout();
+    const carousel = screen.getByRole("group", { name: "선택 날짜 일정" });
+    expect(carousel.className).toContain("touch-pan-y");
+  });
+
+  it("데스크탑 2분할 레이아웃이 함께 렌더된다 (모바일 변경 무영향)", () => {
+    const { container } = renderLayout();
+    // 데스크탑 그리드(hidden lg:grid)가 그대로 존재.
+    expect(container.querySelector(".lg\\:grid")).not.toBeNull();
+  });
 });
