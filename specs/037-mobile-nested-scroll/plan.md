@@ -9,9 +9,9 @@
 
 ## Coverage Targets
 
-- 모바일 중첩 스크롤 레이아웃 구성(캘린더 높이 측정 + 일정 자체 스크롤 영역 + 날짜 선택 시 스크롤 위계) [why: nested-layout] [multi-step: 3]
-- 일정 영역 경계 스크롤 연쇄 차단(overscroll-behavior) [why: overscroll-boundary]
-- 좌우 날짜 스와이프 공존 보존(세로 분리가 가로 스와이프를 막지 않음) [why: swipe-coexist]
+- 모바일 단일 스크롤 골격(캘린더 높이 측정 + trip-snap 등록 + 날짜 선택 시 패널 정렬 스크롤) [why: single-scroll] [multi-step: 3]
+- 캘린더 경계 1점 정지(scroll-snap proximity + snap-always + scroll-behavior auto) [why: snap-boundary]
+- 좌우 날짜 스와이프 공존 보존(단일 스크롤이 가로 스와이프를 막지 않음) [why: swipe-coexist]
 - 데스크탑 무영향 + 레이아웃 회귀 가드 [why: desktop-regression]
 
 ## Technical Context
@@ -64,7 +64,7 @@ src/
 │       ├── TripDetailLayout.tsx          # 모바일 중첩 스크롤 컨테이너 + 요약 헤더 + 일정 스크롤 영역
 │       ├── CalendarView.tsx              # (참조만) sticky 캘린더 높이 — 변경 최소
 │       └── SwipeCarousel.tsx             # (참조만) touch-pan-y 유지
-└── app/globals.css                       # 필요 시 dvh/overscroll 유틸 보조(가능하면 Tailwind 클래스로)
+└── app/globals.css                       # html.trip-snap 미디어쿼리(scroll-snap-type + scroll-behavior auto)
 
 tests/
 └── components/trip/
@@ -75,13 +75,13 @@ tests/
 
 ## 구현 접근 (HOW 요약)
 
-> 구현 중 더 단순한 구조를 채택했다. 기존 DOM 순서(`page.tsx` 헤더 → 캘린더 sticky → 일정)가 이미 "헤더 위 → 캘린더 → 일정"이라, 헤더를 컨테이너 안으로 옮기거나 `page.tsx`를 데스크탑 전용으로 분기할 필요가 없었다. **바깥 스크롤은 기존 document 스크롤을 그대로 쓰고, 일정 영역만 자체 스크롤로 만든다.**
+> 1차 구현(중첩 스크롤: 일정 자체 overflow 영역)은 손가락 위치마다 스크롤 주체가 갈려 "어디를 스크롤해도 동일"을 위배해 철회했다(research 결정 1). **단일 document 스크롤 + 캘린더 sticky + 일정 패널 상단 1점 snap**으로 재설계한다.
 
-1. **바깥(1단계)**: 기존 document 스크롤 유지. 헤더(뒤로가기·제목·기간·개요)가 위로 사라지고 캘린더가 `sticky top-0`에 고정된다.
-2. **캘린더 높이 측정**: sticky 캘린더 영역 높이를 `ResizeObserver`로 측정해 `--trip-cal-h` CSS 변수로 노출(월↔주 토글 시 갱신).
-3. **일정 영역(2단계)**: `overflow-y-auto` + `overscroll-contain` + `height: calc(100dvh - var(--trip-cal-h))`. 캘린더 고정 시 화면을 꽉 채우고, 끝에서 바깥(document)으로의 chaining을 끊어 경계 멈춤을 만든다.
-4. **날짜 선택 스크롤 복귀**: 다른 날짜 선택 시 일정 영역(window 아닌 패널)을 맨 위로.
-5. **좌우 스와이프**: `SwipeCarousel` 현행 `touch-pan-y` 유지. 세로는 일정 영역, 가로는 embla.
-6. **회귀 가드**: 데스크탑 2분할 DOM·일정 영역 구조를 테스트로 고정.
+1. **단일 스크롤**: 화면 전체가 기존 document 스크롤. 손가락 위치 무관 동일. 헤더(뒤로가기·제목·기간·개요)가 위로 사라지고 캘린더가 `sticky top-0`에 고정된다.
+2. **캘린더 높이 측정 + trip-snap 등록**: sticky 캘린더 높이를 `ResizeObserver`로 측정해 `--trip-cal-h`로 노출(월↔주 토글 시 갱신). 마운트 동안 `html`에 `.trip-snap`을 붙여 모바일 한정 snap을 켠다.
+3. **캘린더 경계 1점 정지**: 일정 패널 상단에 `snap-start snap-always`, `scroll-mt-[var(--trip-cal-h)]`. `html.trip-snap { scroll-snap-type: y proximity; scroll-behavior: auto }`(모바일). 캘린더 고정 경계에서 한 번 멈추고, auto로 snap 복귀를 즉시 처리해 속도를 유지한다. 일정 목록 내부는 정지점이 없어 자유 스크롤.
+4. **날짜 선택 스크롤 정렬**: 다른 날짜 선택 시 일정 패널 상단이 캘린더 바로 아래 오도록 `window.scrollTo`.
+5. **좌우 스와이프**: `SwipeCarousel` 현행 `touch-pan-y` 유지. 세로는 document, 가로는 embla.
+6. **회귀 가드**: 데스크탑 2분할 DOM·정지점 클래스를 테스트로 고정.
 
-`page.tsx`·`CalendarView`·`SwipeCarousel`은 변경하지 않는다(참조만). 변경은 `TripDetailLayout.tsx`와 테스트에 한정된다.
+`page.tsx`·`CalendarView`·`SwipeCarousel`은 변경하지 않는다(참조만). 변경은 `TripDetailLayout.tsx`·`globals.css`·테스트에 한정된다.

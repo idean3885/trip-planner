@@ -79,17 +79,18 @@ describe("TripDetailLayout 모바일 상단 (#684)", () => {
     expect(await screen.findByText("여행 정보")).toBeInTheDocument();
   });
 
-  // spec 037 — 중첩 스크롤: 일정 영역이 자체 세로 스크롤 컨테이너이고, 좌우
-  // 스와이프(touch-pan-y)가 공존하며, 데스크탑 2분할이 함께 렌더된다.
+  // spec 037 — 단일 스크롤 + 캘린더 경계 1회 멈춤: 일정 패널 상단에만 정지점
+  // (snap-start snap-always)을 두고 scroll-margin-top 으로 sticky 캘린더 아래에
+  // 정렬한다. 좌우 스와이프(touch-pan-y)가 공존하고, 데스크탑 2분할이 함께 렌더된다.
   // (스크롤 단계 분리·경계 멈춤 거동은 jsdom 미검증 → 실기기 정본.)
-  it("일정 영역은 자체 세로 스크롤 컨테이너다 (overflow-y-auto + overscroll-contain)", () => {
+  it("일정 패널은 캘린더 경계 정지점이다 (snap-start snap-always + scroll-mt)", () => {
     const { container } = renderLayout();
-    const panel = container.querySelector(
-      ".overflow-y-auto.overscroll-contain",
-    );
+    const panel = container.querySelector(".snap-start.snap-always");
     expect(panel).not.toBeNull();
-    // 높이 = 100dvh - 캘린더 높이(--trip-cal-h)
-    expect((panel as HTMLElement).style.height).toContain("var(--trip-cal-h");
+    // 정지 위치를 캘린더 높이(--trip-cal-h)만큼 내려 sticky 캘린더 아래에 맞춘다.
+    expect((panel as HTMLElement).className).toContain(
+      "scroll-mt-[var(--trip-cal-h)]",
+    );
   });
 
   it("일정 캐러셀은 touch-pan-y 로 세로 스크롤을 컨테이너에 위임한다", () => {
