@@ -116,6 +116,7 @@ export default function ActivityList({
       const created = await res.json();
       commit([...activities, created]);
       setShowForm(false);
+      toast.success("일정을 추가했습니다");
     } catch {
       toast.error("활동 생성 중 오류가 발생했습니다");
     }
@@ -150,6 +151,7 @@ export default function ActivityList({
       const updated = await res.json();
       commit(activities.map((a) => (a.id === activityId ? updated : a)));
       setEditingId(null);
+      toast.success("일정을 수정했습니다");
     } catch {
       toast.error("활동 수정 중 오류가 발생했습니다");
     }
@@ -165,6 +167,7 @@ export default function ActivityList({
         return;
       }
       commit(activities.filter((a) => a.id !== activityId));
+      toast.success("일정을 삭제했습니다");
     } catch {
       toast.error("활동 삭제 중 오류가 발생했습니다");
     }
