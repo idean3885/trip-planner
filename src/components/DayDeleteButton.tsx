@@ -58,11 +58,11 @@ export default function DayDeleteButton({
 
   return (
     <Button
-      variant="ghost"
+      variant="outline"
       size="sm"
       onClick={handleDelete}
       disabled={deleting}
-      className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+      className="text-destructive hover:text-destructive hover:bg-destructive/10"
     >
       {deleting ? "삭제 중…" : "일자 삭제"}
     </Button>
