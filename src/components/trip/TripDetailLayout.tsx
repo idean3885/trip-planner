@@ -147,6 +147,10 @@ export function TripDetailLayout({
   const didMountRef = useRef(false);
   // #669 — 윈도우 프리페치 중복 요청 방지(같은 범위 동시 요청 차단).
   const inFlightRef = useRef<Set<string>>(new Set());
+  // spec 051 — 캘린더 위 sentinel 이 화면 밖으로 나가면 캘린더가 sticky 로 상단
+  // 고정된 것 → 모바일 캘린더를 주간으로 접는다.
+  const stickySentinelRef = useRef<HTMLDivElement>(null);
+  const [isCalendarStuck, setIsCalendarStuck] = useState(false);
 
   const daysDates = useMemo(
     () => dayIndex.map((d) => new Date(d.date)),
@@ -237,6 +241,20 @@ export function TripDetailLayout({
       window.history.replaceState(window.history.state, "", url.toString());
     }
   }, [selectedDate]);
+
+  // spec 051 — sentinel 관측으로 캘린더 상단 고정(sticky stuck) 여부를 판정한다.
+  // sentinel 이 화면 위로 사라지면 캘린더가 top-0 으로 고정된 것 → 주간으로 접는다.
+  // 스크롤 이벤트 없이 관측자만 써 성능 부담을 줄인다.
+  useEffect(() => {
+    const el = stickySentinelRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver(
+      ([entry]) => setIsCalendarStuck(!entry.isIntersecting),
+      { threshold: 0 },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
 
   useEffect(() => {
     // 최초 마운트에서는 스크롤하지 않는다(이미 상단).
@@ -377,6 +395,9 @@ export function TripDetailLayout({
       {/* 모바일 <1024px — sticky 캘린더 + 선택 일정. 동기화·동행자·기간 편집은
           위 액션바 버튼으로 연다(spec 043 — 단일 진입). */}
       <div className="space-y-4 lg:hidden">
+        {/* spec 051 — 캘린더 위 sentinel. 스크롤로 화면 위로 사라지면 캘린더가
+            sticky 고정된 것 → 주간으로 접는다. */}
+        <div ref={stickySentinelRef} aria-hidden className="h-px" />
         <div
           ref={mobileStickyRef}
           className="bg-background sticky top-0 z-20 -mx-4 px-4 pt-1 pb-2"
@@ -388,6 +409,7 @@ export function TripDetailLayout({
             selected={selectedDate}
             onSelect={handleSelectDate}
             enableMobileCompact
+            collapsed={isCalendarStuck}
           />
         </div>
         {/* #657 — 하단 일정도 이전·현재·다음 날 3슬라이드로 드래그-팔로우 스와이프. */}
