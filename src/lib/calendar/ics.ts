@@ -44,6 +44,7 @@ export type ActivityForIcs = Pick<
   | "location"
   | "memo"
   | "reservationStatus"
+  | "allDay"
 >;
 
 export interface IcsContext {
@@ -66,6 +67,11 @@ function formatUtcStamp(d: Date): string {
   const iso = d.toISOString().replace(/[-:]/g, "");
   // ISO: 2026-04-27T14:30:00.000Z → 20260427T143000.000Z → 20260427T143000Z
   return iso.replace(/\.\d{3}/, "");
+}
+
+/** Date → `YYYYMMDD` UTC 날짜 표기 (종일 이벤트 VALUE=DATE 용). */
+function formatDateStamp(d: Date): string {
+  return d.toISOString().slice(0, 10).replace(/-/g, "");
 }
 
 /** Date → tzid local 시각 표기 `YYYYMMDDTHHMMSS` (TZID 별도 attribute). */
@@ -123,14 +129,23 @@ export function formatActivityAsIcs(
   const startZone = activity.startTimezone || "UTC";
   const endZone = activity.endTimezone || activity.startTimezone || "UTC";
 
-  const dtstart =
-    startZone === "UTC"
-      ? `DTSTART:${formatUtcStamp(start)}`
-      : `DTSTART;TZID=${startZone}:${formatLocalStamp(start, startZone)}`;
-  const dtend =
-    endZone === "UTC"
-      ? `DTEND:${formatUtcStamp(end)}`
-      : `DTEND;TZID=${endZone}:${formatLocalStamp(end, endZone)}`;
+  let dtstart: string;
+  let dtend: string;
+  if (activity.allDay) {
+    // #740 — RFC 5545 종일 이벤트: DATE 값. DTEND 는 배타적이라 다음 날로 둔다.
+    const next = new Date(start.getTime() + 24 * 60 * 60 * 1000);
+    dtstart = `DTSTART;VALUE=DATE:${formatDateStamp(start)}`;
+    dtend = `DTEND;VALUE=DATE:${formatDateStamp(next)}`;
+  } else {
+    dtstart =
+      startZone === "UTC"
+        ? `DTSTART:${formatUtcStamp(start)}`
+        : `DTSTART;TZID=${startZone}:${formatLocalStamp(start, startZone)}`;
+    dtend =
+      endZone === "UTC"
+        ? `DTEND:${formatUtcStamp(end)}`
+        : `DTEND;TZID=${endZone}:${formatLocalStamp(end, endZone)}`;
+  }
 
   const lines = [
     "BEGIN:VCALENDAR",

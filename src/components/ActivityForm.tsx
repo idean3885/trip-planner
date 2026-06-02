@@ -42,6 +42,7 @@ export interface ActivityFormData {
   cost: string;
   currency: string;
   reservationStatus: string;
+  allDay: boolean;
 }
 
 interface ActivityFormProps {
@@ -86,6 +87,7 @@ export default function ActivityForm({
     cost: initial?.cost ?? "",
     currency: initial?.currency ?? "EUR",
     reservationStatus: initial?.reservationStatus ?? "",
+    allDay: initial?.allDay ?? false,
   });
   const [saving, setSaving] = useState(false);
   const [tzLabel, setTzLabel] = useState("");
@@ -184,48 +186,72 @@ export default function ActivityForm({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-2">
-        <div className="space-y-1">
-          <Label
-            htmlFor="activity-start"
-            className="text-muted-foreground text-[11px]"
-          >
-            시작 <span className="text-destructive">*</span>
-            {tzLabel && (
-              <span className="text-muted-foreground/60 ml-1">({tzLabel})</span>
-            )}
-          </Label>
-          <Input
-            id="activity-start"
-            type="time"
-            value={form.startTime}
-            onChange={(e) => update("startTime", e.target.value)}
-            required
-            readOnly={readOnly}
-            className="h-8"
-          />
+      {/* #740 — 종일 토글. 켜면 시각 입력을 감추고 "종일"로 저장한다. */}
+      <label className="text-muted-foreground flex items-center gap-2 text-[11px] select-none">
+        <input
+          type="checkbox"
+          checked={form.allDay}
+          disabled={readOnly}
+          onChange={(e) => {
+            const checked = e.target.checked;
+            setForm((prev) => ({
+              ...prev,
+              allDay: checked,
+              ...(checked && { startTime: "", endTime: "" }),
+            }));
+          }}
+        />
+        종일 (시간 없음)
+      </label>
+
+      {!form.allDay && (
+        <div className="grid grid-cols-2 gap-2">
+          <div className="space-y-1">
+            <Label
+              htmlFor="activity-start"
+              className="text-muted-foreground text-[11px]"
+            >
+              시작 <span className="text-destructive">*</span>
+              {tzLabel && (
+                <span className="text-muted-foreground/60 ml-1">
+                  ({tzLabel})
+                </span>
+              )}
+            </Label>
+            <Input
+              id="activity-start"
+              type="time"
+              value={form.startTime}
+              onChange={(e) => update("startTime", e.target.value)}
+              required
+              readOnly={readOnly}
+              className="h-8"
+            />
+          </div>
+          <div className="space-y-1">
+            <Label
+              htmlFor="activity-end"
+              className="text-muted-foreground text-[11px]"
+            >
+              종료 <span className="text-destructive">*</span>
+              {tzLabel && (
+                <span className="text-muted-foreground/60 ml-1">
+                  ({tzLabel})
+                </span>
+              )}
+            </Label>
+            <Input
+              id="activity-end"
+              type="time"
+              value={form.endTime}
+              onChange={(e) => update("endTime", e.target.value)}
+              required
+              readOnly={readOnly}
+              className="h-8"
+            />
+          </div>
         </div>
-        <div className="space-y-1">
-          <Label
-            htmlFor="activity-end"
-            className="text-muted-foreground text-[11px]"
-          >
-            종료 <span className="text-destructive">*</span>
-            {tzLabel && (
-              <span className="text-muted-foreground/60 ml-1">({tzLabel})</span>
-            )}
-          </Label>
-          <Input
-            id="activity-end"
-            type="time"
-            value={form.endTime}
-            onChange={(e) => update("endTime", e.target.value)}
-            required
-            readOnly={readOnly}
-            className="h-8"
-          />
-        </div>
-      </div>
+      )}
 
       <div className="space-y-1">
         <Label
