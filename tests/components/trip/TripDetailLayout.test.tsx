@@ -4,7 +4,7 @@
  * 진입 시 여행 기간 안에 오늘이 있으면 오늘, 없으면 여행 첫날(일정 0건이면
  * 오늘)을 선택한다. today 의존이라 기간을 today 상대로 구성해 검증한다.
  */
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import {
@@ -13,7 +13,7 @@ import {
 } from "@/components/trip/TripDetailLayout";
 
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ refresh: vi.fn() }),
+  useRouter: () => ({ refresh: vi.fn(), push: vi.fn() }),
 }));
 const mockToast = vi.hoisted(() => ({ error: vi.fn(), success: vi.fn() }));
 vi.mock("sonner", () => ({ toast: mockToast }));
@@ -49,42 +49,32 @@ describe("computeInitialSelected", () => {
   });
 });
 
-describe("TripDetailLayout 모바일 상단 (#684)", () => {
-  function renderLayout() {
+describe("TripDetailLayout 상단·액션바 (spec 043)", () => {
+  function renderLayout(overrides?: { initialSelected?: string | null }) {
     const today = new Date();
     return render(
       <TripDetailLayout
         tripId={1}
+        tripTitle="테스트 여행"
+        isOwner={false}
         tripStart={today}
         tripEnd={addDays(today, 2)}
         days={[]}
         initialActivities={{}}
         canEdit={false}
+        initialSelected={overrides?.initialSelected ?? null}
+        memberList={<div>멤버 목록</div>}
         syncCard={<div>동기화 카드</div>}
       />,
     );
   }
 
-  it("'캘린더 동기화' 버튼은 텍스트만 렌더한다 (spec 041)", () => {
+  it("동기화 진입 노드를 액션바에 한 번 렌더한다 (spec 043 US3 — 단일 진입)", () => {
     renderLayout();
-    const btn = screen.getByRole("button", { name: "캘린더 동기화" });
-    expect(btn).toBeInTheDocument();
-    expect(btn.querySelector("svg")).toBeNull();
+    // 액션바는 데스크탑·모바일 공통 1개라 syncCard 도 1회만 DOM 에 있다.
+    expect(screen.getAllByText("동기화 카드")).toHaveLength(1);
   });
 
-  it("'캘린더 동기화' 클릭 시 동기화 Dialog 를 연다 (spec 041 — 동행자 분리)", async () => {
-    renderLayout();
-    fireEvent.click(screen.getByRole("button", { name: "캘린더 동기화" }));
-    // 다이얼로그 본문은 동기화 카드(동행자 블록 없음). 데스크탑 분기에도 같은
-    // syncCard 가 DOM 에 있으므로 다이얼로그 범위로 한정해 확인한다.
-    const dialog = await screen.findByRole("dialog");
-    expect(within(dialog).getByText("동기화 카드")).toBeInTheDocument();
-    expect(within(dialog).queryByText("동행자 목록")).toBeNull();
-  });
-
-  // spec 037 — 단일 스크롤 + 캘린더 경계 1회 멈춤(GSAP ScrollTrigger). 경계 멈춤
-  // 거동은 스크롤·레이아웃 엔진이 필요해 jsdom 미검증 → 실기기 정본. 여기서는
-  // 일정 패널·캐러셀이 렌더되고 좌우 스와이프(touch-pan-y)가 유지되는 구조만 본다.
   it("선택 날짜 일정 캐러셀이 렌더된다", () => {
     renderLayout();
     expect(
@@ -98,9 +88,15 @@ describe("TripDetailLayout 모바일 상단 (#684)", () => {
     expect(carousel.className).toContain("touch-pan-y");
   });
 
-  it("데스크탑 2분할 레이아웃이 함께 렌더된다 (모바일 변경 무영향)", () => {
+  it("데스크탑 2분할 레이아웃이 함께 렌더된다", () => {
     const { container } = renderLayout();
-    // 데스크탑 그리드(hidden lg:grid)가 그대로 존재.
     expect(container.querySelector(".lg\\:grid")).not.toBeNull();
+  });
+
+  it("선택 일자를 쿼리(?d=)에 반영한다 (spec 043 US5)", () => {
+    const today = new Date();
+    renderLayout();
+    const ymd = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+    expect(new URL(window.location.href).searchParams.get("d")).toBe(ymd);
   });
 });

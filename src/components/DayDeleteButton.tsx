@@ -9,11 +9,17 @@ import { Button } from "@/components/ui/button";
 interface DayDeleteButtonProps {
   tripId: number;
   dayId: number;
+  /**
+   * spec 043 US2 — 삭제 성공 후 콜백. 주어지면 페이지 이동 없이 호출해(상위가
+   * 캐시/선택을 갱신) SPA 흐름을 유지한다. 없으면 기존처럼 여행 상세로 이동.
+   */
+  onDeleted?: () => void;
 }
 
 export default function DayDeleteButton({
   tripId,
   dayId,
+  onDeleted,
 }: DayDeleteButtonProps) {
   const router = useRouter();
   const [deleting, setDeleting] = useState(false);
@@ -39,8 +45,12 @@ export default function DayDeleteButton({
         return;
       }
       toast.success("일자를 삭제했습니다.");
-      router.push(`/trips/${tripId}`);
-      router.refresh();
+      if (onDeleted) {
+        onDeleted();
+      } else {
+        router.push(`/trips/${tripId}`);
+        router.refresh();
+      }
     } finally {
       setDeleting(false);
     }

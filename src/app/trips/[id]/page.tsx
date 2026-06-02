@@ -6,11 +6,7 @@ import remarkGfm from "remark-gfm";
 import html from "remark-html";
 
 import { auth } from "@/auth";
-import AddDayButton from "@/components/AddDayButton";
 import CalendarSyncEntryCard from "@/components/calendar-sync/CalendarSyncEntryCard";
-import DeleteTripButton from "@/components/DeleteTripButton";
-import InviteButton from "@/components/InviteButton";
-import LeaveTripButton from "@/components/LeaveTripButton";
 import MemberList from "@/components/MemberList";
 import {
   type LayoutActivity,
@@ -35,20 +31,35 @@ async function markdownToHtml(md: string): Promise<string> {
 // DB-정본 전환(#239) 후 이 페이지는 항상 세션 기반 동적 렌더. (#255+ 핫픽스)
 export const dynamic = "force-dynamic";
 
+/** "YYYY-MM-DD" → UTC 자정 Date. 형식 위반·무효는 null. */
+function parseYmd(value: string | undefined): Date | null {
+  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
+  const d = new Date(`${value}T00:00:00.000Z`);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
 export default async function TripDetailPage({
   params,
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ provider?: string }>;
+  searchParams: Promise<{ provider?: string; d?: string }>;
 }) {
   const { id } = await params;
   const tripId = parseInt(id);
   const sp = await searchParams;
   const providerHint = sp.provider === "google" ? "google" : null;
+  // spec 043 US5 — 선택 일자를 쿼리(?d=YYYY-MM-DD)로 받아 진입/새로고침 시 복원.
+  const selectedYmd = parseYmd(sp.d) ? sp.d! : null;
 
   if (isNaN(tripId)) notFound();
-  return <DbTripPage tripId={tripId} providerHint={providerHint} />;
+  return (
+    <DbTripPage
+      tripId={tripId}
+      providerHint={providerHint}
+      selectedYmd={selectedYmd}
+    />
+  );
 }
 
 /* ── DB 기반 여행 상세 ── */
@@ -56,9 +67,11 @@ export default async function TripDetailPage({
 async function DbTripPage({
   tripId,
   providerHint,
+  selectedYmd,
 }: {
   tripId: number;
   providerHint: "google" | null;
+  selectedYmd: string | null;
 }) {
   const session = await auth();
   if (!session?.user?.id) redirect("/auth/signin");
@@ -93,13 +106,15 @@ async function DbTripPage({
   // #669 — 진입 시 선택일 ±N일 활동만 로드. 나머지는 client 가 이동하며 프리페치.
   // 서버 기준 초기 선택일(클라이언트 computeInitialSelected 와 동일 규칙)로 윈도우.
   const today = new Date();
+  const urlSelected = parseYmd(selectedYmd ?? undefined);
   const serverSelected =
-    period.startDate &&
+    urlSelected ??
+    (period.startDate &&
     period.endDate &&
     today >= period.startDate &&
     today <= period.endDate
       ? today
-      : (period.startDate ?? today);
+      : (period.startDate ?? today));
   const win = windowYmds(serverSelected, ACTIVITY_WINDOW_RADIUS);
   const windowDays = await prisma.day.findMany({
     where: {
@@ -135,48 +150,24 @@ async function DbTripPage({
 
   return (
     <div className="space-y-6">
-      {/* spec 041 — 헤더를 `여행 목록 > 제목` 브레드크럼 한 줄로 압축(큰 제목·별도
-          뒤로 링크 제거). 기간 옆에 "일정 변경"(날짜 자유 추가 = 기간 파생 확장).
-          캘린더 동기화·동행자 다이얼로그는 TripDetailLayout 이 viewport 별로 배치. */}
-      <div className="space-y-3">
-        <nav className="text-muted-foreground flex items-center gap-1.5 text-sm">
-          <Link href="/" className="hover:text-foreground">
-            여행 목록
-          </Link>
-          <ChevronRight className="size-3.5 shrink-0" aria-hidden />
-          <span className="text-foreground truncate font-medium">
-            {trip.title}
+      {/* spec 043 US2 — 헤더는 `여행 목록 > 제목 (기간)` 브레드크럼 한 줄로만 둔다.
+          기간 편집·동행자·나가기/삭제·캘린더 동기화·선택 일자 삭제 등 동작 버튼은
+          선택 일자(클라이언트 상태)에 의존하므로 TripDetailLayout 액션바로 모은다. */}
+      <nav className="text-muted-foreground flex flex-wrap items-center gap-1.5 text-sm">
+        <Link href="/" className="hover:text-foreground">
+          여행 목록
+        </Link>
+        <ChevronRight className="size-3.5 shrink-0" aria-hidden />
+        <span className="text-foreground font-medium">{trip.title}</span>
+        {period.isDerived && period.startDate && period.endDate ? (
+          <span className="text-muted-foreground tabular-nums">
+            ({formatCalendarDateFull(period.startDate)} ~{" "}
+            {formatCalendarDateFull(period.endDate)})
           </span>
-        </nav>
-
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-          <p className="text-muted-foreground text-sm tabular-nums">
-            {period.isDerived && period.startDate && period.endDate ? (
-              <>
-                {formatCalendarDateFull(period.startDate)} ~{" "}
-                {formatCalendarDateFull(period.endDate)}
-              </>
-            ) : (
-              <span className="text-foreground font-medium">일정 미정</span>
-            )}
-          </p>
-          {member.role !== "GUEST" && <AddDayButton tripId={tripId} />}
-          <div className="ml-auto flex flex-wrap items-center gap-2">
-            {member.role !== "GUEST" && (
-              <InviteButton
-                tripId={tripId}
-                memberList={<MemberList tripId={tripId} />}
-              />
-            )}
-            {member.role === "OWNER" && (
-              <DeleteTripButton tripId={tripId} tripTitle={trip.title} />
-            )}
-            {member.role !== "OWNER" && (
-              <LeaveTripButton tripId={tripId} tripTitle={trip.title} />
-            )}
-          </div>
-        </div>
-      </div>
+        ) : (
+          <span className="text-muted-foreground">(일정 미정)</span>
+        )}
+      </nav>
 
       {descriptionHtml && (
         <Card>
@@ -194,11 +185,15 @@ async function DbTripPage({
 
       <TripDetailLayout
         tripId={tripId}
+        tripTitle={trip.title}
+        isOwner={member.role === "OWNER"}
         tripStart={period.startDate}
         tripEnd={period.endDate}
         days={dayIndex}
         initialActivities={initialActivities}
         canEdit={member.role !== "GUEST"}
+        initialSelected={selectedYmd}
+        memberList={<MemberList tripId={tripId} />}
         syncCard={
           <CalendarSyncEntryCard
             tripId={tripId}

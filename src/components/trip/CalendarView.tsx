@@ -178,10 +178,10 @@ export function CalendarView({
       modifiersClassNames={modifiersClassNames}
       components={components}
       className={cn(
-        // spec 040 — 데스크탑 가로 grow: w-full 로 컨테이너를 채우고 셀(day flex-1)이
-        // 균등 7등분된다. --cell-size 상한(14)을 제거해 가로폭만큼 셀이 커지고
-        // aspect-square 로 세로가 자동 산출된다. min-w-(--cell-size) 가 하한만 둔다.
-        desktopFull && "mx-auto w-full",
+        // spec 040/043 — 데스크탑 가로 grow: 컨테이너를 채우되(root w-full) 좌우
+        // 약간 여백을 두고, max-w 로 폭 상한을 둬 셀(aspect-square)이 과대해지며
+        // 세로가 화면을 잡아먹는 것을 막는다(#721 — 가로 빔/세로 과대 동시 해소).
+        desktopFull && "mx-auto w-full max-w-2xl px-1",
         className,
       )}
     />
