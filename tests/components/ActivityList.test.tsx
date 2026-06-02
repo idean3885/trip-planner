@@ -133,9 +133,10 @@ describe("ActivityList", () => {
 
     // Fill all fields
     const textInputs = screen.getAllByRole("textbox");
+    // spec 048 레이아웃: title=0, location=1, currency=2, memo(textarea)=3.
     fireEvent.change(textInputs[0], { target: { value: "New" } }); // title
     fireEvent.change(textInputs[1], { target: { value: "Place" } }); // location
-    fireEvent.change(textInputs[2], { target: { value: "Note" } }); // memo
+    fireEvent.change(textInputs[3], { target: { value: "Note" } }); // memo
 
     const costInput = screen.getByRole("spinbutton");
     fireEvent.change(costInput, { target: { value: "25" } });
@@ -489,9 +490,9 @@ describe("ActivityList", () => {
 
     // Clear all optional fields
     const textInputs = screen.getAllByRole("textbox");
-    // title=0, location=1, memo=2, currency=3
+    // spec 048: title=0, location=1, currency=2, memo=3
     fireEvent.change(textInputs[1], { target: { value: "" } }); // location
-    fireEvent.change(textInputs[2], { target: { value: "" } }); // memo
+    fireEvent.change(textInputs[3], { target: { value: "" } }); // memo
     const costInput = screen.getByRole("spinbutton");
     fireEvent.change(costInput, { target: { value: "" } }); // cost
     const timeInputs = document.querySelectorAll('input[type="time"]');

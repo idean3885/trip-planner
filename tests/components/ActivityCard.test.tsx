@@ -82,7 +82,8 @@ describe("ActivityCard", () => {
     );
     const link = screen.getByRole("link");
     expect(link).toHaveAttribute("href", "https://example.com");
-    expect(link).toHaveAttribute("target", "_blank");
+    // spec 048 — 새 탭(target=_blank) 대신 window.open 팝업(onClick). target 없음.
+    expect(link).not.toHaveAttribute("target");
   });
 
   it("renders memo without URL as plain text", () => {
@@ -229,24 +230,24 @@ describe("ActivityCard", () => {
     });
   });
 
-  it("본문을 누르면 onEdit(인라인 수정)이 열린다(#653 — 모바일 호버 부재 대응)", () => {
-    const onEdit = vi.fn();
-    render(<ActivityCard activity={makeActivity()} canEdit onEdit={onEdit} />);
-    // 본문이 role=button 으로 탭 대상. footer "편집" 과 구분되는 "수정" 라벨.
-    fireEvent.click(screen.getByRole("button", { name: /벨렝 탑 방문 수정/ }));
-    expect(onEdit).toHaveBeenCalledOnce();
+  it("본문을 누르면 onView(상세 보기)가 열린다 (spec 048 — 편집 직행 제거)", () => {
+    const onView = vi.fn();
+    render(<ActivityCard activity={makeActivity()} canEdit onView={onView} />);
+    // 본문 탭은 읽기 전용 상세를 연다. aria 라벨 "… 상세".
+    fireEvent.click(screen.getByRole("button", { name: /벨렝 탑 방문 상세/ }));
+    expect(onView).toHaveBeenCalledOnce();
   });
 
-  it("본문에서 Enter/Space 키로도 수정이 열린다(#653 키보드 접근성)", () => {
-    const onEdit = vi.fn();
-    render(<ActivityCard activity={makeActivity()} canEdit onEdit={onEdit} />);
-    const body = screen.getByRole("button", { name: /벨렝 탑 방문 수정/ });
+  it("본문에서 Enter/Space 키로도 상세가 열린다 (키보드 접근성)", () => {
+    const onView = vi.fn();
+    render(<ActivityCard activity={makeActivity()} canEdit onView={onView} />);
+    const body = screen.getByRole("button", { name: /벨렝 탑 방문 상세/ });
     fireEvent.keyDown(body, { key: "Enter" });
     fireEvent.keyDown(body, { key: " " });
-    expect(onEdit).toHaveBeenCalledTimes(2);
+    expect(onView).toHaveBeenCalledTimes(2);
     // 다른 키는 무시.
     fireEvent.keyDown(body, { key: "a" });
-    expect(onEdit).toHaveBeenCalledTimes(2);
+    expect(onView).toHaveBeenCalledTimes(2);
   });
 
   it("메모 안 링크 클릭은 수정 진입을 막는다(stopPropagation, #653)", () => {
