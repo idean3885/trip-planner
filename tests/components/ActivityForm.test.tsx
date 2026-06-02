@@ -261,4 +261,40 @@ describe("ActivityForm", () => {
       expect(screen.getByText("추가")).toBeInTheDocument();
     });
   });
+
+  // spec 048 — readOnly 상세 모드
+  it("readOnly 상세: 입력 비활성 + 편집/닫기 + 메모 링크", () => {
+    const onEdit = vi.fn();
+    render(
+      <ActivityForm
+        onCancel={onCancel}
+        readOnly
+        onEdit={onEdit}
+        initial={{ title: "구엘", memo: "https://example.com 참고" }}
+      />,
+    );
+    expect(screen.getByDisplayValue("구엘")).toHaveAttribute("readonly");
+    expect(screen.getByRole("link")).toBeInTheDocument();
+    fireEvent.click(screen.getByText("편집"));
+    expect(onEdit).toHaveBeenCalledOnce();
+  });
+
+  it("readOnly 상세: 메모 없으면 '메모 없음'", () => {
+    render(
+      <ActivityForm
+        onCancel={onCancel}
+        readOnly
+        initial={{ title: "X", memo: "" }}
+      />,
+    );
+    expect(screen.getByText("메모 없음")).toBeInTheDocument();
+  });
+
+  it("readOnly 상세: onEdit 없으면 편집 버튼 미노출", () => {
+    render(
+      <ActivityForm onCancel={onCancel} readOnly initial={{ title: "X" }} />,
+    );
+    expect(screen.queryByText("편집")).toBeNull();
+    expect(screen.getByText("닫기")).toBeInTheDocument();
+  });
 });

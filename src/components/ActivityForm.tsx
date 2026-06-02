@@ -46,7 +46,8 @@ export interface ActivityFormData {
 
 interface ActivityFormProps {
   initial?: Partial<ActivityFormData>;
-  onSubmit: (data: ActivityFormData) => Promise<void>;
+  /** 편집·생성 모드 제출 핸들러. readOnly 상세에서는 불필요. */
+  onSubmit?: (data: ActivityFormData) => Promise<void>;
   onCancel: () => void;
   isEdit?: boolean;
   /** spec 048 — 읽기 전용 상세 모드. 입력 비활성 + "편집"/"닫기" 푸터. */
@@ -126,7 +127,7 @@ export default function ActivityForm({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (readOnly || !form.title.trim()) return;
+    if (readOnly || !onSubmit || !form.title.trim()) return;
     setSaving(true);
     try {
       await onSubmit(form);

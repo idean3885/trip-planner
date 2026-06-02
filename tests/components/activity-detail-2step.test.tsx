@@ -50,6 +50,15 @@ describe("활동 카드 2단계 인터랙션 (spec 048)", () => {
     expect(screen.getByRole("button", { name: "수정" })).toBeInTheDocument();
   });
 
+  it("상세에서 '닫기' → 카드로 복귀한다", () => {
+    renderList();
+    fireEvent.click(screen.getByRole("button", { name: /구엘 공원 상세/ }));
+    fireEvent.click(screen.getByRole("button", { name: "닫기" }));
+    expect(
+      screen.getByRole("button", { name: /구엘 공원 상세/ }),
+    ).toBeInTheDocument();
+  });
+
   it("편집 권한이 없으면 상세에 편집 버튼을 노출하지 않는다", () => {
     renderList(false);
     fireEvent.click(screen.getByRole("button", { name: /구엘 공원 상세/ }));

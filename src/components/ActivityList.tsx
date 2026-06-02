@@ -233,7 +233,6 @@ export default function ActivityList({
               key={activity.id}
               readOnly
               initial={initial}
-              onSubmit={async () => {}}
               onCancel={() => setViewingId(null)}
               onEdit={
                 canEdit
