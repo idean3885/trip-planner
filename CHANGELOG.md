@@ -9,6 +9,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [3.13.0] - 2026-06-02
+
+### Added
+
+- 모바일에서 아래로 스크롤해 캘린더가 화면 상단에 고정되면 캘린더가 월간에서 주간으로 접혀 일정 영역을 넓게 씁니다. 맨 위로 돌아오면 월간으로 복원됩니다.
+
+  스크롤로 캘린더가 고정돼도 월간이 그대로 남아 일정 영역을 좁히던 문제를 줄이기 위함입니다. ([#736](https://github.com/idean3885/trip-planner/issues/736))
+
+### Fixed
+
+- 여행 상세 액션바의 "일자 삭제" 버튼을 다른 액션 버튼과 같은 외곽선 스타일로 통일했습니다. 삭제 의미는 글자색으로만 구분합니다.
+
+  이 버튼만 테두리 없는 강조 스타일이라 버튼 줄에서 혼자 튀어 보였기 때문입니다. ([#734](https://github.com/idean3885/trip-planner/issues/734))
+- 주간 캘린더를 좌우로 슬라이드해 전/다음 주로 이동하면 이동한 주의 첫 요일(일요일)이 선택됩니다.
+
+  지금까지는 같은 요일에 머물러 이동한 주를 처음부터 살펴보기 불편했기 때문입니다. ([#738](https://github.com/idean3885/trip-planner/issues/738))
+
+
 ## [3.12.0] - 2026-06-02
 
 ### Added
