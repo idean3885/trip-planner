@@ -35,6 +35,12 @@ beforeEach(() => {
 });
 
 describe("POST /api/trips/{id}/days/batch-delete", () => {
+  it("미인증이면 401", async () => {
+    mockAuthHelpers.getAuthUserId.mockResolvedValue(null);
+    const res = await POST(req({ ids: [1] }), params);
+    expect(res.status).toBe(401);
+  });
+
   it("편집 권한 없으면 403", async () => {
     mockAuthHelpers.canEdit.mockResolvedValue(false);
     const res = await POST(req({ ids: [1] }), params);
@@ -66,5 +72,21 @@ describe("POST /api/trips/{id}/days/batch-delete", () => {
     expect(data.deleted).toEqual([]);
     expect(mockPrisma.day.deleteMany).not.toHaveBeenCalled();
     expect(mockAutoSync.triggerCalendarAutoSync).not.toHaveBeenCalled();
+  });
+
+  it("잘못된 trip id면 400", async () => {
+    const res = await POST(req({ ids: [1] }), {
+      params: Promise.resolve({ id: "abc" }),
+    });
+    expect(res.status).toBe(400);
+  });
+
+  it("잘못된 JSON 본문이면 400", async () => {
+    const bad = new Request(
+      "http://localhost/api/trips/5/days/batch-delete",
+      { method: "POST", body: "not-json" },
+    );
+    const res = await POST(bad, params);
+    expect(res.status).toBe(400);
   });
 });

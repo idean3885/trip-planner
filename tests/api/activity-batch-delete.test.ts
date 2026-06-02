@@ -82,4 +82,20 @@ describe("POST /api/trips/{id}/activities/batch-delete", () => {
     const data = await res.json();
     expect(data.deleted).toEqual([160]);
   });
+
+  it("잘못된 trip id면 400", async () => {
+    const res = await POST(req({ ids: [1] }), {
+      params: Promise.resolve({ id: "abc" }),
+    });
+    expect(res.status).toBe(400);
+  });
+
+  it("잘못된 JSON 본문이면 400", async () => {
+    const bad = new Request(
+      "http://localhost/api/trips/5/activities/batch-delete",
+      { method: "POST", body: "not-json" },
+    );
+    const res = await POST(bad, params);
+    expect(res.status).toBe(400);
+  });
 });
