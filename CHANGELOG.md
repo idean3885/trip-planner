@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [3.15.1] - 2026-06-03
+
+### Fixed
+
+- 모바일 여행 상세에서 일정이 없거나 적을 때의 스와이프·스크롤 동작을 고쳤습니다. 빈 날에는 좌우로 넘길 영역이 없고, 일정이 짧으면 화면이 최상단으로 튀던 문제를 없애기 위함입니다.
+
+  * 일정이 없는 날에도 좌우로 넘겨 날짜를 바꿀 수 있습니다.
+  * 일정이 적어도 화면이 맨 위로 강제 이동하지 않습니다.
+  * 아래로 스크롤하면 캘린더가 바로 주간으로 접히고, 맨 위로 올라오면 다시 월간으로 펼쳐집니다.
+
+  ([#757](https://github.com/idean3885/trip-planner/issues/757))
+
+
 ## [3.15.0] - 2026-06-03
 
 ### Added
