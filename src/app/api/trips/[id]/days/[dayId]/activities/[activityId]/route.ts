@@ -1,7 +1,9 @@
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 
 import { toTimestamp } from "@/lib/activity-time";
+import { getAppOrigin } from "@/lib/app-url";
 import { canEdit, getAuthUserId } from "@/lib/auth-helpers";
+import { triggerCalendarAutoSync } from "@/lib/calendar/auto-sync";
 import { prisma } from "@/lib/prisma";
 
 type Params = {
@@ -96,6 +98,10 @@ export async function PUT(request: Request, { params }: Params) {
     },
   });
 
+  // spec 049 — 응답 후 외부 캘린더 자동 반영.
+  const tripUrl = `${getAppOrigin(request)}/trips/${tripId}`;
+  after(() => triggerCalendarAutoSync(tripId, userId, tripUrl));
+
   return NextResponse.json(activity);
 }
 
@@ -118,6 +124,10 @@ export async function DELETE(request: Request, { params }: Params) {
   await prisma.activity.delete({
     where: { id: parseInt(activityId), dayId: dayIdNum, day: { tripId } },
   });
+
+  // spec 049 — 응답 후 외부 캘린더 자동 반영.
+  const tripUrl = `${getAppOrigin(request)}/trips/${tripId}`;
+  after(() => triggerCalendarAutoSync(tripId, userId, tripUrl));
 
   return NextResponse.json({ ok: true });
 }
