@@ -260,7 +260,11 @@ function MobileCompactCalendar({
         <SwipeCarousel
           ariaLabel="주 달력"
           anchorKey={`w${selectedSafe.toDateString()}`}
-          onCommit={(dir) => onSelect?.(addDays(selectedSafe, dir * 7))}
+          onCommit={(dir) =>
+            // spec — 주를 넘기면 같은 요일이 아니라 이동한 주의 첫 요일(일요일)을
+            // 선택해 그 주를 처음부터 보게 한다(#738).
+            onSelect?.(getWeekDays(addDays(selectedSafe, dir * 7))[0])
+          }
           renderSlide={(off) => (
             <WeekStrip
               weekOf={addDays(selectedSafe, off * 7)}
