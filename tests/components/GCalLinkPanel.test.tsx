@@ -107,13 +107,13 @@ describe("GCalLinkPanel — spec 021 Testing 모드 미등록 UI", () => {
       const trigger = await screen.findByRole(
         "button",
         { name: "구글 캘린더 연결" },
-        { timeout: 3000 },
+        { timeout: 5000 },
       );
       fireEvent.click(trigger);
       const cta = await screen.findByRole(
         "button",
         { name: "공유 캘린더 연결" },
-        { timeout: 3000 },
+        { timeout: 5000 },
       );
       fireEvent.click(cta);
     } else {
@@ -126,7 +126,9 @@ describe("GCalLinkPanel — spec 021 Testing 모드 미등록 UI", () => {
     }
   }
 
-  it("주인 미등록: 조작 API 응답이 unregistered면 안내 카드 트리거로 전환", async () => {
+  // CI coverage 환경에서 base-ui Dialog portal 마운트 지연으로 간헐 실패(#420 계보).
+  // timeout 상향에 더해 환경성 flaky 를 retry 로 흡수한다(로컬은 1회 통과).
+  it("주인 미등록: 조작 API 응답이 unregistered면 안내 카드 트리거로 전환", { retry: 2 }, async () => {
     await renderWithUnregisteredError("OWNER");
 
     // 안내 카드의 트리거 라벨로 전환되었는지 확인.
