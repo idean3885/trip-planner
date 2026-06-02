@@ -17,7 +17,7 @@ describe("ActivityForm", () => {
     expect(screen.getByText(/제목/)).toBeInTheDocument();
     expect(screen.getByText(/시작/)).toBeInTheDocument();
     expect(screen.getByText(/종료/)).toBeInTheDocument();
-    expect(screen.getByPlaceholderText("장소")).toBeInTheDocument();
+    expect(screen.getByLabelText("장소")).toBeInTheDocument();
     expect(screen.getByPlaceholderText("메모")).toBeInTheDocument();
     expect(screen.getByText("비용")).toBeInTheDocument();
     expect(screen.getByText("통화")).toBeInTheDocument();
@@ -78,10 +78,11 @@ describe("ActivityForm", () => {
     render(<ActivityForm onSubmit={onSubmit} onCancel={onCancel} />);
 
     const textInputs = screen.getAllByRole("textbox");
-    // textInputs[0] = title, textInputs[1] = location, textInputs[2] = memo, textInputs[3] = currency
+    // spec 048 레이아웃: DOM 순서 title, location, currency, memo(textarea).
+    // (비용은 number=spinbutton 이라 textbox 에서 빠진다.)
     fireEvent.change(textInputs[0], { target: { value: "Test Activity" } });
     fireEvent.change(textInputs[1], { target: { value: "Test Place" } });
-    fireEvent.change(textInputs[2], { target: { value: "A memo" } });
+    fireEvent.change(textInputs[3], { target: { value: "A memo" } });
 
     const form = document.querySelector("form")!;
     fireEvent.submit(form);
@@ -178,8 +179,8 @@ describe("ActivityForm", () => {
   it("uppercases currency input", () => {
     render(<ActivityForm onSubmit={onSubmit} onCancel={onCancel} />);
     const textInputs = screen.getAllByRole("textbox");
-    // currency is textInputs[3]
-    fireEvent.change(textInputs[3], { target: { value: "usd" } });
+    // spec 048 레이아웃: currency 는 textInputs[2](title, location, currency, memo).
+    fireEvent.change(textInputs[2], { target: { value: "usd" } });
     expect(screen.getByDisplayValue("USD")).toBeInTheDocument();
   });
 
@@ -259,5 +260,41 @@ describe("ActivityForm", () => {
     await waitFor(() => {
       expect(screen.getByText("추가")).toBeInTheDocument();
     });
+  });
+
+  // spec 048 — readOnly 상세 모드
+  it("readOnly 상세: 입력 비활성 + 편집/닫기 + 메모 링크", () => {
+    const onEdit = vi.fn();
+    render(
+      <ActivityForm
+        onCancel={onCancel}
+        readOnly
+        onEdit={onEdit}
+        initial={{ title: "구엘", memo: "https://example.com 참고" }}
+      />,
+    );
+    expect(screen.getByDisplayValue("구엘")).toHaveAttribute("readonly");
+    expect(screen.getByRole("link")).toBeInTheDocument();
+    fireEvent.click(screen.getByText("편집"));
+    expect(onEdit).toHaveBeenCalledOnce();
+  });
+
+  it("readOnly 상세: 메모 없으면 '메모 없음'", () => {
+    render(
+      <ActivityForm
+        onCancel={onCancel}
+        readOnly
+        initial={{ title: "X", memo: "" }}
+      />,
+    );
+    expect(screen.getByText("메모 없음")).toBeInTheDocument();
+  });
+
+  it("readOnly 상세: onEdit 없으면 편집 버튼 미노출", () => {
+    render(
+      <ActivityForm onCancel={onCancel} readOnly initial={{ title: "X" }} />,
+    );
+    expect(screen.queryByText("편집")).toBeNull();
+    expect(screen.getByText("닫기")).toBeInTheDocument();
   });
 });

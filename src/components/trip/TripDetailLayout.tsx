@@ -12,10 +12,8 @@
  * - 선택 일자를 쿼리(`?d=YYYY-MM-DD`)에 반영해 새로고침·공유 시 유지한다.
  */
 
-import { useGSAP } from "@gsap/react";
+import type { ActivityCategory, ReservationStatus } from "@prisma/client";
 import { addDays } from "date-fns";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 import {
   type ReactNode,
   useCallback,
@@ -24,9 +22,6 @@ import {
   useRef,
   useState,
 } from "react";
-
-gsap.registerPlugin(useGSAP, ScrollTrigger);
-import type { ActivityCategory, ReservationStatus } from "@prisma/client";
 
 import type { Activity } from "@/components/ActivityList";
 import DayDeleteButton from "@/components/DayDeleteButton";
@@ -262,43 +257,10 @@ export function TripDetailLayout({
     window.scrollTo({ top: Math.max(0, target), behavior: "smooth" });
   }, [selectedDate]);
 
-  // spec 037 — 모바일 단일 스크롤 + 캘린더 경계 1회 멈춤(GSAP ScrollTrigger).
-  // CSS scroll-snap 은 "오버슈트 후 복귀"라 사용자가 본 되돌림을 못 없앤다(v3.8.x).
-  // GSAP snap 으로 헤더가 사라지고 캘린더가 sticky 고정되는 경계(sticky.offsetTop)
-  // 한 지점에서만 정지시키고, 그 이후 일정 구간은 정지점을 두지 않아 자유 스크롤한다.
-  // duration 을 짧게 둬 "벽"에 가깝게 한다. 모바일(<1024px)에서만 matchMedia 로
-  // 켜고, 데스크탑·다른 페이지에는 영향이 없도록 cleanup 에서 revert 한다.
-  useGSAP(() => {
-    const sticky = mobileStickyRef.current;
-    if (!sticky) return;
-    const mm = gsap.matchMedia();
-    mm.add("(max-width: 1023px)", () => {
-      const st = ScrollTrigger.create({
-        snap: {
-          snapTo: (value, self) => {
-            const max = ScrollTrigger.maxScroll(window);
-            if (max <= 0) return value;
-            // spec 043 US4 — vh 근사(뷰포트 방식)가 실기기에서 부정확해 경계가
-            // 안 잡혔다. sticky 가 top-0 으로 고정되는 실제 위치(offsetTop)를
-            // 직접 경계로 쓴다.
-            const boundary = sticky.offsetTop;
-            if (!Number.isFinite(boundary) || boundary <= 0) return value;
-            const scroll = value * max;
-            const goingDown = !self || self.direction === 1;
-            if (goingDown && scroll > boundary * 0.4 && scroll < boundary) {
-              return boundary / max;
-            }
-            return value;
-          },
-          duration: 0.12,
-          ease: "power2.out",
-          directional: true,
-        },
-      });
-      return () => st.kill();
-    });
-    return () => mm.revert();
-  });
+  // 캘린더 경계 멈춤 강제 보정은 제거했다(#730). 여러 방식(scroll-snap·중첩 스크롤·
+  // GSAP snap)이 기기·환경에 따라 안 잡히거나 스크롤이 끊기는 부작용을 남겨, 보정을
+  // 두기보다 네이티브 자유 스크롤을 택한다. 캘린더는 sticky 로 상단에 머문다. 원하는
+  // 경계 멈춤 동작은 추후 실기기 기준으로 다시 정의한다.
 
   const handleDayCreated = useCallback((created: DayCreatedPayload) => {
     setDayIndex((prev) =>

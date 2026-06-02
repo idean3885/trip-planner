@@ -60,6 +60,8 @@ export default function ActivityList({
   const [activities, setActivities] = useState(initialActivities);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
+  // spec 048 — 카드 탭 → 상세(읽기 전용) → 편집 2단계. viewingId 가 상세 대상.
+  const [viewingId, setViewingId] = useState<number | null>(null);
 
   const apiBase = `/api/trips/${tripId}/days/${dayId}/activities`;
 
@@ -201,39 +203,63 @@ export default function ActivityList({
         </h2>
       )}
 
-      {activities.map((activity, idx) =>
-        editingId === activity.id ? (
-          <ActivityForm
-            key={activity.id}
-            isEdit
-            initial={{
-              category: activity.category,
-              title: activity.title,
-              startTime: formatTime(activity.startTime),
-              endTime: formatTime(activity.endTime),
-              location: activity.location ?? "",
-              memo: activity.memo ?? "",
-              cost: activity.cost ? String(activity.cost) : "",
-              currency: activity.currency,
-              reservationStatus: activity.reservationStatus ?? "",
-            }}
-            onSubmit={(data) => handleUpdate(activity.id, data)}
-            onCancel={() => setEditingId(null)}
-          />
-        ) : (
+      {activities.map((activity, idx) => {
+        const initial = {
+          category: activity.category,
+          title: activity.title,
+          startTime: formatTime(activity.startTime),
+          endTime: formatTime(activity.endTime),
+          location: activity.location ?? "",
+          memo: activity.memo ?? "",
+          cost: activity.cost ? String(activity.cost) : "",
+          currency: activity.currency,
+          reservationStatus: activity.reservationStatus ?? "",
+        };
+        // 편집 > 상세 > 카드 우선순위.
+        if (editingId === activity.id) {
+          return (
+            <ActivityForm
+              key={activity.id}
+              isEdit
+              initial={initial}
+              onSubmit={(data) => handleUpdate(activity.id, data)}
+              onCancel={() => setEditingId(null)}
+            />
+          );
+        }
+        if (viewingId === activity.id) {
+          return (
+            <ActivityForm
+              key={activity.id}
+              readOnly
+              initial={initial}
+              onCancel={() => setViewingId(null)}
+              onEdit={
+                canEdit
+                  ? () => {
+                      setViewingId(null);
+                      setEditingId(activity.id);
+                    }
+                  : undefined
+              }
+            />
+          );
+        }
+        return (
           <ActivityCard
             key={activity.id}
             activity={activity}
             canEdit={canEdit}
             isFirst={idx === 0}
             isLast={idx === activities.length - 1}
+            onView={() => setViewingId(activity.id)}
             onEdit={() => setEditingId(activity.id)}
             onDelete={() => handleDelete(activity.id)}
             onMoveUp={() => handleMove(activity.id, "up")}
             onMoveDown={() => handleMove(activity.id, "down")}
           />
-        ),
-      )}
+        );
+      })}
 
       {showForm ? (
         <ActivityForm
