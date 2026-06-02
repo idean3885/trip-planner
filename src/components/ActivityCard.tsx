@@ -73,6 +73,7 @@ interface ActivityCardProps {
     cost: Prisma.Decimal | string | number | null;
     currency: string;
     reservationStatus: ReservationStatus | null;
+    allDay?: boolean;
   };
   canEdit?: boolean;
   isFirst?: boolean;
@@ -98,8 +99,12 @@ export default function ActivityCard({
 }: ActivityCardProps) {
   const startFmt = formatTime(activity.startTime, activity.startTimezone);
   const endFmt = formatTime(activity.endTime, activity.endTimezone);
-  const timeRange =
-    startFmt && endFmt ? `${startFmt}–${endFmt}` : (startFmt ?? null);
+  // #740 — 종일 활동은 시각 대신 "종일" 표기.
+  const timeRange = activity.allDay
+    ? "종일"
+    : startFmt && endFmt
+      ? `${startFmt}–${endFmt}`
+      : (startFmt ?? null);
 
   const cost = activity.cost ? Number(activity.cost) : null;
 

@@ -35,6 +35,7 @@ export interface Activity {
   cost: Prisma.Decimal | string | number | null;
   currency: string;
   reservationStatus: ReservationStatus | null;
+  allDay?: boolean;
   sortOrder: number;
 }
 
@@ -104,6 +105,7 @@ export default function ActivityList({
     if (data.cost) body.cost = parseFloat(data.cost);
     if (data.currency) body.currency = data.currency;
     if (data.reservationStatus) body.reservationStatus = data.reservationStatus;
+    body.allDay = data.allDay;
 
     try {
       const res = await fetch(apiBase, {
@@ -138,6 +140,7 @@ export default function ActivityList({
       cost: data.cost ? parseFloat(data.cost) : null,
       currency: data.currency,
       reservationStatus: data.reservationStatus || null,
+      allDay: data.allDay,
     };
 
     try {
@@ -179,7 +182,18 @@ export default function ActivityList({
     const idx = activities.findIndex((a) => a.id === activityId);
     /* c8 ignore next -- defensive: UI는 렌더된 activity의 id만 전달 */
     if (idx < 0) return;
-    const swapIdx = direction === "up" ? idx - 1 : idx + 1;
+    // #740 — 같은 종일 분류 안에서만 인접 항목과 교환(종일↔시간 그룹 경계는 넘지
+    // 않는다). 다른 분류 항목은 건너뛰며 가장 가까운 동일 분류 이웃을 찾는다.
+    const step = direction === "up" ? -1 : 1;
+    const sameClass = (a: Activity) => !!a.allDay === !!activities[idx].allDay;
+    let swapIdx = idx + step;
+    while (
+      swapIdx >= 0 &&
+      swapIdx < activities.length &&
+      !sameClass(activities[swapIdx])
+    ) {
+      swapIdx += step;
+    }
     /* c8 ignore next -- defensive: ActivityCard의 isFirst/isLast가 경계 버튼을 숨김 */
     if (swapIdx < 0 || swapIdx >= activities.length) return;
 
@@ -195,71 +209,92 @@ export default function ActivityList({
     });
   }
 
+  // #740 — 종일/시간 두 묶음으로 분리. 종일은 최상단 별도 섹션(기본 접힘).
+  const allDayItems = activities.filter((a) => a.allDay);
+  const timedItems = activities.filter((a) => !a.allDay);
+
+  const renderItem = (activity: Activity, isFirst: boolean, isLast: boolean) => {
+    const initial = {
+      category: activity.category,
+      title: activity.title,
+      startTime: formatTime(activity.startTime),
+      endTime: formatTime(activity.endTime),
+      location: activity.location ?? "",
+      memo: activity.memo ?? "",
+      cost: activity.cost ? String(activity.cost) : "",
+      currency: activity.currency,
+      reservationStatus: activity.reservationStatus ?? "",
+      allDay: activity.allDay ?? false,
+    };
+    // 편집 > 상세 > 카드 우선순위.
+    if (editingId === activity.id) {
+      return (
+        <ActivityForm
+          key={activity.id}
+          isEdit
+          initial={initial}
+          onSubmit={(data) => handleUpdate(activity.id, data)}
+          onCancel={() => setEditingId(null)}
+        />
+      );
+    }
+    if (viewingId === activity.id) {
+      return (
+        <ActivityForm
+          key={activity.id}
+          readOnly
+          initial={initial}
+          onCancel={() => setViewingId(null)}
+          onEdit={
+            canEdit
+              ? () => {
+                  setViewingId(null);
+                  setEditingId(activity.id);
+                }
+              : undefined
+          }
+        />
+      );
+    }
+    return (
+      <ActivityCard
+        key={activity.id}
+        activity={activity}
+        canEdit={canEdit}
+        isFirst={isFirst}
+        isLast={isLast}
+        onView={() => setViewingId(activity.id)}
+        onEdit={() => setEditingId(activity.id)}
+        onDelete={() => handleDelete(activity.id)}
+        onMoveUp={() => handleMove(activity.id, "up")}
+        onMoveDown={() => handleMove(activity.id, "down")}
+      />
+    );
+  };
+
   return (
     <div className="space-y-2">
-      {activities.length > 0 && (
-        <h2 className="text-foreground text-sm font-semibold tracking-tight">
-          활동 ({activities.length})
-        </h2>
+      {allDayItems.length > 0 && (
+        <details className="border-border bg-card/50 rounded-lg border">
+          <summary className="text-foreground cursor-pointer px-3 py-2 text-sm font-semibold tracking-tight select-none">
+            종일 ({allDayItems.length})
+          </summary>
+          <div className="space-y-2 px-2 pb-2">
+            {allDayItems.map((activity, idx) =>
+              renderItem(activity, idx === 0, idx === allDayItems.length - 1),
+            )}
+          </div>
+        </details>
       )}
 
-      {activities.map((activity, idx) => {
-        const initial = {
-          category: activity.category,
-          title: activity.title,
-          startTime: formatTime(activity.startTime),
-          endTime: formatTime(activity.endTime),
-          location: activity.location ?? "",
-          memo: activity.memo ?? "",
-          cost: activity.cost ? String(activity.cost) : "",
-          currency: activity.currency,
-          reservationStatus: activity.reservationStatus ?? "",
-        };
-        // 편집 > 상세 > 카드 우선순위.
-        if (editingId === activity.id) {
-          return (
-            <ActivityForm
-              key={activity.id}
-              isEdit
-              initial={initial}
-              onSubmit={(data) => handleUpdate(activity.id, data)}
-              onCancel={() => setEditingId(null)}
-            />
-          );
-        }
-        if (viewingId === activity.id) {
-          return (
-            <ActivityForm
-              key={activity.id}
-              readOnly
-              initial={initial}
-              onCancel={() => setViewingId(null)}
-              onEdit={
-                canEdit
-                  ? () => {
-                      setViewingId(null);
-                      setEditingId(activity.id);
-                    }
-                  : undefined
-              }
-            />
-          );
-        }
-        return (
-          <ActivityCard
-            key={activity.id}
-            activity={activity}
-            canEdit={canEdit}
-            isFirst={idx === 0}
-            isLast={idx === activities.length - 1}
-            onView={() => setViewingId(activity.id)}
-            onEdit={() => setEditingId(activity.id)}
-            onDelete={() => handleDelete(activity.id)}
-            onMoveUp={() => handleMove(activity.id, "up")}
-            onMoveDown={() => handleMove(activity.id, "down")}
-          />
-        );
-      })}
+      {timedItems.length > 0 && (
+        <h2 className="text-foreground text-sm font-semibold tracking-tight">
+          활동 ({timedItems.length})
+        </h2>
+      )}
+      {timedItems.map((activity, idx) =>
+        renderItem(activity, idx === 0, idx === timedItems.length - 1),
+      )}
 
       {showForm ? (
         <ActivityForm

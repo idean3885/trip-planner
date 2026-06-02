@@ -47,6 +47,7 @@ export async function PUT(request: Request, { params }: Params) {
     cost,
     currency,
     reservationStatus,
+    allDay,
     sortOrder,
   } = body;
 
@@ -94,6 +95,15 @@ export async function PUT(request: Request, { params }: Params) {
       ...(cost !== undefined && { cost }),
       ...(currency !== undefined && { currency }),
       ...(reservationStatus !== undefined && { reservationStatus }),
+      ...(allDay !== undefined && { allDay }),
+      // #740 — 종일로 전환하면 시각 앵커를 그 날 날짜(00:00)로, 시간대는 비운다
+      // (마지막 spread 라 시간 입력보다 우선). 종일 해제는 시간 필드 입력을 따른다.
+      ...(allDay === true && {
+        startTime: day.date,
+        endTime: null,
+        startTimezone: null,
+        endTimezone: null,
+      }),
       ...(sortOrder !== undefined && { sortOrder }),
     },
   });

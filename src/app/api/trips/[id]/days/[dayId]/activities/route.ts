@@ -69,6 +69,7 @@ export async function POST(request: Request, { params }: Params) {
     cost,
     currency,
     reservationStatus,
+    allDay,
     sortOrder,
   } = body;
 
@@ -79,20 +80,35 @@ export async function POST(request: Request, { params }: Params) {
     );
   }
 
+  // #740 — 종일 활동은 특정 시각이 없다. 동기화·정렬 기준을 위해 시각 앵커를 그
+  // 날 날짜(00:00)로 두고 시간대는 비운다(표시는 "종일"). 시간 활동은 기존대로.
+  const isAllDay = allDay === true;
+
   const activity = await prisma.activity.create({
     data: {
       dayId: dayIdNum,
       category,
       title,
-      ...(startTime !== undefined && {
-        startTime: toTimestamp(startTime, day.date, startTimezone) ?? null,
-      }),
-      ...(startTimezone !== undefined && { startTimezone }),
-      ...(endTime !== undefined && {
-        endTime:
-          toTimestamp(endTime, day.date, endTimezone ?? startTimezone) ?? null,
-      }),
-      ...(endTimezone !== undefined && { endTimezone }),
+      allDay: isAllDay,
+      ...(isAllDay
+        ? {
+            startTime: day.date,
+            endTime: null,
+            startTimezone: null,
+            endTimezone: null,
+          }
+        : {
+            ...(startTime !== undefined && {
+              startTime: toTimestamp(startTime, day.date, startTimezone) ?? null,
+            }),
+            ...(startTimezone !== undefined && { startTimezone }),
+            ...(endTime !== undefined && {
+              endTime:
+                toTimestamp(endTime, day.date, endTimezone ?? startTimezone) ??
+                null,
+            }),
+            ...(endTimezone !== undefined && { endTimezone }),
+          }),
       ...(location !== undefined && { location }),
       ...(memo !== undefined && { memo }),
       ...(cost !== undefined && { cost }),
