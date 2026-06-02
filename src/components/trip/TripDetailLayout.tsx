@@ -46,7 +46,6 @@ import {
 import { CalendarView } from "./CalendarView";
 import { DayActivitiesPane, type DayCreatedPayload } from "./DayActivitiesPane";
 import { SwipeCarousel } from "./SwipeCarousel";
-import { TripDetailExtras } from "./TripDetailExtras";
 
 export interface LayoutActivity {
   id: number;
@@ -83,8 +82,6 @@ export interface TripDetailLayoutProps {
   canEdit: boolean;
   /** 외부 캘린더 동기화 카드 (서버에서 만든 노드). */
   syncCard: ReactNode;
-  /** 동행자 목록 (서버에서 만든 노드). */
-  memberList: ReactNode;
 }
 
 /**
@@ -117,7 +114,6 @@ export function TripDetailLayout({
   initialActivities,
   canEdit,
   syncCard,
-  memberList,
 }: TripDetailLayoutProps) {
   const [dayIndex, setDayIndex] = useState<LayoutDayIndex[]>(initialDays);
   const [activitiesByDayId, setActivitiesByDayId] =
@@ -345,13 +341,13 @@ export function TripDetailLayout({
           {syncCard}
         </div>
         <div className="min-w-0 space-y-6">
-          {memberList}
           {renderPanel(selectedDate, true)}
         </div>
       </div>
 
-      {/* 모바일 <1024px — sticky 캘린더 + 선택 일정. 동기화·동행자는 자세히
-          다이얼로그(열기/닫기) 안에서만 본다(#645). */}
+      {/* 모바일 <1024px — sticky 캘린더 + 선택 일정. 외부 캘린더 동기화는
+          "캘린더 동기화" 다이얼로그에서 본다(spec 041 — 동행자는 헤더 "동행자
+          초대" 다이얼로그로 분리). */}
       <div className="space-y-4 lg:hidden">
         <div
           ref={mobileStickyRef}
@@ -362,14 +358,13 @@ export function TripDetailLayout({
               <DialogTrigger
                 render={<Button type="button" variant="outline" size="sm" />}
               >
-                자세히
+                캘린더 동기화
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent fullSheetOnMobile>
                 <DialogHeader>
-                  <DialogTitle>여행 정보</DialogTitle>
+                  <DialogTitle>캘린더 동기화</DialogTitle>
                 </DialogHeader>
-                {/* 동행자(위) + 외부 캘린더 동기화(아래)를 한 묶음으로. */}
-                <TripDetailExtras members={memberList} sync={syncCard} />
+                {syncCard}
               </DialogContent>
             </Dialog>
           </div>

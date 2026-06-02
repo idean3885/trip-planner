@@ -1,4 +1,4 @@
-import { ArrowLeft } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { remark } from "remark";
@@ -135,46 +135,46 @@ async function DbTripPage({
 
   return (
     <div className="space-y-6">
-      <div>
-        <Link
-          href="/"
-          className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-sm"
-        >
-          <ArrowLeft className="size-3.5" aria-hidden />
-          여행 목록
-        </Link>
-      </div>
+      {/* spec 041 — 헤더를 `여행 목록 > 제목` 브레드크럼 한 줄로 압축(큰 제목·별도
+          뒤로 링크 제거). 기간 옆에 "일정 변경"(날짜 자유 추가 = 기간 파생 확장).
+          캘린더 동기화·동행자 다이얼로그는 TripDetailLayout 이 viewport 별로 배치. */}
+      <div className="space-y-3">
+        <nav className="text-muted-foreground flex items-center gap-1.5 text-sm">
+          <Link href="/" className="hover:text-foreground">
+            여행 목록
+          </Link>
+          <ChevronRight className="size-3.5 shrink-0" aria-hidden />
+          <span className="text-foreground truncate font-medium">
+            {trip.title}
+          </span>
+        </nav>
 
-      {/* spec 032 — 캘린더 중심 단일 화면. 헤더(제목·기간·액션)는 본문 상단
-          단독으로 두고, 캘린더·동기화·동행자·선택 일정의 좌우/세로 배치는
-          TripDetailLayout 이 viewport 별로 처리한다. */}
-      <div>
-        <h1 className="text-xl font-semibold tracking-tight">{trip.title}</h1>
-        <p className="text-muted-foreground mt-1 text-sm tabular-nums">
-          {period.isDerived && period.startDate && period.endDate ? (
-            <>
-              {formatCalendarDateFull(period.startDate)} ~{" "}
-              {formatCalendarDateFull(period.endDate)}
-            </>
-          ) : (
-            <span className="text-foreground font-medium">일정 미정</span>
-          )}
-        </p>
-        <div className="mt-3 flex flex-wrap items-center gap-2">
-          {member.role !== "GUEST" && (
-            <AddDayButton
-              tripId={tripId}
-              tripStartDate={period.startDate?.toISOString() ?? ""}
-              tripEndDate={period.endDate?.toISOString() ?? ""}
-            />
-          )}
-          {member.role !== "GUEST" && <InviteButton tripId={tripId} />}
-          {member.role === "OWNER" && (
-            <DeleteTripButton tripId={tripId} tripTitle={trip.title} />
-          )}
-          {member.role !== "OWNER" && (
-            <LeaveTripButton tripId={tripId} tripTitle={trip.title} />
-          )}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+          <p className="text-muted-foreground text-sm tabular-nums">
+            {period.isDerived && period.startDate && period.endDate ? (
+              <>
+                {formatCalendarDateFull(period.startDate)} ~{" "}
+                {formatCalendarDateFull(period.endDate)}
+              </>
+            ) : (
+              <span className="text-foreground font-medium">일정 미정</span>
+            )}
+          </p>
+          {member.role !== "GUEST" && <AddDayButton tripId={tripId} />}
+          <div className="ml-auto flex flex-wrap items-center gap-2">
+            {member.role !== "GUEST" && (
+              <InviteButton
+                tripId={tripId}
+                memberList={<MemberList tripId={tripId} />}
+              />
+            )}
+            {member.role === "OWNER" && (
+              <DeleteTripButton tripId={tripId} tripTitle={trip.title} />
+            )}
+            {member.role !== "OWNER" && (
+              <LeaveTripButton tripId={tripId} tripTitle={trip.title} />
+            )}
+          </div>
         </div>
       </div>
 
@@ -209,7 +209,6 @@ async function DbTripPage({
             providerHint={providerHint}
           />
         }
-        memberList={<MemberList tripId={tripId} />}
       />
     </div>
   );
