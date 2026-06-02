@@ -10,7 +10,9 @@ import ScrollToTop from "@/components/ScrollToTop";
 import SessionProvider from "@/components/SessionProvider";
 import { Toaster } from "@/components/ui/sonner";
 
-const inter = Inter({ subsets: ["latin"] });
+// spec 055 — Inter 를 CSS 변수(--font-inter)로 노출해 @theme 의 --font-sans/
+// --font-heading 정본과 연결한다. className 직접 적용도 유지(폴백 보장).
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
   title: "우리의 여행",
@@ -29,7 +31,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko">
+    <html lang="ko" className={inter.variable}>
       <body
         className={`${inter.className} bg-background text-foreground flex min-h-screen flex-col`}
       >

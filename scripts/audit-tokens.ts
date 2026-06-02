@@ -101,10 +101,67 @@ function readUsedNames(): Set<string> {
   return used;
 }
 
+// spec 055 — Figma 디자인 색 정본은 globals.css `:root`(SD 정본 tokens.json 의
+// 반응형/간격 스코프 밖, design/tokens.json _allowlist 위임 규칙). 디자인 등장
+// 프리미티브 팔레트와 캘린더 상태 토큰이 실수로 빠지면 화면이 무채색으로 회귀하므로,
+// :root 선언 존재를 별도로 가드한다. 값 비교는 하지 않고 선언 존재만 검사한다.
+const REQUIRED_ROOT_TOKENS: readonly string[] = [
+  // 프리미티브 팔레트 (디자인 등장 색 전수)
+  "white",
+  "gray-50",
+  "gray-100",
+  "gray-200",
+  "gray-300",
+  "gray-600",
+  "gray-700",
+  "gray-800",
+  "gray-900",
+  "gray-950",
+  "black",
+  "blue-500",
+  "blue-700",
+  "green-50",
+  "green-600",
+  "green-800",
+  "pink-400",
+  // 캘린더 셀/헤더 상태
+  "cal-saturday",
+  "cal-sunday",
+  "cal-weekday-header",
+  "cal-trip-weekend",
+  "cal-trip-weekend-dark",
+  "cal-selected-bg",
+  "cal-selected-text",
+  "cal-today-border",
+  "cal-inactive",
+  "cal-inactive-strong",
+  "cal-weekend-inactive",
+  "cal-fill-weekend",
+  "cal-fill-weekday",
+  // 동행 배너
+  "banner",
+  "banner-foreground",
+];
+
+/** globals.css 전체에서 선언된 CSS 변수명(--name:) 집합. */
+function readDeclaredVars(): Set<string> {
+  const css = readFileSync(CSS_PATH, "utf8");
+  const names = new Set<string>();
+  for (const match of css.matchAll(/--([a-z][a-z0-9-]*)\s*:/g)) {
+    names.add(match[1]!);
+  }
+  return names;
+}
+
 function main(): void {
   const definitive = readTokensDefinitive();
   const theme = readThemeNames();
   const used = readUsedNames();
+  // spec 055 — :root 팔레트·캘린더 토큰 선언 누락 검사.
+  const declaredVars = readDeclaredVars();
+  const missingPalette = REQUIRED_ROOT_TOKENS.filter(
+    (t) => !declaredVars.has(t),
+  );
 
   // 1. 정본 → @theme: 정본의 모든 토큰이 @theme에 존재해야 함 (빌더 결정성)
   const missingInTheme: string[] = [];
@@ -129,15 +186,31 @@ function main(): void {
   console.log(`- 정본 토큰: ${definitive.size}개`);
   console.log(`- @theme 블록 토큰: ${theme.size}개`);
   console.log(`- 사용처 참조 이름: ${used.size}개 (--name: 또는 var(--name))`);
+  console.log(
+    `- :root 디자인 팔레트·캘린더 토큰: ${REQUIRED_ROOT_TOKENS.length - missingPalette.length}/${REQUIRED_ROOT_TOKENS.length}개 선언`,
+  );
 
-  if (missingInTheme.length === 0 && shadowInTheme.length === 0) {
+  if (
+    missingInTheme.length === 0 &&
+    shadowInTheme.length === 0 &&
+    missingPalette.length === 0
+  ) {
     console.log("✓ 정본 ↔ @theme 결정적 일치 (양방향 diff 0)");
+    console.log("✓ :root Figma 팔레트·캘린더 토큰 전수 선언 (spec 055)");
     if (definitive.size === 0) {
       console.log(
         "  ℹ 정본이 비어 있음 — Phase 2 중성 상태(디자이너 합류 전). 예상된 상태.",
       );
     }
     process.exit(0);
+  }
+
+  if (missingPalette.length > 0) {
+    console.error(
+      `FAIL: :root 에 누락된 Figma 팔레트·캘린더 토큰 ${missingPalette.length}건 (무채색 회귀 위험)`,
+    );
+    for (const n of missingPalette) console.error(`  - --${n}`);
+    console.error("→ src/app/globals.css :root 에 토큰 선언 복원 (spec 055)");
   }
 
   if (missingInTheme.length > 0) {
