@@ -1,14 +1,15 @@
 /**
- * spec 028 — SidePanel 진입 카드.
+ * spec 028 → spec 043 US3 — 캘린더 동기화 진입 버튼.
  *
- * trip 상세의 캘린더 관련 모든 동선의 유일한 진입점. 카드 클릭 시 단일 다이얼로그가 열린다.
+ * trip 상세 캘린더 동선의 단일 진입점. 과거 진입 "카드 + [열기]" 2단계를 없애고,
+ * 액션바의 버튼 한 번으로 통합 다이얼로그(연결·가져오기·초안)를 바로 연다.
  */
 
 "use client";
 
 import type { TripRole } from "@prisma/client";
 import { CalendarSync } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 
@@ -39,31 +40,11 @@ export default function CalendarSyncEntryCard({
 }: Props) {
   const [open, setOpen] = useState<boolean>(initialOpenFromUrl);
 
-  const providerLabel =
-    calendarProvider === "APPLE" ? "Apple iCloud" : "Google";
-  const summary = calendarLinked
-    ? calendarName
-      ? `${providerLabel} · ${calendarName} 연결됨`
-      : `${providerLabel} 캘린더 연결됨`
-    : "캘린더 연결 안 됨";
-
-  const description =
-    role === "GUEST"
-      ? "이 여행의 캘린더 상태와 가져온 일정을 확인할 수 있습니다."
-      : "여행 캘린더 연결, 외부 캘린더에서 일정 가져오기, 초안 관리까지 한 화면에서 처리합니다.";
-
-  const handleOpen = useCallback(() => setOpen(true), []);
-
   return (
-    <section className="bg-card rounded-lg border p-4 shadow-sm">
-      <h3 className="flex items-center gap-2 text-sm font-semibold">
+    <>
+      <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
         <CalendarSync className="size-4" />
-        외부 캘린더 동기화
-      </h3>
-      <p className="text-muted-foreground mt-1 text-xs">{summary}</p>
-      <p className="text-muted-foreground mt-2 text-xs">{description}</p>
-      <Button variant="outline" size="sm" className="mt-3" onClick={handleOpen}>
-        열기
+        캘린더 동기화
       </Button>
       <CalendarSyncDialog
         tripId={tripId}
@@ -75,6 +56,6 @@ export default function CalendarSyncEntryCard({
         open={open}
         onOpenChange={setOpen}
       />
-    </section>
+    </>
   );
 }

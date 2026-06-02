@@ -53,7 +53,10 @@ function Calendar({
         ...formatters,
       }}
       classNames={{
-        root: cn("w-fit", defaultClassNames.root),
+        // spec 043 — 여행 상세 캘린더(CalendarView 전용 래퍼)에서 가로 폭을
+        // 컨테이너에 맞춰 채운다. 과거 w-fit 은 내용 크기에 맞춰 좌측에 몰려
+        // 가로 여백이 비었다(#721). 폭 상한은 호출부(CalendarView)에서 max-w 로 둔다.
+        root: cn("w-full", defaultClassNames.root),
         months: cn(
           "relative flex flex-col gap-4 md:flex-row",
           defaultClassNames.months,

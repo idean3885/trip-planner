@@ -38,6 +38,12 @@ export interface SwipeCarouselProps {
   className?: string;
   slideClassName?: string;
   ariaLabel?: string;
+  /**
+   * spec 043 US4 — 트랙 높이를 현재(가운데) 슬라이드 높이에 맞춘다. flex 트랙은
+   * 기본적으로 가장 큰 슬라이드 높이를 가져, 짧은 현재 날 아래에 긴 이웃 날만큼
+   * 빈 스크롤이 남았다(#723). 켜면 현재 슬라이드만 높이를 결정한다.
+   */
+  syncHeight?: boolean;
 }
 
 export function SwipeCarousel({
@@ -47,12 +53,15 @@ export function SwipeCarousel({
   className,
   slideClassName,
   ariaLabel,
+  syncHeight,
 }: SwipeCarouselProps) {
   const [emblaRef, emblaApi] = useEmblaCarousel({
     startIndex: 1,
     align: "center",
     duration: 18,
   });
+  const trackRef = useRef<HTMLDivElement>(null);
+  const activeSlideRef = useRef<HTMLDivElement>(null);
 
   // onCommit 은 부모가 매 렌더 새 클로저로 넘기므로 ref 로 최신값을 들고,
   // embla select 핸들러는 stable 하게 유지해 리스너 재등록을 피한다.
@@ -94,6 +103,23 @@ export function SwipeCarousel({
     emblaApi.scrollTo(1, true);
   }, [emblaApi, anchorKey]);
 
+  // spec 043 US4 — 트랙 높이를 현재 슬라이드에 맞춘다. 긴 이웃(핍) 슬라이드는
+  // 외곽 overflow-hidden 으로 잘려 빈 스크롤이 생기지 않는다. 활성 슬라이드 내용이
+  // 바뀌면(활동 CRUD·날짜 이동) ResizeObserver 가 다시 맞춘다.
+  useIsoLayoutEffect(() => {
+    if (!syncHeight) return;
+    const track = trackRef.current;
+    const active = activeSlideRef.current;
+    if (!track || !active) return;
+    const apply = () => {
+      track.style.height = `${active.offsetHeight}px`;
+    };
+    apply();
+    const ro = new ResizeObserver(apply);
+    ro.observe(active);
+    return () => ro.disconnect();
+  }, [syncHeight, anchorKey]);
+
   return (
     <div
       ref={emblaRef}
@@ -107,10 +133,11 @@ export function SwipeCarousel({
       {/* spec 040 — items-start 로 각 슬라이드가 자기 콘텐츠 높이를 갖게 한다.
           stretch(기본)면 짧은 현재 슬라이드가 옆 긴 슬라이드 높이로 늘어나 빈
           스크롤이 남는다(이미지 #12). */}
-      <div className="flex items-start">
+      <div ref={trackRef} className="flex items-start">
         {([-1, 0, 1] as const).map((off) => (
           <div
             key={off}
+            ref={off === 0 ? activeSlideRef : undefined}
             aria-hidden={off !== 0}
             // contain-layout — 슬라이드별 레이아웃을 격리해 한 칸 변경이 옆 칸
             // 레이아웃 재계산으로 번지지 않게 한다(#673). 색·크기 토큰과 무관.
