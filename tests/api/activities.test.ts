@@ -21,11 +21,15 @@ const { mockPrisma, mockAuthHelpers } = vi.hoisted(() => ({
 
 vi.mock("@/lib/prisma", () => ({ prisma: mockPrisma }));
 vi.mock("@/lib/auth-helpers", () => mockAuthHelpers);
-// spec 049 — route 직접 호출 테스트는 request scope 밖이라 after()가 throw 한다.
-// 자동 반영은 별도 단위테스트(calendar-auto-sync.test)로 검증하므로 여기선 noop.
+// spec 049 — route 직접 호출은 request scope 밖이라 after()가 throw. 콜백을
+// 즉시 실행해 트리거 경로를 커버하되, 자동 반영 본체는 mock 해 service→prisma
+// import chain 을 끊는다(본체는 calendar-auto-sync.test 가 검증).
+vi.mock("@/lib/calendar/auto-sync", () => ({
+  triggerCalendarAutoSync: vi.fn(),
+}));
 vi.mock("next/server", async (importOriginal) => ({
   ...(await importOriginal<typeof import("next/server")>()),
-  after: vi.fn(),
+  after: (fn: () => void) => fn(),
 }));
 
 import {
