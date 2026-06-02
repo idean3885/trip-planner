@@ -429,6 +429,116 @@ export const openApiSpec = {
         },
       },
     },
+    "/api/trips/{id}/activities/batch-delete": {
+      parameters: [
+        { name: "id", in: "path", required: true, schema: { type: "integer" } },
+      ],
+      post: {
+        operationId: "batchDeleteActivities",
+        tags: ["Activities"],
+        summary: "활동 다건 삭제",
+        description:
+          "여러 활동을 한 요청으로 삭제한다. HOST 이상 권한 필요. 여행 경계 안에 실제 존재하는 식별자만 삭제하고, 없거나 다른 여행 소속인 식별자는 `skipped` 로 함께 반환한다(부분 성공). 단건 삭제(`DELETE .../activities/{activityId}`)는 그대로 유지된다.",
+        security: apiAuth,
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["ids"],
+                properties: {
+                  ids: {
+                    type: "array",
+                    items: { type: "integer" },
+                    description: "삭제할 활동 식별자 목록(중복은 1회 처리).",
+                  },
+                },
+              },
+              example: { ids: [160, 161, 162] },
+            },
+          },
+        },
+        responses: {
+          "200": {
+            description: "삭제 결과(부분 성공)",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    deleted: { type: "array", items: { type: "integer" } },
+                    skipped: { type: "array", items: { type: "integer" } },
+                  },
+                },
+                example: { deleted: [160, 161], skipped: [162] },
+              },
+            },
+          },
+          "400": {
+            description: "빈 식별자 목록 또는 잘못된 본문",
+            ...errorResponse,
+          },
+          "401": { description: "미인증", ...errorResponse },
+          "403": { description: "편집 권한 없음", ...errorResponse },
+        },
+      },
+    },
+    "/api/trips/{id}/days/batch-delete": {
+      parameters: [
+        { name: "id", in: "path", required: true, schema: { type: "integer" } },
+      ],
+      post: {
+        operationId: "batchDeleteDays",
+        tags: ["Days"],
+        summary: "일자 다건 삭제",
+        description:
+          "여러 일자를 한 요청으로 삭제한다(그 안의 활동 함께 제거). HOST 이상 권한 필요. 여행 경계 안에 실제 존재하는 식별자만 삭제하고, 나머지는 `skipped` 로 반환한다(부분 성공). 단건 삭제(`DELETE .../days/{dayId}`)는 그대로 유지된다.",
+        security: apiAuth,
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["ids"],
+                properties: {
+                  ids: {
+                    type: "array",
+                    items: { type: "integer" },
+                    description: "삭제할 일자 식별자 목록(중복은 1회 처리).",
+                  },
+                },
+              },
+              example: { ids: [76, 77, 78] },
+            },
+          },
+        },
+        responses: {
+          "200": {
+            description: "삭제 결과(부분 성공)",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    deleted: { type: "array", items: { type: "integer" } },
+                    skipped: { type: "array", items: { type: "integer" } },
+                  },
+                },
+                example: { deleted: [76, 77, 78], skipped: [] },
+              },
+            },
+          },
+          "400": {
+            description: "빈 식별자 목록 또는 잘못된 본문",
+            ...errorResponse,
+          },
+          "401": { description: "미인증", ...errorResponse },
+          "403": { description: "편집 권한 없음", ...errorResponse },
+        },
+      },
+    },
     "/api/trips/{id}/days": {
       parameters: [
         { name: "id", in: "path", required: true, schema: { type: "integer" } },
