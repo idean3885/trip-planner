@@ -1,16 +1,15 @@
 "use client";
 
 /**
- * spec 032 — 여행 상세 캘린더 중심 단일 화면 오케스트레이터.
+ * spec 032 → spec 043 — 여행 상세 캘린더 중심 단일 화면 오케스트레이터.
  *
  * 캘린더 셀 클릭 시 페이지 이동 없이 `selectedDate` 만 갱신하고, 선택 날짜의
  * 일정을 같은 화면 패널(`DayActivitiesPane`)에서 조회·추가·수정·삭제한다.
- * 빈 날짜에 첫 일정이 추가돼 Day 가 새로 생기면 `days` 상태에 반영해 캘린더의
- * 일정 표시와 패널이 같은 소스로 갱신된다.
  *
- * - 데스크탑(≥1024px): 좌(캘린더 확대 + 동기화 카드) / 우(동행자 + 선택 일정).
- * - 모바일(<1024px): sticky 캘린더(위로 스와이프 시 선택 주로 압축) + 선택
- *   일정. 동기화·동행자는 캘린더 상단 바의 "자세히" 로 한 단계 뒤에 둔다.
+ * spec 043:
+ * - 동작 버튼(기간 편집·동행자·나가기/삭제·캘린더 동기화·선택 일자 삭제)을 화면
+ *   상단 액션바 한 줄로 모은다. 선택 일자 삭제는 `selectedDate` 의 Day 에만 동작.
+ * - 선택 일자를 쿼리(`?d=YYYY-MM-DD`)에 반영해 새로고침·공유 시 유지한다.
  */
 
 import { useGSAP } from "@gsap/react";
@@ -30,14 +29,11 @@ gsap.registerPlugin(useGSAP, ScrollTrigger);
 import type { ActivityCategory, ReservationStatus } from "@prisma/client";
 
 import type { Activity } from "@/components/ActivityList";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import DayDeleteButton from "@/components/DayDeleteButton";
+import DeleteTripButton from "@/components/DeleteTripButton";
+import InviteButton from "@/components/InviteButton";
+import LeaveTripButton from "@/components/LeaveTripButton";
+import TripPeriodDialog from "@/components/TripPeriodDialog";
 import {
   ACTIVITY_WINDOW_RADIUS,
   missingFetchRange,
@@ -73,6 +69,8 @@ export interface LayoutDayIndex {
 
 export interface TripDetailLayoutProps {
   tripId: number;
+  tripTitle: string;
+  isOwner: boolean;
   tripStart: Date | null;
   tripEnd: Date | null;
   /** 날짜 인덱스(전체). 활동 본문은 windowed 캐시로 따로 받는다. */
@@ -80,7 +78,11 @@ export interface TripDetailLayoutProps {
   /** 진입 시 받은 선택일 윈도우의 활동(dayId → activities). */
   initialActivities: Record<number, LayoutActivity[]>;
   canEdit: boolean;
-  /** 외부 캘린더 동기화 카드 (서버에서 만든 노드). */
+  /** 쿼리(?d=)에서 받은 초기 선택 일자("YYYY-MM-DD"). 없으면 기본 규칙. */
+  initialSelected: string | null;
+  /** 동행자 초대 다이얼로그에 끼우는 멤버 목록 노드(서버 생성). */
+  memberList: ReactNode;
+  /** 외부 캘린더 동기화 진입 버튼 (서버에서 만든 노드). */
   syncCard: ReactNode;
 }
 
@@ -89,6 +91,21 @@ export interface TripDetailLayoutProps {
  */
 function sameLocalDay(a: Date, b: Date): boolean {
   return a.toDateString() === b.toDateString();
+}
+
+/** Date → 쿼리용 로컬 "YYYY-MM-DD"(캘린더 선택과 같은 기준). */
+function toYmd(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
+    d.getDate(),
+  ).padStart(2, "0")}`;
+}
+
+/** 쿼리 "YYYY-MM-DD" → 로컬 자정 Date. 형식 위반은 null. */
+function parseSelectedYmd(ymd: string | null): Date | null {
+  if (!ymd || !/^\d{4}-\d{2}-\d{2}$/.test(ymd)) return null;
+  const [y, m, d] = ymd.split("-").map(Number);
+  const date = new Date(y, m - 1, d);
+  return Number.isNaN(date.getTime()) ? null : date;
 }
 
 /**
@@ -108,20 +125,25 @@ export function computeInitialSelected(
 
 export function TripDetailLayout({
   tripId,
+  tripTitle,
+  isOwner,
   tripStart,
   tripEnd,
   days: initialDays,
   initialActivities,
   canEdit,
+  initialSelected,
+  memberList,
   syncCard,
 }: TripDetailLayoutProps) {
   const [dayIndex, setDayIndex] = useState<LayoutDayIndex[]>(initialDays);
   const [activitiesByDayId, setActivitiesByDayId] =
     useState<Record<number, LayoutActivity[]>>(initialActivities);
-  const [selectedDate, setSelectedDate] = useState<Date>(() =>
-    computeInitialSelected(tripStart, tripEnd),
+  const [selectedDate, setSelectedDate] = useState<Date>(
+    () =>
+      parseSelectedYmd(initialSelected) ??
+      computeInitialSelected(tripStart, tripEnd),
   );
-  const [detailOpen, setDetailOpen] = useState(false);
 
   // #645 — 다른 날짜를 누르면 모바일 일정 목록 스크롤을 맨 위로 되돌린다.
   // sticky 캘린더 높이만큼 빼서 패널 머리가 캘린더 바로 아래에 오게 한다.
@@ -202,9 +224,24 @@ export function TripDetailLayout({
     [dayIndex, activitiesByDayId],
   );
 
+  // 선택 일자의 Day id(없으면 null) — 액션바 "일자 삭제" 노출 판단.
+  const selectedDayId = dayForDate(selectedDate)?.id ?? null;
+
   const handleSelectDate = useCallback((date: Date | undefined) => {
     if (date) setSelectedDate(date);
   }, []);
+
+  // spec 043 US5 — 선택 일자를 쿼리에 반영(history 만 갱신, 서버 재요청 없음).
+  // 진입·새로고침 복원은 서버가 ?d 를 읽어 initialSelected 로 넘긴다.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const ymd = toYmd(selectedDate);
+    const url = new URL(window.location.href);
+    if (url.searchParams.get("d") !== ymd) {
+      url.searchParams.set("d", ymd);
+      window.history.replaceState(window.history.state, "", url.toString());
+    }
+  }, [selectedDate]);
 
   useEffect(() => {
     // 최초 마운트에서는 스크롤하지 않는다(이미 상단).
@@ -238,19 +275,13 @@ export function TripDetailLayout({
     mm.add("(max-width: 1023px)", () => {
       const st = ScrollTrigger.create({
         snap: {
-          // spec 040 — vh 기준 1순위. 헤더가 화면에서 사라지는 경계를 뷰포트 높이
-          // 비율로 근사하되 sticky.offsetTop 을 넘지 않게 한다. 아래로 스크롤하며
-          // 경계 구간을 지날 때만 경계에 1회 멈추고, 위로 스크롤·경계 밖에서는
-          // value 를 그대로 반환해 "위로 되돌리는 보정"을 없앤다(기존 directional:false
-          // 가 양방향으로 끌어당겨 본 되돌림 버그). 실기기에서 vh 근사가 부정확하면
-          // 캘린더 직하단 토글 문자열 offsetTop 으로 폴백한다.
           snapTo: (value, self) => {
             const max = ScrollTrigger.maxScroll(window);
             if (max <= 0) return value;
-            const boundary = Math.min(
-              window.innerHeight * 0.42,
-              sticky.offsetTop || Number.POSITIVE_INFINITY,
-            );
+            // spec 043 US4 — vh 근사(뷰포트 방식)가 실기기에서 부정확해 경계가
+            // 안 잡혔다. sticky 가 top-0 으로 고정되는 실제 위치(offsetTop)를
+            // 직접 경계로 쓴다.
+            const boundary = sticky.offsetTop;
             if (!Number.isFinite(boundary) || boundary <= 0) return value;
             const scroll = value * max;
             const goingDown = !self || self.direction === 1;
@@ -280,10 +311,18 @@ export function TripDetailLayout({
     setActivitiesByDayId((prev) => ({ ...prev, [created.id]: [] }));
   }, []);
 
+  // spec 043 US2 — 선택 일자 삭제 후 캐시·인덱스에서 제거(페이지 이동 없이).
+  const handleDayDeleted = useCallback((deletedDayId: number) => {
+    setDayIndex((prev) => prev.filter((d) => d.id !== deletedDayId));
+    setActivitiesByDayId((prev) => {
+      const next = { ...prev };
+      delete next[deletedDayId];
+      return next;
+    });
+  }, []);
+
   // 활동 CRUD 결과를 캐시에 반영해 날짜를 오가도 일관되게 유지한다(#669). dayId
   // 동반 단일 안정 핸들러 — 패널마다 새 클로저를 안 만들어 memo 가 산다(#673).
-  // ActivityList 의 Activity(느슨한 cost union)를 캐시 LayoutActivity 로 받는다 —
-  // 런타임 값은 동일(렌더는 cost 를 Number/String 로 방어 처리).
   const handleActivitiesChange = useCallback(
     (dayId: number, next: Activity[]) => {
       setActivitiesByDayId((prev) => ({
@@ -302,8 +341,6 @@ export function TripDetailLayout({
   );
 
   // 특정 날짜의 일정 패널. interactive=false(핍 슬라이드)는 읽기 전용으로 둔다.
-  // dayId·activities(캐시 참조)·안정 핸들러만 넘겨 DayActivitiesPane memo 가
-  // 무관한 프리페치 재렌더를 건너뛰게 한다(#673).
   const renderPanel = (
     date: Date,
     interactive: boolean,
@@ -324,11 +361,44 @@ export function TripDetailLayout({
     );
   };
 
+  // spec 043 US2 — 동작 버튼 한 줄. 데스크탑·모바일 공통(캘린더 위, 비고정).
+  const actionBar = (
+    <div className="flex flex-wrap items-center gap-2">
+      {canEdit && (
+        <TripPeriodDialog
+          tripId={tripId}
+          currentStart={tripStart}
+          currentEnd={tripEnd}
+        />
+      )}
+      {canEdit && selectedDayId != null && (
+        <DayDeleteButton
+          tripId={tripId}
+          dayId={selectedDayId}
+          onDeleted={() => handleDayDeleted(selectedDayId)}
+        />
+      )}
+      {syncCard}
+      {canEdit && <InviteButton tripId={tripId} memberList={memberList} />}
+      <div className="ml-auto flex items-center gap-2">
+        {isOwner ? (
+          <DeleteTripButton tripId={tripId} tripTitle={tripTitle} />
+        ) : (
+          <LeaveTripButton tripId={tripId} tripTitle={tripTitle} />
+        )}
+      </div>
+    </div>
+  );
+
   return (
-    <>
-      {/* 데스크탑 ≥1024px — 좌(캘린더+동기화) / 우(동행자+선택 일정) 2분할. */}
+    <div className="space-y-4">
+      {actionBar}
+
+      {/* 데스크탑 ≥1024px — 좌(캘린더) / 우(선택 일정) 2분할. */}
       <div className="lg:gap-grid-comfy hidden lg:grid lg:grid-cols-2 lg:items-start">
-        <div className="min-w-0 space-y-6">
+        {/* spec 043 US4 — 데스크탑은 좌측 캘린더를 sticky 로 고정해 우측 일정이
+            길어도 캘린더가 화면에 남는다(모바일 경계 멈춤의 데스크탑 대응). */}
+        <div className="min-w-0 lg:sticky lg:top-6">
           <CalendarView
             tripStart={tripStart}
             tripEnd={tripEnd}
@@ -338,36 +408,17 @@ export function TripDetailLayout({
             onSelect={handleSelectDate}
             desktopFull
           />
-          {syncCard}
         </div>
-        <div className="min-w-0 space-y-6">
-          {renderPanel(selectedDate, true)}
-        </div>
+        <div className="min-w-0 space-y-6">{renderPanel(selectedDate, true)}</div>
       </div>
 
-      {/* 모바일 <1024px — sticky 캘린더 + 선택 일정. 외부 캘린더 동기화는
-          "캘린더 동기화" 다이얼로그에서 본다(spec 041 — 동행자는 헤더 "동행자
-          초대" 다이얼로그로 분리). */}
+      {/* 모바일 <1024px — sticky 캘린더 + 선택 일정. 동기화·동행자·기간 편집은
+          위 액션바 버튼으로 연다(spec 043 — 단일 진입). */}
       <div className="space-y-4 lg:hidden">
         <div
           ref={mobileStickyRef}
           className="bg-background sticky top-0 z-20 -mx-4 px-4 pt-1 pb-2"
         >
-          <div className="flex justify-end">
-            <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
-              <DialogTrigger
-                render={<Button type="button" variant="outline" size="sm" />}
-              >
-                캘린더 동기화
-              </DialogTrigger>
-              <DialogContent fullSheetOnMobile>
-                <DialogHeader>
-                  <DialogTitle>캘린더 동기화</DialogTitle>
-                </DialogHeader>
-                {syncCard}
-              </DialogContent>
-            </Dialog>
-          </div>
           <CalendarView
             tripStart={tripStart}
             tripEnd={tripEnd}
@@ -377,15 +428,12 @@ export function TripDetailLayout({
             enableMobileCompact
           />
         </div>
-        {/* #657 — 하단 일정도 이전·현재·다음 날 3슬라이드로 드래그-팔로우 스와이프.
-            핍 슬라이드(±1일)는 읽기 전용. 정착 시 선택 날짜를 하루 옮긴다.
-            spec 037 — 단일 document 스크롤(어디를 만지든 동일). 캘린더 경계 1회
-            멈춤은 GSAP ScrollTrigger(위 useGSAP)가 처리한다. 좌우 스와이프는
-            SwipeCarousel 의 touch-pan-y 로 세로를 document 에 위임해 공존한다. */}
+        {/* #657 — 하단 일정도 이전·현재·다음 날 3슬라이드로 드래그-팔로우 스와이프. */}
         <div ref={mobilePanelRef}>
           <SwipeCarousel
             ariaLabel="선택 날짜 일정"
             anchorKey={selectedDate.toDateString()}
+            syncHeight
             onCommit={(dir) => setSelectedDate((d) => addDays(d, dir))}
             renderSlide={(off) =>
               renderPanel(mobileDates[off + 1], off === 0, false)
@@ -393,6 +441,6 @@ export function TripDetailLayout({
           />
         </div>
       </div>
-    </>
+    </div>
   );
 }

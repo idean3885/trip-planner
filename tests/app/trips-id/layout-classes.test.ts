@@ -39,12 +39,14 @@ describe("trip 상세 레이아웃 (spec 032 — 캘린더 중심 단일 화면)
     expect(pageSrc).not.toMatch(/from "\.\/SidePanel"/);
   });
 
-  it("page.tsx 는 동기화 카드는 TripDetailLayout 에, 동행자는 InviteButton 에 넘긴다 (spec 041)", () => {
+  it("page.tsx 는 동기화·동행자 노드를 TripDetailLayout 에 넘긴다 (spec 043)", () => {
     expect(pageSrc).toContain("CalendarSyncEntryCard");
     expect(pageSrc).toContain("MemberList");
     expect(pageSrc).toMatch(/<TripDetailLayout[\s\S]+syncCard=/);
-    // spec 041 — 동행자 목록은 헤더 "동행자 초대" 다이얼로그(InviteButton)로 이동.
-    expect(pageSrc).toMatch(/<InviteButton[\s\S]+memberList=/);
+    expect(pageSrc).toMatch(/<TripDetailLayout[\s\S]+memberList=/);
+    // spec 043 — 동작 버튼은 TripDetailLayout 액션바로 모은다. InviteButton 은
+    // 거기서 memberList 를 받는다(헤더 page.tsx 에는 더 이상 두지 않는다).
+    expect(layoutComponentSrc).toMatch(/<InviteButton[\s\S]+memberList=/);
   });
 
   it("데스크탑 2분할 grid 는 TripDetailLayout 으로 이동했다 — lg:grid-cols-2", () => {
@@ -97,22 +99,30 @@ describe("trip 상세 레이아웃 (spec 032 — 캘린더 중심 단일 화면)
     expect(authSrc).toMatch(/hidden[^"]*sm:inline-block/);
   });
 
-  it("모바일은 '캘린더 동기화' Dialog 로 동기화 카드를 연다 (spec 041 — 동행자 분리)", () => {
-    expect(layoutComponentSrc).toContain("캘린더 동기화");
-    expect(layoutComponentSrc).toContain("DialogTrigger");
-    expect(layoutComponentSrc).toContain("DialogContent");
-    // 동행자(memberList)는 TripDetailLayout 에서 분리됨 — InviteButton 다이얼로그로.
+  it("동기화 진입은 액션바의 단일 버튼(syncCard)으로 모은다 (spec 043 US3)", () => {
+    // 동기화 진입 노드(syncCard)를 액션바에 둔다 — 다이얼로그 트리거는 진입
+    // 버튼 컴포넌트(CalendarSyncEntryCard)가 직접 들고 있다.
+    expect(layoutComponentSrc).toContain("syncCard");
     expect(layoutComponentSrc).not.toContain("TripDetailExtras");
+    const entrySrc = readFileSync(
+      resolve(
+        REPO_ROOT,
+        "src/components/calendar-sync/CalendarSyncEntryCard.tsx",
+      ),
+      "utf8",
+    );
+    // spec 043 US3 — 중간 [열기] 단계 제거. 버튼 클릭 시 다이얼로그를 바로 연다.
+    expect(entrySrc).not.toMatch(/>\s*열기\s*</);
+    expect(entrySrc).toContain("CalendarSyncDialog");
   });
 
-  it("데스크탑 월간 캘린더는 가로폭을 채운다(spec 040 — 셀 고정폭 → grow)", () => {
+  it("데스크탑 월간 캘린더는 가로폭을 채운다(spec 040/043 — 셀 고정폭 → grow)", () => {
     const calSrc = readFileSync(
       resolve(REPO_ROOT, "src/components/trip/CalendarView.tsx"),
       "utf8",
     );
-    // spec 040 #704 — 셀 고정 크기(--cell-size:14) 대신 w-full + day flex-1 로
-    // 가로 100% 채움(세로는 aspect-square 로 자동). 상한 토큰을 더는 쓰지 않는다.
-    expect(calSrc).toMatch(/desktopFull &&\s*"mx-auto w-full"/);
+    // spec 043 — w-full 로 컨테이너를 채우되 max-w 로 폭 상한(세로 과대 방지).
+    expect(calSrc).toMatch(/desktopFull &&\s*"mx-auto w-full/);
     expect(calSrc).not.toMatch(/--cell-size:--spacing\(14\)/);
   });
 
