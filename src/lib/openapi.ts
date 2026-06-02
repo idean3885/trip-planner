@@ -190,6 +190,12 @@ export const openApiSpec = {
               "RESERVED",
             ],
           },
+          allDay: {
+            type: "boolean",
+            default: false,
+            description:
+              "종일 활동 여부. true면 특정 시각 없이 그 날에 속하며, 표시는 \"종일\", 외부 캘린더에는 날짜 단위 종일 이벤트로 반영됩니다.",
+          },
           sortOrder: {
             type: "integer",
             description:
@@ -758,6 +764,12 @@ export const openApiSpec = {
                       "RESERVED",
                     ],
                   },
+                  allDay: {
+                    type: "boolean",
+                    default: false,
+                    description:
+                      "종일 활동 여부. true면 시각 없이 그 날에 속한다(시간 입력 생략).",
+                  },
                   sortOrder: { type: "integer" },
                 },
               },
@@ -886,6 +898,11 @@ export const openApiSpec = {
                       "NOT_NEEDED",
                       "RESERVED",
                     ],
+                  },
+                  allDay: {
+                    type: "boolean",
+                    description:
+                      "종일 활동 여부. true로 바꾸면 시각이 그 날 날짜로 앵커되고 시간대는 비워진다.",
                   },
                   sortOrder: { type: "integer" },
                 },
