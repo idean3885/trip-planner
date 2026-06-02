@@ -7,9 +7,11 @@
  */
 
 import { calendar_v3 } from "@googleapis/calendar";
-import { prisma } from "@/lib/prisma";
-import { getCalendarClient } from "@/lib/gcal/client";
+
 import { hasFullCalendarScope } from "@/lib/gcal/auth";
+import { getCalendarClient } from "@/lib/gcal/client";
+import { prisma } from "@/lib/prisma";
+
 import type {
   DateRange,
   ExternalCalendarFetcher,
@@ -40,9 +42,11 @@ async function loadManagedCalendarIds(userId: string): Promise<Set<string>> {
   ]);
 }
 
-function parseDate(
-  raw: calendar_v3.Schema$EventDateTime | undefined,
-): { date: Date | null; isAllDay: boolean; timezone: string | null } {
+function parseDate(raw: calendar_v3.Schema$EventDateTime | undefined): {
+  date: Date | null;
+  isAllDay: boolean;
+  timezone: string | null;
+} {
   if (!raw) return { date: null, isAllDay: false, timezone: null };
   if (raw.dateTime) {
     return {

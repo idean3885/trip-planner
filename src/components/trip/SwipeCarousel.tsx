@@ -13,14 +13,15 @@
  * 세로 페이지 스크롤을 그대로 둔다(#649 회귀 방지).
  */
 
+import useEmblaCarousel from "embla-carousel-react";
 import {
+  type ReactNode,
   useCallback,
   useEffect,
   useLayoutEffect,
   useRef,
-  type ReactNode,
 } from "react";
-import useEmblaCarousel from "embla-carousel-react";
+
 import { cn } from "@/lib/utils";
 
 // SSR 에서는 useLayoutEffect 경고가 나므로 클라이언트에서만 layout effect 사용.
@@ -103,7 +104,10 @@ export function SwipeCarousel({
       {/* will-change-transform 제거(#677) — 합성 레이어 고정이 그 위 텍스트·내용을
           낮은 해상도로 래스터해 흐릿했다. 끊김 완화는 재렌더 축소·레이아웃 격리(#673)로
           처리되므로 합성 고정은 불필요. */}
-      <div className="flex">
+      {/* spec 040 — items-start 로 각 슬라이드가 자기 콘텐츠 높이를 갖게 한다.
+          stretch(기본)면 짧은 현재 슬라이드가 옆 긴 슬라이드 높이로 늘어나 빈
+          스크롤이 남는다(이미지 #12). */}
+      <div className="flex items-start">
         {([-1, 0, 1] as const).map((off) => (
           <div
             key={off}

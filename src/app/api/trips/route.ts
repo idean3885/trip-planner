@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+
 import { getAuthUserId } from "@/lib/auth-helpers";
+import { prisma } from "@/lib/prisma";
 
 // T024: 여행 목록 (TripMember 기반 필터)
 export async function GET() {
@@ -46,7 +47,8 @@ export async function POST(request: Request) {
   if (startDate !== undefined || endDate !== undefined) {
     return NextResponse.json(
       {
-        error: "startDate / endDate 입력은 v3.0.0 부터 제거됐습니다. 여행 생성 후 일정을 추가하면 기간이 자동 설정됩니다.",
+        error:
+          "startDate / endDate 입력은 v3.0.0 부터 제거됐습니다. 여행 생성 후 일정을 추가하면 기간이 자동 설정됩니다.",
       },
       { status: 400 },
     );

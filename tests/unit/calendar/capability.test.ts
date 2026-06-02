@@ -4,7 +4,7 @@
  * 정적 보장은 본 테스트로 일부 보강 (capability 객체 모양 자체).
  */
 
-import { describe, it, expect, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 vi.mock("@/lib/prisma", () => ({ prisma: {} }));
 vi.mock("@/lib/gcal/client", () => ({ getCalendarClient: vi.fn() }));
@@ -15,8 +15,8 @@ vi.mock("@/lib/gcal/auth", () => ({
 vi.mock("@/lib/gcal/acl", () => ({ upsertAcl: vi.fn(), deleteAcl: vi.fn() }));
 vi.mock("tsdav", () => ({ createDAVClient: vi.fn() }));
 
-import { googleProvider } from "@/lib/calendar/provider/google";
 import { appleProvider } from "@/lib/calendar/provider/apple";
+import { googleProvider } from "@/lib/calendar/provider/google";
 import { getProvider } from "@/lib/calendar/provider/registry";
 
 describe("ProviderCapabilities — 노출 정합", () => {

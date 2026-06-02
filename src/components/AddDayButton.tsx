@@ -1,28 +1,30 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { toast } from "sonner";
+
 import { Button } from "@/components/ui/button";
 
 interface Props {
   tripId: number;
-  tripStartDate: string;
-  tripEndDate: string;
+  /** @deprecated spec 041 — 날짜 입력 범위 제한을 없앴으나(과거·미래 자유 추가)
+   * 호출부 호환을 위해 선택 prop 으로 남겨둔다. 사용하지 않는다. */
+  tripStartDate?: string;
+  tripEndDate?: string;
 }
 
 /**
- * 여행 상세 페이지의 '일정' 섹션에서 Day(날짜)를 새로 추가한다.
- * Trip 범위 밖 날짜 입력 시 서버가 범위를 자동 확장한다(#296 거동).
+ * spec 041 — "일정 변경". 날짜를 자유롭게(과거·미래) 추가하면 서버가 여행 기간을
+ * 그에 맞춰 파생 확장한다(#296). 기존 날짜 입력 min/max 제한이 시작일 이전 날짜를
+ * 막아 "범위 벗어남" 오류를 내던 것을 제거했다. 기간은 Day 의 최소·최대에서
+ * 파생되므로(명목 컬럼 없음, spec 029) 별도 기간 필드 변경은 없다.
  */
-export default function AddDayButton({ tripId, tripStartDate, tripEndDate }: Props) {
+export default function AddDayButton({ tripId }: Props) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [date, setDate] = useState("");
   const [busy, setBusy] = useState(false);
-
-  const minDate = tripStartDate.slice(0, 10);
-  const maxDate = tripEndDate.slice(0, 10);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -36,10 +38,14 @@ export default function AddDayButton({ tripId, tripStartDate, tripEndDate }: Pro
       });
       if (!res.ok) {
         const body = (await res.json().catch(() => ({}))) as { error?: string };
-        toast.error(body.error === "duplicate_date" ? "이미 해당 날짜의 일정이 있습니다" : "일정 추가에 실패했습니다");
+        toast.error(
+          body.error === "duplicate_date"
+            ? "이미 해당 날짜의 일정이 있습니다"
+            : "일정 변경에 실패했습니다",
+        );
         return;
       }
-      toast.success("일정을 추가했습니다");
+      toast.success("여행 일정을 변경했습니다");
       setOpen(false);
       setDate("");
       router.refresh();
@@ -51,21 +57,20 @@ export default function AddDayButton({ tripId, tripStartDate, tripEndDate }: Pro
   if (!open) {
     return (
       <Button size="sm" variant="outline" onClick={() => setOpen(true)}>
-        + 일정 추가
+        일정 변경
       </Button>
     );
   }
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-wrap items-center gap-2">
+      {/* spec 041 — min/max 제거: 시작일 이전·종료일 이후 날짜도 추가 가능. */}
       <input
         type="date"
         value={date}
         onChange={(e) => setDate(e.target.value)}
-        min={minDate}
-        max={maxDate}
         required
-        className="rounded-md border border-border bg-background px-2 py-1 text-sm tabular-nums"
+        className="border-border bg-background rounded-md border px-2 py-1 text-sm tabular-nums"
       />
       <Button type="submit" size="sm" disabled={busy || !date}>
         추가

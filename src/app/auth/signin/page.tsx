@@ -13,7 +13,8 @@ import { GCAL_DISCUSSIONS_URL } from "@/lib/gcal/unregistered";
  * 계정이 동의 거부당할 때 도달한다. spec 021에서 특화 안내 블록을 별도로 노출.
  */
 const ERROR_MESSAGES: Record<string, string> = {
-  OAuthCallback: "로그인을 취소했습니다. 다시 시도하려면 아래 버튼을 눌러 주세요.",
+  OAuthCallback:
+    "로그인을 취소했습니다. 다시 시도하려면 아래 버튼을 눌러 주세요.",
   OAuthSignin: "로그인 요청을 처리할 수 없었습니다. 다시 시도해 주세요.",
   Verification: "인증 링크가 만료되었거나 이미 사용되었습니다.",
   Configuration:
@@ -30,7 +31,11 @@ function errorMessage(code: string | undefined): string | null {
 export default async function SignInPage({
   searchParams,
 }: {
-  searchParams: Promise<{ callbackUrl?: string; stale?: string; error?: string }>;
+  searchParams: Promise<{
+    callbackUrl?: string;
+    stale?: string;
+    error?: string;
+  }>;
 }) {
   const { callbackUrl, stale, error } = await searchParams;
   const redirectTo = callbackUrl || "/";
@@ -41,16 +46,17 @@ export default async function SignInPage({
     <div className="flex min-h-[60vh] items-center justify-center">
       <div className="w-full max-w-sm space-y-6 text-center">
         <div className="space-y-2">
-          <h1 className="text-xl font-semibold tracking-tight text-foreground">
+          <h1 className="text-foreground text-xl font-semibold tracking-tight">
             우리의 여행
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             로그인하고 여행 일정을 관리하세요
           </p>
         </div>
         {stale === "1" && (
           <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-left text-xs text-amber-900">
-            이전 세션이 유효하지 않아 자동으로 정리했습니다. 다시 로그인해 주세요.
+            이전 세션이 유효하지 않아 자동으로 정리했습니다. 다시 로그인해
+            주세요.
           </div>
         )}
         {errorNotice && (
@@ -59,7 +65,7 @@ export default async function SignInPage({
           </div>
         )}
         {isAccessDenied && (
-          <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-left text-xs text-amber-900 space-y-2">
+          <div className="space-y-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-left text-xs text-amber-900">
             <p className="font-medium text-amber-950">
               이 기능은 현재 개발자 등록 사용자에게만 제공됩니다.
             </p>
@@ -87,7 +93,7 @@ export default async function SignInPage({
         >
           <button
             type="submit"
-            className="w-full rounded-lg bg-foreground px-4 py-3 text-base font-medium text-background transition-colors hover:bg-foreground/90"
+            className="bg-foreground text-background hover:bg-foreground/90 w-full rounded-lg px-4 py-3 text-base font-medium transition-colors"
           >
             Google 계정으로 로그인
           </button>

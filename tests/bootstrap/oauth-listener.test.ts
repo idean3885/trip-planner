@@ -5,7 +5,8 @@
  * state/timeout/invalid_token 경로를 검증.
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
+
 import { runOAuthListener } from "../../scripts/bootstrap/oauth-listener.mjs";
 
 interface ListenerResult {

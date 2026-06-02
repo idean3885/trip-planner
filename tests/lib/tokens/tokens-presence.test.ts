@@ -4,9 +4,10 @@
  * 신규 페이지·컴포넌트가 임의 px 대신 본 토큰을 참조하도록 SSOT를 강제.
  * 임의 px이 작업 대상 코드에 잔존하지 않는지는 quickstart 회귀 라운드에서 grep으로 별도 확인.
  */
-import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+
+import { describe, expect, it } from "vitest";
 
 const REPO_ROOT = resolve(__dirname, "../../..");
 const TOKENS_JSON = resolve(REPO_ROOT, "design/tokens.json");

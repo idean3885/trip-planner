@@ -6,9 +6,10 @@
  */
 
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+
 import { getAuthUserId } from "@/lib/auth-helpers";
 import { userCanImportCalendar } from "@/lib/permissions/activity";
+import { prisma } from "@/lib/prisma";
 
 type Params = { params: Promise<{ id: string; draftId: string }> };
 
@@ -20,7 +21,8 @@ export async function DELETE(_request: Request, { params }: Params) {
     return NextResponse.json({ error: "invalid_ids" }, { status: 400 });
   }
   const userId = await getAuthUserId();
-  if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!userId)
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   if (!(await userCanImportCalendar(tripId, userId))) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }

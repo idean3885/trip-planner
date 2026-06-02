@@ -4,11 +4,12 @@
  * 진입 시 여행 기간 안에 오늘이 있으면 오늘, 없으면 여행 첫날(일정 0건이면
  * 오늘)을 선택한다. today 의존이라 기간을 today 상대로 구성해 검증한다.
  */
-import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
+
 import {
-  TripDetailLayout,
   computeInitialSelected,
+  TripDetailLayout,
 } from "@/components/trip/TripDetailLayout";
 
 vi.mock("next/navigation", () => ({
@@ -60,23 +61,25 @@ describe("TripDetailLayout 모바일 상단 (#684)", () => {
         initialActivities={{}}
         canEdit={false}
         syncCard={<div>동기화 카드</div>}
-        memberList={<div>동행자 목록</div>}
       />,
     );
   }
 
-  it("'자세히' 버튼은 Ellipsis 아이콘 없이 텍스트만 렌더한다", () => {
+  it("'캘린더 동기화' 버튼은 텍스트만 렌더한다 (spec 041)", () => {
     renderLayout();
-    const btn = screen.getByRole("button", { name: "자세히" });
+    const btn = screen.getByRole("button", { name: "캘린더 동기화" });
     expect(btn).toBeInTheDocument();
-    // Ellipsis(svg) 제거 — 버튼 안에 아이콘 노드가 없다.
     expect(btn.querySelector("svg")).toBeNull();
   });
 
-  it("'자세히' 클릭 시 여행 정보 Dialog 를 연다", async () => {
+  it("'캘린더 동기화' 클릭 시 동기화 Dialog 를 연다 (spec 041 — 동행자 분리)", async () => {
     renderLayout();
-    fireEvent.click(screen.getByRole("button", { name: "자세히" }));
-    expect(await screen.findByText("여행 정보")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "캘린더 동기화" }));
+    // 다이얼로그 본문은 동기화 카드(동행자 블록 없음). 데스크탑 분기에도 같은
+    // syncCard 가 DOM 에 있으므로 다이얼로그 범위로 한정해 확인한다.
+    const dialog = await screen.findByRole("dialog");
+    expect(within(dialog).getByText("동기화 카드")).toBeInTheDocument();
+    expect(within(dialog).queryByText("동행자 목록")).toBeNull();
   });
 
   // spec 037 — 단일 스크롤 + 캘린더 경계 1회 멈춤(GSAP ScrollTrigger). 경계 멈춤

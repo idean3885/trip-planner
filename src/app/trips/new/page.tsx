@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 /**
  * spec 029 v3.0.0 contract — 여행 생성 폼은 제목만 받는다. 기간은 첫 일정을
@@ -41,7 +41,7 @@ export default function NewTripPage() {
 
   return (
     <div className="space-y-6">
-      <nav className="flex items-center gap-2 text-sm text-muted-foreground">
+      <nav className="text-muted-foreground flex items-center gap-2 text-sm">
         <Link href="/" className="hover:text-foreground">
           홈
         </Link>
@@ -52,7 +52,7 @@ export default function NewTripPage() {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="mb-1 block text-sm font-medium text-foreground">
+          <label className="text-foreground mb-1 block text-sm font-medium">
             여행 제목
           </label>
           <input
@@ -63,7 +63,7 @@ export default function NewTripPage() {
             required
             className={inputClass}
           />
-          <p className="mt-2 text-xs text-muted-foreground">
+          <p className="text-muted-foreground mt-2 text-xs">
             기간은 첫 일정을 추가하면 자동으로 설정됩니다.
           </p>
         </div>
@@ -71,7 +71,7 @@ export default function NewTripPage() {
         <button
           type="submit"
           disabled={saving || !title.trim()}
-          className="w-full rounded-lg bg-foreground px-4 py-3 text-base font-medium text-background transition-colors hover:bg-foreground/90 disabled:opacity-50"
+          className="bg-foreground text-background hover:bg-foreground/90 w-full rounded-lg px-4 py-3 text-base font-medium transition-colors disabled:opacity-50"
         >
           {saving ? "생성 중..." : "여행 만들기"}
         </button>

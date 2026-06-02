@@ -3,11 +3,18 @@
  *
  * 대체 경로: /api/v2/trips/<id>/calendar* (공유 모델 기반).
  */
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 
-import { GET as linkGet, POST as linkPost, DELETE as linkDelete } from "@/app/api/trips/[id]/gcal/link/route";
-import { GET as syncGet, PATCH as syncPatch } from "@/app/api/trips/[id]/gcal/sync/route";
+import {
+  DELETE as linkDelete,
+  GET as linkGet,
+  POST as linkPost,
+} from "@/app/api/trips/[id]/gcal/link/route";
 import { GET as statusGet } from "@/app/api/trips/[id]/gcal/status/route";
+import {
+  GET as syncGet,
+  PATCH as syncPatch,
+} from "@/app/api/trips/[id]/gcal/sync/route";
 
 async function assertGone(res: Response) {
   expect(res.status).toBe(410);

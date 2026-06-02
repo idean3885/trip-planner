@@ -3,7 +3,7 @@
  * 6종 vocabulary로 정규화하는지 검증.
  */
 
-import { describe, it, expect, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 vi.mock("@/lib/prisma", () => ({ prisma: {} }));
 vi.mock("@/lib/gcal/client", () => ({ getCalendarClient: vi.fn() }));
@@ -28,14 +28,18 @@ describe("googleProvider.classifyError — 6종 vocabulary", () => {
   });
 
   it("403 일반 Forbidden → revoked (REVOKED last_error)", () => {
-    const err = { code: 403, message: "The user has not granted the app access" };
+    const err = {
+      code: 403,
+      message: "The user has not granted the app access",
+    };
     expect(googleProvider.classifyError(err)).toBe("revoked");
   });
 
   it("403 + Testing 모드 미등록 키워드 → unregistered_user", () => {
     const err = {
       code: 403,
-      message: "Error: access_denied — has not completed the verification process",
+      message:
+        "Error: access_denied — has not completed the verification process",
     };
     expect(googleProvider.classifyError(err)).toBe("unregistered_user");
   });

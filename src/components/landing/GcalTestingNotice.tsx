@@ -1,4 +1,5 @@
 import { AlertTriangle } from "lucide-react";
+
 import { GCAL_DISCUSSIONS_URL } from "@/lib/gcal/unregistered";
 
 /**
@@ -18,9 +19,10 @@ export default function GcalTestingNotice() {
             구글 캘린더 연동은 현재 개발자 등록 사용자에게만 제공됩니다
           </p>
           <p className="text-xs leading-relaxed">
-            본 앱은 아직 앱 심사 전 단계라 개발자가 직접 허용한 Google 계정만 캘린더 연동을
-            쓸 수 있습니다. 앱 내 일정 조회·편집은 누구나 정상 사용할 수 있으며, 캘린더
-            연동 등록을 원하시면 아래 링크로 요청해 주세요.
+            본 앱은 아직 앱 심사 전 단계라 개발자가 직접 허용한 Google 계정만
+            캘린더 연동을 쓸 수 있습니다. 앱 내 일정 조회·편집은 누구나 정상
+            사용할 수 있으며, 캘린더 연동 등록을 원하시면 아래 링크로 요청해
+            주세요.
           </p>
           <a
             href={GCAL_DISCUSSIONS_URL}

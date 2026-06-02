@@ -6,6 +6,7 @@
  */
 
 import type { Prisma } from "@prisma/client";
+
 import { prisma } from "@/lib/prisma";
 
 export interface DerivedPeriod {
@@ -57,7 +58,9 @@ export interface ResolvedPeriod {
  * contract 에서 명목 컬럼이 제거돼 fallback 자체가 사라졌다. 일정 0 건
  * trip 은 startDate/endDate 가 null 로 노출되고 UI 는 "일정 미정" 으로 분기.
  */
-export async function getResolvedPeriod(tripId: number): Promise<ResolvedPeriod> {
+export async function getResolvedPeriod(
+  tripId: number,
+): Promise<ResolvedPeriod> {
   const derived = await getDerivedPeriod(tripId);
   return {
     startDate: derived.startDate,

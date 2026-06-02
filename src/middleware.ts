@@ -1,5 +1,6 @@
-import NextAuth from "next-auth";
 import { NextResponse } from "next/server";
+import NextAuth from "next-auth";
+
 import authConfig from "./auth.config";
 
 const { auth } = NextAuth(authConfig);
@@ -44,9 +45,7 @@ export default auth((req) => {
   const isAuthRoute = pathname.startsWith("/auth");
   const isApiRoute = pathname.startsWith("/api/");
   const isPublicRoute =
-    pathname === "/" ||
-    pathname === "/about" ||
-    pathname.startsWith("/docs");
+    pathname === "/" || pathname === "/about" || pathname.startsWith("/docs");
 
   // API 라우트는 자체 인증 처리 (PAT Bearer 토큰 + 세션 병행, auth-helpers.ts)
   if (isApiRoute) return;
@@ -73,8 +72,8 @@ export default auth((req) => {
 
     // stale 세션 감지 — session-token이 남아있는데 auth가 false면 쿠키가 꼬인 상태.
     // 리디렉트 응답에서 세션·부수 쿠키를 함께 만료시켜 다음 로그인이 깔끔하게 시작되게 한다.
-    const staleSessionsPresent = STALE_SESSION_COOKIES.filter((n) =>
-      req.cookies?.has(n) ?? false
+    const staleSessionsPresent = STALE_SESSION_COOKIES.filter(
+      (n) => req.cookies?.has(n) ?? false,
     );
     if (staleSessionsPresent.length > 0) {
       signInUrl.searchParams.set("stale", "1");
@@ -82,8 +81,8 @@ export default auth((req) => {
     const res = NextResponse.redirect(signInUrl, 302);
     if (staleSessionsPresent.length > 0) {
       // 세션 쿠키 + 부수 쿠키(PKCE/state)도 함께 정리
-      const auxPresent = AUXILIARY_AUTH_COOKIES.filter((n) =>
-        req.cookies?.has(n) ?? false
+      const auxPresent = AUXILIARY_AUTH_COOKIES.filter(
+        (n) => req.cookies?.has(n) ?? false,
       );
       clearStaleCookies(res, [...staleSessionsPresent, ...auxPresent]);
     }

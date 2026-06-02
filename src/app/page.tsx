@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+
 import { auth } from "@/auth";
-import { projectMeta } from "@/lib/project-meta";
 import LandingPage from "@/components/landing/LandingPage";
+import { projectMeta } from "@/lib/project-meta";
 
 export const metadata: Metadata = {
   title: projectMeta.name,

@@ -5,8 +5,9 @@
  *   미연결(linked:false) + 비-주인(HOST/GUEST) → 트리거 버튼 + 다이얼로그(설명문 + "닫기"만).
  *   공유 캘린더 조작 버튼(추가/다시 반영/해제)은 렌더되지 않아야 한다(FR-001, FR-002).
  */
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
 import GCalLinkPanel from "@/components/GCalLinkPanel";
 
 describe("GCalLinkPanel — spec 020 미연결 비-주인 UI", () => {
@@ -15,12 +16,13 @@ describe("GCalLinkPanel — spec 020 미연결 비-주인 UI", () => {
     // status API가 linked:false를 반환하도록 fetch mock.
     vi.stubGlobal(
       "fetch",
-      vi.fn(async () =>
-        new Response(JSON.stringify({ linked: false, scopeGranted: false }), {
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-        })
-      )
+      vi.fn(
+        async () =>
+          new Response(JSON.stringify({ linked: false, scopeGranted: false }), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          }),
+      ),
     );
   });
 
@@ -37,19 +39,27 @@ describe("GCalLinkPanel — spec 020 미연결 비-주인 UI", () => {
     await renderTrigger("HOST");
 
     // 공유 캘린더 조작 버튼이 활성 DOM에 없음(다이얼로그 열기 전 상태).
-    expect(screen.queryByRole("button", { name: "내 구글 캘린더에 추가" })).toBeNull();
+    expect(
+      screen.queryByRole("button", { name: "내 구글 캘린더에 추가" }),
+    ).toBeNull();
     expect(screen.queryByRole("button", { name: "다시 반영하기" })).toBeNull();
     expect(screen.queryByRole("button", { name: "연결 해제" })).toBeNull();
-    expect(screen.queryByRole("button", { name: "공유 캘린더 연결" })).toBeNull();
+    expect(
+      screen.queryByRole("button", { name: "공유 캘린더 연결" }),
+    ).toBeNull();
   });
 
   it("게스트 미연결: 트리거 존재 + 조작 버튼 없음", async () => {
     await renderTrigger("GUEST");
 
-    expect(screen.queryByRole("button", { name: "내 구글 캘린더에 추가" })).toBeNull();
+    expect(
+      screen.queryByRole("button", { name: "내 구글 캘린더에 추가" }),
+    ).toBeNull();
     expect(screen.queryByRole("button", { name: "다시 반영하기" })).toBeNull();
     expect(screen.queryByRole("button", { name: "연결 해제" })).toBeNull();
-    expect(screen.queryByRole("button", { name: "공유 캘린더 연결" })).toBeNull();
+    expect(
+      screen.queryByRole("button", { name: "공유 캘린더 연결" }),
+    ).toBeNull();
   });
 
   it("주인 미연결: 단일 연결 트리거, 레거시 업그레이드 분기 없음", async () => {
@@ -67,22 +77,24 @@ describe("GCalLinkPanel — spec 021 Testing 모드 미등록 UI", () => {
   });
 
   async function renderWithUnregisteredError(role: "OWNER" | "HOST" | "GUEST") {
-    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
-      const url = typeof input === "string" ? input : input.toString();
-      // 초기 status 조회는 v2 GET 엔드포인트(#410). GET 메서드만 매칭.
-      const method = init?.method?.toUpperCase() ?? "GET";
-      if (method === "GET" && url.match(/\/api\/v2\/trips\/\d+\/calendar$/)) {
+    const fetchMock = vi.fn(
+      async (input: RequestInfo | URL, init?: RequestInit) => {
+        const url = typeof input === "string" ? input : input.toString();
+        // 초기 status 조회는 v2 GET 엔드포인트(#410). GET 메서드만 매칭.
+        const method = init?.method?.toUpperCase() ?? "GET";
+        if (method === "GET" && url.match(/\/api\/v2\/trips\/\d+\/calendar$/)) {
+          return new Response(
+            JSON.stringify({ linked: false, scopeGranted: false }),
+            { status: 200, headers: { "Content-Type": "application/json" } },
+          );
+        }
+        // 첫 번째 조작 API 호출에 UNREGISTERED 응답.
         return new Response(
-          JSON.stringify({ linked: false, scopeGranted: false }),
-          { status: 200, headers: { "Content-Type": "application/json" } }
+          JSON.stringify({ error: "unregistered", reason: "unregistered" }),
+          { status: 403, headers: { "Content-Type": "application/json" } },
         );
-      }
-      // 첫 번째 조작 API 호출에 UNREGISTERED 응답.
-      return new Response(
-        JSON.stringify({ error: "unregistered", reason: "unregistered" }),
-        { status: 403, headers: { "Content-Type": "application/json" } }
-      );
-    });
+      },
+    );
     vi.stubGlobal("fetch", fetchMock);
 
     render(<GCalLinkPanel tripId={5} role={role} />);
@@ -105,7 +117,9 @@ describe("GCalLinkPanel — spec 021 Testing 모드 미등록 UI", () => {
       );
       fireEvent.click(cta);
     } else {
-      const trigger = await screen.findByRole("button", { name: /구글 캘린더 \(공유\)/ });
+      const trigger = await screen.findByRole("button", {
+        name: /구글 캘린더 \(공유\)/,
+      });
       // 비-주인은 이 시점에서 실제 API 호출을 하지 않으므로 테스트를 위해 수동으로
       // subscribe 시나리오를 흉내내기 어렵다. 본 테스트는 OWNER 경로로 집중한다.
       fireEvent.click(trigger);
@@ -121,7 +135,9 @@ describe("GCalLinkPanel — spec 021 Testing 모드 미등록 UI", () => {
 
     // 기존 미연결 분기의 조작 버튼이 더 이상 DOM에 없음.
     expect(screen.queryByRole("button", { name: "다시 반영하기" })).toBeNull();
-    expect(screen.queryByText(/주인이 공유 캘린더를 아직 연결하지 않았습니다/)).toBeNull();
+    expect(
+      screen.queryByText(/주인이 공유 캘린더를 아직 연결하지 않았습니다/),
+    ).toBeNull();
   });
 });
 
@@ -134,24 +150,30 @@ describe("GCalLinkPanel — #494 비-주인 REVOKED UI", () => {
     vi.restoreAllMocks();
     vi.stubGlobal(
       "fetch",
-      vi.fn(async () =>
-        new Response(
-          JSON.stringify({
-            linked: true,
-            link: {
-              tripId: 5,
-              calendarId: "abc@group.calendar.google.com",
-              calendarName: "테스트 (trip-planner)",
-              ownerId: "owner-id-xyz",
-              lastSyncedAt: "2026-05-26T08:00:00.000Z",
-              lastError: "REVOKED",
-              skippedCount: 0,
-            },
-            mySubscription: { tripId: 5, status: "ADDED", accessRole: null, lastError: null },
-          }),
-          { status: 200, headers: { "Content-Type": "application/json" } }
-        )
-      )
+      vi.fn(
+        async () =>
+          new Response(
+            JSON.stringify({
+              linked: true,
+              link: {
+                tripId: 5,
+                calendarId: "abc@group.calendar.google.com",
+                calendarName: "테스트 (trip-planner)",
+                ownerId: "owner-id-xyz",
+                lastSyncedAt: "2026-05-26T08:00:00.000Z",
+                lastError: "REVOKED",
+                skippedCount: 0,
+              },
+              mySubscription: {
+                tripId: 5,
+                status: "ADDED",
+                accessRole: null,
+                lastError: null,
+              },
+            }),
+            { status: 200, headers: { "Content-Type": "application/json" } },
+          ),
+      ),
     );
   });
 
@@ -164,8 +186,12 @@ describe("GCalLinkPanel — #494 비-주인 REVOKED UI", () => {
     );
     expect(trigger).toBeInTheDocument();
     // 일반 라벨은 더 이상 활성 트리거에 안 보임.
-    expect(screen.queryByRole("button", { name: "구글 캘린더 추가됨" })).toBeNull();
-    expect(screen.queryByRole("button", { name: "내 구글 캘린더에 추가" })).toBeNull();
+    expect(
+      screen.queryByRole("button", { name: "구글 캘린더 추가됨" }),
+    ).toBeNull();
+    expect(
+      screen.queryByRole("button", { name: "내 구글 캘린더에 추가" }),
+    ).toBeNull();
   });
 
   it("GUEST + REVOKED: 트리거 라벨이 '주인 권한 만료'로 전환", async () => {

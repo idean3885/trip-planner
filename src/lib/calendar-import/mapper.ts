@@ -5,7 +5,8 @@
  * 옮긴다. activity category, hotel·attraction 참조, reservation status는 사용자가 승격 단계에서 입력.
  */
 
-import type { Prisma, CalendarProviderId } from "@prisma/client";
+import type { CalendarProviderId, Prisma } from "@prisma/client";
+
 import type { ExternalEvent } from "./types";
 
 export interface MapToDraftInput {

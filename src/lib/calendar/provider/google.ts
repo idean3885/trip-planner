@@ -9,18 +9,15 @@
  * 본 메서드들은 라우트 권한 검증을 통과한 호출만 받는다(권한 재검증 안 함).
  */
 
-import { prisma } from "@/lib/prisma";
+import { deleteAcl, upsertAcl } from "@/lib/gcal/acl";
+import { buildConsentRedirectUrl, hasCalendarScope } from "@/lib/gcal/auth";
 import { getCalendarClient } from "@/lib/gcal/client";
-import { hasCalendarScope, buildConsentRedirectUrl } from "@/lib/gcal/auth";
-import {
-  upsertAcl,
-  deleteAcl,
-} from "@/lib/gcal/acl";
 import {
   classifyError as classifyGCalError,
   isPreconditionFailed,
   isUnregisteredError,
 } from "@/lib/gcal/errors";
+import { prisma } from "@/lib/prisma";
 
 import type {
   CalendarErrorCode,
@@ -49,7 +46,10 @@ export const googleProvider: CalendarProvider = {
     return hasCalendarScope(userId);
   },
 
-  async getReauthUrl(_userId: string, returnTo: string): Promise<string | null> {
+  async getReauthUrl(
+    _userId: string,
+    returnTo: string,
+  ): Promise<string | null> {
     return buildConsentRedirectUrl(returnTo);
   },
 
@@ -121,7 +121,9 @@ export const googleProvider: CalendarProvider = {
       role: args.role,
     });
     if (!result.ok) {
-      throw new Error(`upsertAcl failed: ${result.reason ?? "unknown"} status=${result.status ?? "?"}`);
+      throw new Error(
+        `upsertAcl failed: ${result.reason ?? "unknown"} status=${result.status ?? "?"}`,
+      );
     }
   },
 
@@ -165,7 +167,9 @@ export const googleProvider: CalendarProvider = {
       email: args.memberEmail,
     });
     if (!result.ok) {
-      throw new Error(`deleteAcl failed: ${result.reason ?? "unknown"} status=${result.status ?? "?"}`);
+      throw new Error(
+        `deleteAcl failed: ${result.reason ?? "unknown"} status=${result.status ?? "?"}`,
+      );
     }
     return { revoked: true };
   },
@@ -177,7 +181,8 @@ export const googleProvider: CalendarProvider = {
     const { reason, lastError } = classifyGCalError(err);
     if (lastError === "REVOKED") return "revoked";
     if (reason === "forbidden") return "auth_invalid";
-    if (reason === "rate_limited" || reason === "network") return "transient_failure";
+    if (reason === "rate_limited" || reason === "network")
+      return "transient_failure";
     return null;
   },
 };

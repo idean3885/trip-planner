@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 const BASE = process.env.E2E_BASE_URL ?? "https://trip.idean.me";
 const PAT = process.env.TRIP_PAT!;
@@ -85,7 +85,12 @@ test.describe("Activity CRUD E2E", () => {
     // 두 번째 활동 생성
     const res2 = await request.post(`${API}/activities`, {
       headers: headers(),
-      data: { category: "DINING", title: "E2E 식사", startTime: "13:00", endTime: "14:00" },
+      data: {
+        category: "DINING",
+        title: "E2E 식사",
+        startTime: "13:00",
+        endTime: "14:00",
+      },
     });
     const second = await res2.json();
 
@@ -98,13 +103,17 @@ test.describe("Activity CRUD E2E", () => {
     expect(body.ok).toBe(true);
 
     // 순서 확인
-    const listRes = await request.get(`${API}/activities`, { headers: headers() });
+    const listRes = await request.get(`${API}/activities`, {
+      headers: headers(),
+    });
     const list = await listRes.json();
     expect(list[0].id).toBe(second.id);
     expect(list[1].id).toBe(activityId);
 
     // 두 번째 활동 정리
-    await request.delete(`${API}/activities/${second.id}`, { headers: headers() });
+    await request.delete(`${API}/activities/${second.id}`, {
+      headers: headers(),
+    });
   });
 
   test("DELETE /activities/{id} — 활동 삭제", async ({ request }) => {
@@ -116,13 +125,17 @@ test.describe("Activity CRUD E2E", () => {
     expect(body.ok).toBe(true);
 
     // 삭제 확인
-    const listRes = await request.get(`${API}/activities`, { headers: headers() });
+    const listRes = await request.get(`${API}/activities`, {
+      headers: headers(),
+    });
     const list = await listRes.json();
     const found = list.find((a: { id: number }) => a.id === activityId);
     expect(found).toBeFalsy();
   });
 
-  test("GET /days/{dayId} — content 필드로 마크다운 확인", async ({ request }) => {
+  test("GET /days/{dayId} — content 필드로 마크다운 확인", async ({
+    request,
+  }) => {
     const res = await request.get(API, { headers: headers() });
     if (res.status() === 405) {
       test.skip(true, "GET /days/{dayId} not deployed yet");

@@ -12,9 +12,10 @@
  * - Day 상세 페이지(/trips/[id]/day/[dayId])는 redirect 로 축소.
  * - DayList 제거.
  */
-import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+
+import { describe, expect, it } from "vitest";
 
 const REPO_ROOT = resolve(__dirname, "../../..");
 const PAGE_PATH = resolve(REPO_ROOT, "src/app/trips/[id]/page.tsx");
@@ -22,7 +23,10 @@ const LAYOUT_COMPONENT_PATH = resolve(
   REPO_ROOT,
   "src/components/trip/TripDetailLayout.tsx",
 );
-const DAY_PAGE_PATH = resolve(REPO_ROOT, "src/app/trips/[id]/day/[dayId]/page.tsx");
+const DAY_PAGE_PATH = resolve(
+  REPO_ROOT,
+  "src/app/trips/[id]/day/[dayId]/page.tsx",
+);
 const GLOBAL_LAYOUT_PATH = resolve(REPO_ROOT, "src/app/layout.tsx");
 
 const pageSrc = readFileSync(PAGE_PATH, "utf8");
@@ -35,11 +39,12 @@ describe("trip 상세 레이아웃 (spec 032 — 캘린더 중심 단일 화면)
     expect(pageSrc).not.toMatch(/from "\.\/SidePanel"/);
   });
 
-  it("page.tsx 는 동기화 카드·동행자를 직접 만들어 TripDetailLayout 에 prop 으로 넘긴다", () => {
+  it("page.tsx 는 동기화 카드는 TripDetailLayout 에, 동행자는 InviteButton 에 넘긴다 (spec 041)", () => {
     expect(pageSrc).toContain("CalendarSyncEntryCard");
     expect(pageSrc).toContain("MemberList");
     expect(pageSrc).toMatch(/<TripDetailLayout[\s\S]+syncCard=/);
-    expect(pageSrc).toMatch(/<TripDetailLayout[\s\S]+memberList=/);
+    // spec 041 — 동행자 목록은 헤더 "동행자 초대" 다이얼로그(InviteButton)로 이동.
+    expect(pageSrc).toMatch(/<InviteButton[\s\S]+memberList=/);
   });
 
   it("데스크탑 2분할 grid 는 TripDetailLayout 으로 이동했다 — lg:grid-cols-2", () => {
@@ -80,7 +85,8 @@ describe("trip 상세 레이아웃 (spec 032 — 캘린더 중심 단일 화면)
 
   it("헤더 로고는 좁은 화면에서 짓눌리지 않게 shrink-0 + whitespace-nowrap 을 쓴다(#641)", () => {
     // 13 mini(375px) 에서 로고가 한 글자씩 세로로 접히던 회귀 가드.
-    expect(globalLayoutSrc).toMatch(/shrink-0 whitespace-nowrap/);
+    // prettier-plugin-tailwindcss 정렬로 사이에 다른 클래스가 올 수 있어 인접 가정을 푼다 (spec 038)
+    expect(globalLayoutSrc).toMatch(/shrink-0[^"]*whitespace-nowrap/);
   });
 
   it("AuthButton 이메일은 sm 미만에서 숨겨 헤더 가로 넘침을 막는다(#641)", () => {
@@ -91,19 +97,23 @@ describe("trip 상세 레이아웃 (spec 032 — 캘린더 중심 단일 화면)
     expect(authSrc).toMatch(/hidden[^"]*sm:inline-block/);
   });
 
-  it("모바일 '자세히'는 펼침이 아니라 Dialog + TripDetailExtras 로 연다(#645)", () => {
-    expect(layoutComponentSrc).toContain("TripDetailExtras");
+  it("모바일은 '캘린더 동기화' Dialog 로 동기화 카드를 연다 (spec 041 — 동행자 분리)", () => {
+    expect(layoutComponentSrc).toContain("캘린더 동기화");
     expect(layoutComponentSrc).toContain("DialogTrigger");
     expect(layoutComponentSrc).toContain("DialogContent");
+    // 동행자(memberList)는 TripDetailLayout 에서 분리됨 — InviteButton 다이얼로그로.
+    expect(layoutComponentSrc).not.toContain("TripDetailExtras");
   });
 
-  it("데스크탑 월간 캘린더는 셀 크기를 키워 폭을 더 채운다(#645)", () => {
+  it("데스크탑 월간 캘린더는 가로폭을 채운다(spec 040 — 셀 고정폭 → grow)", () => {
     const calSrc = readFileSync(
       resolve(REPO_ROOT, "src/components/trip/CalendarView.tsx"),
       "utf8",
     );
-    // desktopFull 셀 크기가 기존 10 보다 큰 14 로 상향.
-    expect(calSrc).toMatch(/desktopFull &&[^;]*--cell-size:--spacing\(14\)/);
+    // spec 040 #704 — 셀 고정 크기(--cell-size:14) 대신 w-full + day flex-1 로
+    // 가로 100% 채움(세로는 aspect-square 로 자동). 상한 토큰을 더는 쓰지 않는다.
+    expect(calSrc).toMatch(/desktopFull &&\s*"mx-auto w-full"/);
+    expect(calSrc).not.toMatch(/--cell-size:--spacing\(14\)/);
   });
 
   it("캘린더에 세로 스크롤을 막는 touch-action 제약이 없다(#649 치명 회귀 제거)", () => {

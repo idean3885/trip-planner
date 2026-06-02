@@ -25,9 +25,9 @@
  *  TRIP_BOOTSTRAP_TIMEOUT_SEC — 기본 300.
  */
 
-import http from "node:http";
-import { randomBytes } from "node:crypto";
 import { spawn } from "node:child_process";
+import { randomBytes } from "node:crypto";
+import http from "node:http";
 
 const BASE_URL = process.env.TRIP_BOOTSTRAP_BASE_URL ?? "https://trip.idean.me";
 const TIMEOUT_SEC = Number.parseInt(
@@ -41,10 +41,19 @@ function generateState() {
 
 function openBrowser(url) {
   const platform = process.platform;
-  const cmd = platform === "darwin" ? "open" : platform === "win32" ? "start" : "xdg-open";
+  const cmd =
+    platform === "darwin"
+      ? "open"
+      : platform === "win32"
+        ? "start"
+        : "xdg-open";
   // 비차단 spawn. 실패 시 stderr 출력만 하고 listener 는 계속 대기.
   try {
-    spawn(cmd, [url], { stdio: "ignore", detached: true, shell: platform === "win32" }).unref();
+    spawn(cmd, [url], {
+      stdio: "ignore",
+      detached: true,
+      shell: platform === "win32",
+    }).unref();
   } catch (e) {
     process.stderr.write(
       `[bootstrap] 자동 브라우저 실행 실패: ${e.message}. 아래 URL 을 수동으로 열어주세요.\n`,
@@ -111,7 +120,9 @@ export async function runOAuthListener({
     server.listen(0, "127.0.0.1", () => {
       const port = server.address().port;
       const target = `${baseUrl}/bootstrap?port=${port}&state=${state}`;
-      process.stderr.write(`[bootstrap] 브라우저에서 다음 URL 로 인증을 진행해 주세요:\n  ${target}\n`);
+      process.stderr.write(
+        `[bootstrap] 브라우저에서 다음 URL 로 인증을 진행해 주세요:\n  ${target}\n`,
+      );
       open(target);
       timer = setTimeout(() => {
         cleanup();

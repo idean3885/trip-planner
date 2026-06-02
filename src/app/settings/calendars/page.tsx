@@ -9,11 +9,12 @@
  * OWNER 전용)에서 처리한다.
  */
 
-import { redirect } from "next/navigation";
 import Link from "next/link";
+import { redirect } from "next/navigation";
+
 import { auth } from "@/auth";
-import { prisma } from "@/lib/prisma";
 import AppleConnectWizard from "@/components/calendar/AppleConnectWizard";
+import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
@@ -30,7 +31,7 @@ export default async function CalendarsSettingsPage() {
 
   return (
     <main className="container mx-auto space-y-8 py-8">
-      <nav className="flex items-center gap-2 text-sm text-muted-foreground">
+      <nav className="text-muted-foreground flex items-center gap-2 text-sm">
         <Link href="/" className="hover:text-foreground">
           홈
         </Link>
@@ -44,7 +45,7 @@ export default async function CalendarsSettingsPage() {
 
       <header className="space-y-2">
         <h1 className="text-2xl font-semibold tracking-tight">외부 캘린더</h1>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-muted-foreground text-sm">
           외부 캘린더 자격증명을 등록·갱신합니다. trip별 공유 캘린더 생성은 trip
           상세 화면에서 별도로 진행합니다.
         </p>
@@ -57,15 +58,18 @@ export default async function CalendarsSettingsPage() {
             <p>
               <span className="font-medium">{cred.appleId}</span> 등록됨
             </p>
-            <p className="text-xs text-muted-foreground">
-              마지막 갱신: {new Date(cred.updatedAt).toLocaleDateString("ko-KR")}
+            <p className="text-muted-foreground text-xs">
+              마지막 갱신:{" "}
+              {new Date(cred.updatedAt).toLocaleDateString("ko-KR")}
             </p>
-            <p className="mt-2 text-xs text-muted-foreground">
+            <p className="text-muted-foreground mt-2 text-xs">
               자격증명이 만료됐거나 변경되었다면 아래 양식으로 다시 등록하세요.
             </p>
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground">아직 등록된 자격증명이 없습니다.</p>
+          <p className="text-muted-foreground text-sm">
+            아직 등록된 자격증명이 없습니다.
+          </p>
         )}
 
         {/* 재등록 편의로 이미 등록된 Apple ID 만 prefill. 로그인 이메일은 채우지

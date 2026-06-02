@@ -5,11 +5,12 @@
  * 시) "일정 추가" 버튼을 보인다. 빈 날짜에서 추가하면 POST /days 로 Day 를
  * 생성하고 onDayCreated 콜백을 호출한다.
  */
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import type { ActivityCategory } from "@prisma/client";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
 import { DayActivitiesPane } from "@/components/trip/DayActivitiesPane";
 import { formatCalendarDate } from "@/lib/date-utils";
-import type { ActivityCategory } from "@prisma/client";
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ refresh: vi.fn() }),
@@ -39,7 +40,9 @@ describe("DayActivitiesPane", () => {
         onDayCreated={vi.fn()}
       />,
     );
-    expect(screen.getByText("이 날짜에 등록된 일정이 없습니다.")).toBeInTheDocument();
+    expect(
+      screen.getByText("이 날짜에 등록된 일정이 없습니다."),
+    ).toBeInTheDocument();
   });
 
   it("day 가 있으면 ActivityList 로 활동을 보여준다", () => {
@@ -81,7 +84,9 @@ describe("DayActivitiesPane", () => {
         onDayCreated={vi.fn()}
       />,
     );
-    expect(screen.queryByRole("button", { name: /일정 추가/ })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /일정 추가/ }),
+    ).not.toBeInTheDocument();
   });
 
   it("빈 날짜에서 추가하면 POST /days 후 onDayCreated 를 호출한다", async () => {
@@ -101,7 +106,9 @@ describe("DayActivitiesPane", () => {
       />,
     );
     fireEvent.click(screen.getByRole("button", { name: /일정 추가/ }));
-    await waitFor(() => expect(onDayCreated).toHaveBeenCalledWith({ id: 42, date: "2026-06-09" }));
+    await waitFor(() =>
+      expect(onDayCreated).toHaveBeenCalledWith({ id: 42, date: "2026-06-09" }),
+    );
     expect(mockFetch).toHaveBeenCalledWith(
       "/api/trips/1/days",
       expect.objectContaining({ method: "POST" }),

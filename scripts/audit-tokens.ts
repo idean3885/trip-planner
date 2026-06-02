@@ -8,8 +8,8 @@
 //   0 — 고아·그림자 토큰 0건
 //   2 — 정합 위반 발견
 
-import { readFileSync, readdirSync, statSync } from "node:fs";
-import { resolve, dirname, join } from "node:path";
+import { readdirSync, readFileSync, statSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
@@ -27,7 +27,11 @@ function isLeaf(node: unknown): node is { $value: unknown } {
   return typeof node === "object" && node !== null && "$value" in node;
 }
 
-function flatten(node: unknown, prefix: string[], out: Record<string, string>): void {
+function flatten(
+  node: unknown,
+  prefix: string[],
+  out: Record<string, string>,
+): void {
   if (isLeaf(node)) {
     out[prefix.join("-")] = String(node.$value);
     return;
@@ -55,7 +59,9 @@ function readThemeNames(): Set<string> {
   const beginIdx = css.indexOf(BEGIN_MARKER);
   const endIdx = css.indexOf(END_MARKER);
   if (beginIdx === -1 || endIdx === -1) {
-    console.error(`ERROR: BEGIN:tokens/END:tokens 마커를 찾지 못함 (${CSS_PATH})`);
+    console.error(
+      `ERROR: BEGIN:tokens/END:tokens 마커를 찾지 못함 (${CSS_PATH})`,
+    );
     process.exit(2);
   }
   const block = css.slice(beginIdx, endIdx);
@@ -128,7 +134,7 @@ function main(): void {
     console.log("✓ 정본 ↔ @theme 결정적 일치 (양방향 diff 0)");
     if (definitive.size === 0) {
       console.log(
-        "  ℹ 정본이 비어 있음 — Phase 2 중성 상태(디자이너 합류 전). 예상된 상태."
+        "  ℹ 정본이 비어 있음 — Phase 2 중성 상태(디자이너 합류 전). 예상된 상태.",
       );
     }
     process.exit(0);
@@ -136,7 +142,7 @@ function main(): void {
 
   if (missingInTheme.length > 0) {
     console.error(
-      `FAIL: 정본에 있으나 @theme에 없는 토큰 ${missingInTheme.length}건 (빌드 누락)`
+      `FAIL: 정본에 있으나 @theme에 없는 토큰 ${missingInTheme.length}건 (빌드 누락)`,
     );
     for (const n of missingInTheme) console.error(`  - ${n}`);
     console.error("→ `npm run tokens:build` 재실행 후 커밋");
@@ -144,7 +150,7 @@ function main(): void {
 
   if (shadowInTheme.length > 0) {
     console.error(
-      `FAIL: @theme에 있으나 정본에 없는 토큰 ${shadowInTheme.length}건 (수동 편집 흔적)`
+      `FAIL: @theme에 있으나 정본에 없는 토큰 ${shadowInTheme.length}건 (수동 편집 흔적)`,
     );
     for (const n of shadowInTheme) console.error(`  - ${n}`);
     console.error("→ design/tokens.json에 추가하거나 @theme에서 제거");

@@ -3,8 +3,9 @@
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface DayEditorProps {
   tripId: number;
@@ -50,7 +51,10 @@ export default function DayEditor({
   if (isEditing) {
     return (
       <div className="space-y-3">
-        <Tabs value={tab} onValueChange={(v) => setTab(v as "edit" | "preview")}>
+        <Tabs
+          value={tab}
+          onValueChange={(v) => setTab(v as "edit" | "preview")}
+        >
           <div className="flex items-center justify-between gap-2">
             <TabsList>
               <TabsTrigger value="edit">편집</TabsTrigger>
@@ -78,11 +82,11 @@ export default function DayEditor({
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              className="w-full min-h-[400px] rounded-xl border border-border bg-background p-4 font-mono text-sm leading-relaxed outline-none ring-1 ring-transparent transition-colors focus:ring-ring"
+              className="border-border bg-background focus:ring-ring min-h-[400px] w-full rounded-xl border p-4 font-mono text-sm leading-relaxed ring-1 ring-transparent transition-colors outline-none"
             />
           </TabsContent>
           <TabsContent value="preview">
-            <div className="min-h-[400px] rounded-xl border border-border bg-background p-4">
+            <div className="border-border bg-background min-h-[400px] rounded-xl border p-4">
               <div className="prose prose-sm max-w-none">
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
                   {content}

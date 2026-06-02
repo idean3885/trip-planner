@@ -1,7 +1,9 @@
-import Link from "next/link";
 import { ArrowRight, BookOpen } from "lucide-react";
+import Link from "next/link";
+
 import { Button } from "@/components/ui/button";
 import { projectMeta } from "@/lib/project-meta";
+
 import GithubIcon from "./GithubIcon";
 
 export default function BottomCta() {
@@ -9,12 +11,12 @@ export default function BottomCta() {
     <section aria-labelledby="cta-heading" className="py-8">
       <h2
         id="cta-heading"
-        className="text-xs font-medium uppercase tracking-wider text-muted-foreground"
+        className="text-muted-foreground text-xs font-medium tracking-wider uppercase"
       >
         시작해 볼까요
       </h2>
       <div className="mt-4 space-y-3">
-        <p className="text-sm text-muted-foreground">
+        <p className="text-muted-foreground text-sm">
           Google 계정으로 1초 로그인하면 바로 여행을 만들 수 있습니다. 코드를
           살펴보고 싶다면 저장소와 기술 문서가 함께 열려 있습니다.
         </p>

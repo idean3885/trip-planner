@@ -9,6 +9,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
+
 import { auth } from "@/auth";
 import { connectAppleCalendar } from "@/lib/calendar/service";
 
@@ -25,6 +26,9 @@ export async function POST(
     return NextResponse.json({ error: "bad_trip_id" }, { status: 400 });
   }
 
-  const result = await connectAppleCalendar({ userId: session.user.id, tripId });
+  const result = await connectAppleCalendar({
+    userId: session.user.id,
+    tripId,
+  });
   return NextResponse.json(result.body, { status: result.status });
 }

@@ -1,6 +1,8 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
-vi.mock("@/auth.config", () => ({ default: { providers: [], pages: { signIn: "/auth/signin" } } }));
+vi.mock("@/auth.config", () => ({
+  default: { providers: [], pages: { signIn: "/auth/signin" } },
+}));
 
 // next-auth wrapper: make `auth(handler)` return the handler as-is so we can invoke it directly.
 vi.mock("next-auth", () => ({
@@ -16,7 +18,11 @@ interface FakeCookies {
 }
 type FakeReq = { auth: unknown; nextUrl: URL; cookies?: FakeCookies };
 
-function makeReq(url: string, loggedIn: boolean, cookieNames: string[] = []): FakeReq {
+function makeReq(
+  url: string,
+  loggedIn: boolean,
+  cookieNames: string[] = [],
+): FakeReq {
   const set = new Set(cookieNames);
   return {
     auth: loggedIn ? { user: { id: "u1" } } : null,
@@ -27,18 +33,27 @@ function makeReq(url: string, loggedIn: boolean, cookieNames: string[] = []): Fa
 
 describe("middleware", () => {
   it("passes API routes through (no redirect)", () => {
-    const res = middleware(makeReq("https://x.test/api/trips", false) as never, {} as never);
+    const res = middleware(
+      makeReq("https://x.test/api/trips", false) as never,
+      {} as never,
+    );
     expect(res).toBeUndefined();
   });
 
   it("redirects logged-in users away from /auth pages to /trips", () => {
-    const res = middleware(makeReq("https://x.test/auth/signin", true) as never, {} as never) as Response;
+    const res = middleware(
+      makeReq("https://x.test/auth/signin", true) as never,
+      {} as never,
+    ) as Response;
     expect(res.status).toBe(302);
     expect(res.headers.get("location")).toBe("https://x.test/trips");
   });
 
   it("allows non-logged-in users on /auth pages", () => {
-    const res = middleware(makeReq("https://x.test/auth/signin", false) as never, {} as never);
+    const res = middleware(
+      makeReq("https://x.test/auth/signin", false) as never,
+      {} as never,
+    );
     expect(res).toBeUndefined();
   });
 
@@ -50,7 +65,9 @@ describe("middleware", () => {
     expect(res.status).toBe(302);
     const loc = new URL(res.headers.get("location") ?? "");
     expect(loc.pathname).toBe("/auth/signin");
-    expect(loc.searchParams.get("callbackUrl")).toBe("/invite/abc.def.ghi?ref=email");
+    expect(loc.searchParams.get("callbackUrl")).toBe(
+      "/invite/abc.def.ghi?ref=email",
+    );
   });
 
   it("redirects non-logged-in users from protected routes with callbackUrl", () => {
@@ -64,12 +81,18 @@ describe("middleware", () => {
   });
 
   it("allows non-logged-in users on root (landing is public)", () => {
-    const res = middleware(makeReq("https://x.test/", false) as never, {} as never);
+    const res = middleware(
+      makeReq("https://x.test/", false) as never,
+      {} as never,
+    );
     expect(res).toBeUndefined();
   });
 
   it("allows logged-in users on root (page.tsx handles /trips redirect)", () => {
-    const res = middleware(makeReq("https://x.test/", true) as never, {} as never);
+    const res = middleware(
+      makeReq("https://x.test/", true) as never,
+      {} as never,
+    );
     expect(res).toBeUndefined();
   });
 
@@ -87,7 +110,9 @@ describe("middleware", () => {
     expect(loc.searchParams.get("stale")).toBe("1");
 
     const setCookies = res.headers.getSetCookie?.() ?? [];
-    expect(setCookies.some((c) => c.startsWith("__Secure-authjs.session-token=;"))).toBe(true);
+    expect(
+      setCookies.some((c) => c.startsWith("__Secure-authjs.session-token=;")),
+    ).toBe(true);
     expect(setCookies.some((c) => c.includes("Max-Age=0"))).toBe(true);
   });
 
@@ -101,7 +126,14 @@ describe("middleware", () => {
   });
 
   it("allows /about and /docs as public routes", () => {
-    expect(middleware(makeReq("https://x.test/about", false) as never, {} as never)).toBeUndefined();
-    expect(middleware(makeReq("https://x.test/docs/api", false) as never, {} as never)).toBeUndefined();
+    expect(
+      middleware(makeReq("https://x.test/about", false) as never, {} as never),
+    ).toBeUndefined();
+    expect(
+      middleware(
+        makeReq("https://x.test/docs/api", false) as never,
+        {} as never,
+      ),
+    ).toBeUndefined();
   });
 });

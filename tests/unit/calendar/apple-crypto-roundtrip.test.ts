@@ -5,13 +5,14 @@
  * 잘못된 키·iv·tampered ciphertext 전 케이스 검증.
  */
 
-import { describe, it, expect, beforeEach } from "vitest";
 import { randomBytes } from "node:crypto";
 
+import { beforeEach, describe, expect, it } from "vitest";
+
 import {
-  encryptPassword,
-  decryptPassword,
   __resetKeyCacheForTests,
+  decryptPassword,
+  encryptPassword,
 } from "@/lib/calendar/provider/apple-crypto";
 
 const KEY1 = randomBytes(32).toString("base64");
@@ -60,8 +61,7 @@ describe("apple-crypto — 인증 실패", () => {
   it("ciphertext tamper 시 throw (auth tag 검증)", () => {
     const { ciphertext, iv } = encryptPassword("secret-12345");
     // base64 첫 글자 변조
-    const tampered =
-      (ciphertext[0] === "A" ? "B" : "A") + ciphertext.slice(1);
+    const tampered = (ciphertext[0] === "A" ? "B" : "A") + ciphertext.slice(1);
     expect(() => decryptPassword(tampered, iv)).toThrow();
   });
 
@@ -74,9 +74,8 @@ describe("apple-crypto — 인증 실패", () => {
 
 describe("apple-crypto — env 키 검증", () => {
   it("32바이트가 아닌 키는 throw", () => {
-    process.env.APPLE_PASSWORD_ENCRYPTION_KEY = Buffer.from("short").toString(
-      "base64",
-    );
+    process.env.APPLE_PASSWORD_ENCRYPTION_KEY =
+      Buffer.from("short").toString("base64");
     __resetKeyCacheForTests();
     expect(() => encryptPassword("x")).toThrow(/32 bytes/);
   });

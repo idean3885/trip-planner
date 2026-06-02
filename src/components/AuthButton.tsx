@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useSession, signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
+
 import { Button } from "@/components/ui/button";
 
 export default function AuthButton() {
@@ -15,7 +16,7 @@ export default function AuthButton() {
     <div className="flex min-w-0 items-center gap-1 sm:gap-3">
       {/* 좁은 화면(13 mini, 375px)에서 헤더 가로 넘침을 막는다(#641):
           긴 이메일은 sm 미만에서 숨기고, sm 이상에서도 폭을 제한해 줄임표 처리. */}
-      <span className="hidden max-w-[12rem] truncate text-sm text-muted-foreground sm:inline-block">
+      <span className="text-muted-foreground hidden max-w-[12rem] truncate text-sm sm:inline-block">
         {displayName}
       </span>
       <Button variant="ghost" size="sm" render={<Link href="/settings" />}>

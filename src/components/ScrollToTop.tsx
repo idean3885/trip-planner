@@ -49,8 +49,8 @@ export default function ScrollToTop() {
         };
         requestAnimationFrame(step);
       }}
-      className={`fixed right-4 z-30 flex size-10 items-center justify-center rounded-full bg-foreground/80 text-background shadow-lg backdrop-blur-sm transition-opacity duration-500 hover:bg-foreground active:scale-95 ${
-        fading ? "opacity-0 pointer-events-none" : "opacity-100"
+      className={`bg-foreground/80 text-background hover:bg-foreground fixed right-4 z-30 flex size-10 items-center justify-center rounded-full shadow-lg backdrop-blur-sm transition-opacity duration-500 active:scale-95 ${
+        fading ? "pointer-events-none opacity-0" : "opacity-100"
       }`}
       style={{ bottom: "calc(1.5rem + env(safe-area-inset-bottom, 0px))" }}
       aria-label="맨 위로 스크롤"

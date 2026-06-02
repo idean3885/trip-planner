@@ -7,14 +7,15 @@
  */
 
 import { NextResponse } from "next/server";
+
 import { getAuthUserId } from "@/lib/auth-helpers";
-import { userCanImportCalendar } from "@/lib/permissions/activity";
 import {
-  refreshDraft,
   DraftRefreshConflictError,
-  ExternalAccountNotLinkedError,
   EmptyTripPeriodError,
+  ExternalAccountNotLinkedError,
+  refreshDraft,
 } from "@/lib/calendar-import/service";
+import { userCanImportCalendar } from "@/lib/permissions/activity";
 
 type Params = { params: Promise<{ id: string; draftId: string }> };
 
@@ -26,16 +27,24 @@ export async function POST(_request: Request, { params }: Params) {
     return NextResponse.json({ error: "invalid_ids" }, { status: 400 });
   }
   const userId = await getAuthUserId();
-  if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!userId)
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   if (!(await userCanImportCalendar(tripId, userId))) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 
   try {
-    const result = await refreshDraft({ tripId, draftId: draftIdNum, triggeredByUserId: userId });
+    const result = await refreshDraft({
+      tripId,
+      draftId: draftIdNum,
+      triggeredByUserId: userId,
+    });
     if (!result.refreshed) {
       return NextResponse.json(
-        { error: "external_event_missing", message: "외부에서 해당 이벤트를 찾을 수 없습니다." },
+        {
+          error: "external_event_missing",
+          message: "외부에서 해당 이벤트를 찾을 수 없습니다.",
+        },
         { status: 404 },
       );
     }
@@ -46,7 +55,10 @@ export async function POST(_request: Request, { params }: Params) {
     }
     if (err instanceof ExternalAccountNotLinkedError) {
       return NextResponse.json(
-        { error: "external_account_not_linked", settingsPath: "/settings/calendars" },
+        {
+          error: "external_account_not_linked",
+          settingsPath: "/settings/calendars",
+        },
         { status: 409 },
       );
     }
@@ -54,7 +66,8 @@ export async function POST(_request: Request, { params }: Params) {
       return NextResponse.json(
         {
           error: "empty_trip_period",
-          message: "일정 0건이라 기간이 정해지지 않았습니다. 일정을 먼저 추가해 주세요.",
+          message:
+            "일정 0건이라 기간이 정해지지 않았습니다. 일정을 먼저 추가해 주세요.",
         },
         { status: 422 },
       );

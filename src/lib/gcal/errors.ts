@@ -49,7 +49,11 @@ function extractErrorText(err: unknown): string {
   if (typeof e.message === "string") parts.push(e.message);
   if (e.response?.data !== undefined) {
     try {
-      parts.push(typeof e.response.data === "string" ? e.response.data : JSON.stringify(e.response.data));
+      parts.push(
+        typeof e.response.data === "string"
+          ? e.response.data
+          : JSON.stringify(e.response.data),
+      );
     } catch {
       // ignore serialization error
     }
@@ -89,7 +93,8 @@ export function classifyError(err: unknown): {
   if (status === 401 || status === 403)
     return { reason: "forbidden", lastError: "REVOKED" };
   if (status === 404) return { reason: "not_found", lastError: null };
-  if (status === 429) return { reason: "rate_limited", lastError: "RATE_LIMITED" };
+  if (status === 429)
+    return { reason: "rate_limited", lastError: "RATE_LIMITED" };
   if (status >= 500 || status === 0)
     return { reason: "network", lastError: "NETWORK" };
   return { reason: "unknown", lastError: "UNKNOWN" };

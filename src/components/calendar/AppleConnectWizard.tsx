@@ -12,14 +12,15 @@
  *    재생성 0회
  */
 
-import { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { toast } from "sonner";
+
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card } from "@/components/ui/card";
 
 interface AppleConnectWizardProps {
   /**
@@ -105,7 +106,9 @@ export default function AppleConnectWizard({
       }
       if (!validateRes.ok) {
         const data = await validateRes.json().catch(() => ({}));
-        setValidateError(`검증에 실패했습니다 (${data.error ?? validateRes.status})`);
+        setValidateError(
+          `검증에 실패했습니다 (${data.error ?? validateRes.status})`,
+        );
         return;
       }
 
@@ -154,7 +157,7 @@ export default function AppleConnectWizard({
     <Card className="mx-auto max-w-xl space-y-5 p-6">
       <header className="space-y-1">
         <h2 className="text-lg font-semibold">Apple 캘린더 연결</h2>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-muted-foreground text-sm">
           Apple ID에 2단계 인증(2FA)이 활성화되어 있어야 하고,{" "}
           <a
             href="https://appleid.apple.com"
@@ -169,14 +172,14 @@ export default function AppleConnectWizard({
         <button
           type="button"
           onClick={() => setGuideOpen((o) => !o)}
-          className="text-xs font-medium text-muted-foreground hover:text-foreground"
+          className="text-muted-foreground hover:text-foreground text-xs font-medium"
         >
           {guideOpen ? "▾ 발급 가이드 닫기" : "▸ 발급 가이드 보기"}
         </button>
       </header>
 
       {guideOpen && (
-        <section className="space-y-3 rounded-md border border-dashed border-input bg-muted/30 p-3 text-sm">
+        <section className="border-input bg-muted/30 space-y-3 rounded-md border border-dashed p-3 text-sm">
           <ol className="list-inside list-decimal space-y-1 text-xs">
             <li>
               appleid.apple.com 로그인 → &ldquo;로그인 및 보안&rdquo; →{" "}
@@ -216,9 +219,9 @@ export default function AppleConnectWizard({
               />
             </figure>
           </div>
-          <p className="text-xs text-muted-foreground">
-            ⚠️ 16자리 암호는 한 번만 표시됩니다. 분실 시 폐기 후 재발급이 필요합니다.
-            본 서버는 입력값을 AES-256-GCM으로 암호화해 보관합니다.
+          <p className="text-muted-foreground text-xs">
+            ⚠️ 16자리 암호는 한 번만 표시됩니다. 분실 시 폐기 후 재발급이
+            필요합니다. 본 서버는 입력값을 AES-256-GCM으로 암호화해 보관합니다.
           </p>
         </section>
       )}
@@ -237,7 +240,7 @@ export default function AppleConnectWizard({
             required
           />
           {reauth && (
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               재인증 모드 — Apple ID는 변경할 수 없습니다.
             </p>
           )}
@@ -257,13 +260,13 @@ export default function AppleConnectWizard({
             disabled={submitting}
             required
           />
-          <p className="text-xs text-muted-foreground">
-            appleid.apple.com에서 발급한 16자리 앱 전용 암호. 일반 Apple ID 비밀번호
-            아님. 입력 시 자동으로 4자리마다 dash로 정렬됩니다.
+          <p className="text-muted-foreground text-xs">
+            appleid.apple.com에서 발급한 16자리 앱 전용 암호. 일반 Apple ID
+            비밀번호 아님. 입력 시 자동으로 4자리마다 dash로 정렬됩니다.
           </p>
         </div>
         {validateError && (
-          <p className="text-sm text-destructive" role="alert">
+          <p className="text-destructive text-sm" role="alert">
             {validateError}
           </p>
         )}

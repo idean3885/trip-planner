@@ -4,7 +4,7 @@
  * 선택분 일괄 승격, 부분 성공(일부 실패는 failed 로), 필수 누락 항목 건너뛰기,
  * 빈 items 400, 권한 없음 403.
  */
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   getAuthUserId: vi.fn(),
@@ -47,14 +47,21 @@ describe("POST /drafts/promote-batch", () => {
     vi.clearAllMocks();
     mocks.getAuthUserId.mockResolvedValue("user1");
     mocks.userCanImportCalendar.mockResolvedValue(true);
-    mocks.promoteDraft.mockImplementation(async ({ draftId }: { draftId: number }) => ({
-      activityId: draftId * 10,
-    }));
+    mocks.promoteDraft.mockImplementation(
+      async ({ draftId }: { draftId: number }) => ({
+        activityId: draftId * 10,
+      }),
+    );
   });
 
   it("선택분을 일괄 승격하고 promoted 를 반환한다", async () => {
     const res = await POST(
-      req({ items: [{ draftId: 1, ...VALID }, { draftId: 2, ...VALID }] }),
+      req({
+        items: [
+          { draftId: 1, ...VALID },
+          { draftId: 2, ...VALID },
+        ],
+      }),
       params,
     );
     expect(res.status).toBe(200);
@@ -65,12 +72,20 @@ describe("POST /drafts/promote-batch", () => {
   });
 
   it("일부 실패는 failed 로 모으고 성공분은 유지한다(부분 성공)", async () => {
-    mocks.promoteDraft.mockImplementation(async ({ draftId }: { draftId: number }) => {
-      if (draftId === 2) throw new DraftNotPromotableError("draft_not_pending");
-      return { activityId: draftId * 10 };
-    });
+    mocks.promoteDraft.mockImplementation(
+      async ({ draftId }: { draftId: number }) => {
+        if (draftId === 2)
+          throw new DraftNotPromotableError("draft_not_pending");
+        return { activityId: draftId * 10 };
+      },
+    );
     const res = await POST(
-      req({ items: [{ draftId: 1, ...VALID }, { draftId: 2, ...VALID }] }),
+      req({
+        items: [
+          { draftId: 1, ...VALID },
+          { draftId: 2, ...VALID },
+        ],
+      }),
       params,
     );
     const data = await res.json();
@@ -85,7 +100,10 @@ describe("POST /drafts/promote-batch", () => {
     );
     const data = await res.json();
     expect(data.promoted).toHaveLength(0);
-    expect(data.failed[0]).toEqual({ draftId: 1, error: "missing_required_fields" });
+    expect(data.failed[0]).toEqual({
+      draftId: 1,
+      error: "missing_required_fields",
+    });
     expect(mocks.promoteDraft).not.toHaveBeenCalled();
   });
 

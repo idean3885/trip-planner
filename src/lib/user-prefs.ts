@@ -12,7 +12,9 @@
 const PREFIX = "trip-planner:prefs:v1:" as const;
 
 function isBrowser(): boolean {
-  return typeof window !== "undefined" && typeof window.localStorage !== "undefined";
+  return (
+    typeof window !== "undefined" && typeof window.localStorage !== "undefined"
+  );
 }
 
 function readJson<T>(key: string, fallback: T): T {
@@ -55,6 +57,8 @@ export function readCheckedTripIds(): number[] {
 }
 
 export function writeCheckedTripIds(tripIds: number[]): void {
-  const normalized = Array.from(new Set(tripIds.filter((v) => Number.isFinite(v))));
+  const normalized = Array.from(
+    new Set(tripIds.filter((v) => Number.isFinite(v))),
+  );
   writeJson(CHECKED_TRIPS_KEY, normalized);
 }

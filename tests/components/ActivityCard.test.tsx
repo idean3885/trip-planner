@@ -1,7 +1,8 @@
-import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
-import ActivityCard from "@/components/ActivityCard";
 import type { ActivityCategory, ReservationStatus } from "@prisma/client";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
+
+import ActivityCard from "@/components/ActivityCard";
 
 function makeActivity(overrides = {}) {
   return {
@@ -37,7 +38,7 @@ describe("ActivityCard", () => {
     render(
       <ActivityCard
         activity={makeActivity({ startTime: "08:30", endTime: "09:45" })}
-      />
+      />,
     );
     // legacy 값은 변환 없이 그대로 표시 (ISO가 아닌 옛 데이터 방어 경로)
     expect(screen.getByText("08:30–09:45")).toBeInTheDocument();
@@ -52,24 +53,32 @@ describe("ActivityCard", () => {
           endTime: null,
           startTimezone: "Etc/GMT",
         })}
-      />
+      />,
     );
     expect(screen.getByText(/04:00 GMT/)).toBeInTheDocument();
   });
 
   it("renders cost and currency", () => {
-    render(<ActivityCard activity={makeActivity({ cost: 15, currency: "EUR" })} />);
+    render(
+      <ActivityCard activity={makeActivity({ cost: 15, currency: "EUR" })} />,
+    );
     expect(screen.getByText("15 EUR")).toBeInTheDocument();
   });
 
   it("renders reservation status", () => {
-    render(<ActivityCard activity={makeActivity({ reservationStatus: "REQUIRED" })} />);
+    render(
+      <ActivityCard
+        activity={makeActivity({ reservationStatus: "REQUIRED" })}
+      />,
+    );
     expect(screen.getByText("사전 예약 필수")).toBeInTheDocument();
   });
 
   it("renders memo with URL as link", () => {
     render(
-      <ActivityCard activity={makeActivity({ memo: "예약 https://example.com 필수" })} />
+      <ActivityCard
+        activity={makeActivity({ memo: "예약 https://example.com 필수" })}
+      />,
     );
     const link = screen.getByRole("link");
     expect(link).toHaveAttribute("href", "https://example.com");
@@ -96,7 +105,7 @@ describe("ActivityCard", () => {
         onDelete={vi.fn()}
         onMoveUp={vi.fn()}
         onMoveDown={vi.fn()}
-      />
+      />,
     );
     expect(screen.getByText("편집")).toBeInTheDocument();
     expect(screen.getByText("삭제")).toBeInTheDocument();
@@ -106,7 +115,13 @@ describe("ActivityCard", () => {
 
   it("disables move up when isFirst", () => {
     render(
-      <ActivityCard activity={makeActivity()} canEdit isFirst onMoveUp={vi.fn()} onMoveDown={vi.fn()} />
+      <ActivityCard
+        activity={makeActivity()}
+        canEdit
+        isFirst
+        onMoveUp={vi.fn()}
+        onMoveDown={vi.fn()}
+      />,
     );
     expect(screen.getByLabelText("위로")).toBeDisabled();
     expect(screen.getByLabelText("아래로")).not.toBeDisabled();
@@ -114,7 +129,13 @@ describe("ActivityCard", () => {
 
   it("disables move down when isLast", () => {
     render(
-      <ActivityCard activity={makeActivity()} canEdit isLast onMoveUp={vi.fn()} onMoveDown={vi.fn()} />
+      <ActivityCard
+        activity={makeActivity()}
+        canEdit
+        isLast
+        onMoveUp={vi.fn()}
+        onMoveDown={vi.fn()}
+      />,
     );
     expect(screen.getByLabelText("위로")).not.toBeDisabled();
     expect(screen.getByLabelText("아래로")).toBeDisabled();
@@ -129,13 +150,19 @@ describe("ActivityCard", () => {
 
   it("calls onDelete when delete button clicked", () => {
     const onDelete = vi.fn();
-    render(<ActivityCard activity={makeActivity()} canEdit onDelete={onDelete} />);
+    render(
+      <ActivityCard activity={makeActivity()} canEdit onDelete={onDelete} />,
+    );
     fireEvent.click(screen.getByText("삭제"));
     expect(onDelete).toHaveBeenCalledOnce();
   });
 
   it("renders null when no startTime and no endTime", () => {
-    render(<ActivityCard activity={makeActivity({ startTime: null, endTime: null })} />);
+    render(
+      <ActivityCard
+        activity={makeActivity({ startTime: null, endTime: null })}
+      />,
+    );
     // No time range should be displayed
     expect(screen.queryByText(/\d{2}:\d{2}/)).not.toBeInTheDocument();
   });
@@ -150,7 +177,7 @@ describe("ActivityCard", () => {
           startTimezone: "Asia/Seoul",
           endTimezone: "Asia/Seoul",
         })}
-      />
+      />,
     );
     expect(screen.getByText("13:00 KST–15:00 KST")).toBeInTheDocument();
   });
@@ -164,7 +191,7 @@ describe("ActivityCard", () => {
           endTime: null,
           startTimezone: "Europe/Lisbon",
         })}
-      />
+      />,
     );
     expect(screen.getByText("20:15 WEST")).toBeInTheDocument();
   });
@@ -178,18 +205,25 @@ describe("ActivityCard", () => {
           endTime: null,
           startTimezone: "Europe/Lisbon",
         })}
-      />
+      />,
     );
     expect(screen.getByText("12:00 WET")).toBeInTheDocument();
   });
 
   it("renders all category types", () => {
     const categories: ActivityCategory[] = [
-      "SIGHTSEEING", "DINING", "TRANSPORT", "ACCOMMODATION", "SHOPPING", "OTHER",
+      "SIGHTSEEING",
+      "DINING",
+      "TRANSPORT",
+      "ACCOMMODATION",
+      "SHOPPING",
+      "OTHER",
     ];
     const labels = ["관광", "식사", "이동", "숙소", "쇼핑", "기타"];
     categories.forEach((cat, i) => {
-      const { unmount } = render(<ActivityCard activity={makeActivity({ category: cat })} />);
+      const { unmount } = render(
+        <ActivityCard activity={makeActivity({ category: cat })} />,
+      );
       expect(screen.getByText(labels[i])).toBeInTheDocument();
       unmount();
     });
@@ -236,8 +270,10 @@ describe("ActivityCard", () => {
   });
 
   it("긴 제목·위치·메모는 줄바꿈 클래스로 가로 넘침을 막는다(#637, 375px)", () => {
-    const longTitle = "신혼여행리스본1박2일HotelLXRossio체크인후호시우광장도보이동";
-    const longLoc = "Rua-da-Assuncao-52-Rossio-1100-044-Lisboa-Portugal-Baixa-Pombalina";
+    const longTitle =
+      "신혼여행리스본1박2일HotelLXRossio체크인후호시우광장도보이동";
+    const longLoc =
+      "Rua-da-Assuncao-52-Rossio-1100-044-Lisboa-Portugal-Baixa-Pombalina";
     render(
       <ActivityCard
         activity={makeActivity({
@@ -245,7 +281,7 @@ describe("ActivityCard", () => {
           location: longLoc,
           memo: "예약: https://www.google.com/maps/place/Hotel+LX+Rossio/very/long/path",
         })}
-      />
+      />,
     );
     expect(screen.getByText(longTitle).className).toMatch(/break-words/);
     expect(screen.getByText(longLoc).className).toMatch(/break-words/);

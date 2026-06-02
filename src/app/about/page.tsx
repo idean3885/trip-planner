@@ -1,7 +1,14 @@
+import {
+  ArrowRight,
+  BookOpen,
+  ExternalLink,
+  KeyRound,
+  Layers,
+  Terminal,
+} from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ExternalLink, ArrowRight, BookOpen, Layers, KeyRound, Terminal } from "lucide-react";
-import { projectMeta } from "@/lib/project-meta";
+
 import {
   Card,
   CardContent,
@@ -9,6 +16,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { projectMeta } from "@/lib/project-meta";
 
 export const metadata: Metadata = {
   title: `소개 — ${projectMeta.name}`,
@@ -19,7 +27,7 @@ export default function AboutPage() {
   return (
     <article className="mx-auto max-w-2xl space-y-8">
       <header className="space-y-3">
-        <nav className="flex items-center gap-2 text-sm text-muted-foreground">
+        <nav className="text-muted-foreground flex items-center gap-2 text-sm">
           <Link href="/" className="hover:text-foreground">
             홈
           </Link>
@@ -29,7 +37,7 @@ export default function AboutPage() {
         <h1 className="text-2xl font-semibold tracking-tight">
           {projectMeta.name}
         </h1>
-        <p className="text-base leading-relaxed text-foreground">
+        <p className="text-foreground text-base leading-relaxed">
           {projectMeta.tagline}
         </p>
       </header>
@@ -38,11 +46,12 @@ export default function AboutPage() {
         <h2 className="text-base font-semibold tracking-tight">
           이렇게 쓰게 됩니다
         </h2>
-        <p className="text-sm leading-relaxed text-muted-foreground">
-          여행 주인이 &quot;이번 주말 제주 2박 3일, 바다가 보이는 숙소로&quot;처럼 말을
-          건네면 일정이 자동으로 짜입니다. 초대받은 동행자는 웹에서 바로 일정을
-          열어보고, 가고 싶은 곳을 덧붙이거나 시간을 조정합니다. 모든 변경은
-          즉시 서로에게 공유되어 따로 정리할 필요가 없습니다.
+        <p className="text-muted-foreground text-sm leading-relaxed">
+          여행 주인이 &quot;이번 주말 제주 2박 3일, 바다가 보이는
+          숙소로&quot;처럼 말을 건네면 일정이 자동으로 짜입니다. 초대받은
+          동행자는 웹에서 바로 일정을 열어보고, 가고 싶은 곳을 덧붙이거나 시간을
+          조정합니다. 모든 변경은 즉시 서로에게 공유되어 따로 정리할 필요가
+          없습니다.
         </p>
       </section>
 
@@ -50,7 +59,7 @@ export default function AboutPage() {
         <h2 className="text-base font-semibold tracking-tight">
           좀 더 자세히 보기
         </h2>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-muted-foreground text-sm">
           아키텍처·개발 가이드·MCP 도구 설명 등 기술 문서는 GitHub에서 확인할 수
           있습니다.
         </p>
@@ -63,7 +72,7 @@ export default function AboutPage() {
           >
             <Card
               size="sm"
-              className="h-full transition-all group-hover:ring-foreground/20 group-hover:-translate-y-px"
+              className="group-hover:ring-foreground/20 h-full transition-all group-hover:-translate-y-px"
             >
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-sm">
@@ -75,7 +84,7 @@ export default function AboutPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <span className="inline-flex items-center gap-1 text-xs font-medium text-foreground">
+                <span className="text-foreground inline-flex items-center gap-1 text-xs font-medium">
                   GitHub에서 열기
                   <ExternalLink className="size-3" aria-hidden />
                 </span>
@@ -90,7 +99,7 @@ export default function AboutPage() {
           >
             <Card
               size="sm"
-              className="h-full transition-all group-hover:ring-foreground/20 group-hover:-translate-y-px"
+              className="group-hover:ring-foreground/20 h-full transition-all group-hover:-translate-y-px"
             >
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-sm">
@@ -102,7 +111,7 @@ export default function AboutPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <span className="inline-flex items-center gap-1 text-xs font-medium text-foreground">
+                <span className="text-foreground inline-flex items-center gap-1 text-xs font-medium">
                   ARCHITECTURE.md 열기
                   <ExternalLink className="size-3" aria-hidden />
                 </span>
@@ -116,7 +125,7 @@ export default function AboutPage() {
         <h2 className="text-base font-semibold tracking-tight">
           외부 자동화·AI 클라이언트 연동
         </h2>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-muted-foreground text-sm">
           Personal Access Token으로 외부 도구에서 API를 직접 호출하거나, MCP
           서버로 Claude Code·Cursor 등 AI CLI에 연결할 수 있습니다.
         </p>
@@ -124,7 +133,7 @@ export default function AboutPage() {
           <Link href="/settings/tokens" className="group block">
             <Card
               size="sm"
-              className="h-full transition-all group-hover:ring-foreground/20 group-hover:-translate-y-px"
+              className="group-hover:ring-foreground/20 h-full transition-all group-hover:-translate-y-px"
             >
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-sm">
@@ -137,7 +146,7 @@ export default function AboutPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <span className="inline-flex items-center gap-1 text-xs font-medium text-foreground">
+                <span className="text-foreground inline-flex items-center gap-1 text-xs font-medium">
                   발급 페이지 열기
                   <ArrowRight className="size-3" aria-hidden />
                 </span>
@@ -152,7 +161,7 @@ export default function AboutPage() {
           >
             <Card
               size="sm"
-              className="h-full transition-all group-hover:ring-foreground/20 group-hover:-translate-y-px"
+              className="group-hover:ring-foreground/20 h-full transition-all group-hover:-translate-y-px"
             >
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-sm">
@@ -165,7 +174,7 @@ export default function AboutPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <span className="inline-flex items-center gap-1 text-xs font-medium text-foreground">
+                <span className="text-foreground inline-flex items-center gap-1 text-xs font-medium">
                   설치 상세 (GitHub)
                   <ExternalLink className="size-3" aria-hidden />
                 </span>
@@ -173,14 +182,14 @@ export default function AboutPage() {
             </Card>
           </a>
         </div>
-        <div className="rounded-lg border bg-muted/40 p-3 text-xs">
-          <p className="mb-2 font-medium text-foreground">
+        <div className="bg-muted/40 rounded-lg border p-3 text-xs">
+          <p className="text-foreground mb-2 font-medium">
             맥북 1줄 설치 (Claude Code MCP 자동 등록)
           </p>
-          <pre className="overflow-x-auto whitespace-pre rounded bg-background p-2 font-mono text-[11px] leading-relaxed">
+          <pre className="bg-background overflow-x-auto rounded p-2 font-mono text-[11px] leading-relaxed whitespace-pre">
             <code>{`curl -sSL https://raw.githubusercontent.com/idean3885/trip-planner/main/scripts/install.sh | bash`}</code>
           </pre>
-          <p className="mt-2 text-muted-foreground">
+          <p className="text-muted-foreground mt-2">
             설치 중 브라우저가 열리면 Google 로그인만 하세요. 토큰이 자동
             저장되고 Claude Code에 MCP가 등록됩니다. 이후 Claude에게 자연어로
             요청하면 일정·항공·숙소를 자동으로 조회·편집합니다.
@@ -203,7 +212,7 @@ export default function AboutPage() {
               href={projectMeta.githubUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-foreground underline-offset-4 hover:underline"
+              className="text-foreground inline-flex items-center gap-1 underline-offset-4 hover:underline"
             >
               {projectMeta.repoName}
               <ExternalLink className="size-3" aria-hidden />
@@ -214,7 +223,7 @@ export default function AboutPage() {
           <dd>
             <Link
               href="/docs"
-              className="inline-flex items-center gap-1 text-foreground underline-offset-4 hover:underline"
+              className="text-foreground inline-flex items-center gap-1 underline-offset-4 hover:underline"
             >
               앱 안에서 열기
               <ArrowRight className="size-3" aria-hidden />

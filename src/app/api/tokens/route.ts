@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
+
 import { getSession } from "@/lib/auth-helpers";
-import { createPAT } from "@/lib/token-helpers";
 import { prisma } from "@/lib/prisma";
+import { createPAT } from "@/lib/token-helpers";
 
 /**
  * POST /api/tokens — PAT 생성
@@ -17,10 +18,7 @@ export async function POST(request: Request) {
   const name = body.name?.trim();
 
   if (!name) {
-    return NextResponse.json(
-      { error: "name is required" },
-      { status: 400 },
-    );
+    return NextResponse.json({ error: "name is required" }, { status: 400 });
   }
 
   const expiresAt = body.expiresAt ? new Date(body.expiresAt) : null;

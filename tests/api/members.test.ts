@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { mockPrisma, mockAuthHelpers } = vi.hoisted(() => ({
   mockPrisma: {
@@ -29,7 +29,10 @@ describe("GET /api/trips/{id}/members — 멤버 목록 (#193)", () => {
 
   it("returns 401 when unauthenticated", async () => {
     mockAuth.mockResolvedValue(null);
-    const res = await GET(new Request("http://localhost/api/trips/1/members"), tripParams());
+    const res = await GET(
+      new Request("http://localhost/api/trips/1/members"),
+      tripParams(),
+    );
     expect(res.status).toBe(401);
   });
 
@@ -37,7 +40,10 @@ describe("GET /api/trips/{id}/members — 멤버 목록 (#193)", () => {
     mockAuth.mockResolvedValue("user1");
     mockGetMember.mockResolvedValue(null);
     mockPrisma.tripMember.findMany.mockResolvedValue([]);
-    const res = await GET(new Request("http://localhost/api/trips/1/members"), tripParams());
+    const res = await GET(
+      new Request("http://localhost/api/trips/1/members"),
+      tripParams(),
+    );
     expect(res.status).toBe(403);
   });
 
@@ -45,17 +51,39 @@ describe("GET /api/trips/{id}/members — 멤버 목록 (#193)", () => {
     mockAuth.mockResolvedValue("user1");
     mockGetMember.mockResolvedValue({ id: 1, userId: "user1", role: "OWNER" });
     mockPrisma.tripMember.findMany.mockResolvedValue([
-      { id: 1, userId: "user1", role: "OWNER", user: { id: "user1", name: "A" } },
-      { id: 2, userId: "user2", role: "HOST", user: { id: "user2", name: "B" } },
-      { id: 3, userId: "user3", role: "GUEST", user: { id: "user3", name: "C" } },
+      {
+        id: 1,
+        userId: "user1",
+        role: "OWNER",
+        user: { id: "user1", name: "A" },
+      },
+      {
+        id: 2,
+        userId: "user2",
+        role: "HOST",
+        user: { id: "user2", name: "B" },
+      },
+      {
+        id: 3,
+        userId: "user3",
+        role: "GUEST",
+        user: { id: "user3", name: "C" },
+      },
     ]);
 
-    const res = await GET(new Request("http://localhost/api/trips/1/members"), tripParams());
+    const res = await GET(
+      new Request("http://localhost/api/trips/1/members"),
+      tripParams(),
+    );
     expect(res.status).toBe(200);
 
     const body = await res.json();
     expect(body.myRole).toBe("OWNER");
     expect(body.members).toHaveLength(3);
-    expect(body.members.map((m: { role: string }) => m.role)).toEqual(["OWNER", "HOST", "GUEST"]);
+    expect(body.members.map((m: { role: string }) => m.role)).toEqual([
+      "OWNER",
+      "HOST",
+      "GUEST",
+    ]);
   });
 });

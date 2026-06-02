@@ -13,9 +13,16 @@
  * 날짜에 벽시계 시작 값을 부여한다.
  */
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import type {
+  ActivityCategory,
+  ActivityDraftStatus,
+  CalendarProviderId,
+  ReservationStatus,
+} from "@prisma/client";
 import { Loader2 } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -24,12 +31,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type {
-  ActivityCategory,
-  ActivityDraftStatus,
-  CalendarProviderId,
-  ReservationStatus,
-} from "@prisma/client";
 import { TIMEZONE_OPTIONS } from "@/lib/timezones";
 
 interface DraftDTO {
@@ -92,7 +93,13 @@ function withFloatingTime(baseIso: string, hhmm: string): string {
   const base = new Date(baseIso);
   const [h, m] = hhmm.split(":").map((v) => parseInt(v, 10));
   return new Date(
-    Date.UTC(base.getUTCFullYear(), base.getUTCMonth(), base.getUTCDate(), h, m),
+    Date.UTC(
+      base.getUTCFullYear(),
+      base.getUTCMonth(),
+      base.getUTCDate(),
+      h,
+      m,
+    ),
   ).toISOString();
 }
 /** start 기준 +1시간 부동 시각. */
@@ -149,14 +156,17 @@ export default function DraftSection({ tripId, canEdit, onMutated }: Props) {
   }, [refresh]);
 
   const allSelected = useMemo(
-    () => drafts !== null && drafts.length > 0 && selected.size === drafts.length,
+    () =>
+      drafts !== null && drafts.length > 0 && selected.size === drafts.length,
     [drafts, selected],
   );
 
   const toggleAll = useCallback(() => {
     if (!drafts) return;
     setSelected((prev) =>
-      prev.size === drafts.length ? new Set() : new Set(drafts.map((d) => d.id)),
+      prev.size === drafts.length
+        ? new Set()
+        : new Set(drafts.map((d) => d.id)),
     );
   }, [drafts]);
 
@@ -185,7 +195,11 @@ export default function DraftSection({ tripId, canEdit, onMutated }: Props) {
       for (const d of drafts) {
         if (!d.isAllDay) continue;
         const start = withFloatingTime(d.startTime, batchStartTime);
-        next[d.id] = { ...next[d.id], startTime: start, endTime: plusOneHour(start) };
+        next[d.id] = {
+          ...next[d.id],
+          startTime: start,
+          endTime: plusOneHour(start),
+        };
         count++;
       }
       toast.success(`시간 미정 ${count}건에 시작 시간을 적용했습니다.`);
@@ -209,7 +223,9 @@ export default function DraftSection({ tripId, canEdit, onMutated }: Props) {
         };
         count++;
       }
-      toast.success(`시간 있는 ${count}건을 ${batchTimezone} 지역 시간으로 기록했습니다. 시각은 그대로입니다.`);
+      toast.success(
+        `시간 있는 ${count}건을 ${batchTimezone} 지역 시간으로 기록했습니다. 시각은 그대로입니다.`,
+      );
       return next;
     });
   }, [drafts, batchTimezone]);
@@ -240,7 +256,9 @@ export default function DraftSection({ tripId, canEdit, onMutated }: Props) {
         body: JSON.stringify({ items }),
       });
       if (!res.ok) {
-        toast.error("가져오기 실패", { description: `오류 코드 ${res.status}` });
+        toast.error("가져오기 실패", {
+          description: `오류 코드 ${res.status}`,
+        });
         return;
       }
       const data = (await res.json()) as {
@@ -266,11 +284,17 @@ export default function DraftSection({ tripId, canEdit, onMutated }: Props) {
   return (
     <section className="min-w-0">
       {/* 상단 sticky — 확정 버튼 + 일괄 설정. 목록만 스크롤된다. */}
-      <div className="sticky top-0 z-10 -mx-1 mb-3 space-y-2 bg-background px-1 pb-2 pt-1">
+      <div className="bg-background sticky top-0 z-10 -mx-1 mb-3 space-y-2 px-1 pt-1 pb-2">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h4 className="text-sm font-semibold">외부에서 가져온 일정 ({drafts.length})</h4>
+          <h4 className="text-sm font-semibold">
+            외부에서 가져온 일정 ({drafts.length})
+          </h4>
           {canEdit && (
-            <Button size="sm" onClick={handleConfirm} disabled={submitting || selected.size === 0}>
+            <Button
+              size="sm"
+              onClick={handleConfirm}
+              disabled={submitting || selected.size === 0}
+            >
               {submitting ? (
                 <>
                   <Loader2 className="mr-2 size-4 animate-spin" />
@@ -286,7 +310,11 @@ export default function DraftSection({ tripId, canEdit, onMutated }: Props) {
           <div className="space-y-1.5">
             <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-xs">
               <label className="flex items-center gap-1.5">
-                <input type="checkbox" checked={allSelected} onChange={toggleAll} />
+                <input
+                  type="checkbox"
+                  checked={allSelected}
+                  onChange={toggleAll}
+                />
                 전체 선택 ({selected.size}/{drafts.length})
               </label>
               <span className="flex min-w-0 items-center gap-1">
@@ -295,9 +323,14 @@ export default function DraftSection({ tripId, canEdit, onMutated }: Props) {
                   type="time"
                   value={batchStartTime}
                   onChange={(e) => setBatchStartTime(e.target.value)}
-                  className="min-w-0 rounded border border-border bg-background px-1.5 py-0.5 tabular-nums"
+                  className="border-border bg-background min-w-0 rounded border px-1.5 py-0.5 tabular-nums"
                 />
-                <Button variant="outline" size="sm" className="h-7 px-2" onClick={applyBatchStartTime}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 px-2"
+                  onClick={applyBatchStartTime}
+                >
                   적용
                 </Button>
               </span>
@@ -306,21 +339,30 @@ export default function DraftSection({ tripId, canEdit, onMutated }: Props) {
                 <select
                   value={batchTimezone}
                   onChange={(e) => setBatchTimezone(e.target.value)}
-                  className="min-w-0 rounded border border-border bg-background px-1.5 py-0.5"
+                  className="border-border bg-background min-w-0 rounded border px-1.5 py-0.5"
                   aria-label="이 시각이 어느 지역 시간인지"
                 >
                   {TIMEZONE_OPTIONS.map((tz) => (
-                    <option key={tz} value={tz}>{tz}</option>
+                    <option key={tz} value={tz}>
+                      {tz}
+                    </option>
                   ))}
                 </select>
-                <Button variant="outline" size="sm" className="h-7 px-2" onClick={applyBatchTimezone}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 px-2"
+                  onClick={applyBatchTimezone}
+                >
                   기록
                 </Button>
               </span>
             </div>
             {/* 부동 시간(헌법 VII) — 시각은 안 바뀌고 "어디 시간인지"만 기록한다는 안내. */}
-            <p className="text-[0.7rem] leading-snug text-muted-foreground">
-              시각은 그대로 둡니다. 이 시각이 어느 지역 시간인지만 기록해, 나중에 일정을 볼 때 “이거 어디 시간이지?”를 바로 알 수 있게 합니다.
+            <p className="text-muted-foreground text-[0.7rem] leading-snug">
+              시각은 그대로 둡니다. 이 시각이 어느 지역 시간인지만 기록해,
+              나중에 일정을 볼 때 “이거 어디 시간이지?”를 바로 알 수 있게
+              합니다.
             </p>
           </div>
         )}
@@ -330,13 +372,14 @@ export default function DraftSection({ tripId, canEdit, onMutated }: Props) {
         {drafts.map((d) => {
           const ov = overrides[d.id] ?? defaultOverride(d);
           const effStart = ov.startTime ?? d.startTime;
-          const timeLabel = d.isAllDay && !ov.startTime
-            ? "종일"
-            : `${formatHHMM(effStart)} · ${ov.startTimezone}`;
+          const timeLabel =
+            d.isAllDay && !ov.startTime
+              ? "종일"
+              : `${formatHHMM(effStart)} · ${ov.startTimezone}`;
           return (
             <li
               key={d.id}
-              className="rounded-md border border-dashed bg-muted/30 px-3 py-2"
+              className="bg-muted/30 rounded-md border border-dashed px-3 py-2"
             >
               {/* 모바일 가로 스크롤 방지 — flex-wrap + min-w-0 + break-words */}
               <div className="flex min-w-0 flex-wrap items-start gap-x-2 gap-y-1">
@@ -350,8 +393,10 @@ export default function DraftSection({ tripId, canEdit, onMutated }: Props) {
                   />
                 )}
                 <div className="min-w-0 flex-1">
-                  <div className="break-words text-sm font-medium">{d.title}</div>
-                  <div className="break-words text-xs text-muted-foreground">
+                  <div className="text-sm font-medium break-words">
+                    {d.title}
+                  </div>
+                  <div className="text-muted-foreground text-xs break-words">
                     {formatMonthDay(effStart)} {timeLabel}
                     {d.locationText ? ` · ${d.locationText}` : ""}
                   </div>
@@ -361,7 +406,9 @@ export default function DraftSection({ tripId, canEdit, onMutated }: Props) {
                     variant="ghost"
                     size="sm"
                     className="h-7 shrink-0 px-2 text-xs"
-                    onClick={() => setEditingId(editingId === d.id ? null : d.id)}
+                    onClick={() =>
+                      setEditingId(editingId === d.id ? null : d.id)
+                    }
                   >
                     수정
                   </Button>
@@ -373,22 +420,46 @@ export default function DraftSection({ tripId, canEdit, onMutated }: Props) {
                 <div className="mt-2 grid grid-cols-1 gap-2 border-t pt-2 sm:grid-cols-2">
                   <label className="block text-xs">
                     <span className="mb-1 block font-medium">카테고리</span>
-                    <Select value={ov.category} onValueChange={(v) => v && updateOverride(d.id, { category: v as ActivityCategory })}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
+                    <Select
+                      value={ov.category}
+                      onValueChange={(v) =>
+                        v &&
+                        updateOverride(d.id, {
+                          category: v as ActivityCategory,
+                        })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
                       <SelectContent>
                         {CATEGORY_OPTIONS.map((o) => (
-                          <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                          <SelectItem key={o.value} value={o.value}>
+                            {o.label}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </label>
                   <label className="block text-xs">
                     <span className="mb-1 block font-medium">예약 상태</span>
-                    <Select value={ov.reservationStatus} onValueChange={(v) => v && updateOverride(d.id, { reservationStatus: v as ReservationStatus })}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
+                    <Select
+                      value={ov.reservationStatus}
+                      onValueChange={(v) =>
+                        v &&
+                        updateOverride(d.id, {
+                          reservationStatus: v as ReservationStatus,
+                        })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
                       <SelectContent>
                         {RESERVATION_OPTIONS.map((o) => (
-                          <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                          <SelectItem key={o.value} value={o.value}>
+                            {o.label}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -397,11 +468,18 @@ export default function DraftSection({ tripId, canEdit, onMutated }: Props) {
                     <span className="mb-1 block font-medium">지역 표시</span>
                     <select
                       value={ov.startTimezone}
-                      onChange={(e) => updateOverride(d.id, { startTimezone: e.target.value, endTimezone: e.target.value })}
-                      className="w-full rounded border border-border bg-background px-2 py-1"
+                      onChange={(e) =>
+                        updateOverride(d.id, {
+                          startTimezone: e.target.value,
+                          endTimezone: e.target.value,
+                        })
+                      }
+                      className="border-border bg-background w-full rounded border px-2 py-1"
                     >
                       {TIMEZONE_OPTIONS.map((tz) => (
-                        <option key={tz} value={tz}>{tz}</option>
+                        <option key={tz} value={tz}>
+                          {tz}
+                        </option>
                       ))}
                     </select>
                   </label>
@@ -411,10 +489,16 @@ export default function DraftSection({ tripId, canEdit, onMutated }: Props) {
                       type="time"
                       value={formatHHMM(effStart)}
                       onChange={(e) => {
-                        const start = withFloatingTime(effStart, e.target.value);
-                        updateOverride(d.id, { startTime: start, endTime: plusOneHour(start) });
+                        const start = withFloatingTime(
+                          effStart,
+                          e.target.value,
+                        );
+                        updateOverride(d.id, {
+                          startTime: start,
+                          endTime: plusOneHour(start),
+                        });
                       }}
-                      className="w-full rounded border border-border bg-background px-2 py-1 tabular-nums"
+                      className="border-border bg-background w-full rounded border px-2 py-1 tabular-nums"
                     />
                   </label>
                 </div>

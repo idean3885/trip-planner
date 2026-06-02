@@ -7,6 +7,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
+
 import { auth } from "@/auth";
 import { getAppOrigin } from "@/lib/app-url";
 import { syncCalendar } from "@/lib/calendar/service";

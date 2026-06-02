@@ -6,7 +6,7 @@ export default function FeatureHighlights() {
     <section aria-labelledby="features-heading" className="py-8">
       <h2
         id="features-heading"
-        className="text-xs font-medium uppercase tracking-wider text-muted-foreground"
+        className="text-muted-foreground text-xs font-medium tracking-wider uppercase"
       >
         할 수 있는 것
       </h2>
@@ -15,22 +15,22 @@ export default function FeatureHighlights() {
           <Card key={title}>
             <CardHeader>
               <div className="flex items-start gap-3">
-                <div className="mt-0.5 inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-foreground/5 text-foreground">
+                <div className="bg-foreground/5 text-foreground mt-0.5 inline-flex size-9 shrink-0 items-center justify-center rounded-full">
                   <Icon className="size-4" aria-hidden />
                 </div>
                 <div className="space-y-1">
                   <CardTitle className="text-base">{title}</CardTitle>
-                  <p className="text-sm text-muted-foreground">{summary}</p>
+                  <p className="text-muted-foreground text-sm">{summary}</p>
                 </div>
               </div>
             </CardHeader>
             <CardContent>
-              <ul className="space-y-1.5 text-sm text-muted-foreground">
+              <ul className="text-muted-foreground space-y-1.5 text-sm">
                 {bullets.map((b) => (
                   <li key={b} className="flex items-start gap-2">
                     <span
                       aria-hidden
-                      className="mt-[0.55rem] size-1 shrink-0 rounded-full bg-muted-foreground/70"
+                      className="bg-muted-foreground/70 mt-[0.55rem] size-1 shrink-0 rounded-full"
                     />
                     <span>{b}</span>
                   </li>

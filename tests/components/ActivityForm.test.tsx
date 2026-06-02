@@ -1,5 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
 import ActivityForm from "@/components/ActivityForm";
 
 describe("ActivityForm", () => {
@@ -62,7 +63,7 @@ describe("ActivityForm", () => {
           currency: "USD",
           reservationStatus: "RECOMMENDED",
         }}
-      />
+      />,
     );
     expect(screen.getByDisplayValue("Lunch")).toBeInTheDocument();
     expect(screen.getByDisplayValue("12:00")).toBeInTheDocument();
@@ -128,7 +129,12 @@ describe("ActivityForm", () => {
 
   it("does not auto-set time in edit mode", async () => {
     render(
-      <ActivityForm onSubmit={onSubmit} onCancel={onCancel} isEdit initial={{ startTime: "14:00", endTime: "15:00" }} />
+      <ActivityForm
+        onSubmit={onSubmit}
+        onCancel={onCancel}
+        isEdit
+        initial={{ startTime: "14:00", endTime: "15:00" }}
+      />,
     );
     expect(screen.getByDisplayValue("14:00")).toBeInTheDocument();
     expect(screen.getByDisplayValue("15:00")).toBeInTheDocument();
@@ -138,7 +144,9 @@ describe("ActivityForm", () => {
     render(<ActivityForm onSubmit={onSubmit} onCancel={onCancel} />);
     await waitFor(() => {
       const labels = document.querySelectorAll("label");
-      const startLabel = Array.from(labels).find((l) => l.textContent?.includes("시작"));
+      const startLabel = Array.from(labels).find((l) =>
+        l.textContent?.includes("시작"),
+      );
       expect(startLabel?.textContent).toMatch(/\(.+\)/);
     });
   });
@@ -154,7 +162,9 @@ describe("ActivityForm", () => {
     render(<ActivityForm onSubmit={onSubmit} onCancel={onCancel} />);
     const selects = screen.getAllByRole("combobox");
     // Last select is reservation status
-    fireEvent.change(selects[selects.length - 1], { target: { value: "REQUIRED" } });
+    fireEvent.change(selects[selects.length - 1], {
+      target: { value: "REQUIRED" },
+    });
     expect(screen.getByDisplayValue("사전 예약 필수")).toBeInTheDocument();
   });
 
@@ -174,7 +184,14 @@ describe("ActivityForm", () => {
   });
 
   it("updates time fields", () => {
-    render(<ActivityForm onSubmit={onSubmit} onCancel={onCancel} isEdit initial={{ startTime: "", endTime: "" }} />);
+    render(
+      <ActivityForm
+        onSubmit={onSubmit}
+        onCancel={onCancel}
+        isEdit
+        initial={{ startTime: "", endTime: "" }}
+      />,
+    );
     const timeInputs = document.querySelectorAll('input[type="time"]');
     fireEvent.change(timeInputs[0], { target: { value: "10:30" } });
     fireEvent.change(timeInputs[1], { target: { value: "12:00" } });
@@ -208,7 +225,11 @@ describe("ActivityForm", () => {
 
   it("skips auto-set when initial startTime provided", async () => {
     render(
-      <ActivityForm onSubmit={onSubmit} onCancel={onCancel} initial={{ startTime: "08:00", endTime: "09:00" }} />
+      <ActivityForm
+        onSubmit={onSubmit}
+        onCancel={onCancel}
+        initial={{ startTime: "08:00", endTime: "09:00" }}
+      />,
     );
     expect(screen.getByDisplayValue("08:00")).toBeInTheDocument();
     expect(screen.getByDisplayValue("09:00")).toBeInTheDocument();
@@ -216,7 +237,12 @@ describe("ActivityForm", () => {
 
   it("shows saving state during submit", async () => {
     let resolveSubmit: () => void;
-    const slowSubmit = vi.fn(() => new Promise<void>((r) => { resolveSubmit = r; }));
+    const slowSubmit = vi.fn(
+      () =>
+        new Promise<void>((r) => {
+          resolveSubmit = r;
+        }),
+    );
 
     render(<ActivityForm onSubmit={slowSubmit} onCancel={onCancel} />);
     const textInputs = screen.getAllByRole("textbox");

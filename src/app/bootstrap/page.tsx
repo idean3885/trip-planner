@@ -8,8 +8,9 @@
  * 노출되고 fragment(#) 로 redirect 해 서버 로그·referrer 에 남지 않는다.
  */
 
-import { redirect } from "next/navigation";
 import { headers } from "next/headers";
+import { redirect } from "next/navigation";
+
 import { getSession } from "@/lib/auth-helpers";
 import { createPAT } from "@/lib/token-helpers";
 
@@ -52,7 +53,7 @@ export default async function BootstrapPage({
   if (!isValidPort(port) || !isValidState(state)) {
     return (
       <PageShell title="잘못된 요청">
-        <p className="text-sm text-muted-foreground">
+        <p className="text-muted-foreground text-sm">
           install 흐름 외부에서 직접 열린 페이지입니다. install 스크립트를 다시
           실행해 주세요.
         </p>
@@ -75,7 +76,7 @@ export default async function BootstrapPage({
 
   return (
     <PageShell title="MCP 등록 준비 완료">
-      <p className="text-sm text-muted-foreground">
+      <p className="text-muted-foreground text-sm">
         install 스크립트가 자동으로 등록을 마칩니다. 이 창은 닫아도 됩니다.
       </p>
       <noscript>
@@ -106,7 +107,7 @@ function PageShell({
   children: React.ReactNode;
 }) {
   return (
-    <div className="mx-auto max-w-md p-8 space-y-4">
+    <div className="mx-auto max-w-md space-y-4 p-8">
       <h1 className="text-lg font-semibold tracking-tight">{title}</h1>
       {children}
     </div>

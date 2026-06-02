@@ -10,6 +10,7 @@
  */
 
 import { NextRequest } from "next/server";
+
 import { signIn } from "@/auth";
 import { GCAL_SCOPE } from "@/types/gcal";
 
@@ -23,6 +24,6 @@ export async function GET(req: NextRequest) {
       include_granted_scopes: "true",
       prompt: "consent",
       access_type: "offline",
-    }
+    },
   );
 }

@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { getAuthUserId, getTripMember, canEdit } from "@/lib/auth-helpers";
+
+import { canEdit, getAuthUserId, getTripMember } from "@/lib/auth-helpers";
 import { withSortOrder } from "@/lib/day-number";
+import { prisma } from "@/lib/prisma";
 import { getDerivedPeriodTx, getResolvedPeriod } from "@/lib/trip-period";
 
 type Params = { params: Promise<{ id: string }> };
@@ -89,7 +90,10 @@ export async function POST(request: Request, { params }: Params) {
   }
 
   if (!(await canEdit(tripId, userId))) {
-    return NextResponse.json({ error: "편집 권한이 없습니다" }, { status: 403 });
+    return NextResponse.json(
+      { error: "편집 권한이 없습니다" },
+      { status: 403 },
+    );
   }
 
   const body = await request.json();
@@ -108,10 +112,9 @@ export async function POST(request: Request, { params }: Params) {
       const derived = await getDerivedPeriodTx(tx, tripId);
       return { day: created, tripStartDate: derived.startDate! };
     });
-    return NextResponse.json(
-      withSortOrder(result.day, result.tripStartDate),
-      { status: 201 },
-    );
+    return NextResponse.json(withSortOrder(result.day, result.tripStartDate), {
+      status: 201,
+    });
   } catch (e: unknown) {
     if ((e as { code?: string }).code === "P2002") {
       return NextResponse.json(

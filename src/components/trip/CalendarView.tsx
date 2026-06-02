@@ -15,15 +15,16 @@
  *   가 주간 표시를 직접 제공하지 않아 주간 스트립을 별도로 렌더한다.
  */
 
+import { addDays, addMonths } from "date-fns";
 import * as React from "react";
 import { useMemo, useState } from "react";
-import { addDays, addMonths } from "date-fns";
-import { ko } from "react-day-picker/locale";
 import type { Matcher } from "react-day-picker";
+import { ko } from "react-day-picker/locale";
 
 import { Calendar, CalendarDayButton } from "@/components/ui/calendar";
 import { getTripColor } from "@/lib/trip-palette";
 import { cn } from "@/lib/utils";
+
 import { SwipeCarousel } from "./SwipeCarousel";
 
 export interface TripDayGroup {
@@ -54,6 +55,11 @@ export interface CalendarViewProps {
   extraModifierClassNames?: Record<string, string>;
   /** spec 032 — 데스크탑 좌측 컬럼을 꽉 채우도록 폭·셀 확대. */
   desktopFull?: boolean;
+  /**
+   * spec 040 — 날짜(toDateString) → Day 제목 맵. desktopFull(넓은 셀)에서 일정
+   * 있는 날에 제목을 노출한다. 제목이 없으면 도트로 폴백. 모바일은 항상 도트.
+   */
+  dayTitles?: Map<string, string | null>;
   /** spec 032 — 모바일 위/아래 스와이프로 월↔주 압축 토글 활성화. */
   enableMobileCompact?: boolean;
   className?: string;
@@ -87,19 +93,22 @@ export function CalendarView({
   extraModifiers,
   extraModifierClassNames,
   desktopFull,
+  dayTitles,
   enableMobileCompact,
   className,
 }: CalendarViewProps) {
   const isMultiTrip = (tripsDays?.length ?? 0) > 0;
+  // spec 040 — 데스크탑 넓은 셀은 custom DayButton 이 제목/도트를 직접 그린다.
+  const singleDesktop = !isMultiTrip && !!desktopFull;
 
   const tripRange: Matcher | undefined =
     tripStart && tripEnd ? { from: tripStart, to: tripEnd } : undefined;
 
   const modifiers: Record<string, Matcher | Matcher[]> = {
     ...(tripRange ? { tripRange } : {}),
-    // 다중 trip 모드에서는 dot 을 custom DayButton 이 그리므로 hasActivity
-    // modifier 자체를 제거해 단일 dot 과의 중복 노출을 막는다.
-    ...(isMultiTrip ? {} : { hasActivity: daysDates }),
+    // 다중 trip·데스크탑 단일 모드에서는 dot/제목을 custom DayButton 이 그리므로
+    // hasActivity modifier 를 제거해 중복 노출을 막는다(모바일 단일만 modifier dot).
+    ...(isMultiTrip || singleDesktop ? {} : { hasActivity: daysDates }),
     ...(extraModifiers ?? {}),
   };
 
@@ -108,7 +117,7 @@ export function CalendarView({
   // 같은 위치/색이면 Google Calendar 멀티데이 이벤트처럼 한 줄로 이어 보인다.
   const modifiersClassNames: Record<string, string> = {
     tripRange: "bg-primary/10",
-    ...(isMultiTrip
+    ...(isMultiTrip || singleDesktop
       ? {}
       : {
           hasActivity:
@@ -137,7 +146,19 @@ export function CalendarView({
           dayProps: React.ComponentProps<typeof CalendarDayButton>,
         ) => <MultiTripDayButton tripsDays={tripsDays!} {...dayProps} />,
       }
-    : undefined;
+    : singleDesktop
+      ? {
+          DayButton: (
+            dayProps: React.ComponentProps<typeof CalendarDayButton>,
+          ) => (
+            <SingleTripDayButton
+              daysDates={daysDates}
+              dayTitles={dayTitles}
+              {...dayProps}
+            />
+          ),
+        }
+      : undefined;
 
   // spec 032 — 데스크탑 확대: 셀 크기를 키워 좌측 컬럼을 채운다(#645).
   // 셀은 정사각이라 셀 크기가 곧 세로 길이도 결정한다 — 너무 키우면 캘린더가
@@ -157,7 +178,10 @@ export function CalendarView({
       modifiersClassNames={modifiersClassNames}
       components={components}
       className={cn(
-        desktopFull && "mx-auto w-full [--cell-size:--spacing(14)]",
+        // spec 040 — 데스크탑 가로 grow: w-full 로 컨테이너를 채우고 셀(day flex-1)이
+        // 균등 7등분된다. --cell-size 상한(14)을 제거해 가로폭만큼 셀이 커지고
+        // aspect-square 로 세로가 자동 산출된다. min-w-(--cell-size) 가 하한만 둔다.
+        desktopFull && "mx-auto w-full",
         className,
       )}
     />
@@ -245,7 +269,7 @@ function MobileCompactCalendar({
         type="button"
         onClick={() => setView((v) => (v === "month" ? "week" : "month"))}
         aria-pressed={view === "week"}
-        className="mt-1 flex w-full items-center justify-center rounded-md py-1.5 text-xs text-muted-foreground transition-colors hover:bg-muted"
+        className="text-muted-foreground hover:bg-muted mt-1 flex w-full items-center justify-center rounded-md py-1.5 text-xs transition-colors"
       >
         {view === "month" ? "주간만 보기" : "월 전체 보기"}
       </button>
@@ -316,6 +340,44 @@ function WeekStrip({
   );
 }
 
+/**
+ * spec 040 — 데스크탑 단일 trip 셀. 일정 있는 날에 Day 제목이 있으면 셀 하단에
+ * 제목(말줄임)을, 제목이 없으면 도트(가로 bar)를 그린다. 넓은 셀에서만 쓰인다
+ * (모바일은 modifier dot). 색은 디자인 토큰(primary)만 사용한다.
+ */
+function SingleTripDayButton({
+  daysDates,
+  dayTitles,
+  ...buttonProps
+}: React.ComponentProps<typeof CalendarDayButton> & {
+  daysDates: Date[];
+  dayTitles?: Map<string, string | null>;
+}) {
+  const date = buttonProps.day.date;
+  const hasActivity = daysDates.some((d) => sameLocalDay(d, date));
+  const title = dayTitles?.get(date.toDateString()) ?? null;
+
+  return (
+    <div className="relative w-full">
+      <CalendarDayButton {...buttonProps} />
+      {hasActivity &&
+        (title ? (
+          <span
+            className="text-primary pointer-events-none absolute inset-x-1 bottom-1 truncate text-[0.6rem] leading-tight"
+            title={title}
+          >
+            {title}
+          </span>
+        ) : (
+          <span
+            aria-hidden
+            className="bg-primary pointer-events-none absolute inset-x-0 bottom-1 h-0.5"
+          />
+        ))}
+    </div>
+  );
+}
+
 function MultiTripDayButton({
   tripsDays,
   ...buttonProps
@@ -346,7 +408,7 @@ function MultiTripDayButton({
             />
           ))}
           {matched.length > MAX_VISIBLE_BARS && (
-            <span className="text-[0.5rem] leading-none text-muted-foreground">
+            <span className="text-muted-foreground text-[0.5rem] leading-none">
               +{matched.length - MAX_VISIBLE_BARS}
             </span>
           )}

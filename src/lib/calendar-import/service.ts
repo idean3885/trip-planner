@@ -10,10 +10,12 @@
  */
 
 import type { CalendarProviderId } from "@prisma/client";
+
 import { prisma } from "@/lib/prisma";
 import { getDerivedPeriod } from "@/lib/trip-period";
-import { googleImportFetcher } from "./google";
+
 import { appleImportFetcher } from "./apple";
+import { googleImportFetcher } from "./google";
 import { findExistingDraftIds, ignoreUniqueViolation } from "./idempotency";
 import { mapExternalEvent, overlapsTrip } from "./mapper";
 import type {
@@ -194,11 +196,16 @@ export interface ExternalCalendarListing {
 export async function listAvailableExternalCalendars(
   userId: string,
 ): Promise<ExternalCalendarListing> {
-  const fetchers: ExternalCalendarFetcher[] = [googleImportFetcher, appleImportFetcher];
+  const fetchers: ExternalCalendarFetcher[] = [
+    googleImportFetcher,
+    appleImportFetcher,
+  ];
   const notConnected: CalendarProviderId[] = [];
   const scopeInsufficient: CalendarProviderId[] = [];
   const errors: { provider: CalendarProviderId; message: string }[] = [];
-  const allLists: Awaited<ReturnType<ExternalCalendarFetcher["listCalendars"]>>[] = [];
+  const allLists: Awaited<
+    ReturnType<ExternalCalendarFetcher["listCalendars"]>
+  >[] = [];
 
   for (const f of fetchers) {
     const connected = await f.isConnected(userId);

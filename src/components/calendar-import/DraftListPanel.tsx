@@ -7,9 +7,16 @@
  * 카드 클릭 → 승격 모달. 컨텍스트 메뉴 → 다시 가져오기 / 삭제.
  */
 
-import { useCallback, useEffect, useState } from "react";
+import type {
+  ActivityCategory,
+  ActivityDraftStatus,
+  CalendarProviderId,
+  ReservationStatus,
+} from "@prisma/client";
 import { CalendarClock, Loader2, MoreHorizontal } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -32,12 +39,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type {
-  ActivityCategory,
-  ActivityDraftStatus,
-  CalendarProviderId,
-  ReservationStatus,
-} from "@prisma/client";
 
 interface DraftDTO {
   id: number;
@@ -113,7 +114,8 @@ export default function DraftListPanel({
 
   // 폼 상태
   const [category, setCategory] = useState<ActivityCategory>("SIGHTSEEING");
-  const [reservationStatus, setReservationStatus] = useState<ReservationStatus>("NOT_NEEDED");
+  const [reservationStatus, setReservationStatus] =
+    useState<ReservationStatus>("NOT_NEEDED");
   const [startTz, setStartTz] = useState<string>("Asia/Seoul");
   const [endTz, setEndTz] = useState<string>("Asia/Seoul");
 
@@ -176,7 +178,15 @@ export default function DraftListPanel({
     } finally {
       setSubmitting(false);
     }
-  }, [category, endTz, promoteTarget, refresh, reservationStatus, startTz, tripId]);
+  }, [
+    category,
+    endTz,
+    promoteTarget,
+    refresh,
+    reservationStatus,
+    startTz,
+    tripId,
+  ]);
 
   const handleRefreshDraft = useCallback(
     async (d: DraftDTO) => {
@@ -190,7 +200,9 @@ export default function DraftListPanel({
         return;
       }
       if (!res.ok) {
-        toast.error("다시 가져오기 실패", { description: `오류 코드 ${res.status}` });
+        toast.error("다시 가져오기 실패", {
+          description: `오류 코드 ${res.status}`,
+        });
         return;
       }
       toast.success("외부 최신 값으로 갱신했습니다.");
@@ -201,8 +213,15 @@ export default function DraftListPanel({
 
   const handleDelete = useCallback(
     async (d: DraftDTO) => {
-      if (!confirm("이 초안을 삭제할까요? 외부 캘린더의 이벤트는 그대로 유지됩니다.")) return;
-      const res = await fetch(`/api/trips/${tripId}/drafts/${d.id}`, { method: "DELETE" });
+      if (
+        !confirm(
+          "이 초안을 삭제할까요? 외부 캘린더의 이벤트는 그대로 유지됩니다.",
+        )
+      )
+        return;
+      const res = await fetch(`/api/trips/${tripId}/drafts/${d.id}`, {
+        method: "DELETE",
+      });
       if (res.ok) {
         toast.success("초안을 삭제했습니다.");
         await refresh();
@@ -216,19 +235,20 @@ export default function DraftListPanel({
   if (!drafts || drafts.length === 0) return null;
 
   return (
-    <section className="rounded-lg border bg-card p-4 shadow-sm">
+    <section className="bg-card rounded-lg border p-4 shadow-sm">
       <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold">
         <CalendarClock className="size-4" />
         외부에서 가져온 일정 ({drafts.length})
       </h3>
-      <p className="mb-3 text-xs text-muted-foreground">
-        클릭하면 카테고리·예약 상태·시간대를 채워 정식 일정으로 만들 수 있습니다.
+      <p className="text-muted-foreground mb-3 text-xs">
+        클릭하면 카테고리·예약 상태·시간대를 채워 정식 일정으로 만들 수
+        있습니다.
       </p>
       <ul className="space-y-2">
         {drafts.map((d) => (
           <li
             key={d.id}
-            className="flex items-start justify-between gap-2 rounded-md border border-dashed bg-muted/30 px-3 py-2"
+            className="bg-muted/30 flex items-start justify-between gap-2 rounded-md border border-dashed px-3 py-2"
           >
             <button
               className="flex-1 text-left disabled:cursor-not-allowed"
@@ -236,18 +256,21 @@ export default function DraftListPanel({
               disabled={!canEdit}
             >
               <div className="text-sm font-medium opacity-80">{d.title}</div>
-              <div className="text-xs text-muted-foreground">
+              <div className="text-muted-foreground text-xs">
                 {formatRange(d.startTime, d.endTime, d.isAllDay)}
                 {d.locationText ? ` · ${d.locationText}` : ""}
               </div>
-              <div className="mt-1 inline-flex items-center rounded bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+              <div className="bg-muted text-muted-foreground mt-1 inline-flex items-center rounded px-2 py-0.5 text-[10px] font-medium">
                 외부 캘린더에서 가져옴
               </div>
             </button>
             {canEdit && (
               <DropdownMenu>
                 <DropdownMenuTrigger>
-                  <span className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-accent" aria-label="더보기">
+                  <span
+                    className="text-muted-foreground hover:bg-accent inline-flex size-8 items-center justify-center rounded-md"
+                    aria-label="더보기"
+                  >
                     <MoreHorizontal className="size-4" />
                   </span>
                 </DropdownMenuTrigger>
@@ -255,7 +278,10 @@ export default function DraftListPanel({
                   <DropdownMenuItem onClick={() => handleRefreshDraft(d)}>
                     다시 가져오기
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleDelete(d)} className="text-destructive">
+                  <DropdownMenuItem
+                    onClick={() => handleDelete(d)}
+                    className="text-destructive"
+                  >
                     삭제
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -265,18 +291,22 @@ export default function DraftListPanel({
         ))}
       </ul>
 
-      <Dialog open={promoteTarget !== null} onOpenChange={(o) => !o && setPromoteTarget(null)}>
+      <Dialog
+        open={promoteTarget !== null}
+        onOpenChange={(o) => !o && setPromoteTarget(null)}
+      >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>정식 일정으로 만들기</DialogTitle>
-            <DialogDescription>
-              {promoteTarget?.title}
-            </DialogDescription>
+            <DialogDescription>{promoteTarget?.title}</DialogDescription>
           </DialogHeader>
           <div className="space-y-3 text-sm">
             <label className="block">
               <span className="mb-1 block text-xs font-medium">카테고리</span>
-              <Select value={category} onValueChange={(v) => setCategory(v as ActivityCategory)}>
+              <Select
+                value={category}
+                onValueChange={(v) => setCategory(v as ActivityCategory)}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -293,7 +323,9 @@ export default function DraftListPanel({
               <span className="mb-1 block text-xs font-medium">예약 상태</span>
               <Select
                 value={reservationStatus}
-                onValueChange={(v) => setReservationStatus(v as ReservationStatus)}
+                onValueChange={(v) =>
+                  setReservationStatus(v as ReservationStatus)
+                }
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -309,8 +341,13 @@ export default function DraftListPanel({
             </label>
             <div className="grid grid-cols-2 gap-2">
               <label className="block">
-                <span className="mb-1 block text-xs font-medium">시작 시간대</span>
-                <Select value={startTz} onValueChange={(v) => v && setStartTz(v)}>
+                <span className="mb-1 block text-xs font-medium">
+                  시작 시간대
+                </span>
+                <Select
+                  value={startTz}
+                  onValueChange={(v) => v && setStartTz(v)}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -324,7 +361,9 @@ export default function DraftListPanel({
                 </Select>
               </label>
               <label className="block">
-                <span className="mb-1 block text-xs font-medium">종료 시간대</span>
+                <span className="mb-1 block text-xs font-medium">
+                  종료 시간대
+                </span>
                 <Select value={endTz} onValueChange={(v) => v && setEndTz(v)}>
                   <SelectTrigger>
                     <SelectValue />

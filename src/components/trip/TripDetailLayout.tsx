@@ -13,25 +13,23 @@
  *   일정. 동기화·동행자는 캘린더 상단 바의 "자세히" 로 한 단계 뒤에 둔다.
  */
 
+import { useGSAP } from "@gsap/react";
+import { addDays } from "date-fns";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import {
+  type ReactNode,
   useCallback,
   useEffect,
   useMemo,
   useRef,
   useState,
-  type ReactNode,
 } from "react";
-import { addDays } from "date-fns";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { useGSAP } from "@gsap/react";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 import type { ActivityCategory, ReservationStatus } from "@prisma/client";
-import {
-  ACTIVITY_WINDOW_RADIUS,
-  missingFetchRange,
-} from "@/lib/activity-window";
+
+import type { Activity } from "@/components/ActivityList";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -40,11 +38,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import type { Activity } from "@/components/ActivityList";
+import {
+  ACTIVITY_WINDOW_RADIUS,
+  missingFetchRange,
+} from "@/lib/activity-window";
+
 import { CalendarView } from "./CalendarView";
 import { DayActivitiesPane, type DayCreatedPayload } from "./DayActivitiesPane";
 import { SwipeCarousel } from "./SwipeCarousel";
-import { TripDetailExtras } from "./TripDetailExtras";
 
 export interface LayoutActivity {
   id: number;
@@ -81,8 +82,6 @@ export interface TripDetailLayoutProps {
   canEdit: boolean;
   /** 외부 캘린더 동기화 카드 (서버에서 만든 노드). */
   syncCard: ReactNode;
-  /** 동행자 목록 (서버에서 만든 노드). */
-  memberList: ReactNode;
 }
 
 /**
@@ -115,12 +114,10 @@ export function TripDetailLayout({
   initialActivities,
   canEdit,
   syncCard,
-  memberList,
 }: TripDetailLayoutProps) {
   const [dayIndex, setDayIndex] = useState<LayoutDayIndex[]>(initialDays);
-  const [activitiesByDayId, setActivitiesByDayId] = useState<
-    Record<number, LayoutActivity[]>
-  >(initialActivities);
+  const [activitiesByDayId, setActivitiesByDayId] =
+    useState<Record<number, LayoutActivity[]>>(initialActivities);
   const [selectedDate, setSelectedDate] = useState<Date>(() =>
     computeInitialSelected(tripStart, tripEnd),
   );
@@ -138,6 +135,13 @@ export function TripDetailLayout({
     () => dayIndex.map((d) => new Date(d.date)),
     [dayIndex],
   );
+
+  // spec 040 — 데스크탑 넓은 셀에 노출할 날짜→Day 제목 맵(추가 조회 없이 인덱스 재사용).
+  const dayTitles = useMemo(() => {
+    const m = new Map<string, string | null>();
+    for (const d of dayIndex) m.set(new Date(d.date).toDateString(), d.title);
+    return m;
+  }, [dayIndex]);
 
   // #669 — 선택일 윈도우(±N)에서 아직 캐시에 없는 Day 의 활동을 백그라운드로
   // 받아 캐시에 채운다. 캐시가 채워지면 effect 가 재실행돼 missingFetchRange 가
@@ -190,7 +194,10 @@ export function TripDetailLayout({
         sameLocalDay(new Date(d.date), date),
       );
       if (!matched) return null;
-      return { id: matched.id, activities: activitiesByDayId[matched.id] ?? null };
+      return {
+        id: matched.id,
+        activities: activitiesByDayId[matched.id] ?? null,
+      };
     },
     [dayIndex, activitiesByDayId],
   );
@@ -231,20 +238,30 @@ export function TripDetailLayout({
     mm.add("(max-width: 1023px)", () => {
       const st = ScrollTrigger.create({
         snap: {
-          snapTo: (value) => {
+          // spec 040 — vh 기준 1순위. 헤더가 화면에서 사라지는 경계를 뷰포트 높이
+          // 비율로 근사하되 sticky.offsetTop 을 넘지 않게 한다. 아래로 스크롤하며
+          // 경계 구간을 지날 때만 경계에 1회 멈추고, 위로 스크롤·경계 밖에서는
+          // value 를 그대로 반환해 "위로 되돌리는 보정"을 없앤다(기존 directional:false
+          // 가 양방향으로 끌어당겨 본 되돌림 버그). 실기기에서 vh 근사가 부정확하면
+          // 캘린더 직하단 토글 문자열 offsetTop 으로 폴백한다.
+          snapTo: (value, self) => {
             const max = ScrollTrigger.maxScroll(window);
-            const boundary = sticky.offsetTop;
-            if (max <= 0 || boundary <= 0) return value;
+            if (max <= 0) return value;
+            const boundary = Math.min(
+              window.innerHeight * 0.42,
+              sticky.offsetTop || Number.POSITIVE_INFINITY,
+            );
+            if (!Number.isFinite(boundary) || boundary <= 0) return value;
             const scroll = value * max;
-            // 헤더 구간(0~경계)에서만 0 또는 경계로 정지. 일정 구간은 자유.
-            if (scroll < boundary) {
-              return (scroll < boundary / 2 ? 0 : boundary) / max;
+            const goingDown = !self || self.direction === 1;
+            if (goingDown && scroll > boundary * 0.4 && scroll < boundary) {
+              return boundary / max;
             }
             return value;
           },
           duration: 0.12,
           ease: "power2.out",
-          directional: false,
+          directional: true,
         },
       });
       return () => st.kill();
@@ -310,12 +327,13 @@ export function TripDetailLayout({
   return (
     <>
       {/* 데스크탑 ≥1024px — 좌(캘린더+동기화) / 우(동행자+선택 일정) 2분할. */}
-      <div className="hidden lg:grid lg:grid-cols-2 lg:gap-grid-comfy lg:items-start">
+      <div className="lg:gap-grid-comfy hidden lg:grid lg:grid-cols-2 lg:items-start">
         <div className="min-w-0 space-y-6">
           <CalendarView
             tripStart={tripStart}
             tripEnd={tripEnd}
             daysDates={daysDates}
+            dayTitles={dayTitles}
             selected={selectedDate}
             onSelect={handleSelectDate}
             desktopFull
@@ -323,33 +341,30 @@ export function TripDetailLayout({
           {syncCard}
         </div>
         <div className="min-w-0 space-y-6">
-          {memberList}
           {renderPanel(selectedDate, true)}
         </div>
       </div>
 
-      {/* 모바일 <1024px — sticky 캘린더 + 선택 일정. 동기화·동행자는 자세히
-          다이얼로그(열기/닫기) 안에서만 본다(#645). */}
+      {/* 모바일 <1024px — sticky 캘린더 + 선택 일정. 외부 캘린더 동기화는
+          "캘린더 동기화" 다이얼로그에서 본다(spec 041 — 동행자는 헤더 "동행자
+          초대" 다이얼로그로 분리). */}
       <div className="space-y-4 lg:hidden">
         <div
           ref={mobileStickyRef}
-          className="sticky top-0 z-20 -mx-4 bg-background px-4 pb-2 pt-1"
+          className="bg-background sticky top-0 z-20 -mx-4 px-4 pt-1 pb-2"
         >
           <div className="flex justify-end">
             <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
               <DialogTrigger
-                render={
-                  <Button type="button" variant="outline" size="sm" />
-                }
+                render={<Button type="button" variant="outline" size="sm" />}
               >
-                자세히
+                캘린더 동기화
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent fullSheetOnMobile>
                 <DialogHeader>
-                  <DialogTitle>여행 정보</DialogTitle>
+                  <DialogTitle>캘린더 동기화</DialogTitle>
                 </DialogHeader>
-                {/* 동행자(위) + 외부 캘린더 동기화(아래)를 한 묶음으로. */}
-                <TripDetailExtras members={memberList} sync={syncCard} />
+                {syncCard}
               </DialogContent>
             </Dialog>
           </div>

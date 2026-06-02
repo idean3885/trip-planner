@@ -6,9 +6,10 @@
  * push 경로(spec 025 appleProvider)와는 read-only 분리.
  */
 
-import { prisma } from "@/lib/prisma";
 import { createAppleClient } from "@/lib/calendar/provider/apple-client";
 import { decryptPassword } from "@/lib/calendar/provider/apple-crypto";
+import { prisma } from "@/lib/prisma";
+
 import { parseVevent } from "./ics-parser";
 import type {
   DateRange,
@@ -18,7 +19,9 @@ import type {
 } from "./types";
 
 async function loadClient(userId: string) {
-  const cred = await prisma.appleCalendarCredential.findUnique({ where: { userId } });
+  const cred = await prisma.appleCalendarCredential.findUnique({
+    where: { userId },
+  });
   if (!cred) return null;
   try {
     const password = decryptPassword(cred.encryptedPassword, cred.iv);
@@ -41,7 +44,9 @@ export const appleImportFetcher: ExternalCalendarFetcher = {
   provider: "APPLE",
 
   async isConnected(userId: string): Promise<boolean> {
-    const cred = await prisma.appleCalendarCredential.findUnique({ where: { userId } });
+    const cred = await prisma.appleCalendarCredential.findUnique({
+      where: { userId },
+    });
     return cred !== null;
   },
 
@@ -53,7 +58,9 @@ export const appleImportFetcher: ExternalCalendarFetcher = {
     return calendars
       .filter(
         (c) =>
-          Array.isArray(c.components) && c.components.includes("VEVENT") && Boolean(c.url),
+          Array.isArray(c.components) &&
+          c.components.includes("VEVENT") &&
+          Boolean(c.url),
       )
       .map((c) => ({
         provider: "APPLE" as const,
