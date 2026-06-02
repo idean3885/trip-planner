@@ -167,9 +167,31 @@ body {
 }
 
 @theme inline {
-  /* CardTitle/DialogTitle 등이 font-heading 유틸리티를 참조하므로 명시 정의.
-     단일 서체 정책(라이트 단독 + Inter)에서는 sans 스택과 동일. 추후 브랜드 타이포 도입 시 분리. */
-  --font-heading: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  /* spec 055 — Inter를 sans/heading 정본으로 연결(next/font 변수 --font-inter).
+     라이트 전용·단일 서체. CardTitle/DialogTitle 등이 font-heading 유틸리티 참조. */
+  --font-sans:
+    var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    sans-serif;
+  --font-heading:
+    var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    sans-serif;
+  /* spec 055 — 캘린더 셀/헤더 상태 + 동행 배너 색을 Tailwind 유틸리티로 노출
+     (text-cal-sunday / bg-cal-selected-bg / bg-banner 등). 값 정본은 :root. */
+  --color-cal-saturday: var(--cal-saturday);
+  --color-cal-sunday: var(--cal-sunday);
+  --color-cal-weekday-header: var(--cal-weekday-header);
+  --color-cal-trip-weekend: var(--cal-trip-weekend);
+  --color-cal-trip-weekend-dark: var(--cal-trip-weekend-dark);
+  --color-cal-selected-bg: var(--cal-selected-bg);
+  --color-cal-selected-text: var(--cal-selected-text);
+  --color-cal-today-border: var(--cal-today-border);
+  --color-cal-inactive: var(--cal-inactive);
+  --color-cal-inactive-strong: var(--cal-inactive-strong);
+  --color-cal-weekend-inactive: var(--cal-weekend-inactive);
+  --color-cal-fill-weekend: var(--cal-fill-weekend);
+  --color-cal-fill-weekday: var(--cal-fill-weekday);
+  --color-banner: var(--banner);
+  --color-banner-foreground: var(--banner-foreground);
   --color-sidebar-ring:  var(--sidebar-ring);
   --color-sidebar-border:  var(--sidebar-border);
   --color-sidebar-accent-foreground:  var(--sidebar-accent-foreground);
@@ -211,38 +233,83 @@ body {
 }
 
 :root {
-  --background:  oklch(1 0 0);
-  --foreground:  oklch(0.145 0 0);
-  --card:  oklch(1 0 0);
-  --card-foreground:  oklch(0.145 0 0);
-  --popover:  oklch(1 0 0);
-  --popover-foreground:  oklch(0.145 0 0);
-  --primary:  oklch(0.205 0 0);
-  --primary-foreground:  oklch(0.985 0 0);
-  --secondary:  oklch(0.97 0 0);
-  --secondary-foreground:  oklch(0.205 0 0);
-  --muted:  oklch(0.97 0 0);
-  --muted-foreground:  oklch(0.556 0 0);
-  --accent:  oklch(0.97 0 0);
-  --accent-foreground:  oklch(0.205 0 0);
-  --destructive:  oklch(0.577 0.245 27.325);
-  --border:  oklch(0.922 0 0);
-  --input:  oklch(0.922 0 0);
-  --ring:  oklch(0.708 0 0);
-  --chart-1:  oklch(0.87 0 0);
-  --chart-2:  oklch(0.556 0 0);
-  --chart-3:  oklch(0.439 0 0);
-  --chart-4:  oklch(0.371 0 0);
-  --chart-5:  oklch(0.269 0 0);
-  --radius:  0.625rem;
-  --sidebar:  oklch(0.985 0 0);
-  --sidebar-foreground:  oklch(0.145 0 0);
-  --sidebar-primary:  oklch(0.205 0 0);
-  --sidebar-primary-foreground:  oklch(0.985 0 0);
-  --sidebar-accent:  oklch(0.97 0 0);
-  --sidebar-accent-foreground:  oklch(0.205 0 0);
-  --sidebar-border:  oklch(0.922 0 0);
-  --sidebar-ring:  oklch(0.708 0 0);
+  /* ════════════════════════════════════════════════════════════════════
+     spec 055 — Figma 디자인 프리미티브 팔레트 (디자인 등장 색 전수).
+     출처: Figma "Trip Planner" (file key Q9CK8aGJQu1sSnde8uQ44H) 노드 전수 파싱.
+     색 정본 = 이 :root. 모든 표면·텍스트·테두리·강조는 토큰 경유(하드코딩 hex 금지,
+     spec 038 색상 가드). 라이트 전용 — .dark 블록 없음.
+     ════════════════════════════════════════════════════════════════════ */
+  --white: #ffffff;
+  --gray-50: #f5f5f5; /* section/muted 표면 */
+  --gray-100: #eeeeee; /* divider */
+  --gray-200: #d9d9d9; /* border/input (stroke) */
+  --gray-300: #b3b3b3; /* muted 텍스트·캘린더 비활성 */
+  --gray-600: #616161; /* secondary 텍스트·비활성 평일(진함) */
+  --gray-700: #333333; /* 주차칸 배경(다크 참조)·강한 중립 */
+  --gray-800: #2f2f2f; /* 동행 배너 텍스트 */
+  --gray-900: #212121; /* 다크 표면(참조) */
+  --gray-950: #121212; /* 근접-블랙 텍스트·다크 배경 */
+  --black: #000000; /* foreground 강조·DAY 칩·평일 선택 채움 */
+  --blue-500: #17a1fa; /* 포인트: 토요일·오늘·주말 선택 채움 */
+  --blue-700: #1270b0; /* 주말 비활성(진한 파랑) */
+  --green-50: #f0ffd7; /* 여행주말/선택 셀 배경·동행 배너 배경 */
+  --green-600: #629126; /* 여행기간 주말·일요일 텍스트 */
+  --green-800: #335803; /* 여행주말 진녹·선택 텍스트 */
+  --pink-400: #ff8a9d; /* 배경 스와치 — 팔레트 등재만(미적용) */
+
+  /* ── shadcn 시맨틱 토큰 → 디자인 정확값 매핑 (무채색 oklch 제거) ── */
+  --background: var(--white);
+  --foreground: var(--gray-950);
+  --card: var(--white);
+  --card-foreground: var(--gray-950);
+  --popover: var(--white);
+  --popover-foreground: var(--gray-950);
+  --primary: var(--gray-950);
+  --primary-foreground: var(--white);
+  --secondary: var(--gray-50);
+  --secondary-foreground: var(--gray-950);
+  --muted: var(--gray-50);
+  --muted-foreground: var(--gray-600);
+  --accent: var(--gray-50);
+  --accent-foreground: var(--gray-950);
+  --destructive: oklch(0.577 0.245 27.325); /* 위험(여행 삭제 등) — 유지 */
+  --border: var(--gray-200);
+  --input: var(--gray-200);
+  --ring: var(--blue-500); /* 포커스 링 = 브랜드 블루 */
+  --chart-1: var(--blue-500);
+  --chart-2: var(--green-600);
+  --chart-3: var(--blue-700);
+  --chart-4: var(--gray-600);
+  --chart-5: var(--gray-300);
+  --radius: 0.5rem; /* 8px 기준 (디자인 4/6.23/8 중 카드 8). md≈6.4=버튼, sm≈4.8 */
+  --sidebar: var(--gray-50);
+  --sidebar-foreground: var(--gray-950);
+  --sidebar-primary: var(--gray-950);
+  --sidebar-primary-foreground: var(--white);
+  --sidebar-accent: var(--gray-50);
+  --sidebar-accent-foreground: var(--gray-950);
+  --sidebar-border: var(--gray-200);
+  --sidebar-ring: var(--blue-500);
+
+  /* ── 캘린더 셀/헤더 상태 토큰 (Atoms 8변형 추출값) ──
+     Weekend × Active × Fill/Strok 조합을 라이트 여행 캘린더에 적용. */
+  --cal-saturday: var(--blue-500); /* 토요일 헤더·날짜 */
+  --cal-sunday: var(--green-600); /* 일요일 헤더 */
+  --cal-weekday-header: var(--gray-300); /* 평일 헤더 */
+  --cal-trip-weekend: var(--green-600); /* 여행기간 주말 텍스트 */
+  --cal-trip-weekend-dark: var(--green-800);
+  --cal-selected-bg: var(--green-50); /* 선택 셀 배경 */
+  --cal-selected-text: var(--green-800); /* 선택 셀 텍스트 */
+  --cal-today-border: var(--gray-950); /* 오늘 = 테두리 박스 */
+  --cal-inactive: var(--gray-300); /* 비활성 평일 */
+  --cal-inactive-strong: var(--gray-600);
+  --cal-weekend-inactive: var(--blue-700); /* 비활성 주말 */
+  --cal-fill-weekend: var(--blue-500); /* 주말 선택 채움(흰 글자) */
+  --cal-fill-weekday: var(--black); /* 평일 선택 채움(흰 글자) */
+
+  /* ── 동행 배너 ── */
+  --banner: var(--green-50);
+  --banner-foreground: var(--gray-800);
 
   /* spec 029 T030 — 통합 캘린더 트립 라벨 palette pool (6색).
      getTripColor(tripId) 가 trip ID hash → palette index 결정적 부여.
@@ -268,6 +335,50 @@ body {
  * component templates compile, but no ancestor ever gets the .dark class,
  * so dark: utilities are runtime-inert.
  */
+
+/* ════════════════════════════════════════════════════════════════════════
+   spec 055 — 여행 캘린더(react-day-picker) Figma 디자인 재색.
+   CalendarView 가 루트에 `.trip-cal` 을 부여한다. 셀 기본은 비활성 그레이,
+   여행기간(.cal-range)은 강조, 그 중 주(週)의 첫/끝 칸(일/토)은 여행주말 초록,
+   선택은 연녹 배경, 오늘은 테두리 박스. 요일 헤더는 일=초록·토=파랑·평일=그레이.
+   값은 전부 :root 토큰(var) 경유 — 하드코딩 색 없음.
+   ════════════════════════════════════════════════════════════════════════ */
+/* 요일 헤더: 일요일(첫)·토요일(끝) */
+.trip-cal .rdp-weekdays > :first-child {
+  color: var(--cal-sunday);
+}
+.trip-cal .rdp-weekdays > :last-child {
+  color: var(--cal-saturday);
+}
+/* 날짜 셀 기본 = 비활성 그레이(여행기간 밖·당월 외) */
+.trip-cal .rdp-day button:not([data-selected-single="true"]) {
+  color: var(--cal-inactive);
+}
+/* 여행기간 안(.cal-range) = 진한 본문색 + 볼드(평일) */
+.trip-cal .rdp-day.cal-range button:not([data-selected-single="true"]) {
+  color: var(--foreground);
+  font-weight: 600;
+}
+/* 여행기간 안 주말(주의 첫=일·끝=토 칸) = 여행주말 초록 */
+.trip-cal .rdp-week > .cal-range:first-child button:not([data-selected-single="true"]),
+.trip-cal .rdp-week > .cal-range:last-child button:not([data-selected-single="true"]) {
+  color: var(--cal-trip-weekend);
+}
+/* 선택 셀 = 연녹 배경 + 진녹 텍스트 (CalendarDayButton 의 bg-primary 무력화) */
+.trip-cal [data-selected-single="true"] {
+  background-color: var(--cal-selected-bg) !important;
+  color: var(--cal-selected-text) !important;
+}
+/* 오늘(선택 아님) = 테두리 박스, 채움 없음.
+   react-day-picker 의 today 셀은 bg-muted(연회색)를 셀에 입히므로 셀 배경도
+   중화하고, 버튼에 테두리 박스를 그린다. 디자인의 오늘 = 흰 배경 + 테두리. */
+.trip-cal .rdp-today:not(:has([data-selected-single="true"])) {
+  background-color: transparent;
+}
+.trip-cal .rdp-today:not(:has([data-selected-single="true"])) button {
+  background-color: transparent;
+  box-shadow: inset 0 0 0 1px var(--cal-today-border);
+}
 
 @layer base {
   * {
