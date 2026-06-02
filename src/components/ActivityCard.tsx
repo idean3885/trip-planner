@@ -5,34 +5,9 @@ import type {
 } from "@prisma/client";
 import { ArrowDown, ArrowUp, Pencil, Trash2 } from "lucide-react";
 
+import { Linkify } from "@/components/Linkify";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { tzLabel } from "@/lib/tz-label";
-
-const URL_RE = /(https?:\/\/[^\s]+)/;
-
-function Linkify({ text }: { text: string }) {
-  const parts = text.split(URL_RE);
-  return (
-    <>
-      {parts.map((part, i) =>
-        URL_RE.test(part) ? (
-          <a
-            key={i}
-            href={part}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={(e) => e.stopPropagation()}
-            className="text-foreground break-all underline underline-offset-2 hover:opacity-80"
-          >
-            {part}
-          </a>
-        ) : (
-          part
-        ),
-      )}
-    </>
-  );
-}
 
 const CATEGORY_LABEL: Record<ActivityCategory, string> = {
   SIGHTSEEING: "관광",
@@ -102,6 +77,8 @@ interface ActivityCardProps {
   canEdit?: boolean;
   isFirst?: boolean;
   isLast?: boolean;
+  /** spec 048 — 본문 탭 시 상세(읽기 전용) 펼침. */
+  onView?: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
   onMoveUp?: () => void;
@@ -113,6 +90,7 @@ export default function ActivityCard({
   canEdit = false,
   isFirst = false,
   isLast = false,
+  onView,
   onEdit,
   onDelete,
   onMoveUp,
@@ -125,25 +103,23 @@ export default function ActivityCard({
 
   const cost = activity.cost ? Number(activity.cost) : null;
 
-  const editable = canEdit && Boolean(onEdit);
+  // spec 048 — 본문 탭은 상세(읽기 전용)를 연다. 편집은 푸터의 "편집" 버튼으로만.
+  const viewable = Boolean(onView);
 
   return (
     <Card size="sm" className="group gap-2">
-      {/* 본문 탭 → 그 자리에서 인라인 수정 폼이 펼쳐진다(#653). 수정 버튼이
-          데스크탑 호버에서만 보여 모바일에서 닿지 않던 문제를 본문 전체를
-          탭 대상으로 만들어 해결. 메모 안 링크는 stopPropagation 으로 분리. */}
       <CardContent
-        className={`flex items-start justify-between gap-2${editable ? "cursor-pointer" : ""}`}
-        role={editable ? "button" : undefined}
-        tabIndex={editable ? 0 : undefined}
-        aria-label={editable ? `${activity.title} 수정` : undefined}
-        onClick={editable ? onEdit : undefined}
+        className={`flex items-start justify-between gap-2${viewable ? " cursor-pointer" : ""}`}
+        role={viewable ? "button" : undefined}
+        tabIndex={viewable ? 0 : undefined}
+        aria-label={viewable ? `${activity.title} 상세` : undefined}
+        onClick={viewable ? onView : undefined}
         onKeyDown={
-          editable
+          viewable
             ? (e) => {
                 if (e.key === "Enter" || e.key === " ") {
                   e.preventDefault();
-                  onEdit?.();
+                  onView?.();
                 }
               }
             : undefined

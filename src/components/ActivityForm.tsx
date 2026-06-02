@@ -3,6 +3,7 @@
 import type { ActivityCategory, ReservationStatus } from "@prisma/client";
 import { useEffect, useState } from "react";
 
+import { Linkify } from "@/components/Linkify";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -48,6 +49,10 @@ interface ActivityFormProps {
   onSubmit: (data: ActivityFormData) => Promise<void>;
   onCancel: () => void;
   isEdit?: boolean;
+  /** spec 048 — 읽기 전용 상세 모드. 입력 비활성 + "편집"/"닫기" 푸터. */
+  readOnly?: boolean;
+  /** readOnly 상세에서 편집 모드로 전환. */
+  onEdit?: () => void;
 }
 
 function getLocalTimes(): { start: string; end: string } {
@@ -67,6 +72,8 @@ export default function ActivityForm({
   onSubmit,
   onCancel,
   isEdit = false,
+  readOnly = false,
+  onEdit,
 }: ActivityFormProps) {
   const [form, setForm] = useState<ActivityFormData>({
     category: initial?.category ?? "SIGHTSEEING",
@@ -104,7 +111,7 @@ export default function ActivityForm({
     };
     setTzLabel(CITY_KO[city] ?? city);
 
-    if (!isEdit && !initial?.startTime && !form.startTime) {
+    if (!isEdit && !readOnly && !initial?.startTime && !form.startTime) {
       const { start, end } = getLocalTimes();
       setForm((prev) => ({ ...prev, startTime: start, endTime: end }));
     }
@@ -119,7 +126,7 @@ export default function ActivityForm({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.title.trim()) return;
+    if (readOnly || !form.title.trim()) return;
     setSaving(true);
     try {
       await onSubmit(form);
@@ -147,6 +154,7 @@ export default function ActivityForm({
             onChange={(e) =>
               update("category", e.target.value as ActivityCategory)
             }
+            disabled={readOnly}
             className={SELECT_CLASS}
           >
             {CATEGORY_OPTIONS.map((opt) => (
@@ -169,6 +177,7 @@ export default function ActivityForm({
             value={form.title}
             onChange={(e) => update("title", e.target.value)}
             required
+            readOnly={readOnly}
             className="h-8"
           />
         </div>
@@ -191,6 +200,7 @@ export default function ActivityForm({
             value={form.startTime}
             onChange={(e) => update("startTime", e.target.value)}
             required
+            readOnly={readOnly}
             className="h-8"
           />
         </div>
@@ -210,27 +220,34 @@ export default function ActivityForm({
             value={form.endTime}
             onChange={(e) => update("endTime", e.target.value)}
             required
+            readOnly={readOnly}
             className="h-8"
           />
         </div>
       </div>
 
-      <Input
-        type="text"
-        placeholder="장소"
-        value={form.location}
-        onChange={(e) => update("location", e.target.value)}
-        className="h-8"
-      />
+      <div className="space-y-1">
+        <Label
+          htmlFor="activity-location"
+          className="text-muted-foreground text-[11px]"
+        >
+          장소
+        </Label>
+        <Input
+          id="activity-location"
+          type="text"
+          placeholder="예: 사그라다 파밀리아"
+          value={form.location}
+          onChange={(e) => update("location", e.target.value)}
+          readOnly={readOnly}
+          className="h-8"
+        />
+        <p className="text-muted-foreground/60 text-[11px]">
+          지도·캘린더 위치로 연동됩니다. 자유 메모는 아래 메모란에 적어주세요.
+        </p>
+      </div>
 
-      <textarea
-        placeholder="메모"
-        value={form.memo}
-        onChange={(e) => update("memo", e.target.value)}
-        rows={2}
-        className="border-input focus-visible:border-ring focus-visible:ring-ring/50 w-full min-w-0 resize-none rounded-lg border bg-transparent px-2.5 py-1 text-base transition-colors outline-none focus-visible:ring-3 md:text-sm"
-      />
-
+      {/* spec 048 US2 — 핵심 정보(비용·통화·예약)를 메모 위로 모은다. */}
       <div className="grid grid-cols-3 gap-2">
         <div className="space-y-1">
           <Label
@@ -247,6 +264,7 @@ export default function ActivityForm({
             placeholder="0"
             value={form.cost}
             onChange={(e) => update("cost", e.target.value)}
+            readOnly={readOnly}
             className="h-8"
           />
         </div>
@@ -263,6 +281,7 @@ export default function ActivityForm({
             maxLength={3}
             value={form.currency}
             onChange={(e) => update("currency", e.target.value.toUpperCase())}
+            readOnly={readOnly}
             className="h-8"
           />
         </div>
@@ -277,6 +296,7 @@ export default function ActivityForm({
             id="activity-reservation"
             value={form.reservationStatus}
             onChange={(e) => update("reservationStatus", e.target.value)}
+            disabled={readOnly}
             className={SELECT_CLASS}
           >
             {RESERVATION_OPTIONS.map((opt) => (
@@ -288,13 +308,60 @@ export default function ActivityForm({
         </div>
       </div>
 
+      <div className="space-y-1">
+        <Label
+          htmlFor="activity-memo"
+          className="text-muted-foreground text-[11px]"
+        >
+          메모
+        </Label>
+        {readOnly ? (
+          // spec 048 US2/US3 — 상세에서 메모는 최소 높이를 확보하고 링크를 인식한다.
+          <div className="border-input min-h-24 w-full rounded-lg border bg-transparent px-2.5 py-1.5 text-sm break-words whitespace-pre-wrap">
+            {form.memo ? (
+              <Linkify text={form.memo} />
+            ) : (
+              <span className="text-muted-foreground">메모 없음</span>
+            )}
+          </div>
+        ) : (
+          <textarea
+            id="activity-memo"
+            placeholder="메모"
+            value={form.memo}
+            onChange={(e) => update("memo", e.target.value)}
+            rows={4}
+            className="border-input focus-visible:border-ring focus-visible:ring-ring/50 min-h-24 w-full min-w-0 resize-y rounded-lg border bg-transparent px-2.5 py-1 text-base transition-colors outline-none focus-visible:ring-3 md:text-sm"
+          />
+        )}
+      </div>
+
       <div className="flex justify-end gap-2 pt-1">
-        <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
-          취소
-        </Button>
-        <Button type="submit" size="sm" disabled={saving || !form.title.trim()}>
-          {saving ? "저장 중..." : isEdit ? "수정" : "추가"}
-        </Button>
+        {readOnly ? (
+          <>
+            <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
+              닫기
+            </Button>
+            {onEdit && (
+              <Button type="button" size="sm" onClick={onEdit}>
+                편집
+              </Button>
+            )}
+          </>
+        ) : (
+          <>
+            <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
+              취소
+            </Button>
+            <Button
+              type="submit"
+              size="sm"
+              disabled={saving || !form.title.trim()}
+            >
+              {saving ? "저장 중..." : isEdit ? "수정" : "추가"}
+            </Button>
+          </>
+        )}
       </div>
     </form>
   );
