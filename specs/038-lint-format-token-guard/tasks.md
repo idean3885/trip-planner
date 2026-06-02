@@ -28,7 +28,7 @@ description: "Task list for spec 038 — lint/format/디자인 토큰 가드 인
 - [x] T004 [US1] typescript-eslint recommended 적용 + 소음 큰 type-checked 룰은 warn 강등 설정 [artifact: eslint.config.mjs] [why: lint-rules]
 - [x] T005 [US1] react-hooks·jsx-a11y 권장 룰 명시적 강화 [artifact: eslint.config.mjs] [why: lint-rules]
 - [x] T006 [US1] simple-import-sort 규칙 활성화 (import/export 정렬, --fix 대상) [artifact: eslint.config.mjs] [why: import-sort]
-- [x] T007 [P] [US1] Prettier 규약 파일 작성 (.prettierrc + prettier-plugin-tailwindcss 등록) [artifact: .prettierrc] [why: format]
+- [x] T007 [P] [US1] Prettier 규약 파일 작성 (.prettierrc.json + prettier-plugin-tailwindcss 등록) [artifact: .prettierrc.json] [why: format]
 - [x] T008 [P] [US1] .prettierignore 작성 (.next, build, 생성물, prisma 마이그레이션 제외) [artifact: .prettierignore] [why: format]
 
 ## Phase 4: US2 — 디자인 토큰 색상 가드 (Priority: P1)
