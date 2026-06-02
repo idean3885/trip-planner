@@ -82,3 +82,78 @@ describe("design tokens SSOT (spec 026)", () => {
     expect(d).toBeLessThan(w);
   });
 });
+
+describe("Figma 디자인 색 토큰 SSOT (spec 055)", () => {
+  const css = readFileSync(GLOBALS_CSS, "utf8");
+  const hasDecl = (name: string) => new RegExp(`--${name}\\s*:`).test(css);
+
+  it("디자인 등장 프리미티브 팔레트가 :root에 전수 선언된다", () => {
+    const palette = [
+      ["white", "#ffffff"],
+      ["gray-50", "#f5f5f5"],
+      ["gray-100", "#eeeeee"],
+      ["gray-200", "#d9d9d9"],
+      ["gray-300", "#b3b3b3"],
+      ["gray-600", "#616161"],
+      ["gray-700", "#333333"],
+      ["gray-800", "#2f2f2f"],
+      ["gray-900", "#212121"],
+      ["gray-950", "#121212"],
+      ["black", "#000000"],
+      ["blue-500", "#17a1fa"],
+      ["blue-700", "#1270b0"],
+      ["green-50", "#f0ffd7"],
+      ["green-600", "#629126"],
+      ["green-800", "#335803"],
+      ["pink-400", "#ff8a9d"],
+    ] as const;
+    for (const [name, value] of palette) {
+      expect(hasDecl(name), `--${name} 선언 누락`).toBe(true);
+      expect(css.toLowerCase()).toContain(`--${name}: ${value}`);
+    }
+  });
+
+  it("캘린더 셀/헤더 상태 토큰이 :root에 전수 선언된다", () => {
+    const calTokens = [
+      "cal-saturday",
+      "cal-sunday",
+      "cal-weekday-header",
+      "cal-trip-weekend",
+      "cal-trip-weekend-dark",
+      "cal-selected-bg",
+      "cal-selected-text",
+      "cal-today-border",
+      "cal-inactive",
+      "cal-inactive-strong",
+      "cal-weekend-inactive",
+      "cal-fill-weekend",
+      "cal-fill-weekday",
+    ];
+    for (const name of calTokens) {
+      expect(hasDecl(name), `--${name} 선언 누락`).toBe(true);
+    }
+  });
+
+  it("동행 배너 토큰이 :root에 선언된다", () => {
+    expect(hasDecl("banner")).toBe(true);
+    expect(hasDecl("banner-foreground")).toBe(true);
+  });
+
+  it("shadcn 시맨틱 토큰이 무채색 oklch가 아닌 디자인 팔레트(var)로 매핑된다", () => {
+    expect(css).toMatch(/--foreground:\s*var\(--gray-950\)/);
+    expect(css).toMatch(/--background:\s*var\(--white\)/);
+    expect(css).toMatch(/--border:\s*var\(--gray-200\)/);
+    expect(css).toMatch(/--muted-foreground:\s*var\(--gray-600\)/);
+    expect(css).toMatch(/--ring:\s*var\(--blue-500\)/);
+  });
+
+  it("Inter 폰트가 --font-sans/--font-heading 정본에 연결된다", () => {
+    expect(css).toContain("var(--font-inter)");
+    expect(css).toMatch(/--font-sans:/);
+    expect(css).toMatch(/--font-heading:/);
+  });
+
+  it("라이트 전용 — .dark 색 블록을 도입하지 않는다", () => {
+    expect(css).not.toMatch(/\.dark\s*\{/);
+  });
+});

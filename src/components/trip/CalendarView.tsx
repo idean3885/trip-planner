@@ -119,7 +119,10 @@ export function CalendarView({
   // `after:inset-x-0` 으로 셀 가로 너비 전체를 채우고, 인접 셀 hasActivity 가
   // 같은 위치/색이면 Google Calendar 멀티데이 이벤트처럼 한 줄로 이어 보인다.
   const modifiersClassNames: Record<string, string> = {
-    tripRange: "bg-primary/10",
+    // spec 055 — 디자인은 여행기간 셀에 배경 채움을 두지 않고 텍스트로만 강조한다.
+    // `.cal-range` 마커만 부여하면 globals.css `.trip-cal` 규칙이 평일=진한 본문색·
+    // 볼드, 주말(주 첫/끝 칸)=여행주말 초록으로 칠한다.
+    tripRange: "cal-range",
     ...(isMultiTrip || singleDesktop
       ? {}
       : {
@@ -181,6 +184,9 @@ export function CalendarView({
       modifiersClassNames={modifiersClassNames}
       components={components}
       className={cn(
+        // spec 055 — Figma 디자인 재색을 위한 스코프 마커. globals.css `.trip-cal`
+        // 규칙이 요일 헤더(일=초록·토=파랑)·여행기간 강조·선택·오늘 색을 입힌다.
+        "trip-cal",
         // spec 040/043 — 데스크탑 가로 grow: 컨테이너를 채우되(root w-full) 좌우
         // 약간 여백을 두고, max-w 로 폭 상한을 둬 셀(aspect-square)이 과대해지며
         // 세로가 화면을 잡아먹는 것을 막는다(#721 — 가로 빔/세로 과대 동시 해소).
@@ -319,6 +325,12 @@ function WeekStrip({
         const hasActivity = daysDates.some((x) => sameLocalDay(x, d));
         const inRange =
           tripStart && tripEnd ? d >= tripStart && d <= tripEnd : false;
+        const dow = d.getDay();
+        const isWeekend = dow === 0 || dow === 6;
+        const isToday = sameLocalDay(d, new Date());
+        // spec 055 — 월 그리드와 동일한 디자인 색 체계를 주간 스트립에도 적용한다:
+        // 선택=연녹 배경, 여행기간 주말=초록·평일=진한 본문색(볼드), 기간 밖=비활성 그레이,
+        // 오늘(비선택)=테두리 박스. 요일 라벨도 일=초록·토=파랑.
         return (
           <button
             key={d.toISOString()}
@@ -328,25 +340,35 @@ function WeekStrip({
             className={cn(
               "flex flex-1 flex-col items-center gap-0.5 rounded-md py-1.5 text-sm transition-colors",
               isSelected
-                ? "bg-primary text-primary-foreground"
+                ? "bg-cal-selected-bg text-cal-selected-text font-semibold"
                 : inRange
-                  ? "bg-primary/10 text-foreground"
-                  : "text-foreground hover:bg-muted",
+                  ? isWeekend
+                    ? "text-cal-trip-weekend font-semibold"
+                    : "text-foreground font-semibold hover:bg-muted"
+                  : "text-cal-inactive hover:bg-muted",
+              !isSelected &&
+                isToday &&
+                "shadow-[inset_0_0_0_1px_var(--cal-today-border)]",
             )}
           >
-            <span className="text-[0.65rem] opacity-70">
-              {WEEKDAY_LABELS[d.getDay()]}
+            <span
+              className={cn(
+                "text-[0.65rem]",
+                dow === 0
+                  ? "text-cal-sunday"
+                  : dow === 6
+                    ? "text-cal-saturday"
+                    : "text-cal-weekday-header",
+              )}
+            >
+              {WEEKDAY_LABELS[dow]}
             </span>
             <span className="tabular-nums">{d.getDate()}</span>
             <span
               aria-hidden
               className={cn(
                 "h-0.5 w-4 rounded-full",
-                hasActivity
-                  ? isSelected
-                    ? "bg-primary-foreground"
-                    : "bg-primary"
-                  : "bg-transparent",
+                hasActivity ? "bg-primary" : "bg-transparent",
               )}
             />
           </button>
