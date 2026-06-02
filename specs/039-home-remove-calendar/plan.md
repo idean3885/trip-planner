@@ -9,7 +9,7 @@
 
 ## Coverage Targets
 
-- 홈 캘린더 제거 + 단일 컬럼 목록 전환 (page.tsx의 TripsCalendar·캘린더 데이터 제거, grid 단순화) [why: home-remove-cal] [multi-step: 2]
+- 홈 캘린더 제거 + 1열 세로 목록 전환 (page.tsx의 TripsCalendar·캘린더 데이터 제거, grid 단순화) [why: home-remove-cal] [multi-step: 2]
 - dead 컴포넌트·테스트 정리 (TripsCalendar.tsx 삭제, list-grid.test.ts 갱신) [why: dead-cleanup] [multi-step: 2]
 
 ## Technical Context
