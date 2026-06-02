@@ -140,17 +140,15 @@ export function TripDetailLayout({
       computeInitialSelected(tripStart, tripEnd),
   );
 
-  // #645 — 다른 날짜를 누르면 모바일 일정 목록 스크롤을 맨 위로 되돌린다.
-  // sticky 캘린더 높이만큼 빼서 패널 머리가 캘린더 바로 아래에 오게 한다.
-  const mobileStickyRef = useRef<HTMLDivElement>(null);
-  const mobilePanelRef = useRef<HTMLDivElement>(null);
-  const didMountRef = useRef(false);
   // #669 — 윈도우 프리페치 중복 요청 방지(같은 범위 동시 요청 차단).
   const inFlightRef = useRef<Set<string>>(new Set());
-  // spec 051 — 캘린더 위 sentinel 이 화면 밖으로 나가면 캘린더가 sticky 로 상단
-  // 고정된 것 → 모바일 캘린더를 주간으로 접는다.
-  const stickySentinelRef = useRef<HTMLDivElement>(null);
-  const [isCalendarStuck, setIsCalendarStuck] = useState(false);
+  // v3.15.1 — 모바일 캘린더 접힘은 스크롤 방향으로 결정한다. 아래로 스크롤하면
+  // 접고(주간), 최상단으로 돌아오면 펼친다(월간). 과거 sentinel + IntersectionObserver
+  // 방식(spec 051)은 (1) 콘텐츠가 짧으면 sentinel 이 화면 밖으로 못 나가 트리거가 안
+  // 되고, (2) 접히며 문서가 짧아져 스크롤이 최상단으로 튀는 버그가 있었다. 방향 감지는
+  // 콘텐츠 길이와 무관하게 동작한다.
+  const lastScrollYRef = useRef(0);
+  const [isCalendarCollapsed, setIsCalendarCollapsed] = useState(false);
 
   const daysDates = useMemo(
     () => dayIndex.map((d) => new Date(d.date)),
@@ -242,43 +240,35 @@ export function TripDetailLayout({
     }
   }, [selectedDate]);
 
-  // spec 051 — sentinel 관측으로 캘린더 상단 고정(sticky stuck) 여부를 판정한다.
-  // sentinel 이 화면 위로 사라지면 캘린더가 top-0 으로 고정된 것 → 주간으로 접는다.
-  // 스크롤 이벤트 없이 관측자만 써 성능 부담을 줄인다.
+  // v3.15.1 — 스크롤 방향으로 모바일 캘린더 접힘을 제어한다. 아래로 스크롤하면
+  // 즉시 주간으로 접고, 최상단(scrollY ≤ 4)으로 돌아오면 월간으로 펼친다. 위로
+  // 스크롤해도 최상단에 닿기 전까지는 접힌 채 둬 일관되게 둔다. 접히며 문서가 짧아져
+  // 스크롤이 클램프되어도(짧은 콘텐츠) 최상단이 아니면 펼치지 않아 튐·플립이 없다.
   useEffect(() => {
-    const el = stickySentinelRef.current;
-    if (!el || typeof IntersectionObserver === "undefined") return;
-    const io = new IntersectionObserver(
-      ([entry]) => setIsCalendarStuck(!entry.isIntersecting),
-      { threshold: 0 },
-    );
-    io.observe(el);
-    return () => io.disconnect();
+    if (typeof window === "undefined") return;
+    lastScrollYRef.current = window.scrollY;
+    const onScroll = () => {
+      const y = window.scrollY;
+      if (y <= 4) {
+        setIsCalendarCollapsed(false);
+      } else if (y > lastScrollYRef.current) {
+        setIsCalendarCollapsed(true);
+      }
+      lastScrollYRef.current = y;
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  useEffect(() => {
-    // 최초 마운트에서는 스크롤하지 않는다(이미 상단).
-    if (!didMountRef.current) {
-      didMountRef.current = true;
-      return;
-    }
-    // #645 → spec 037 — 다른 날짜를 누르면 일정 패널 상단이 sticky 캘린더 바로
-    // 아래에 오도록 페이지를 스크롤한다(단일 document 스크롤). 캘린더 높이만큼
-    // 빼 패널 머리가 캘린더에 가려지지 않게 한다. 데스크탑은 sticky 높이 0이라 스킵.
-    const sticky = mobileStickyRef.current;
-    const panel = mobilePanelRef.current;
-    if (!sticky || !panel) return;
-    const stickyH = sticky.offsetHeight;
-    if (stickyH === 0) return;
-    const target =
-      panel.getBoundingClientRect().top + window.scrollY - stickyH - 8;
-    window.scrollTo({ top: Math.max(0, target), behavior: "smooth" });
-  }, [selectedDate]);
+  // 날짜 변경 시 강제 스크롤(#645)은 제거했다. 짧은 콘텐츠에서 스크롤 목표가 최상단
+  // 근처로 계산돼 페이지가 맨 위로 튀는 버그가 있었고, 스와이프로 날짜를 바꿀 때마다
+  // 스크롤 위치가 끌려가 일관성을 해쳤다. 이제 날짜를 바꿔도 스크롤 위치를 그대로 둔다.
+  // 캘린더는 sticky 로 상단에 머물러 선택 일정이 바로 아래에 보인다.
 
   // 캘린더 경계 멈춤 강제 보정은 제거했다(#730). 여러 방식(scroll-snap·중첩 스크롤·
   // GSAP snap)이 기기·환경에 따라 안 잡히거나 스크롤이 끊기는 부작용을 남겨, 보정을
-  // 두기보다 네이티브 자유 스크롤을 택한다. 캘린더는 sticky 로 상단에 머문다. 원하는
-  // 경계 멈춤 동작은 추후 실기기 기준으로 다시 정의한다.
+  // 두기보다 네이티브 자유 스크롤을 택한다. 캘린더는 sticky 로 상단에 머문다.
 
   const handleDayCreated = useCallback((created: DayCreatedPayload) => {
     setDayIndex((prev) =>
@@ -395,13 +385,7 @@ export function TripDetailLayout({
       {/* 모바일 <1024px — sticky 캘린더 + 선택 일정. 동기화·동행자·기간 편집은
           위 액션바 버튼으로 연다(spec 043 — 단일 진입). */}
       <div className="space-y-4 lg:hidden">
-        {/* spec 051 — 캘린더 위 sentinel. 스크롤로 화면 위로 사라지면 캘린더가
-            sticky 고정된 것 → 주간으로 접는다. */}
-        <div ref={stickySentinelRef} aria-hidden className="h-px" />
-        <div
-          ref={mobileStickyRef}
-          className="bg-background sticky top-0 z-20 -mx-4 px-4 pt-1 pb-2"
-        >
+        <div className="bg-background sticky top-0 z-20 -mx-4 px-4 pt-1 pb-2">
           <CalendarView
             tripStart={tripStart}
             tripEnd={tripEnd}
@@ -409,21 +393,22 @@ export function TripDetailLayout({
             selected={selectedDate}
             onSelect={handleSelectDate}
             enableMobileCompact
-            collapsed={isCalendarStuck}
+            collapsed={isCalendarCollapsed}
           />
         </div>
-        {/* #657 — 하단 일정도 이전·현재·다음 날 3슬라이드로 드래그-팔로우 스와이프. */}
-        <div ref={mobilePanelRef}>
-          <SwipeCarousel
-            ariaLabel="선택 날짜 일정"
-            anchorKey={selectedDate.toDateString()}
-            syncHeight
-            onCommit={(dir) => setSelectedDate((d) => addDays(d, dir))}
-            renderSlide={(off) =>
-              renderPanel(mobileDates[off + 1], off === 0, false)
-            }
-          />
-        </div>
+        {/* #657 — 하단 일정도 이전·현재·다음 날 3슬라이드로 드래그-팔로우 스와이프.
+            v3.15.1 — min-h 로 일정이 없거나 적은 날에도 좌우 스와이프 영역을 확보한다
+            (빈 패널은 높이가 작아 스와이프할 영역이 없던 버그). */}
+        <SwipeCarousel
+          className="min-h-48"
+          ariaLabel="선택 날짜 일정"
+          anchorKey={selectedDate.toDateString()}
+          syncHeight
+          onCommit={(dir) => setSelectedDate((d) => addDays(d, dir))}
+          renderSlide={(off) =>
+            renderPanel(mobileDates[off + 1], off === 0, false)
+          }
+        />
       </div>
     </div>
   );

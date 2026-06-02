@@ -4,8 +4,8 @@
  * 진입 시 여행 기간 안에 오늘이 있으면 오늘, 없으면 여행 첫날(일정 0건이면
  * 오늘)을 선택한다. today 의존이라 기간을 today 상대로 구성해 검증한다.
  */
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
   computeInitialSelected,
@@ -98,5 +98,74 @@ describe("TripDetailLayout 상단·액션바 (spec 043)", () => {
     renderLayout();
     const ymd = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
     expect(new URL(window.location.href).searchParams.get("d")).toBe(ymd);
+  });
+});
+
+describe("TripDetailLayout 모바일 스와이프·스크롤 접힘 (v3.15.1 hotfix)", () => {
+  function renderLayout() {
+    const today = new Date();
+    const addD = (n: number) => {
+      const d = new Date(today);
+      d.setDate(d.getDate() + n);
+      return d;
+    };
+    return render(
+      <TripDetailLayout
+        tripId={1}
+        tripTitle="테스트 여행"
+        isOwner={false}
+        tripStart={today}
+        tripEnd={addD(2)}
+        days={[]}
+        initialActivities={{}}
+        canEdit={false}
+        initialSelected={null}
+        memberList={<div>멤버 목록</div>}
+        syncCard={<div>동기화 카드</div>}
+      />,
+    );
+  }
+
+  function setScrollY(y: number) {
+    Object.defineProperty(window, "scrollY", {
+      value: y,
+      writable: true,
+      configurable: true,
+    });
+  }
+
+  afterEach(() => setScrollY(0));
+
+  it("일정 캐러셀에 최소 높이가 있어 빈 날에도 스와이프 영역이 있다", () => {
+    renderLayout();
+    const carousel = screen.getByRole("group", { name: "선택 날짜 일정" });
+    // min-h 로 일정이 없는 날(days=[])에도 좌우 스와이프 영역을 확보한다.
+    expect(carousel.className).toContain("min-h-48");
+  });
+
+  it("아래로 스크롤하면 모바일 캘린더가 주간으로 접히고, 최상단 복귀 시 펼친다", () => {
+    renderLayout();
+    // 초기(최상단) = 월간.
+    expect(screen.getByRole("group", { name: "월 달력" })).toBeInTheDocument();
+    // 아래로 스크롤 → 주간 접힘.
+    setScrollY(200);
+    fireEvent.scroll(window);
+    expect(screen.getByRole("group", { name: "주 달력" })).toBeInTheDocument();
+    expect(screen.queryByRole("group", { name: "월 달력" })).toBeNull();
+    // 최상단 복귀 → 월간 펼침.
+    setScrollY(0);
+    fireEvent.scroll(window);
+    expect(screen.getByRole("group", { name: "월 달력" })).toBeInTheDocument();
+  });
+
+  it("최상단에 닿기 전 위로 조금 스크롤해도 접힌 채 둔다(일관 동작)", () => {
+    renderLayout();
+    setScrollY(300);
+    fireEvent.scroll(window);
+    expect(screen.getByRole("group", { name: "주 달력" })).toBeInTheDocument();
+    // 위로 조금(300→150) — 아직 최상단 아님 → 접힘 유지.
+    setScrollY(150);
+    fireEvent.scroll(window);
+    expect(screen.getByRole("group", { name: "주 달력" })).toBeInTheDocument();
   });
 });
