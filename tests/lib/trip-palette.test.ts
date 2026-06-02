@@ -1,4 +1,5 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
+
 import { getTripColor, TRIP_PALETTE_SIZE } from "@/lib/trip-palette";
 
 describe("getTripColor", () => {

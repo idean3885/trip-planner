@@ -45,7 +45,11 @@ function unescapeText(s: string): string {
 }
 
 /** "YYYYMMDDTHHmmssZ" / "YYYYMMDDTHHmmss" / "YYYYMMDD" → Date. */
-function parseIcsTimestamp(value: string, tzid: string | undefined, isDate: boolean): {
+function parseIcsTimestamp(
+  value: string,
+  tzid: string | undefined,
+  isDate: boolean,
+): {
   date: Date;
   timezone: string | null;
   isAllDay: boolean;
@@ -147,8 +151,16 @@ export function parseVevent(
   const f = parseVeventBlock(veventLines);
   if (!f.dtstart || !f.dtend) return null;
 
-  const start = parseIcsTimestamp(f.dtstart.value, f.dtstart.tzid, f.dtstart.isDate ?? false);
-  const end = parseIcsTimestamp(f.dtend.value, f.dtend.tzid, f.dtend.isDate ?? false);
+  const start = parseIcsTimestamp(
+    f.dtstart.value,
+    f.dtstart.tzid,
+    f.dtstart.isDate ?? false,
+  );
+  const end = parseIcsTimestamp(
+    f.dtend.value,
+    f.dtend.tzid,
+    f.dtend.isDate ?? false,
+  );
   if (!start || !end) return null;
 
   const externalEventId = f.uid ?? fallbackExternalEventId;

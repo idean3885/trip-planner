@@ -1,11 +1,12 @@
 import { Separator } from "@/components/ui/separator";
-import Hero from "./Hero";
-import ValueProps from "./ValueProps";
-import FeatureHighlights from "./FeatureHighlights";
-import TechStack from "./TechStack";
-import DemoShowcase from "./DemoShowcase";
+
 import BottomCta from "./BottomCta";
+import DemoShowcase from "./DemoShowcase";
+import FeatureHighlights from "./FeatureHighlights";
 import GcalTestingNotice from "./GcalTestingNotice";
+import Hero from "./Hero";
+import TechStack from "./TechStack";
+import ValueProps from "./ValueProps";
 
 export default function LandingPage() {
   return (

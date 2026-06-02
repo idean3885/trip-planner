@@ -1,5 +1,6 @@
-import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
+
 import { TripCheckboxes } from "@/components/trip/TripCheckboxes";
 
 describe("TripCheckboxes", () => {
@@ -41,8 +42,12 @@ describe("TripCheckboxes", () => {
         onToggle={() => {}}
       />,
     );
-    const cb1 = screen.getByLabelText("신혼여행 캘린더에 표시") as HTMLInputElement;
-    const cb2 = screen.getByLabelText("동창회 캘린더에 표시") as HTMLInputElement;
+    const cb1 = screen.getByLabelText(
+      "신혼여행 캘린더에 표시",
+    ) as HTMLInputElement;
+    const cb2 = screen.getByLabelText(
+      "동창회 캘린더에 표시",
+    ) as HTMLInputElement;
     const cb3 = screen.getByLabelText("출장 캘린더에 표시") as HTMLInputElement;
     expect(cb1.checked).toBe(true);
     expect(cb2.checked).toBe(false);

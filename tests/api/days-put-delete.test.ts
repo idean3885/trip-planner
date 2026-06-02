@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { mockPrisma, mockAuthHelpers } = vi.hoisted(() => ({
   mockPrisma: {
@@ -27,7 +27,7 @@ const { mockPrisma, mockAuthHelpers } = vi.hoisted(() => ({
 vi.mock("@/lib/prisma", () => ({ prisma: mockPrisma }));
 vi.mock("@/lib/auth-helpers", () => mockAuthHelpers);
 
-import { PUT, DELETE } from "@/app/api/trips/[id]/days/[dayId]/route";
+import { DELETE, PUT } from "@/app/api/trips/[id]/days/[dayId]/route";
 
 const mockAuth = mockAuthHelpers.getAuthUserId;
 const mockCanEdit = mockAuthHelpers.canEdit;
@@ -151,10 +151,7 @@ describe("PUT /days/{dayId}", () => {
     mockCanEdit.mockResolvedValue(true);
     mockPrisma.day.update.mockRejectedValue({ code: "P2002" });
 
-    const res = await PUT(
-      makeRequest({ date: "2026-06-07" }),
-      params(),
-    );
+    const res = await PUT(makeRequest({ date: "2026-06-07" }), params());
     expect(res.status).toBe(409);
   });
 
@@ -163,9 +160,9 @@ describe("PUT /days/{dayId}", () => {
     mockCanEdit.mockResolvedValue(true);
     mockPrisma.day.update.mockRejectedValue(new Error("DB exploded"));
 
-    await expect(
-      PUT(makeRequest({ title: "X" }), params()),
-    ).rejects.toThrow("DB exploded");
+    await expect(PUT(makeRequest({ title: "X" }), params())).rejects.toThrow(
+      "DB exploded",
+    );
   });
 });
 

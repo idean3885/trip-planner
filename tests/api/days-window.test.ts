@@ -2,7 +2,7 @@
  * #669 — GET /days 윈도우 모드(activities + from/to). 범위 내 Day 의 활동을
  * client 캐시 형태로 응답한다. 쿼리 없으면 기존 경량 인덱스.
  */
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { mockPrisma, mockAuthHelpers, mockPeriod } = vi.hoisted(() => ({
   mockPrisma: {
@@ -83,7 +83,13 @@ describe("GET /days 윈도우 모드", () => {
 
   it("activities 쿼리가 없으면 기존 경량 인덱스(활동 미포함)", async () => {
     mockPrisma.day.findMany.mockResolvedValue([
-      { id: 10, tripId: 1, date: new Date("2026-06-07"), title: null, content: null },
+      {
+        id: 10,
+        tripId: 1,
+        date: new Date("2026-06-07"),
+        title: null,
+        content: null,
+      },
     ]);
     const res = await GET(
       new Request("http://localhost/api/trips/1/days"),

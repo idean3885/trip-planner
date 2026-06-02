@@ -12,11 +12,12 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
+
 import { auth } from "@/auth";
-import { prisma } from "@/lib/prisma";
+import { appleProvider } from "@/lib/calendar/provider/apple";
 import { createAppleClient } from "@/lib/calendar/provider/apple-client";
 import { encryptPassword } from "@/lib/calendar/provider/apple-crypto";
-import { appleProvider } from "@/lib/calendar/provider/apple";
+import { prisma } from "@/lib/prisma";
 
 interface ValidateBody {
   appleId?: unknown;
@@ -38,7 +39,9 @@ export async function POST(req: NextRequest) {
 
   const appleId = typeof body.appleId === "string" ? body.appleId.trim() : "";
   const appPassword =
-    typeof body.appPassword === "string" ? body.appPassword.replace(/\s+/g, "") : "";
+    typeof body.appPassword === "string"
+      ? body.appPassword.replace(/\s+/g, "")
+      : "";
   if (!appleId || !appPassword) {
     return NextResponse.json(
       { error: "missing_fields", fields: ["appleId", "appPassword"] },

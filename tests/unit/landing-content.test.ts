@@ -1,8 +1,9 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
+
 import {
-  landingValues,
   landingFeatures,
   landingTechStack,
+  landingValues,
 } from "@/lib/landing-content";
 
 describe("landing-content schema", () => {
@@ -14,7 +15,10 @@ describe("landing-content schema", () => {
 
     it("each value title fits mobile width (<= 28 chars)", () => {
       for (const v of landingValues) {
-        expect(v.title.length, `title too long: "${v.title}"`).toBeLessThanOrEqual(28);
+        expect(
+          v.title.length,
+          `title too long: "${v.title}"`,
+        ).toBeLessThanOrEqual(28);
       }
     });
 

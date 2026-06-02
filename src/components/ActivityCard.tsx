@@ -1,5 +1,10 @@
-import type { ActivityCategory, ReservationStatus, Prisma } from "@prisma/client";
-import { ArrowUp, ArrowDown, Pencil, Trash2 } from "lucide-react";
+import type {
+  ActivityCategory,
+  Prisma,
+  ReservationStatus,
+} from "@prisma/client";
+import { ArrowDown, ArrowUp, Pencil, Trash2 } from "lucide-react";
+
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { tzLabel } from "@/lib/tz-label";
 
@@ -17,13 +22,13 @@ function Linkify({ text }: { text: string }) {
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
-            className="break-all text-foreground underline underline-offset-2 hover:opacity-80"
+            className="text-foreground break-all underline underline-offset-2 hover:opacity-80"
           >
             {part}
           </a>
         ) : (
           part
-        )
+        ),
       )}
     </>
   );
@@ -116,9 +121,7 @@ export default function ActivityCard({
   const startFmt = formatTime(activity.startTime, activity.startTimezone);
   const endFmt = formatTime(activity.endTime, activity.endTimezone);
   const timeRange =
-    startFmt && endFmt
-      ? `${startFmt}–${endFmt}`
-      : startFmt ?? null;
+    startFmt && endFmt ? `${startFmt}–${endFmt}` : (startFmt ?? null);
 
   const cost = activity.cost ? Number(activity.cost) : null;
 
@@ -130,7 +133,7 @@ export default function ActivityCard({
           데스크탑 호버에서만 보여 모바일에서 닿지 않던 문제를 본문 전체를
           탭 대상으로 만들어 해결. 메모 안 링크는 stopPropagation 으로 분리. */}
       <CardContent
-        className={`flex items-start justify-between gap-2${editable ? " cursor-pointer" : ""}`}
+        className={`flex items-start justify-between gap-2${editable ? "cursor-pointer" : ""}`}
         role={editable ? "button" : undefined}
         tabIndex={editable ? 0 : undefined}
         aria-label={editable ? `${activity.title} 수정` : undefined}
@@ -154,33 +157,33 @@ export default function ActivityCard({
               {CATEGORY_LABEL[activity.category]}
             </span>
             {timeRange && (
-              <span className="text-xs text-muted-foreground tabular-nums">
+              <span className="text-muted-foreground text-xs tabular-nums">
                 {timeRange}
               </span>
             )}
           </div>
-          <p className="mt-1 break-words text-sm font-medium text-foreground">
+          <p className="text-foreground mt-1 text-sm font-medium break-words">
             {activity.title}
           </p>
           {activity.location && (
-            <p className="mt-0.5 break-words text-xs text-muted-foreground">
+            <p className="text-muted-foreground mt-0.5 text-xs break-words">
               {activity.location}
             </p>
           )}
           {activity.memo && (
-            <p className="mt-1 break-words text-xs text-muted-foreground">
+            <p className="text-muted-foreground mt-1 text-xs break-words">
               <Linkify text={activity.memo} />
             </p>
           )}
         </div>
         <div className="flex shrink-0 flex-col items-end gap-1 text-right">
           {cost !== null && cost > 0 && (
-            <span className="text-sm font-medium text-foreground tabular-nums">
+            <span className="text-foreground text-sm font-medium tabular-nums">
               {cost.toLocaleString()} {activity.currency}
             </span>
           )}
           {activity.reservationStatus && (
-            <span className="text-[11px] text-muted-foreground">
+            <span className="text-muted-foreground text-[11px]">
               {RESERVATION_LABEL[activity.reservationStatus]}
             </span>
           )}
@@ -193,7 +196,7 @@ export default function ActivityCard({
             <button
               onClick={onMoveUp}
               disabled={isFirst}
-              className="inline-flex size-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
+              className="text-muted-foreground hover:bg-muted hover:text-foreground inline-flex size-6 items-center justify-center rounded-md transition-colors disabled:pointer-events-none disabled:opacity-30"
               aria-label="위로"
             >
               <ArrowUp className="size-3.5" aria-hidden />
@@ -201,7 +204,7 @@ export default function ActivityCard({
             <button
               onClick={onMoveDown}
               disabled={isLast}
-              className="inline-flex size-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
+              className="text-muted-foreground hover:bg-muted hover:text-foreground inline-flex size-6 items-center justify-center rounded-md transition-colors disabled:pointer-events-none disabled:opacity-30"
               aria-label="아래로"
             >
               <ArrowDown className="size-3.5" aria-hidden />
@@ -210,14 +213,14 @@ export default function ActivityCard({
           <div className="flex gap-1">
             <button
               onClick={onEdit}
-              className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className="text-muted-foreground hover:bg-muted hover:text-foreground inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs transition-colors"
             >
               <Pencil className="size-3" aria-hidden />
               편집
             </button>
             <button
               onClick={onDelete}
-              className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs text-destructive transition-colors hover:bg-destructive/10"
+              className="text-destructive hover:bg-destructive/10 inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs transition-colors"
             >
               <Trash2 className="size-3" aria-hidden />
               삭제

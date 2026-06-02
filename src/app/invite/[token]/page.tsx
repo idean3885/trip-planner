@@ -1,8 +1,9 @@
 import { redirect } from "next/navigation";
+
 import { auth } from "@/auth";
-import { prisma } from "@/lib/prisma";
-import { verifyInviteToken } from "@/lib/invite-token";
 import { onMemberJoin } from "@/lib/gcal/member-sync";
+import { verifyInviteToken } from "@/lib/invite-token";
+import { prisma } from "@/lib/prisma";
 
 export default async function InvitePage({
   params,
@@ -23,11 +24,11 @@ export default async function InvitePage({
   if (!payload) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <div className="text-center space-y-2">
-          <h1 className="text-xl font-semibold tracking-tight text-foreground">
+        <div className="space-y-2 text-center">
+          <h1 className="text-foreground text-xl font-semibold tracking-tight">
             초대가 만료되었거나 유효하지 않습니다
           </h1>
-          <p className="text-base text-muted-foreground">
+          <p className="text-muted-foreground text-base">
             호스트에게 새 초대 링크를 요청하세요.
           </p>
         </div>
@@ -44,8 +45,8 @@ export default async function InvitePage({
   if (!trip) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <div className="text-center space-y-2">
-          <h1 className="text-xl font-semibold tracking-tight text-foreground">
+        <div className="space-y-2 text-center">
+          <h1 className="text-foreground text-xl font-semibold tracking-tight">
             여행을 찾을 수 없습니다
           </h1>
         </div>

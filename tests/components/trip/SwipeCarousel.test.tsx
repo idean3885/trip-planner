@@ -3,8 +3,9 @@
  * 접근성 트리에 노출(핍은 aria-hidden). 실제 드래그/스냅은 embla + 레이아웃이라
  * jsdom 에서 검증 불가 — 마운트·구조 계약만 본다(실기기 확인 영역).
  */
-import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
+
 import { SwipeCarousel } from "@/components/trip/SwipeCarousel";
 
 describe("SwipeCarousel", () => {

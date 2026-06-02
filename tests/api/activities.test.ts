@@ -1,8 +1,14 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { mockPrisma, mockAuthHelpers } = vi.hoisted(() => ({
   mockPrisma: {
-    activity: { findMany: vi.fn(), findUnique: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn() },
+    activity: {
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+    },
     day: { findUnique: vi.fn() },
     $transaction: vi.fn(),
   },
@@ -16,8 +22,15 @@ const { mockPrisma, mockAuthHelpers } = vi.hoisted(() => ({
 vi.mock("@/lib/prisma", () => ({ prisma: mockPrisma }));
 vi.mock("@/lib/auth-helpers", () => mockAuthHelpers);
 
-import { GET, POST, PATCH } from "@/app/api/trips/[id]/days/[dayId]/activities/route";
-import { PUT, DELETE } from "@/app/api/trips/[id]/days/[dayId]/activities/[activityId]/route";
+import {
+  DELETE,
+  PUT,
+} from "@/app/api/trips/[id]/days/[dayId]/activities/[activityId]/route";
+import {
+  GET,
+  PATCH,
+  POST,
+} from "@/app/api/trips/[id]/days/[dayId]/activities/route";
 const mockAuth = mockAuthHelpers.getAuthUserId;
 const mockMember = mockAuthHelpers.getTripMember;
 const mockCanEdit = mockAuthHelpers.canEdit;
@@ -35,7 +48,14 @@ function params(overrides = {}) {
 }
 
 function activityParams(overrides = {}) {
-  return { params: Promise.resolve({ id: "1", dayId: "1", activityId: "10", ...overrides }) };
+  return {
+    params: Promise.resolve({
+      id: "1",
+      dayId: "1",
+      activityId: "10",
+      ...overrides,
+    }),
+  };
 }
 
 describe("GET /activities", () => {
@@ -72,14 +92,20 @@ describe("POST /activities", () => {
 
   it("returns 401 when not authenticated", async () => {
     mockAuth.mockResolvedValue(null);
-    const res = await POST(makeRequest({ category: "DINING", title: "Test" }, "POST"), params());
+    const res = await POST(
+      makeRequest({ category: "DINING", title: "Test" }, "POST"),
+      params(),
+    );
     expect(res.status).toBe(401);
   });
 
   it("returns 403 when cannot edit", async () => {
     mockAuth.mockResolvedValue("user1");
     mockCanEdit.mockResolvedValue(false);
-    const res = await POST(makeRequest({ category: "DINING", title: "Test" }, "POST"), params());
+    const res = await POST(
+      makeRequest({ category: "DINING", title: "Test" }, "POST"),
+      params(),
+    );
     expect(res.status).toBe(403);
   });
 
@@ -87,7 +113,10 @@ describe("POST /activities", () => {
     mockAuth.mockResolvedValue("user1");
     mockCanEdit.mockResolvedValue(true);
     mockPrisma.day.findUnique.mockResolvedValue(null);
-    const res = await POST(makeRequest({ category: "DINING", title: "Test" }, "POST"), params());
+    const res = await POST(
+      makeRequest({ category: "DINING", title: "Test" }, "POST"),
+      params(),
+    );
     expect(res.status).toBe(404);
   });
 
@@ -95,30 +124,44 @@ describe("POST /activities", () => {
     mockAuth.mockResolvedValue("user1");
     mockCanEdit.mockResolvedValue(true);
     mockPrisma.day.findUnique.mockResolvedValue({ id: 1 });
-    const res = await POST(makeRequest({ title: "No category" }, "POST"), params());
+    const res = await POST(
+      makeRequest({ title: "No category" }, "POST"),
+      params(),
+    );
     expect(res.status).toBe(400);
   });
 
   it("creates activity with all fields", async () => {
     mockAuth.mockResolvedValue("user1");
     mockCanEdit.mockResolvedValue(true);
-    mockPrisma.day.findUnique.mockResolvedValue({ id: 1, date: new Date("2026-06-07T00:00:00Z") });
-    const created = { id: 10, category: "DINING", title: "Lunch", startTime: "2026-06-07T12:00:00.000Z" };
+    mockPrisma.day.findUnique.mockResolvedValue({
+      id: 1,
+      date: new Date("2026-06-07T00:00:00Z"),
+    });
+    const created = {
+      id: 10,
+      category: "DINING",
+      title: "Lunch",
+      startTime: "2026-06-07T12:00:00.000Z",
+    };
     mockPrisma.activity.create.mockResolvedValue(created);
 
     const res = await POST(
-      makeRequest({
-        category: "DINING",
-        title: "Lunch",
-        startTime: "12:00",
-        endTime: "13:00",
-        location: "Restaurant",
-        memo: "Good food",
-        cost: 25,
-        currency: "EUR",
-        reservationStatus: "RECOMMENDED",
-      }, "POST"),
-      params()
+      makeRequest(
+        {
+          category: "DINING",
+          title: "Lunch",
+          startTime: "12:00",
+          endTime: "13:00",
+          location: "Restaurant",
+          memo: "Good food",
+          cost: 25,
+          currency: "EUR",
+          reservationStatus: "RECOMMENDED",
+        },
+        "POST",
+      ),
+      params(),
     );
     expect(res.status).toBe(201);
     const data = await res.json();
@@ -128,15 +171,24 @@ describe("POST /activities", () => {
   it("creates activity without startTime/endTime (conditional spread false branch)", async () => {
     mockAuth.mockResolvedValue("user1");
     mockCanEdit.mockResolvedValue(true);
-    mockPrisma.day.findUnique.mockResolvedValue({ id: 1, date: new Date("2026-06-07T00:00:00Z") });
-    mockPrisma.activity.create.mockResolvedValue({ id: 12, category: "OTHER", title: "Walk" });
+    mockPrisma.day.findUnique.mockResolvedValue({
+      id: 1,
+      date: new Date("2026-06-07T00:00:00Z"),
+    });
+    mockPrisma.activity.create.mockResolvedValue({
+      id: 12,
+      category: "OTHER",
+      title: "Walk",
+    });
 
     const res = await POST(
       makeRequest({ category: "OTHER", title: "Walk" }, "POST"),
-      params()
+      params(),
     );
     expect(res.status).toBe(201);
-    const createArgs = mockPrisma.activity.create.mock.calls[0]?.[0] as { data: Record<string, unknown> };
+    const createArgs = mockPrisma.activity.create.mock.calls[0]?.[0] as {
+      data: Record<string, unknown>;
+    };
     expect(createArgs.data.startTime).toBeUndefined();
     expect(createArgs.data.endTime).toBeUndefined();
     expect(createArgs.data.startTimezone).toBeUndefined();
@@ -146,14 +198,26 @@ describe("POST /activities", () => {
   it("POST explicit startTime=null persists null (toTimestamp ?? null right branch)", async () => {
     mockAuth.mockResolvedValue("user1");
     mockCanEdit.mockResolvedValue(true);
-    mockPrisma.day.findUnique.mockResolvedValue({ id: 1, date: new Date("2026-06-07T00:00:00Z") });
-    mockPrisma.activity.create.mockResolvedValue({ id: 20, category: "OTHER", title: "X" });
+    mockPrisma.day.findUnique.mockResolvedValue({
+      id: 1,
+      date: new Date("2026-06-07T00:00:00Z"),
+    });
+    mockPrisma.activity.create.mockResolvedValue({
+      id: 20,
+      category: "OTHER",
+      title: "X",
+    });
 
     await POST(
-      makeRequest({ category: "OTHER", title: "X", startTime: null, endTime: null }, "POST"),
+      makeRequest(
+        { category: "OTHER", title: "X", startTime: null, endTime: null },
+        "POST",
+      ),
       params(),
     );
-    const args = mockPrisma.activity.create.mock.calls[0]?.[0] as { data: Record<string, unknown> };
+    const args = mockPrisma.activity.create.mock.calls[0]?.[0] as {
+      data: Record<string, unknown>;
+    };
     expect(args.data.startTime).toBeNull();
     expect(args.data.endTime).toBeNull();
   });
@@ -161,15 +225,28 @@ describe("POST /activities", () => {
   it("POST uses explicit endTimezone (not startTimezone fallback)", async () => {
     mockAuth.mockResolvedValue("user1");
     mockCanEdit.mockResolvedValue(true);
-    mockPrisma.day.findUnique.mockResolvedValue({ id: 1, date: new Date("2026-06-07T00:00:00Z") });
-    mockPrisma.activity.create.mockResolvedValue({ id: 21, category: "DINING", title: "Cross-tz" });
+    mockPrisma.day.findUnique.mockResolvedValue({
+      id: 1,
+      date: new Date("2026-06-07T00:00:00Z"),
+    });
+    mockPrisma.activity.create.mockResolvedValue({
+      id: 21,
+      category: "DINING",
+      title: "Cross-tz",
+    });
 
     await POST(
-      makeRequest({
-        category: "DINING", title: "Cross-tz",
-        startTime: "10:00", startTimezone: "Europe/Lisbon",
-        endTime: "22:00", endTimezone: "Asia/Seoul",
-      }, "POST"),
+      makeRequest(
+        {
+          category: "DINING",
+          title: "Cross-tz",
+          startTime: "10:00",
+          startTimezone: "Europe/Lisbon",
+          endTime: "22:00",
+          endTimezone: "Asia/Seoul",
+        },
+        "POST",
+      ),
       params(),
     );
     const args = mockPrisma.activity.create.mock.calls[0]?.[0] as {
@@ -183,25 +260,41 @@ describe("POST /activities", () => {
   it("POST converts HH:mm using IANA timezone (#232)", async () => {
     mockAuth.mockResolvedValue("user1");
     mockCanEdit.mockResolvedValue(true);
-    mockPrisma.day.findUnique.mockResolvedValue({ id: 1, date: new Date("2026-06-07T00:00:00Z") });
-    mockPrisma.activity.create.mockResolvedValue({ id: 11, category: "DINING", title: "Dinner" });
+    mockPrisma.day.findUnique.mockResolvedValue({
+      id: 1,
+      date: new Date("2026-06-07T00:00:00Z"),
+    });
+    mockPrisma.activity.create.mockResolvedValue({
+      id: 11,
+      category: "DINING",
+      title: "Dinner",
+    });
 
     await POST(
-      makeRequest({
-        category: "DINING",
-        title: "Dinner",
-        startTime: "20:15",
-        startTimezone: "Europe/Lisbon",
-        endTime: "21:30",
-      }, "POST"),
-      params()
+      makeRequest(
+        {
+          category: "DINING",
+          title: "Dinner",
+          startTime: "20:15",
+          startTimezone: "Europe/Lisbon",
+          endTime: "21:30",
+        },
+        "POST",
+      ),
+      params(),
     );
 
-    const createArgs = mockPrisma.activity.create.mock.calls[0]?.[0] as { data: { startTime: Date; endTime: Date } };
+    const createArgs = mockPrisma.activity.create.mock.calls[0]?.[0] as {
+      data: { startTime: Date; endTime: Date };
+    };
     expect(createArgs.data.startTime).toBeInstanceOf(Date);
     // Lisbon 여름(UTC+1): 20:15 = 19:15 UTC, 21:30 = 20:30 UTC (endTimezone 미지정 시 startTimezone 사용)
-    expect(createArgs.data.startTime.toISOString()).toBe("2026-06-07T19:15:00.000Z");
-    expect(createArgs.data.endTime.toISOString()).toBe("2026-06-07T20:30:00.000Z");
+    expect(createArgs.data.startTime.toISOString()).toBe(
+      "2026-06-07T19:15:00.000Z",
+    );
+    expect(createArgs.data.endTime.toISOString()).toBe(
+      "2026-06-07T20:30:00.000Z",
+    );
   });
 });
 
@@ -210,14 +303,20 @@ describe("PATCH /activities (reorder)", () => {
 
   it("returns 401 when not authenticated", async () => {
     mockAuth.mockResolvedValue(null);
-    const res = await PATCH(makeRequest({ orderedIds: [1] }, "PATCH"), params());
+    const res = await PATCH(
+      makeRequest({ orderedIds: [1] }, "PATCH"),
+      params(),
+    );
     expect(res.status).toBe(401);
   });
 
   it("returns 403 when cannot edit", async () => {
     mockAuth.mockResolvedValue("user1");
     mockCanEdit.mockResolvedValue(false);
-    const res = await PATCH(makeRequest({ orderedIds: [1] }, "PATCH"), params());
+    const res = await PATCH(
+      makeRequest({ orderedIds: [1] }, "PATCH"),
+      params(),
+    );
     expect(res.status).toBe(403);
   });
 
@@ -240,7 +339,10 @@ describe("PATCH /activities (reorder)", () => {
     mockCanEdit.mockResolvedValue(true);
     mockPrisma.$transaction.mockResolvedValue([]);
 
-    const res = await PATCH(makeRequest({ orderedIds: [3, 1, 2] }, "PATCH"), params());
+    const res = await PATCH(
+      makeRequest({ orderedIds: [3, 1, 2] }, "PATCH"),
+      params(),
+    );
     expect(res.status).toBe(200);
     const data = await res.json();
     expect(data.ok).toBe(true);
@@ -252,14 +354,20 @@ describe("PUT /activities/{id}", () => {
 
   it("returns 401 when not authenticated", async () => {
     mockAuth.mockResolvedValue(null);
-    const res = await PUT(makeRequest({ title: "Updated" }, "PUT"), activityParams());
+    const res = await PUT(
+      makeRequest({ title: "Updated" }, "PUT"),
+      activityParams(),
+    );
     expect(res.status).toBe(401);
   });
 
   it("returns 403 when cannot edit", async () => {
     mockAuth.mockResolvedValue("user1");
     mockCanEdit.mockResolvedValue(false);
-    const res = await PUT(makeRequest({ title: "Updated" }, "PUT"), activityParams());
+    const res = await PUT(
+      makeRequest({ title: "Updated" }, "PUT"),
+      activityParams(),
+    );
     expect(res.status).toBe(403);
   });
 
@@ -267,25 +375,44 @@ describe("PUT /activities/{id}", () => {
     mockAuth.mockResolvedValue("user1");
     mockCanEdit.mockResolvedValue(true);
     mockPrisma.day.findUnique.mockResolvedValue(null);
-    const res = await PUT(makeRequest({ title: "Updated" }, "PUT"), activityParams());
+    const res = await PUT(
+      makeRequest({ title: "Updated" }, "PUT"),
+      activityParams(),
+    );
     expect(res.status).toBe(404);
   });
 
   it("updates activity with all fields", async () => {
     mockAuth.mockResolvedValue("user1");
     mockCanEdit.mockResolvedValue(true);
-    mockPrisma.day.findUnique.mockResolvedValue({ id: 1, date: new Date("2026-06-07T00:00:00Z") });
-    mockPrisma.activity.findUnique.mockResolvedValue({ startTimezone: null, endTimezone: null });
+    mockPrisma.day.findUnique.mockResolvedValue({
+      id: 1,
+      date: new Date("2026-06-07T00:00:00Z"),
+    });
+    mockPrisma.activity.findUnique.mockResolvedValue({
+      startTimezone: null,
+      endTimezone: null,
+    });
     const updated = { id: 10, title: "Updated", category: "DINING" };
     mockPrisma.activity.update.mockResolvedValue(updated);
 
     const res = await PUT(
-      makeRequest({
-        category: "DINING", title: "Updated", startTime: "12:00", endTime: "13:00",
-        location: "Place", memo: "Note", cost: 10, currency: "USD",
-        reservationStatus: "REQUIRED", sortOrder: 1,
-      }, "PUT"),
-      activityParams()
+      makeRequest(
+        {
+          category: "DINING",
+          title: "Updated",
+          startTime: "12:00",
+          endTime: "13:00",
+          location: "Place",
+          memo: "Note",
+          cost: 10,
+          currency: "USD",
+          reservationStatus: "REQUIRED",
+          sortOrder: 1,
+        },
+        "PUT",
+      ),
+      activityParams(),
     );
     expect(res.status).toBe(200);
     const data = await res.json();
@@ -295,49 +422,73 @@ describe("PUT /activities/{id}", () => {
   it("PUT with startTimezone uses IANA tz for HH:mm → UTC", async () => {
     mockAuth.mockResolvedValue("user1");
     mockCanEdit.mockResolvedValue(true);
-    mockPrisma.day.findUnique.mockResolvedValue({ id: 1, date: new Date("2026-06-07T00:00:00Z") });
-    mockPrisma.activity.update.mockResolvedValue({ id: 10, title: "X", category: "DINING" });
+    mockPrisma.day.findUnique.mockResolvedValue({
+      id: 1,
+      date: new Date("2026-06-07T00:00:00Z"),
+    });
+    mockPrisma.activity.update.mockResolvedValue({
+      id: 10,
+      title: "X",
+      category: "DINING",
+    });
 
     await PUT(
       makeRequest({ startTime: "13:00", startTimezone: "Asia/Seoul" }, "PUT"),
-      activityParams()
+      activityParams(),
     );
 
     // findUnique는 호출되지 않아야 한다 (startTimezone이 요청에 있으므로)
     expect(mockPrisma.activity.findUnique).not.toHaveBeenCalled();
     // update의 startTime은 Seoul 13:00 = 04:00Z
-    const updateArgs = mockPrisma.activity.update.mock.calls[0]?.[0] as { data: { startTime: Date } };
+    const updateArgs = mockPrisma.activity.update.mock.calls[0]?.[0] as {
+      data: { startTime: Date };
+    };
     expect(updateArgs.data.startTime).toBeInstanceOf(Date);
-    expect(updateArgs.data.startTime.toISOString()).toBe("2026-06-07T04:00:00.000Z");
+    expect(updateArgs.data.startTime.toISOString()).toBe(
+      "2026-06-07T04:00:00.000Z",
+    );
   });
 
   it("PUT endTime HH:mm w/o tz, stored endTimezone null → effStartTz fallback", async () => {
     mockAuth.mockResolvedValue("user1");
     mockCanEdit.mockResolvedValue(true);
-    mockPrisma.day.findUnique.mockResolvedValue({ id: 1, date: new Date("2026-06-07T00:00:00Z") });
+    mockPrisma.day.findUnique.mockResolvedValue({
+      id: 1,
+      date: new Date("2026-06-07T00:00:00Z"),
+    });
     // stored: endTimezone null — effEndTz는 effStartTz(Asia/Seoul)로 귀결
     mockPrisma.activity.findUnique.mockResolvedValue({
       startTimezone: "Asia/Seoul",
       endTimezone: null,
     });
-    mockPrisma.activity.update.mockResolvedValue({ id: 10, title: "X", category: "DINING" });
+    mockPrisma.activity.update.mockResolvedValue({
+      id: 10,
+      title: "X",
+      category: "DINING",
+    });
 
-    await PUT(
-      makeRequest({ endTime: "22:00" }, "PUT"),
-      activityParams(),
-    );
+    await PUT(makeRequest({ endTime: "22:00" }, "PUT"), activityParams());
     const updateArgs = mockPrisma.activity.update.mock.calls[0]?.[0] as {
       data: { endTime: Date };
     };
     // Seoul 22:00 = 13:00 UTC
-    expect(updateArgs.data.endTime.toISOString()).toBe("2026-06-07T13:00:00.000Z");
+    expect(updateArgs.data.endTime.toISOString()).toBe(
+      "2026-06-07T13:00:00.000Z",
+    );
   });
 
   it("PUT with ISO startTime (T 포함) does not trigger existing-tz lookup", async () => {
     mockAuth.mockResolvedValue("user1");
     mockCanEdit.mockResolvedValue(true);
-    mockPrisma.day.findUnique.mockResolvedValue({ id: 1, date: new Date("2026-06-07T00:00:00Z") });
-    mockPrisma.activity.update.mockResolvedValue({ id: 10, title: "X", category: "DINING" });
+    mockPrisma.day.findUnique.mockResolvedValue({
+      id: 1,
+      date: new Date("2026-06-07T00:00:00Z"),
+    });
+    mockPrisma.activity.update.mockResolvedValue({
+      id: 10,
+      title: "X",
+      category: "DINING",
+    });
 
     await PUT(
       makeRequest({ startTime: "2026-06-07T12:00:00.000Z" }, "PUT"),
@@ -350,19 +501,30 @@ describe("PUT /activities/{id}", () => {
   it("PUT with only startTime (no tz in body) falls back to stored timezone", async () => {
     mockAuth.mockResolvedValue("user1");
     mockCanEdit.mockResolvedValue(true);
-    mockPrisma.day.findUnique.mockResolvedValue({ id: 1, date: new Date("2026-06-07T00:00:00Z") });
-    mockPrisma.activity.findUnique.mockResolvedValue({ startTimezone: "Europe/Lisbon", endTimezone: "Europe/Lisbon" });
-    mockPrisma.activity.update.mockResolvedValue({ id: 10, title: "X", category: "DINING" });
+    mockPrisma.day.findUnique.mockResolvedValue({
+      id: 1,
+      date: new Date("2026-06-07T00:00:00Z"),
+    });
+    mockPrisma.activity.findUnique.mockResolvedValue({
+      startTimezone: "Europe/Lisbon",
+      endTimezone: "Europe/Lisbon",
+    });
+    mockPrisma.activity.update.mockResolvedValue({
+      id: 10,
+      title: "X",
+      category: "DINING",
+    });
 
-    await PUT(
-      makeRequest({ startTime: "20:15" }, "PUT"),
-      activityParams()
-    );
+    await PUT(makeRequest({ startTime: "20:15" }, "PUT"), activityParams());
 
     expect(mockPrisma.activity.findUnique).toHaveBeenCalled();
-    const updateArgs = mockPrisma.activity.update.mock.calls[0]?.[0] as { data: { startTime: Date } };
+    const updateArgs = mockPrisma.activity.update.mock.calls[0]?.[0] as {
+      data: { startTime: Date };
+    };
     // Lisbon 여름(WEST, UTC+1) 20:15 = 19:15 UTC
-    expect(updateArgs.data.startTime.toISOString()).toBe("2026-06-07T19:15:00.000Z");
+    expect(updateArgs.data.startTime.toISOString()).toBe(
+      "2026-06-07T19:15:00.000Z",
+    );
   });
 });
 
@@ -371,14 +533,20 @@ describe("DELETE /activities/{id}", () => {
 
   it("returns 401 when not authenticated", async () => {
     mockAuth.mockResolvedValue(null);
-    const res = await DELETE(makeRequest(undefined, "DELETE"), activityParams());
+    const res = await DELETE(
+      makeRequest(undefined, "DELETE"),
+      activityParams(),
+    );
     expect(res.status).toBe(401);
   });
 
   it("returns 403 when cannot edit", async () => {
     mockAuth.mockResolvedValue("user1");
     mockCanEdit.mockResolvedValue(false);
-    const res = await DELETE(makeRequest(undefined, "DELETE"), activityParams());
+    const res = await DELETE(
+      makeRequest(undefined, "DELETE"),
+      activityParams(),
+    );
     expect(res.status).toBe(403);
   });
 
@@ -387,7 +555,10 @@ describe("DELETE /activities/{id}", () => {
     mockCanEdit.mockResolvedValue(true);
     mockPrisma.activity.delete.mockResolvedValue({});
 
-    const res = await DELETE(makeRequest(undefined, "DELETE"), activityParams());
+    const res = await DELETE(
+      makeRequest(undefined, "DELETE"),
+      activityParams(),
+    );
     expect(res.status).toBe(200);
     const data = await res.json();
     expect(data.ok).toBe(true);

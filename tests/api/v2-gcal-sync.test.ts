@@ -7,9 +7,10 @@
  * 호출이 0건임을 grep 수준으로 확인한다. 레거시 라우트 파일은 410 핸들러로만 남으므로
  * 이들 파일에는 prisma 호출 자체가 없다.
  */
-import { describe, it, expect } from "vitest";
-import { readFileSync, readdirSync, statSync } from "node:fs";
+import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
+
+import { describe, expect, it } from "vitest";
 
 function collectFiles(dir: string, out: string[] = []): string[] {
   for (const name of readdirSync(dir)) {

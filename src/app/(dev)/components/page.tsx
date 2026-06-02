@@ -1,4 +1,7 @@
 import { notFound } from "next/navigation";
+
+import ActivityCard from "@/components/ActivityCard";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -7,9 +10,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
@@ -28,19 +28,26 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field";
 import { Separator } from "@/components/ui/separator";
-import { ToastTriggers } from "./ToastTriggers";
-import ActivityCard from "@/components/ActivityCard";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 import { sampleActivity, sampleActivityAlt } from "./_samples";
+import { ToastTriggers } from "./ToastTriggers";
 
 export const metadata = {
   title: "Components Preview",
@@ -85,10 +92,17 @@ export default function ComponentsPreviewPage() {
         </div>
       </PreviewSection>
 
-      <PreviewSection title="Field" description="Form 레이아웃(base-nova의 form 대체)">
+      <PreviewSection
+        title="Field"
+        description="Form 레이아웃(base-nova의 form 대체)"
+      >
         <Field>
           <FieldLabel htmlFor="preview-field-input">이메일</FieldLabel>
-          <Input id="preview-field-input" type="email" placeholder="you@example.com" />
+          <Input
+            id="preview-field-input"
+            type="email"
+            placeholder="you@example.com"
+          />
           <FieldDescription>초대 발송용 이메일입니다.</FieldDescription>
         </Field>
         <Field>
@@ -105,7 +119,9 @@ export default function ComponentsPreviewPage() {
             <CardDescription>6월 16일 ~ 20일 · 4박 5일</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-sm">시로코·사그라다파밀리아·구엘공원 등 주요 관광지 일정.</p>
+            <p className="text-sm">
+              시로코·사그라다파밀리아·구엘공원 등 주요 관광지 일정.
+            </p>
           </CardContent>
           <CardFooter>
             <Button size="sm">상세 보기</Button>
@@ -225,27 +241,42 @@ export default function ComponentsPreviewPage() {
       >
         <ul className="space-y-2 text-sm">
           <li>
-            <code className="rounded bg-muted px-1.5 py-0.5 text-xs">ActivityForm</code>{" "}
+            <code className="bg-muted rounded px-1.5 py-0.5 text-xs">
+              ActivityForm
+            </code>{" "}
             — 여행 활동 생성/수정. 경로:{" "}
-            <code className="text-muted-foreground">/trips/[id]/day/[dayId]</code> (활동 목록에서
-            &quot;+ 추가&quot; 클릭)
+            <code className="text-muted-foreground">
+              /trips/[id]/day/[dayId]
+            </code>{" "}
+            (활동 목록에서 &quot;+ 추가&quot; 클릭)
           </li>
           <li>
-            <code className="rounded bg-muted px-1.5 py-0.5 text-xs">AuthButton</code> — 모든 페이지
-            상단 헤더 (설정·로그아웃)
+            <code className="bg-muted rounded px-1.5 py-0.5 text-xs">
+              AuthButton
+            </code>{" "}
+            — 모든 페이지 상단 헤더 (설정·로그아웃)
           </li>
           <li>
-            <code className="rounded bg-muted px-1.5 py-0.5 text-xs">DeleteTripButton</code> /{" "}
-            <code className="rounded bg-muted px-1.5 py-0.5 text-xs">LeaveTripButton</code> — 여행
-            상세 페이지 하단 (Dialog 사용)
+            <code className="bg-muted rounded px-1.5 py-0.5 text-xs">
+              DeleteTripButton
+            </code>{" "}
+            /{" "}
+            <code className="bg-muted rounded px-1.5 py-0.5 text-xs">
+              LeaveTripButton
+            </code>{" "}
+            — 여행 상세 페이지 하단 (Dialog 사용)
           </li>
           <li>
-            <code className="rounded bg-muted px-1.5 py-0.5 text-xs">InviteButton</code> — 여행
-            상세에서 호스트가 노출. toast로 복사 피드백
+            <code className="bg-muted rounded px-1.5 py-0.5 text-xs">
+              InviteButton
+            </code>{" "}
+            — 여행 상세에서 호스트가 노출. toast로 복사 피드백
           </li>
           <li>
-            <code className="rounded bg-muted px-1.5 py-0.5 text-xs">TodayButton</code> — 여행
-            상세에서 오늘 일정이 있을 때 표시
+            <code className="bg-muted rounded px-1.5 py-0.5 text-xs">
+              TodayButton
+            </code>{" "}
+            — 여행 상세에서 오늘 일정이 있을 때 표시
           </li>
         </ul>
       </PreviewSection>
@@ -266,10 +297,9 @@ function PreviewSection({
     <section className="space-y-3">
       <div>
         <h2 className="text-xl font-semibold">{title}</h2>
-        <p className="text-sm text-muted-foreground">{description}</p>
+        <p className="text-muted-foreground text-sm">{description}</p>
       </div>
       <div className="space-y-4 rounded-lg border p-4">{children}</div>
     </section>
   );
 }
-

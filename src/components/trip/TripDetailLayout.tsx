@@ -13,25 +13,23 @@
  *   일정. 동기화·동행자는 캘린더 상단 바의 "자세히" 로 한 단계 뒤에 둔다.
  */
 
+import { useGSAP } from "@gsap/react";
+import { addDays } from "date-fns";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import {
+  type ReactNode,
   useCallback,
   useEffect,
   useMemo,
   useRef,
   useState,
-  type ReactNode,
 } from "react";
-import { addDays } from "date-fns";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { useGSAP } from "@gsap/react";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 import type { ActivityCategory, ReservationStatus } from "@prisma/client";
-import {
-  ACTIVITY_WINDOW_RADIUS,
-  missingFetchRange,
-} from "@/lib/activity-window";
+
+import type { Activity } from "@/components/ActivityList";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -40,7 +38,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import type { Activity } from "@/components/ActivityList";
+import {
+  ACTIVITY_WINDOW_RADIUS,
+  missingFetchRange,
+} from "@/lib/activity-window";
+
 import { CalendarView } from "./CalendarView";
 import { DayActivitiesPane, type DayCreatedPayload } from "./DayActivitiesPane";
 import { SwipeCarousel } from "./SwipeCarousel";
@@ -118,9 +120,8 @@ export function TripDetailLayout({
   memberList,
 }: TripDetailLayoutProps) {
   const [dayIndex, setDayIndex] = useState<LayoutDayIndex[]>(initialDays);
-  const [activitiesByDayId, setActivitiesByDayId] = useState<
-    Record<number, LayoutActivity[]>
-  >(initialActivities);
+  const [activitiesByDayId, setActivitiesByDayId] =
+    useState<Record<number, LayoutActivity[]>>(initialActivities);
   const [selectedDate, setSelectedDate] = useState<Date>(() =>
     computeInitialSelected(tripStart, tripEnd),
   );
@@ -190,7 +191,10 @@ export function TripDetailLayout({
         sameLocalDay(new Date(d.date), date),
       );
       if (!matched) return null;
-      return { id: matched.id, activities: activitiesByDayId[matched.id] ?? null };
+      return {
+        id: matched.id,
+        activities: activitiesByDayId[matched.id] ?? null,
+      };
     },
     [dayIndex, activitiesByDayId],
   );
@@ -310,7 +314,7 @@ export function TripDetailLayout({
   return (
     <>
       {/* 데스크탑 ≥1024px — 좌(캘린더+동기화) / 우(동행자+선택 일정) 2분할. */}
-      <div className="hidden lg:grid lg:grid-cols-2 lg:gap-grid-comfy lg:items-start">
+      <div className="lg:gap-grid-comfy hidden lg:grid lg:grid-cols-2 lg:items-start">
         <div className="min-w-0 space-y-6">
           <CalendarView
             tripStart={tripStart}
@@ -333,14 +337,12 @@ export function TripDetailLayout({
       <div className="space-y-4 lg:hidden">
         <div
           ref={mobileStickyRef}
-          className="sticky top-0 z-20 -mx-4 bg-background px-4 pb-2 pt-1"
+          className="bg-background sticky top-0 z-20 -mx-4 px-4 pt-1 pb-2"
         >
           <div className="flex justify-end">
             <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
               <DialogTrigger
-                render={
-                  <Button type="button" variant="outline" size="sm" />
-                }
+                render={<Button type="button" variant="outline" size="sm" />}
               >
                 자세히
               </DialogTrigger>

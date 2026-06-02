@@ -75,8 +75,16 @@ export interface CalendarProvider {
   createCalendar(userId: string, name: string): Promise<CalendarRef>;
 
   // ── 이벤트 sync ─────────────────────────────────────────
-  putEvent(userId: string, calendarId: string, ics: string): Promise<ExternalEventRef>;
-  updateEvent(userId: string, ref: ExternalEventRef, ics: string): Promise<ExternalEventRef>;
+  putEvent(
+    userId: string,
+    calendarId: string,
+    ics: string,
+  ): Promise<ExternalEventRef>;
+  updateEvent(
+    userId: string,
+    ref: ExternalEventRef,
+    ics: string,
+  ): Promise<ExternalEventRef>;
   deleteEvent(userId: string, ref: ExternalEventRef): Promise<void>;
 
   // ── 멤버 ACL ────────────────────────────────────────────

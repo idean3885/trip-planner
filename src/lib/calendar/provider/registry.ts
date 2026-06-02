@@ -5,9 +5,9 @@
  * GOOGLE은 v2.8.0~ 운영, APPLE은 v2.11.0(spec 025)에서 활성화됨.
  */
 
-import type { CalendarProvider, ProviderId } from "./types";
-import { googleProvider } from "./google";
 import { appleProvider } from "./apple";
+import { googleProvider } from "./google";
+import type { CalendarProvider, ProviderId } from "./types";
 
 export function getProvider(id: ProviderId): CalendarProvider {
   switch (id) {

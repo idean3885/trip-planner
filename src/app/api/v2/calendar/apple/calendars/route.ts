@@ -9,9 +9,10 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
+
 import { auth } from "@/auth";
-import { prisma } from "@/lib/prisma";
 import { appleProvider } from "@/lib/calendar/provider/apple";
+import { prisma } from "@/lib/prisma";
 
 export async function GET(_req: NextRequest) {
   const session = await auth();
@@ -40,14 +41,8 @@ export async function GET(_req: NextRequest) {
         where: { userId: session.user.id },
         data: { lastError: code },
       });
-      return NextResponse.json(
-        { error: "auth_invalid" },
-        { status: 401 },
-      );
+      return NextResponse.json({ error: "auth_invalid" }, { status: 401 });
     }
-    return NextResponse.json(
-      { error: code ?? "unknown" },
-      { status: 502 },
-    );
+    return NextResponse.json({ error: code ?? "unknown" }, { status: 502 });
   }
 }

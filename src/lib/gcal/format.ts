@@ -8,6 +8,7 @@
  */
 
 import type { Activity, Trip } from "@prisma/client";
+
 import { DEDICATED_CALENDAR_SUFFIX } from "@/types/gcal";
 
 const CATEGORY_SYMBOL: Record<string, string> = {
@@ -56,20 +57,23 @@ export type ActivityForFormat = Pick<
 export function formatActivityAsEvent(
   activity: ActivityForFormat,
   trip: Pick<Trip, "id" | "title">,
-  opts: { tripUrl: string }
+  opts: { tripUrl: string },
 ): FormattedEvent {
   const symbol = CATEGORY_SYMBOL[activity.category] ?? "•";
   const summary = `[${trip.title}] ${symbol} ${activity.title}`;
 
   const descLines: string[] = [];
   if (activity.reservationStatus) {
-    descLines.push(RESERVATION_LABEL[activity.reservationStatus] ?? activity.reservationStatus);
+    descLines.push(
+      RESERVATION_LABEL[activity.reservationStatus] ??
+        activity.reservationStatus,
+    );
   }
   if (activity.memo) descLines.push(activity.memo);
   if (activity.location) {
     descLines.push(`📍 ${activity.location}`);
     descLines.push(
-      `지도: https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(activity.location)}`
+      `지도: https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(activity.location)}`,
     );
   }
   descLines.push("");

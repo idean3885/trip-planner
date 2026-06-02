@@ -1,7 +1,8 @@
 /**
  * spec 021 — classifyError가 Testing 모드 제약 거부를 UNREGISTERED로 분류하는지 검증.
  */
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
+
 import { classifyError, isUnregisteredError } from "@/lib/gcal/errors";
 
 describe("classifyError — spec 021 UNREGISTERED 분류", () => {
@@ -22,7 +23,8 @@ describe("classifyError — spec 021 UNREGISTERED 분류", () => {
         status: 401,
         data: {
           error: "invalid_client",
-          error_description: "App has not completed the Google verification process",
+          error_description:
+            "App has not completed the Google verification process",
         },
       },
     };
@@ -56,7 +58,9 @@ describe("classifyError — spec 021 UNREGISTERED 분류", () => {
   });
 
   it("isUnregisteredError — 500은 대상 아님(권한 범주 외)", () => {
-    expect(isUnregisteredError({ code: 500, message: "access_denied" })).toBe(false);
+    expect(isUnregisteredError({ code: 500, message: "access_denied" })).toBe(
+      false,
+    );
   });
 
   // #481 — Google OAuth refresh 실패가 400 + invalid_grant로 내려와 unknown으로 묻히던 회귀.
@@ -82,7 +86,10 @@ describe("classifyError — spec 021 UNREGISTERED 분류", () => {
     const err = {
       code: 400,
       message: "Invalid argument",
-      response: { status: 400, data: { error: { code: 400, message: "Bad Request" } } },
+      response: {
+        status: 400,
+        data: { error: { code: 400, message: "Bad Request" } },
+      },
     };
     expect(classifyError(err)).toEqual({
       reason: "unknown",

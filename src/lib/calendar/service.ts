@@ -29,29 +29,24 @@
  *   - reconcileOwnerTransfer (provider.upsertMemberAcl writer 부분만)
  */
 
-import { TripRole, type TripMember, type User } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
+import { type TripMember, TripRole, type User } from "@prisma/client";
+
 import { getTripMember } from "@/lib/auth-helpers";
 import {
-  buildConsentRedirectUrl,
-  hasCalendarScope,
-} from "@/lib/gcal/auth";
+  type AclUpsertResult,
+  deleteAcl,
+  mapRoleToAcl,
+  upsertAcl,
+} from "@/lib/gcal/acl";
+import { buildConsentRedirectUrl, hasCalendarScope } from "@/lib/gcal/auth";
 import {
-  getCalendarClient,
   classifyError as classifyGCalError,
+  getCalendarClient,
   getStatus as getGCalStatus,
 } from "@/lib/gcal/client";
 import { dedicatedCalendarName } from "@/lib/gcal/format";
-import {
-  upsertAcl,
-  deleteAcl,
-  mapRoleToAcl,
-  type AclUpsertResult,
-} from "@/lib/gcal/acl";
 import { syncActivities } from "@/lib/gcal/sync";
-import { syncAppleActivities } from "./sync-apple";
-import { getProvider } from "./provider/registry";
-import type { CalendarErrorCode } from "./provider/types";
+import { prisma } from "@/lib/prisma";
 import type {
   ConsentRequired,
   GCalLastError,
@@ -62,6 +57,10 @@ import type {
   TripCalendarLinkResponse,
   TripCalendarLinkState,
 } from "@/types/gcal";
+
+import { getProvider } from "./provider/registry";
+import type { CalendarErrorCode } from "./provider/types";
+import { syncAppleActivities } from "./sync-apple";
 
 // ────────────────────────────────────────────────────────────
 // 결과 union — 라우트는 본 union을 NextResponse로 변환만 한다.
@@ -83,7 +82,9 @@ function err(
   return { kind: "error", status, body };
 }
 
-function consentRequired(authorizationUrl: string): CalendarServiceResult<never> {
+function consentRequired(
+  authorizationUrl: string,
+): CalendarServiceResult<never> {
   return {
     kind: "consent_required",
     status: 409,
@@ -97,13 +98,20 @@ function consentRequired(authorizationUrl: string): CalendarServiceResult<never>
 
 function normalizeLastError(raw: string | null): TripCalendarLastError {
   if (!raw) return null;
-  if (raw === "REVOKED" || raw === "RATE_LIMITED" || raw === "NETWORK" || raw === "UNKNOWN") {
+  if (
+    raw === "REVOKED" ||
+    raw === "RATE_LIMITED" ||
+    raw === "NETWORK" ||
+    raw === "UNKNOWN"
+  ) {
     return raw;
   }
   return "UNKNOWN";
 }
 
-function inferLastError(result: { failed: { reason: string }[] }): GCalLastError {
+function inferLastError(result: {
+  failed: { reason: string }[];
+}): GCalLastError {
   if (!result.failed.length) return null;
   const r = result.failed[0].reason;
   if (r === "forbidden") return "REVOKED";
@@ -142,7 +150,9 @@ function toMemberAclState(
     role: m.role,
     aclRole: mapRoleToAcl(m.role),
     aclStatus: aclResult?.ok ? "granted" : "failed",
-    aclError: aclResult?.ok ? undefined : (aclResult?.reason as MemberAclState["aclError"]),
+    aclError: aclResult?.ok
+      ? undefined
+      : (aclResult?.reason as MemberAclState["aclError"]),
   };
 }
 
@@ -600,7 +610,12 @@ export async function getCalendarStatus(
  */
 async function syncAppleLinkBranch(
   caller: CallerCtx,
-  link: { id: number; calendarId: string; calendarName: string | null; ownerId: string },
+  link: {
+    id: number;
+    calendarId: string;
+    calendarName: string | null;
+    ownerId: string;
+  },
   args: { tripUrl: string },
 ): Promise<CalendarServiceResult<SyncResponse>> {
   const provider = getProvider("APPLE");
@@ -681,7 +696,10 @@ export async function syncCalendar(
   args: { tripUrl: string },
 ): Promise<CalendarServiceResult<SyncResponse>> {
   const member = await getTripMember(caller.tripId, caller.userId);
-  if (!member || (member.role !== TripRole.OWNER && member.role !== TripRole.HOST)) {
+  if (
+    !member ||
+    (member.role !== TripRole.OWNER && member.role !== TripRole.HOST)
+  ) {
     return err(403, { error: "editor_only" });
   }
 
@@ -695,7 +713,10 @@ export async function syncCalendar(
     return syncAppleLinkBranch(caller, link, args);
   }
 
-  if (member.role === TripRole.OWNER && !(await hasCalendarScope(caller.userId))) {
+  if (
+    member.role === TripRole.OWNER &&
+    !(await hasCalendarScope(caller.userId))
+  ) {
     return consentRequired(
       buildConsentRedirectUrl(`/trips/${caller.tripId}?gcal=synced`),
     );
@@ -841,7 +862,10 @@ export async function subscribeCalendar(
       update: { status: "ERROR", lastError: reason },
     });
     const body: MemberSubscribeResponse = { status: "failed", error: reason };
-    return err(status >= 400 ? status : 502, body as unknown as Record<string, unknown>);
+    return err(
+      status >= 400 ? status : 502,
+      body as unknown as Record<string, unknown>,
+    );
   }
 }
 
@@ -859,7 +883,9 @@ export async function unsubscribeCalendar(
   const client = await getCalendarClient(caller.userId);
   if (client) {
     try {
-      await client.calendar.calendarList.delete({ calendarId: link.calendarId });
+      await client.calendar.calendarList.delete({
+        calendarId: link.calendarId,
+      });
     } catch (e) {
       if (getGCalStatus(e) !== 404) {
         console.warn(

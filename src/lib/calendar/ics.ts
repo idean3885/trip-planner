@@ -11,6 +11,7 @@
  */
 
 import { randomUUID } from "node:crypto";
+
 import type { Activity, Trip } from "@prisma/client";
 
 const PRODID = "-//trip-planner//EN";
@@ -103,7 +104,8 @@ export function formatActivityAsIcs(
   const descLines: string[] = [];
   if (activity.reservationStatus) {
     descLines.push(
-      RESERVATION_LABEL[activity.reservationStatus] ?? activity.reservationStatus,
+      RESERVATION_LABEL[activity.reservationStatus] ??
+        activity.reservationStatus,
     );
   }
   if (activity.memo) descLines.push(activity.memo);

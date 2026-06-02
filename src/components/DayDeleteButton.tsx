@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { toast } from "sonner";
+
 import { Button } from "@/components/ui/button";
 
 interface DayDeleteButtonProps {
@@ -10,7 +11,10 @@ interface DayDeleteButtonProps {
   dayId: number;
 }
 
-export default function DayDeleteButton({ tripId, dayId }: DayDeleteButtonProps) {
+export default function DayDeleteButton({
+  tripId,
+  dayId,
+}: DayDeleteButtonProps) {
   const router = useRouter();
   const [deleting, setDeleting] = useState(false);
 

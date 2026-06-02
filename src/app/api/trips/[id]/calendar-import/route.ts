@@ -7,15 +7,16 @@
  * 멱등성: (provider, externalCalendarId, externalEventId) 키로 중복 차단.
  */
 
-import { NextResponse } from "next/server";
-import { getAuthUserId } from "@/lib/auth-helpers";
-import { userCanImportCalendar } from "@/lib/permissions/activity";
-import {
-  runImport,
-  ExternalAccountNotLinkedError,
-  EmptyTripPeriodError,
-} from "@/lib/calendar-import/service";
 import type { CalendarProviderId } from "@prisma/client";
+import { NextResponse } from "next/server";
+
+import { getAuthUserId } from "@/lib/auth-helpers";
+import {
+  EmptyTripPeriodError,
+  ExternalAccountNotLinkedError,
+  runImport,
+} from "@/lib/calendar-import/service";
+import { userCanImportCalendar } from "@/lib/permissions/activity";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -38,7 +39,10 @@ export async function POST(request: Request, { params }: Params) {
 
   if (!(await userCanImportCalendar(tripId, userId))) {
     return NextResponse.json(
-      { error: "forbidden", message: "외부 캘린더 import는 HOST 이상에게만 허용됩니다." },
+      {
+        error: "forbidden",
+        message: "외부 캘린더 import는 HOST 이상에게만 허용됩니다.",
+      },
       { status: 403 },
     );
   }
@@ -80,15 +84,13 @@ export async function POST(request: Request, { params }: Params) {
       return NextResponse.json(
         {
           error: "empty_trip_period",
-          message: "일정 0건이라 기간이 정해지지 않았습니다. 일정을 먼저 추가해 주세요.",
+          message:
+            "일정 0건이라 기간이 정해지지 않았습니다. 일정을 먼저 추가해 주세요.",
         },
         { status: 422 },
       );
     }
     console.error("[calendar-import] internal error", err);
-    return NextResponse.json(
-      { error: "internal_error" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "internal_error" }, { status: 500 });
   }
 }

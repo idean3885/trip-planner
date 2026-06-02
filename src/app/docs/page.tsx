@@ -5,8 +5,8 @@ import Script from "next/script";
 
 export default function DocsPage() {
   return (
-    <div className="relative w-screen min-h-[calc(100vh-3.5rem)] ml-[calc(50%-50vw)]">
-      <nav className="mx-auto flex max-w-wide items-center gap-2 px-6 pt-4 pb-2 text-sm text-muted-foreground">
+    <div className="relative ml-[calc(50%-50vw)] min-h-[calc(100vh-3.5rem)] w-screen">
+      <nav className="max-w-wide text-muted-foreground mx-auto flex items-center gap-2 px-6 pt-4 pb-2 text-sm">
         <Link href="/" className="hover:text-foreground">
           홈
         </Link>
@@ -21,7 +21,7 @@ export default function DocsPage() {
           hideDownloadButton: true,
           layout: "modern",
         })}
-        className="mx-auto max-w-wide px-2"
+        className="max-w-wide mx-auto px-2"
       />
       <Script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference" />
     </div>

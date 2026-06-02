@@ -11,6 +11,7 @@
  */
 
 import Link from "next/link";
+
 import { Card } from "@/components/ui/card";
 import { GCAL_DISCUSSIONS_URL } from "@/lib/gcal/unregistered";
 
@@ -25,9 +26,9 @@ export default function CalendarProviderChoice({
     <Card className="p-4">
       <div className="space-y-1">
         <h3 className="text-sm font-medium">캘린더 연결</h3>
-        <p className="text-xs text-muted-foreground">
-          모바일 Calendar 앱에서 여행 일정을 보려면 캘린더를 연결하세요. 한 여행은
-          1개 캘린더만 연결할 수 있습니다.
+        <p className="text-muted-foreground text-xs">
+          모바일 Calendar 앱에서 여행 일정을 보려면 캘린더를 연결하세요. 한
+          여행은 1개 캘린더만 연결할 수 있습니다.
         </p>
       </div>
 
@@ -35,22 +36,22 @@ export default function CalendarProviderChoice({
         {/* Apple — 권장 */}
         <Link
           href={`/trips/${tripId}/calendar/connect-apple`}
-          className="block rounded-lg border-2 border-primary/40 bg-primary/5 p-3 transition-colors hover:bg-primary/10"
+          className="border-primary/40 bg-primary/5 hover:bg-primary/10 block rounded-lg border-2 p-3 transition-colors"
         >
           <div className="flex items-start justify-between gap-3">
             <div className="space-y-0.5">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium">🍎 Apple iCloud</span>
-                <span className="rounded bg-primary px-1.5 py-0.5 text-[10px] font-medium text-primary-foreground">
+                <span className="bg-primary text-primary-foreground rounded px-1.5 py-0.5 text-[10px] font-medium">
                   권장
                 </span>
               </div>
-              <p className="text-xs text-muted-foreground">
-                iPhone·iPad·Mac Calendar 앱 사용자에게 권장. 앱 전용 암호 1번 발급
-                후 즉시 사용.
+              <p className="text-muted-foreground text-xs">
+                iPhone·iPad·Mac Calendar 앱 사용자에게 권장. 앱 전용 암호 1번
+                발급 후 즉시 사용.
               </p>
             </div>
-            <span className="shrink-0 text-sm font-medium text-primary">
+            <span className="text-primary shrink-0 text-sm font-medium">
               연결 →
             </span>
           </div>
@@ -60,7 +61,7 @@ export default function CalendarProviderChoice({
         <Link
           href={`/trips/${tripId}?provider=google`}
           scroll={false}
-          className="block rounded-lg border border-input bg-background p-3 transition-colors hover:bg-accent"
+          className="border-input bg-background hover:bg-accent block rounded-lg border p-3 transition-colors"
         >
           <div className="flex items-start justify-between gap-3">
             <div className="space-y-0.5">
@@ -70,19 +71,19 @@ export default function CalendarProviderChoice({
                   Testing
                 </span>
               </div>
-              <p className="text-xs text-muted-foreground">
-                개발자에게 등록된 사용자만 통과합니다. 등록되어 있다면 바로 시도하세요.
-                미등록 시 동의 단계에서 차단되며 안내가 노출됩니다.
+              <p className="text-muted-foreground text-xs">
+                개발자에게 등록된 사용자만 통과합니다. 등록되어 있다면 바로
+                시도하세요. 미등록 시 동의 단계에서 차단되며 안내가 노출됩니다.
               </p>
             </div>
-            <span className="shrink-0 text-sm font-medium text-foreground">
+            <span className="text-foreground shrink-0 text-sm font-medium">
               시작 →
             </span>
           </div>
         </Link>
 
         {/* 등록 문의 보조 링크 (Google 박스 밖, 작은 footer 톤) */}
-        <p className="pt-1 text-center text-xs text-muted-foreground">
+        <p className="text-muted-foreground pt-1 text-center text-xs">
           Google 등록이 필요하다면{" "}
           <a
             href={GCAL_DISCUSSIONS_URL}

@@ -8,6 +8,7 @@
 
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+
 import { NextResponse } from "next/server";
 
 const SCRIPT_PATH = join(process.cwd(), "scripts/bootstrap/install-v3.sh");

@@ -8,7 +8,7 @@
  * ADR-0002에 따라 공식 SDK(`@googleapis/calendar`, `google-auth-library`)를 사용한다.
  */
 
-import { calendar_v3, calendar } from "@googleapis/calendar";
+import { calendar, calendar_v3 } from "@googleapis/calendar";
 import { OAuth2Client } from "google-auth-library";
 
 import { prisma } from "@/lib/prisma";
@@ -27,7 +27,9 @@ export interface GCalClient {
  * oauth2 클라이언트는 내부적으로 만료 시 refresh_token으로 자동 갱신하며, 갱신된
  * 값은 `tokens` 이벤트 훅으로 Prisma Account에 동기화된다.
  */
-export async function getCalendarClient(userId: string): Promise<GCalClient | null> {
+export async function getCalendarClient(
+  userId: string,
+): Promise<GCalClient | null> {
   const account = await prisma.account.findFirst({
     where: { userId, provider: "google" },
     select: {
@@ -54,7 +56,8 @@ export async function getCalendarClient(userId: string): Promise<GCalClient | nu
       where: { id: account.id },
       data: {
         access_token: tokens.access_token ?? undefined,
-        refresh_token: tokens.refresh_token ?? account.refresh_token ?? undefined,
+        refresh_token:
+          tokens.refresh_token ?? account.refresh_token ?? undefined,
         expires_at: tokens.expiry_date
           ? Math.floor(tokens.expiry_date / 1000)
           : undefined,
@@ -64,4 +67,3 @@ export async function getCalendarClient(userId: string): Promise<GCalClient | nu
 
   return { calendar: calendar({ version: "v3", auth: oauth2 }), oauth2 };
 }
-

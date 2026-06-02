@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { toast } from "sonner";
+
 import { Button } from "@/components/ui/button";
 
 interface Props {
@@ -15,7 +16,11 @@ interface Props {
  * 여행 상세 페이지의 '일정' 섹션에서 Day(날짜)를 새로 추가한다.
  * Trip 범위 밖 날짜 입력 시 서버가 범위를 자동 확장한다(#296 거동).
  */
-export default function AddDayButton({ tripId, tripStartDate, tripEndDate }: Props) {
+export default function AddDayButton({
+  tripId,
+  tripStartDate,
+  tripEndDate,
+}: Props) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [date, setDate] = useState("");
@@ -36,7 +41,11 @@ export default function AddDayButton({ tripId, tripStartDate, tripEndDate }: Pro
       });
       if (!res.ok) {
         const body = (await res.json().catch(() => ({}))) as { error?: string };
-        toast.error(body.error === "duplicate_date" ? "이미 해당 날짜의 일정이 있습니다" : "일정 추가에 실패했습니다");
+        toast.error(
+          body.error === "duplicate_date"
+            ? "이미 해당 날짜의 일정이 있습니다"
+            : "일정 추가에 실패했습니다",
+        );
         return;
       }
       toast.success("일정을 추가했습니다");
@@ -65,7 +74,7 @@ export default function AddDayButton({ tripId, tripStartDate, tripEndDate }: Pro
         min={minDate}
         max={maxDate}
         required
-        className="rounded-md border border-border bg-background px-2 py-1 text-sm tabular-nums"
+        className="border-border bg-background rounded-md border px-2 py-1 text-sm tabular-nums"
       />
       <Button type="submit" size="sm" disabled={busy || !date}>
         추가

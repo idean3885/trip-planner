@@ -1,0 +1,38 @@
+# 빌드 산출물·생성물
+.next/
+out/
+build/
+dist/
+coverage/
+test-results/
+next-env.d.ts
+
+# 탐색 잔재·비추적
+web/
+spike/
+
+# 가상환경·외부
+.venv/
+.vercel/
+node_modules/
+
+# Prisma 생성·마이그레이션 (SQL은 수기 관리)
+prisma/migrations/
+
+# 자동 생성 토큰 CSS (tokens:build 산출)
+src/app/globals.css
+
+# 패키지 메타
+package-lock.json
+uv.lock
+
+# 마크다운·문서는 별도 작성 규약(블로그 스타일·speckit 템플릿)이 있어 prettier 일괄 포맷 제외
+**/*.md
+.agents/
+.claude/
+.specify/
+.github/
+.omc/
+docs/
+changes/
+specs/

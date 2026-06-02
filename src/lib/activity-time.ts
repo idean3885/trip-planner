@@ -26,7 +26,7 @@ function zonedWallTimeToUtc(
   day: number,
   hour: number,
   minute: number,
-  timezone: string
+  timezone: string,
 ): Date {
   // 1차: 벽시각을 UTC로 가정한 초기값
   const guess = Date.UTC(year, month - 1, day, hour, minute, 0, 0);
@@ -61,14 +61,15 @@ function tzOffsetMs(utcMs: number, timezone: string): number {
     second: "2-digit",
   });
   const parts = dtf.formatToParts(new Date(utcMs));
-  const get = (type: string) => Number(parts.find((p) => p.type === type)?.value);
+  const get = (type: string) =>
+    Number(parts.find((p) => p.type === type)?.value);
   const asUtc = Date.UTC(
     get("year"),
     get("month") - 1,
     get("day"),
     get("hour"),
     get("minute"),
-    get("second")
+    get("second"),
   );
   return asUtc - utcMs;
 }
@@ -87,7 +88,7 @@ function tzOffsetMs(utcMs: number, timezone: string): number {
 export function toTimestamp(
   value: string | null | undefined,
   dayDate: Date,
-  timezone: string | null | undefined
+  timezone: string | null | undefined,
 ): Date | null | undefined {
   if (value === undefined) return undefined;
   if (value === null || value === "") return null;

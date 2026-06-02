@@ -1,4 +1,5 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+
 import { getAppOrigin, getCanonicalOrigin } from "@/lib/app-url";
 
 describe("getAppOrigin — Layer 1 (내부 링크)", () => {
@@ -33,9 +34,11 @@ describe("getCanonicalOrigin — Layer 3 (외부 노출용)", () => {
   });
 
   afterEach(() => {
-    if (originalAppProd !== undefined) process.env.APP_PRODUCTION_URL = originalAppProd;
+    if (originalAppProd !== undefined)
+      process.env.APP_PRODUCTION_URL = originalAppProd;
     else delete process.env.APP_PRODUCTION_URL;
-    if (originalVercelProd !== undefined) process.env.VERCEL_PROJECT_PRODUCTION_URL = originalVercelProd;
+    if (originalVercelProd !== undefined)
+      process.env.VERCEL_PROJECT_PRODUCTION_URL = originalVercelProd;
     else delete process.env.VERCEL_PROJECT_PRODUCTION_URL;
   });
 

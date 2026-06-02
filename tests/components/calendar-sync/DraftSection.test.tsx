@@ -4,8 +4,9 @@
  * 진입 시 전체 선택, 전체 토글, 시간 미정 일괄/타임존 일괄, 확정 시 promote-batch
  * 로 선택분 전송을 검증한다. 표시 시각은 부동 시간(getUTC*) 기준(헌법 VII).
  */
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
 import DraftSection from "@/components/calendar-sync/sections/DraftSection";
 
 const mockToast = vi.hoisted(() => ({ error: vi.fn(), success: vi.fn() }));
@@ -52,12 +53,22 @@ const DRAFTS = [
 function mockDraftsThenBatch() {
   mockFetch.mockImplementation((url: string, opts?: { method?: string }) => {
     if (typeof url === "string" && url.includes("/drafts?status=PENDING")) {
-      return Promise.resolve({ ok: true, json: async () => ({ drafts: DRAFTS }) });
-    }
-    if (typeof url === "string" && url.includes("/promote-batch") && opts?.method === "POST") {
       return Promise.resolve({
         ok: true,
-        json: async () => ({ promoted: [{ draftId: 1, activityId: 10 }], failed: [] }),
+        json: async () => ({ drafts: DRAFTS }),
+      });
+    }
+    if (
+      typeof url === "string" &&
+      url.includes("/promote-batch") &&
+      opts?.method === "POST"
+    ) {
+      return Promise.resolve({
+        ok: true,
+        json: async () => ({
+          promoted: [{ draftId: 1, activityId: 10 }],
+          failed: [],
+        }),
       });
     }
     return Promise.resolve({ ok: true, json: async () => ({}) });
@@ -72,7 +83,9 @@ describe("DraftSection (spec 033)", () => {
 
   it("진입 시 draft 를 렌더하고 전체 선택한다", async () => {
     render(<DraftSection tripId={1} canEdit onMutated={vi.fn()} />);
-    await waitFor(() => expect(screen.getByText("리스본 도착")).toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.getByText("리스본 도착")).toBeInTheDocument(),
+    );
     expect(screen.getByText("호텔 체크인")).toBeInTheDocument();
     // 전체 선택 표시 2/2
     expect(screen.getByText(/전체 선택 \(2\/2\)/)).toBeInTheDocument();
@@ -83,7 +96,9 @@ describe("DraftSection (spec 033)", () => {
   it("확정 버튼은 선택 수를 표시하고, 클릭 시 promote-batch 로 선택분을 보낸다", async () => {
     const onMutated = vi.fn();
     render(<DraftSection tripId={1} canEdit onMutated={onMutated} />);
-    await waitFor(() => expect(screen.getByText("리스본 도착")).toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.getByText("리스본 도착")).toBeInTheDocument(),
+    );
 
     fireEvent.click(screen.getByRole("button", { name: /2건 가져오기/ }));
 
@@ -108,7 +123,9 @@ describe("DraftSection (spec 033)", () => {
 
   it("전체 선택을 끄면 확정 버튼이 비활성화된다", async () => {
     render(<DraftSection tripId={1} canEdit onMutated={vi.fn()} />);
-    await waitFor(() => expect(screen.getByText("리스본 도착")).toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.getByText("리스본 도착")).toBeInTheDocument(),
+    );
     fireEvent.click(screen.getByLabelText(/전체 선택/));
     expect(screen.getByText(/0건 가져오기/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /0건 가져오기/ })).toBeDisabled();
@@ -116,7 +133,9 @@ describe("DraftSection (spec 033)", () => {
 
   it("지역 표시 일괄은 '기록' 어휘 + 시각 불변 안내를 노출한다(#637 부동 시간 프레이밍)", async () => {
     render(<DraftSection tripId={1} canEdit onMutated={vi.fn()} />);
-    await waitFor(() => expect(screen.getByText("리스본 도착")).toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.getByText("리스본 도착")).toBeInTheDocument(),
+    );
     // "적용"이 아니라 "기록" — 변환이 아니라 어느 지역 시간인지 기록.
     expect(screen.getByRole("button", { name: "기록" })).toBeInTheDocument();
     // 라벨은 "지역 표시", 시각 불변 안내 노출.
@@ -126,7 +145,9 @@ describe("DraftSection (spec 033)", () => {
 
   it("지역 표시 기록은 표시 시각 숫자를 바꾸지 않는다(헌법 VII)", async () => {
     render(<DraftSection tripId={1} canEdit onMutated={vi.fn()} />);
-    await waitFor(() => expect(screen.getByText("리스본 도착")).toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.getByText("리스본 도착")).toBeInTheDocument(),
+    );
     expect(screen.getByText(/09:00/)).toBeInTheDocument(); // 기록 전
     fireEvent.click(screen.getByRole("button", { name: "기록" }));
     // 기록 후에도 벽시계 숫자 그대로(09:00) — 환산 없음.
@@ -137,9 +158,15 @@ describe("DraftSection (spec 033)", () => {
   });
 
   it("종일(시간 미정) draft 항목 컨테이너가 가로 넘침 방지 클래스를 쓴다", async () => {
-    const { container } = render(<DraftSection tripId={1} canEdit onMutated={vi.fn()} />);
-    await waitFor(() => expect(screen.getByText("호텔 체크인")).toBeInTheDocument());
+    const { container } = render(
+      <DraftSection tripId={1} canEdit onMutated={vi.fn()} />,
+    );
+    await waitFor(() =>
+      expect(screen.getByText("호텔 체크인")).toBeInTheDocument(),
+    );
     // 항목 내부 flex-wrap + min-w-0 (모바일 가로 스크롤 방지)
-    expect(container.querySelector(".flex-wrap.min-w-0, .min-w-0.flex-wrap")).not.toBeNull();
+    expect(
+      container.querySelector(".flex-wrap.min-w-0, .min-w-0.flex-wrap"),
+    ).not.toBeNull();
   });
 });

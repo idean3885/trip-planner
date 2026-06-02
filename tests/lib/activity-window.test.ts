@@ -1,12 +1,9 @@
 /**
  * #669 — 일정 윈도우 로딩 계산.
  */
-import { describe, it, expect } from "vitest";
-import {
-  ymdLocal,
-  windowYmds,
-  missingFetchRange,
-} from "@/lib/activity-window";
+import { describe, expect, it } from "vitest";
+
+import { missingFetchRange, windowYmds, ymdLocal } from "@/lib/activity-window";
 
 describe("ymdLocal", () => {
   it("로컬 기준 YYYY-MM-DD 로 변환한다", () => {
@@ -36,12 +33,7 @@ describe("missingFetchRange", () => {
   ];
 
   it("윈도우 안에서 캐시에 없는 Day 들의 날짜 범위를 만든다", () => {
-    const range = missingFetchRange(
-      new Date(2026, 5, 7),
-      3,
-      index,
-      new Set(),
-    );
+    const range = missingFetchRange(new Date(2026, 5, 7), 3, index, new Set());
     expect(range).toEqual({ from: "2026-06-06", to: "2026-06-08" });
   });
 
@@ -66,12 +58,7 @@ describe("missingFetchRange", () => {
   });
 
   it("윈도우 밖 Day 는 받지 않는다", () => {
-    const range = missingFetchRange(
-      new Date(2026, 5, 20),
-      1,
-      index,
-      new Set(),
-    );
+    const range = missingFetchRange(new Date(2026, 5, 20), 1, index, new Set());
     // 06-19 ~ 06-21 중 인덱스에 있는 건 06-20(id 4)뿐.
     expect(range).toEqual({ from: "2026-06-20", to: "2026-06-20" });
   });

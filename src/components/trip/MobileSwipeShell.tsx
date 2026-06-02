@@ -9,9 +9,10 @@
  * 좌 스와이프 외 "뒤로" 버튼 + ESC 가 항상 같이 제공된다.
  */
 
+import { ArrowLeft } from "lucide-react";
 import { useEffect } from "react";
 import { useSwipeable } from "react-swipeable";
-import { ArrowLeft } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 
 export interface MobileSwipeShellProps {
@@ -56,7 +57,7 @@ export function MobileSwipeShell({
         size="sm"
         onClick={onSwapBack}
         aria-label="기본 일정 목록으로 돌아가기"
-        className="gap-1 text-sm text-muted-foreground"
+        className="text-muted-foreground gap-1 text-sm"
       >
         <ArrowLeft className="size-3.5" aria-hidden />
         뒤로

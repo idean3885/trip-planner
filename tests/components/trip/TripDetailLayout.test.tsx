@@ -4,11 +4,12 @@
  * 진입 시 여행 기간 안에 오늘이 있으면 오늘, 없으면 여행 첫날(일정 0건이면
  * 오늘)을 선택한다. today 의존이라 기간을 today 상대로 구성해 검증한다.
  */
-import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
+
 import {
-  TripDetailLayout,
   computeInitialSelected,
+  TripDetailLayout,
 } from "@/components/trip/TripDetailLayout";
 
 vi.mock("next/navigation", () => ({

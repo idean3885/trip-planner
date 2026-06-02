@@ -14,8 +14,10 @@ interface Props {
 export default function GCalCalendarChoice({ value, onChange }: Props) {
   return (
     <fieldset className="space-y-2">
-      <legend className="text-sm font-medium text-foreground">캘린더 선택</legend>
-      <label className="flex items-start gap-2 rounded-md border border-border p-2 cursor-pointer hover:bg-muted/30">
+      <legend className="text-foreground text-sm font-medium">
+        캘린더 선택
+      </legend>
+      <label className="border-border hover:bg-muted/30 flex cursor-pointer items-start gap-2 rounded-md border p-2">
         <input
           type="radio"
           name="calendar-type"
@@ -25,13 +27,15 @@ export default function GCalCalendarChoice({ value, onChange }: Props) {
           className="mt-0.5"
         />
         <span>
-          <span className="block text-sm font-medium">이 여행 전용 캘린더 자동 생성 (추천)</span>
-          <span className="block text-xs text-muted-foreground">
+          <span className="block text-sm font-medium">
+            이 여행 전용 캘린더 자동 생성 (추천)
+          </span>
+          <span className="text-muted-foreground block text-xs">
             여행 종료 후 캘린더를 한 번에 숨기거나 지우기 쉽습니다.
           </span>
         </span>
       </label>
-      <label className="flex items-start gap-2 rounded-md border border-border p-2 cursor-pointer hover:bg-muted/30">
+      <label className="border-border hover:bg-muted/30 flex cursor-pointer items-start gap-2 rounded-md border p-2">
         <input
           type="radio"
           name="calendar-type"
@@ -41,8 +45,10 @@ export default function GCalCalendarChoice({ value, onChange }: Props) {
           className="mt-0.5"
         />
         <span>
-          <span className="block text-sm font-medium">내 기본 캘린더에 바로 넣기</span>
-          <span className="block text-xs text-muted-foreground">
+          <span className="block text-sm font-medium">
+            내 기본 캘린더에 바로 넣기
+          </span>
+          <span className="text-muted-foreground block text-xs">
             개인 일정과 섞여 보입니다.
           </span>
         </span>

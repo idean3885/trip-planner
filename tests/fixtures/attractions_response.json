@@ -104,13 +104,8 @@
       "cancellationPolicy": {
         "hasFreeCancellation": true
       },
-      "labels": [
-        {"text": "Best Seller"},
-        {"text": "Skip the Line"}
-      ],
-      "flags": [
-        {"flag": "likely_to_sell_out", "value": true}
-      ],
+      "labels": [{ "text": "Best Seller" }, { "text": "Skip the Line" }],
+      "flags": [{ "flag": "likely_to_sell_out", "value": true }],
       "audioSupportedLanguages": ["en", "es", "fr", "de", "it"],
       "additionalInfo": "Please bring your booking confirmation. Entry is at the time stated on your ticket. Dress modestly — shoulders and knees must be covered.",
       "notIncluded": [

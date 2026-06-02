@@ -5,8 +5,9 @@
  * 캘린더는 enableMobileCompact 일 때 기본 월 표시(data-calendar-view="month")
  * 로 시작한다(위로 스와이프 전).
  */
-import { describe, it, expect, vi } from "vitest";
-import { render, fireEvent, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
+
 import { CalendarView, getWeekDays } from "@/components/trip/CalendarView";
 
 vi.mock("next/navigation", () => ({

@@ -12,11 +12,14 @@
  */
 
 import { randomUUID } from "node:crypto";
-import { prisma } from "@/lib/prisma";
-import { appleProvider } from "./provider/apple";
-import { formatActivityAsIcs } from "./ics";
+
 import type { Activity, Trip, TripCalendarEventMapping } from "@prisma/client";
+
+import { prisma } from "@/lib/prisma";
 import type { FailureReason } from "@/types/gcal";
+
+import { formatActivityAsIcs } from "./ics";
+import { appleProvider } from "./provider/apple";
 
 /**
  * Apple put 결과 URL의 마지막 segment에서 UID를 추출.
@@ -99,7 +102,11 @@ export async function syncAppleActivities(
           tripUrl: ctx.tripUrl,
           uid,
         });
-        const ref = await appleProvider.putEvent(ctx.ownerId, ctx.calendarId, ics);
+        const ref = await appleProvider.putEvent(
+          ctx.ownerId,
+          ctx.calendarId,
+          ics,
+        );
         await prisma.tripCalendarEventMapping.create({
           data: {
             tripCalendarLinkId: ctx.tripCalendarLinkId,
@@ -159,13 +166,17 @@ export async function syncAppleActivities(
         externalEventId: mapping.googleEventId,
         etag: mapping.syncedEtag,
       });
-      await prisma.tripCalendarEventMapping.delete({ where: { id: mapping.id } });
+      await prisma.tripCalendarEventMapping.delete({
+        where: { id: mapping.id },
+      });
       result.deleted++;
     } catch (e) {
       const code = appleProvider.classifyError(e);
       if (code === "precondition_failed") {
         // 외부에서 수정된 이벤트 → 보존, 매핑만 끊는다
-        await prisma.tripCalendarEventMapping.delete({ where: { id: mapping.id } });
+        await prisma.tripCalendarEventMapping.delete({
+          where: { id: mapping.id },
+        });
         result.skipped++;
         continue;
       }

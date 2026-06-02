@@ -12,9 +12,10 @@
  * - Day 상세 페이지(/trips/[id]/day/[dayId])는 redirect 로 축소.
  * - DayList 제거.
  */
-import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+
+import { describe, expect, it } from "vitest";
 
 const REPO_ROOT = resolve(__dirname, "../../..");
 const PAGE_PATH = resolve(REPO_ROOT, "src/app/trips/[id]/page.tsx");
@@ -22,7 +23,10 @@ const LAYOUT_COMPONENT_PATH = resolve(
   REPO_ROOT,
   "src/components/trip/TripDetailLayout.tsx",
 );
-const DAY_PAGE_PATH = resolve(REPO_ROOT, "src/app/trips/[id]/day/[dayId]/page.tsx");
+const DAY_PAGE_PATH = resolve(
+  REPO_ROOT,
+  "src/app/trips/[id]/day/[dayId]/page.tsx",
+);
 const GLOBAL_LAYOUT_PATH = resolve(REPO_ROOT, "src/app/layout.tsx");
 
 const pageSrc = readFileSync(PAGE_PATH, "utf8");
@@ -80,7 +84,8 @@ describe("trip 상세 레이아웃 (spec 032 — 캘린더 중심 단일 화면)
 
   it("헤더 로고는 좁은 화면에서 짓눌리지 않게 shrink-0 + whitespace-nowrap 을 쓴다(#641)", () => {
     // 13 mini(375px) 에서 로고가 한 글자씩 세로로 접히던 회귀 가드.
-    expect(globalLayoutSrc).toMatch(/shrink-0 whitespace-nowrap/);
+    // prettier-plugin-tailwindcss 정렬로 사이에 다른 클래스가 올 수 있어 인접 가정을 푼다 (spec 038)
+    expect(globalLayoutSrc).toMatch(/shrink-0[^"]*whitespace-nowrap/);
   });
 
   it("AuthButton 이메일은 sm 미만에서 숨겨 헤더 가로 넘침을 막는다(#641)", () => {

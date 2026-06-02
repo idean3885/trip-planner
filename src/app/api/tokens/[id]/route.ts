@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+
 import { getSession } from "@/lib/auth-helpers";
+import { prisma } from "@/lib/prisma";
 
 /**
  * DELETE /api/tokens/[id] — 토큰 삭제 (즉시 무효화)

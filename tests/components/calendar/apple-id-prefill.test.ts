@@ -6,9 +6,10 @@
  * settings/calendars 는 이미 등록된 Apple ID 만 prefill 한다. 누가 세션 이메일
  * prefill 을 다시 넣으면 이 테스트가 깨진다.
  */
-import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+
+import { describe, expect, it } from "vitest";
 
 const ROOT = resolve(__dirname, "../../..");
 const connectSrc = readFileSync(

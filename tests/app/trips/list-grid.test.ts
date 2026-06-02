@@ -5,9 +5,10 @@
  * (좌측 통합 캘린더 + 우측 카드 목록) 으로 단순화. 우측 카드 목록은 단일
  * 컬럼으로 세로 나열. xl:grid-cols-3 분기는 제거됨.
  */
-import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+
+import { describe, expect, it } from "vitest";
 
 const REPO_ROOT = resolve(__dirname, "../../..");
 const PAGE = readFileSync(resolve(REPO_ROOT, "src/app/trips/page.tsx"), "utf8");

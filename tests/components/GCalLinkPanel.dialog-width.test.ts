@@ -4,9 +4,10 @@
  * DialogContent가 토큰 기반 폭(sm:max-w-narrow)으로 override되어 있는지 확인.
  * shadcn 기본 sm:max-w-sm(~384px)을 그대로 두면 데스크탑에서 모달이 좁아 정보가 잘림.
  */
-import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+
+import { describe, expect, it } from "vitest";
 
 const REPO_ROOT = resolve(__dirname, "../..");
 const SRC = readFileSync(

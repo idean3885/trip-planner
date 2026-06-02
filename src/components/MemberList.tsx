@@ -1,7 +1,8 @@
 import Image from "next/image";
-import { prisma } from "@/lib/prisma";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { rolesFor, type RoleBadgeTone } from "@/lib/member-role";
+import { type RoleBadgeTone, rolesFor } from "@/lib/member-role";
+import { prisma } from "@/lib/prisma";
 
 interface MemberListProps {
   tripId: number;
@@ -13,15 +14,19 @@ const BADGE_BASE =
   "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ring-1";
 
 function badgeClass(tone: RoleBadgeTone) {
-  if (tone === "primary") return `${BADGE_BASE} bg-foreground text-background ring-transparent`;
-  if (tone === "secondary") return `${BADGE_BASE} bg-secondary text-secondary-foreground ring-foreground/10`;
+  if (tone === "primary")
+    return `${BADGE_BASE} bg-foreground text-background ring-transparent`;
+  if (tone === "secondary")
+    return `${BADGE_BASE} bg-secondary text-secondary-foreground ring-foreground/10`;
   return `${BADGE_BASE} bg-muted text-muted-foreground ring-foreground/5`;
 }
 
 export default async function MemberList({ tripId }: MemberListProps) {
   const members = await prisma.tripMember.findMany({
     where: { tripId },
-    include: { user: { select: { id: true, name: true, email: true, image: true } } },
+    include: {
+      user: { select: { id: true, name: true, email: true, image: true } },
+    },
   });
 
   const sorted = [...members].sort((a, b) => {
@@ -50,16 +55,16 @@ export default async function MemberList({ tripId }: MemberListProps) {
                     className="rounded-full"
                   />
                 ) : (
-                  <div className="flex size-8 items-center justify-center rounded-full bg-muted text-sm text-muted-foreground">
+                  <div className="bg-muted text-muted-foreground flex size-8 items-center justify-center rounded-full text-sm">
                     {displayName[0]?.toUpperCase() ?? "?"}
                   </div>
                 )}
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-foreground">
+                  <p className="text-foreground truncate text-sm font-medium">
                     {displayName}
                   </p>
                   {m.user.email && m.user.name && (
-                    <p className="truncate text-xs text-muted-foreground">
+                    <p className="text-muted-foreground truncate text-xs">
                       {m.user.email}
                     </p>
                   )}
