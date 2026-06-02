@@ -1,7 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import ActivityList from "@/components/ActivityList";
 import type { ActivityCategory, ReservationStatus } from "@prisma/client";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import ActivityList from "@/components/ActivityList";
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ refresh: vi.fn() }),
@@ -41,8 +42,18 @@ describe("ActivityList", () => {
   });
 
   it("renders activity cards with count", () => {
-    const activities = [makeActivity(), makeActivity({ id: 2, title: "점심 식사", sortOrder: 1 })];
-    render(<ActivityList tripId={1} dayId={1} activities={activities} canEdit={false} />);
+    const activities = [
+      makeActivity(),
+      makeActivity({ id: 2, title: "점심 식사", sortOrder: 1 }),
+    ];
+    render(
+      <ActivityList
+        tripId={1}
+        dayId={1}
+        activities={activities}
+        canEdit={false}
+      />,
+    );
     expect(screen.getByText("벨렝 탑")).toBeInTheDocument();
     expect(screen.getByText("점심 식사")).toBeInTheDocument();
     expect(screen.getByText("활동 (2)")).toBeInTheDocument();
@@ -50,35 +61,52 @@ describe("ActivityList", () => {
 
   it("renders legacy HH:mm value verbatim in list (no T, no ISO conversion)", () => {
     const activities = [makeActivity({ startTime: "08:30", endTime: "09:45" })];
-    render(<ActivityList tripId={1} dayId={1} activities={activities} canEdit={false} />);
+    render(
+      <ActivityList
+        tripId={1}
+        dayId={1}
+        activities={activities}
+        canEdit={false}
+      />,
+    );
     // ActivityList 내부의 formatTime이 T 미포함 값을 그대로 반환 (legacy 방어 경로)
     expect(screen.getByText(/08:30/)).toBeInTheDocument();
   });
 
   it("does not show heading when no activities", () => {
-    render(<ActivityList tripId={1} dayId={1} activities={[]} canEdit={true} />);
+    render(
+      <ActivityList tripId={1} dayId={1} activities={[]} canEdit={true} />,
+    );
     expect(screen.queryByText(/활동 \(/)).not.toBeInTheDocument();
   });
 
   it("shows add button when canEdit", () => {
-    render(<ActivityList tripId={1} dayId={1} activities={[]} canEdit={true} />);
+    render(
+      <ActivityList tripId={1} dayId={1} activities={[]} canEdit={true} />,
+    );
     expect(screen.getByText("+ 활동 추가")).toBeInTheDocument();
   });
 
   it("hides add button when cannot edit", () => {
-    render(<ActivityList tripId={1} dayId={1} activities={[]} canEdit={false} />);
+    render(
+      <ActivityList tripId={1} dayId={1} activities={[]} canEdit={false} />,
+    );
     expect(screen.queryByText("+ 활동 추가")).not.toBeInTheDocument();
   });
 
   it("shows form when add button clicked", () => {
-    render(<ActivityList tripId={1} dayId={1} activities={[]} canEdit={true} />);
+    render(
+      <ActivityList tripId={1} dayId={1} activities={[]} canEdit={true} />,
+    );
     fireEvent.click(screen.getByText("+ 활동 추가"));
     expect(screen.getByText("추가")).toBeInTheDocument();
     expect(screen.getByText("취소")).toBeInTheDocument();
   });
 
   it("hides form and shows add button when cancel clicked", () => {
-    render(<ActivityList tripId={1} dayId={1} activities={[]} canEdit={true} />);
+    render(
+      <ActivityList tripId={1} dayId={1} activities={[]} canEdit={true} />,
+    );
     fireEvent.click(screen.getByText("+ 활동 추가"));
     fireEvent.click(screen.getByText("취소"));
     expect(screen.getByText("+ 활동 추가")).toBeInTheDocument();
@@ -86,13 +114,21 @@ describe("ActivityList", () => {
 
   it("creates activity with all optional fields", async () => {
     const created = makeActivity({
-      id: 99, title: "New", startTime: "2026-06-07T10:00:00.000Z", endTime: "2026-06-07T12:00:00.000Z",
-      location: "Place", memo: "Note", cost: 25, currency: "USD",
+      id: 99,
+      title: "New",
+      startTime: "2026-06-07T10:00:00.000Z",
+      endTime: "2026-06-07T12:00:00.000Z",
+      location: "Place",
+      memo: "Note",
+      cost: 25,
+      currency: "USD",
       reservationStatus: "REQUIRED",
     });
     mockFetch.mockResolvedValueOnce({ ok: true, json: async () => created });
 
-    render(<ActivityList tripId={1} dayId={1} activities={[]} canEdit={true} />);
+    render(
+      <ActivityList tripId={1} dayId={1} activities={[]} canEdit={true} />,
+    );
     fireEvent.click(screen.getByText("+ 활동 추가"));
 
     // Fill all fields
@@ -105,7 +141,9 @@ describe("ActivityList", () => {
     fireEvent.change(costInput, { target: { value: "25" } });
 
     const selects = screen.getAllByRole("combobox");
-    fireEvent.change(selects[selects.length - 1], { target: { value: "REQUIRED" } }); // reservation
+    fireEvent.change(selects[selects.length - 1], {
+      target: { value: "REQUIRED" },
+    }); // reservation
 
     const form = document.querySelector("form")!;
     fireEvent.submit(form);
@@ -113,7 +151,7 @@ describe("ActivityList", () => {
     await waitFor(() => {
       expect(mockFetch).toHaveBeenCalledWith(
         "/api/trips/1/days/1/activities",
-        expect.objectContaining({ method: "POST" })
+        expect.objectContaining({ method: "POST" }),
       );
       // Check body includes optional fields
       const callBody = JSON.parse(mockFetch.mock.calls[0][1].body);
@@ -128,7 +166,9 @@ describe("ActivityList", () => {
     const created = makeActivity({ id: 50, title: "Minimal" });
     mockFetch.mockResolvedValueOnce({ ok: true, json: async () => created });
 
-    render(<ActivityList tripId={1} dayId={1} activities={[]} canEdit={true} />);
+    render(
+      <ActivityList tripId={1} dayId={1} activities={[]} canEdit={true} />,
+    );
     fireEvent.click(screen.getByText("+ 활동 추가"));
 
     const textInputs = screen.getAllByRole("textbox");
@@ -152,13 +192,20 @@ describe("ActivityList", () => {
     const activities = [makeActivity()];
     mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({}) });
 
-    render(<ActivityList tripId={1} dayId={1} activities={activities} canEdit={true} />);
+    render(
+      <ActivityList
+        tripId={1}
+        dayId={1}
+        activities={activities}
+        canEdit={true}
+      />,
+    );
     fireEvent.click(screen.getByText("삭제"));
 
     await waitFor(() => {
       expect(mockFetch).toHaveBeenCalledWith(
         "/api/trips/1/days/1/activities/1",
-        expect.objectContaining({ method: "DELETE" })
+        expect.objectContaining({ method: "DELETE" }),
       );
     });
   });
@@ -166,7 +213,9 @@ describe("ActivityList", () => {
   it("shows error toast when create API fails", async () => {
     mockFetch.mockResolvedValueOnce({ ok: false, status: 500 });
 
-    render(<ActivityList tripId={1} dayId={1} activities={[]} canEdit={true} />);
+    render(
+      <ActivityList tripId={1} dayId={1} activities={[]} canEdit={true} />,
+    );
     fireEvent.click(screen.getByText("+ 활동 추가"));
 
     const textInputs = screen.getAllByRole("textbox");
@@ -183,7 +232,14 @@ describe("ActivityList", () => {
     mockFetch.mockResolvedValueOnce({ ok: false, status: 500 });
 
     const activities = [makeActivity()];
-    render(<ActivityList tripId={1} dayId={1} activities={activities} canEdit={true} />);
+    render(
+      <ActivityList
+        tripId={1}
+        dayId={1}
+        activities={activities}
+        canEdit={true}
+      />,
+    );
     fireEvent.click(screen.getByText("편집"));
 
     const form = document.querySelector("form")!;
@@ -197,7 +253,14 @@ describe("ActivityList", () => {
     mockFetch.mockResolvedValueOnce({ ok: false, status: 500 });
 
     const activities = [makeActivity()];
-    render(<ActivityList tripId={1} dayId={1} activities={activities} canEdit={true} />);
+    render(
+      <ActivityList
+        tripId={1}
+        dayId={1}
+        activities={activities}
+        canEdit={true}
+      />,
+    );
     fireEvent.click(screen.getByText("삭제"));
     await waitFor(() => {
       expect(mockToast.error).toHaveBeenCalledWith("활동 삭제에 실패했습니다");
@@ -207,7 +270,9 @@ describe("ActivityList", () => {
   it("shows error toast when create fetch throws (network)", async () => {
     mockFetch.mockRejectedValueOnce(new Error("network"));
 
-    render(<ActivityList tripId={1} dayId={1} activities={[]} canEdit={true} />);
+    render(
+      <ActivityList tripId={1} dayId={1} activities={[]} canEdit={true} />,
+    );
     fireEvent.click(screen.getByText("+ 활동 추가"));
     const textInputs = screen.getAllByRole("textbox");
     fireEvent.change(textInputs[0], { target: { value: "NetFail" } });
@@ -215,7 +280,9 @@ describe("ActivityList", () => {
     const form = document.querySelector("form")!;
     fireEvent.submit(form);
     await waitFor(() => {
-      expect(mockToast.error).toHaveBeenCalledWith("활동 생성 중 오류가 발생했습니다");
+      expect(mockToast.error).toHaveBeenCalledWith(
+        "활동 생성 중 오류가 발생했습니다",
+      );
     });
   });
 
@@ -223,12 +290,21 @@ describe("ActivityList", () => {
     mockFetch.mockRejectedValueOnce(new Error("network"));
 
     const activities = [makeActivity()];
-    render(<ActivityList tripId={1} dayId={1} activities={activities} canEdit={true} />);
+    render(
+      <ActivityList
+        tripId={1}
+        dayId={1}
+        activities={activities}
+        canEdit={true}
+      />,
+    );
     fireEvent.click(screen.getByText("편집"));
     const form = document.querySelector("form")!;
     fireEvent.submit(form);
     await waitFor(() => {
-      expect(mockToast.error).toHaveBeenCalledWith("활동 수정 중 오류가 발생했습니다");
+      expect(mockToast.error).toHaveBeenCalledWith(
+        "활동 수정 중 오류가 발생했습니다",
+      );
     });
   });
 
@@ -236,10 +312,19 @@ describe("ActivityList", () => {
     mockFetch.mockRejectedValueOnce(new Error("network"));
 
     const activities = [makeActivity()];
-    render(<ActivityList tripId={1} dayId={1} activities={activities} canEdit={true} />);
+    render(
+      <ActivityList
+        tripId={1}
+        dayId={1}
+        activities={activities}
+        canEdit={true}
+      />,
+    );
     fireEvent.click(screen.getByText("삭제"));
     await waitFor(() => {
-      expect(mockToast.error).toHaveBeenCalledWith("활동 삭제 중 오류가 발생했습니다");
+      expect(mockToast.error).toHaveBeenCalledWith(
+        "활동 삭제 중 오류가 발생했습니다",
+      );
     });
   });
 
@@ -251,7 +336,14 @@ describe("ActivityList", () => {
       makeActivity({ id: 1, title: "First" }),
       makeActivity({ id: 2, title: "Second" }),
     ];
-    render(<ActivityList tripId={1} dayId={1} activities={activities} canEdit={true} />);
+    render(
+      <ActivityList
+        tripId={1}
+        dayId={1}
+        activities={activities}
+        canEdit={true}
+      />,
+    );
     // 첫 activity의 편집 버튼 클릭
     fireEvent.click(screen.getAllByText("편집")[0]);
     const form = document.querySelector("form")!;
@@ -268,7 +360,14 @@ describe("ActivityList", () => {
     mockFetch.mockResolvedValueOnce({ ok: true, json: async () => updated });
 
     const activities = [makeActivity({ id: 1, cost: 10 })];
-    render(<ActivityList tripId={1} dayId={1} activities={activities} canEdit={true} />);
+    render(
+      <ActivityList
+        tripId={1}
+        dayId={1}
+        activities={activities}
+        canEdit={true}
+      />,
+    );
     fireEvent.click(screen.getByText("편집"));
     const costInput = screen.getByRole("spinbutton");
     fireEvent.change(costInput, { target: { value: "42.5" } });
@@ -284,7 +383,14 @@ describe("ActivityList", () => {
     (global.confirm as ReturnType<typeof vi.fn>).mockReturnValueOnce(false);
     const activities = [makeActivity()];
 
-    render(<ActivityList tripId={1} dayId={1} activities={activities} canEdit={true} />);
+    render(
+      <ActivityList
+        tripId={1}
+        dayId={1}
+        activities={activities}
+        canEdit={true}
+      />,
+    );
     fireEvent.click(screen.getByText("삭제"));
 
     await new Promise((r) => setTimeout(r, 50));
@@ -293,7 +399,14 @@ describe("ActivityList", () => {
 
   it("shows edit form when edit clicked", () => {
     const activities = [makeActivity()];
-    render(<ActivityList tripId={1} dayId={1} activities={activities} canEdit={true} />);
+    render(
+      <ActivityList
+        tripId={1}
+        dayId={1}
+        activities={activities}
+        canEdit={true}
+      />,
+    );
     fireEvent.click(screen.getByText("편집"));
     expect(screen.getByText("수정")).toBeInTheDocument();
     expect(screen.getByDisplayValue("벨렝 탑")).toBeInTheDocument();
@@ -301,7 +414,14 @@ describe("ActivityList", () => {
 
   it("cancels edit and returns to card", () => {
     const activities = [makeActivity()];
-    render(<ActivityList tripId={1} dayId={1} activities={activities} canEdit={true} />);
+    render(
+      <ActivityList
+        tripId={1}
+        dayId={1}
+        activities={activities}
+        canEdit={true}
+      />,
+    );
     fireEvent.click(screen.getByText("편집"));
     fireEvent.click(screen.getByText("취소"));
     expect(screen.getByText("벨렝 탑")).toBeInTheDocument();
@@ -313,7 +433,14 @@ describe("ActivityList", () => {
     mockFetch.mockResolvedValueOnce({ ok: true, json: async () => updated });
 
     const activities = [makeActivity()];
-    render(<ActivityList tripId={1} dayId={1} activities={activities} canEdit={true} />);
+    render(
+      <ActivityList
+        tripId={1}
+        dayId={1}
+        activities={activities}
+        canEdit={true}
+      />,
+    );
     fireEvent.click(screen.getByText("편집"));
 
     const form = document.querySelector("form")!;
@@ -322,21 +449,42 @@ describe("ActivityList", () => {
     await waitFor(() => {
       expect(mockFetch).toHaveBeenCalledWith(
         "/api/trips/1/days/1/activities/1",
-        expect.objectContaining({ method: "PUT" })
+        expect.objectContaining({ method: "PUT" }),
       );
     });
   });
 
   it("sends null for empty optional fields on update", async () => {
-    const updated = makeActivity({ title: "Cleared", startTime: null, endTime: null, location: null, memo: null, cost: null, reservationStatus: null });
+    const updated = makeActivity({
+      title: "Cleared",
+      startTime: null,
+      endTime: null,
+      location: null,
+      memo: null,
+      cost: null,
+      reservationStatus: null,
+    });
     mockFetch.mockResolvedValueOnce({ ok: true, json: async () => updated });
 
     // Activity with all fields filled
-    const activities = [makeActivity({
-      startTime: "2026-06-07T09:00:00.000Z", endTime: "2026-06-07T11:00:00.000Z", location: "Place",
-      memo: "Note", cost: "25", reservationStatus: "REQUIRED",
-    })];
-    render(<ActivityList tripId={1} dayId={1} activities={activities} canEdit={true} />);
+    const activities = [
+      makeActivity({
+        startTime: "2026-06-07T09:00:00.000Z",
+        endTime: "2026-06-07T11:00:00.000Z",
+        location: "Place",
+        memo: "Note",
+        cost: "25",
+        reservationStatus: "REQUIRED",
+      }),
+    ];
+    render(
+      <ActivityList
+        tripId={1}
+        dayId={1}
+        activities={activities}
+        canEdit={true}
+      />,
+    );
     fireEvent.click(screen.getByText("편집"));
 
     // Clear all optional fields
@@ -373,14 +521,21 @@ describe("ActivityList", () => {
     ];
     mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({}) });
 
-    render(<ActivityList tripId={1} dayId={1} activities={activities} canEdit={true} />);
+    render(
+      <ActivityList
+        tripId={1}
+        dayId={1}
+        activities={activities}
+        canEdit={true}
+      />,
+    );
     const downButtons = screen.getAllByLabelText("아래로");
     fireEvent.click(downButtons[0]);
 
     await waitFor(() => {
       expect(mockFetch).toHaveBeenCalledWith(
         "/api/trips/1/days/1/activities",
-        expect.objectContaining({ method: "PATCH" })
+        expect.objectContaining({ method: "PATCH" }),
       );
       const callBody = JSON.parse(mockFetch.mock.calls[0][1].body);
       expect(callBody.orderedIds).toEqual([2, 1]);
@@ -388,11 +543,24 @@ describe("ActivityList", () => {
   });
 
   it("shows edit form with null fields converted to empty strings", () => {
-    const activities = [makeActivity({
-      startTime: null, endTime: null, location: null,
-      memo: null, cost: null, reservationStatus: null,
-    })];
-    render(<ActivityList tripId={1} dayId={1} activities={activities} canEdit={true} />);
+    const activities = [
+      makeActivity({
+        startTime: null,
+        endTime: null,
+        location: null,
+        memo: null,
+        cost: null,
+        reservationStatus: null,
+      }),
+    ];
+    render(
+      <ActivityList
+        tripId={1}
+        dayId={1}
+        activities={activities}
+        canEdit={true}
+      />,
+    );
     fireEvent.click(screen.getByText("편집"));
     expect(screen.getByText("수정")).toBeInTheDocument();
     // Null fields should become empty inputs, not "null"
@@ -401,14 +569,31 @@ describe("ActivityList", () => {
 
   it("shows edit form with cost as string", () => {
     const activities = [makeActivity({ cost: "42.50" })];
-    render(<ActivityList tripId={1} dayId={1} activities={activities} canEdit={true} />);
+    render(
+      <ActivityList
+        tripId={1}
+        dayId={1}
+        activities={activities}
+        canEdit={true}
+      />,
+    );
     fireEvent.click(screen.getByText("편집"));
     expect(screen.getByDisplayValue("42.50")).toBeInTheDocument();
   });
 
   it("does not move first item up (boundary)", async () => {
-    const activities = [makeActivity({ id: 1 }), makeActivity({ id: 2, title: "Second", sortOrder: 1 })];
-    render(<ActivityList tripId={1} dayId={1} activities={activities} canEdit={true} />);
+    const activities = [
+      makeActivity({ id: 1 }),
+      makeActivity({ id: 2, title: "Second", sortOrder: 1 }),
+    ];
+    render(
+      <ActivityList
+        tripId={1}
+        dayId={1}
+        activities={activities}
+        canEdit={true}
+      />,
+    );
 
     const upButtons = screen.getAllByLabelText("위로");
     // First item's up button is disabled, clicking should not trigger fetch
@@ -418,8 +603,18 @@ describe("ActivityList", () => {
   });
 
   it("does not move last item down (boundary)", async () => {
-    const activities = [makeActivity({ id: 1 }), makeActivity({ id: 2, title: "Second", sortOrder: 1 })];
-    render(<ActivityList tripId={1} dayId={1} activities={activities} canEdit={true} />);
+    const activities = [
+      makeActivity({ id: 1 }),
+      makeActivity({ id: 2, title: "Second", sortOrder: 1 }),
+    ];
+    render(
+      <ActivityList
+        tripId={1}
+        dayId={1}
+        activities={activities}
+        canEdit={true}
+      />,
+    );
 
     const downButtons = screen.getAllByLabelText("아래로");
     // Last item's down button is disabled
@@ -435,14 +630,21 @@ describe("ActivityList", () => {
     ];
     mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({}) });
 
-    render(<ActivityList tripId={1} dayId={1} activities={activities} canEdit={true} />);
+    render(
+      <ActivityList
+        tripId={1}
+        dayId={1}
+        activities={activities}
+        canEdit={true}
+      />,
+    );
     const upButtons = screen.getAllByLabelText("위로");
     fireEvent.click(upButtons[1]); // second item's up button
 
     await waitFor(() => {
       expect(mockFetch).toHaveBeenCalledWith(
         "/api/trips/1/days/1/activities",
-        expect.objectContaining({ method: "PATCH" })
+        expect.objectContaining({ method: "PATCH" }),
       );
       const callBody = JSON.parse(mockFetch.mock.calls[0][1].body);
       expect(callBody.orderedIds).toEqual([2, 1]);

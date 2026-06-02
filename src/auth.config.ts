@@ -1,5 +1,5 @@
-import Google from "next-auth/providers/google";
 import type { NextAuthConfig } from "next-auth";
+import Google from "next-auth/providers/google";
 
 export default {
   // 요청 Host 헤더를 신뢰하여 OAuth 콜백 URL을 자체 도출.

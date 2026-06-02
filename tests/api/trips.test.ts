@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { mockPrisma, mockAuthHelpers } = vi.hoisted(() => ({
   mockPrisma: {
@@ -7,7 +7,9 @@ const { mockPrisma, mockAuthHelpers } = vi.hoisted(() => ({
     // v2.9.0 per-trip 공유 캘린더 훅이 호출됨 — 미연결 여행에서 no-op으로 흐르도록
     // findUnique가 null을 반환하게만 만들어두면 onMemberLeave가 조용히 return.
     tripCalendarLink: { findUnique: vi.fn().mockResolvedValue(null) },
-    memberCalendarSubscription: { deleteMany: vi.fn().mockResolvedValue({ count: 0 }) },
+    memberCalendarSubscription: {
+      deleteMany: vi.fn().mockResolvedValue({ count: 0 }),
+    },
     user: { findUnique: vi.fn().mockResolvedValue(null) },
   },
   mockAuthHelpers: {
@@ -20,9 +22,9 @@ const { mockPrisma, mockAuthHelpers } = vi.hoisted(() => ({
 vi.mock("@/lib/prisma", () => ({ prisma: mockPrisma }));
 vi.mock("@/lib/auth-helpers", () => mockAuthHelpers);
 
-import { POST } from "@/app/api/trips/route";
-import { DELETE } from "@/app/api/trips/[id]/route";
 import { POST as LEAVE } from "@/app/api/trips/[id]/leave/route";
+import { DELETE } from "@/app/api/trips/[id]/route";
+import { POST } from "@/app/api/trips/route";
 
 const mockAuth = mockAuthHelpers.getAuthUserId;
 const mockIsOwner = mockAuthHelpers.isOwner;
@@ -45,7 +47,9 @@ describe("POST /api/trips — 생성 (#191)", () => {
 
   it("returns 401 when unauthenticated", async () => {
     mockAuth.mockResolvedValue(null);
-    const res = await POST(jsonRequest("http://localhost/api/trips", { title: "x" }));
+    const res = await POST(
+      jsonRequest("http://localhost/api/trips", { title: "x" }),
+    );
     expect(res.status).toBe(401);
   });
 
@@ -65,7 +69,10 @@ describe("POST /api/trips — 생성 (#191)", () => {
 
     expect(res.status).toBe(201);
     const callArg = mockPrisma.trip.create.mock.calls[0][0];
-    expect(callArg.data.tripMembers.create).toEqual({ userId: "user1", role: "OWNER" });
+    expect(callArg.data.tripMembers.create).toEqual({
+      userId: "user1",
+      role: "OWNER",
+    });
     expect(callArg.data.createdBy).toBe("user1");
   });
 
@@ -87,14 +94,20 @@ describe("DELETE /api/trips/{id} — 삭제 (#191)", () => {
 
   it("returns 401 when unauthenticated", async () => {
     mockAuth.mockResolvedValue(null);
-    const res = await DELETE(new Request("http://localhost/api/trips/1", { method: "DELETE" }), tripParams());
+    const res = await DELETE(
+      new Request("http://localhost/api/trips/1", { method: "DELETE" }),
+      tripParams(),
+    );
     expect(res.status).toBe(401);
   });
 
   it("returns 403 when not OWNER", async () => {
     mockAuth.mockResolvedValue("user1");
     mockIsOwner.mockResolvedValue(false);
-    const res = await DELETE(new Request("http://localhost/api/trips/1", { method: "DELETE" }), tripParams());
+    const res = await DELETE(
+      new Request("http://localhost/api/trips/1", { method: "DELETE" }),
+      tripParams(),
+    );
     expect(res.status).toBe(403);
   });
 
@@ -103,7 +116,10 @@ describe("DELETE /api/trips/{id} — 삭제 (#191)", () => {
     mockIsOwner.mockResolvedValue(true);
     mockPrisma.trip.delete.mockResolvedValue({ id: 1 });
 
-    const res = await DELETE(new Request("http://localhost/api/trips/1", { method: "DELETE" }), tripParams());
+    const res = await DELETE(
+      new Request("http://localhost/api/trips/1", { method: "DELETE" }),
+      tripParams(),
+    );
 
     expect(res.status).toBe(200);
     expect(mockPrisma.trip.delete).toHaveBeenCalledWith({ where: { id: 1 } });
@@ -115,21 +131,30 @@ describe("POST /api/trips/{id}/leave — 나가기 (#191)", () => {
 
   it("returns 401 when unauthenticated", async () => {
     mockAuth.mockResolvedValue(null);
-    const res = await LEAVE(new Request("http://localhost/api/trips/1/leave", { method: "POST" }), tripParams());
+    const res = await LEAVE(
+      new Request("http://localhost/api/trips/1/leave", { method: "POST" }),
+      tripParams(),
+    );
     expect(res.status).toBe(401);
   });
 
   it("returns 400 when not a member", async () => {
     mockAuth.mockResolvedValue("user1");
     mockGetMember.mockResolvedValue(null);
-    const res = await LEAVE(new Request("http://localhost/api/trips/1/leave", { method: "POST" }), tripParams());
+    const res = await LEAVE(
+      new Request("http://localhost/api/trips/1/leave", { method: "POST" }),
+      tripParams(),
+    );
     expect(res.status).toBe(400);
   });
 
   it("blocks OWNER — must transfer first", async () => {
     mockAuth.mockResolvedValue("user1");
     mockGetMember.mockResolvedValue({ id: 10, role: "OWNER" });
-    const res = await LEAVE(new Request("http://localhost/api/trips/1/leave", { method: "POST" }), tripParams());
+    const res = await LEAVE(
+      new Request("http://localhost/api/trips/1/leave", { method: "POST" }),
+      tripParams(),
+    );
     expect(res.status).toBe(400);
     mockPrisma.tripMember.delete.mockClear();
     expect(mockPrisma.tripMember.delete).not.toHaveBeenCalled();
@@ -139,16 +164,24 @@ describe("POST /api/trips/{id}/leave — 나가기 (#191)", () => {
     mockAuth.mockResolvedValue("user1");
     mockGetMember.mockResolvedValue({ id: 10, role: "HOST" });
     mockPrisma.tripMember.delete.mockResolvedValue({ id: 10 });
-    const res = await LEAVE(new Request("http://localhost/api/trips/1/leave", { method: "POST" }), tripParams());
+    const res = await LEAVE(
+      new Request("http://localhost/api/trips/1/leave", { method: "POST" }),
+      tripParams(),
+    );
     expect(res.status).toBe(200);
-    expect(mockPrisma.tripMember.delete).toHaveBeenCalledWith({ where: { id: 10 } });
+    expect(mockPrisma.tripMember.delete).toHaveBeenCalledWith({
+      where: { id: 10 },
+    });
   });
 
   it("lets GUEST leave", async () => {
     mockAuth.mockResolvedValue("user1");
     mockGetMember.mockResolvedValue({ id: 11, role: "GUEST" });
     mockPrisma.tripMember.delete.mockResolvedValue({ id: 11 });
-    const res = await LEAVE(new Request("http://localhost/api/trips/1/leave", { method: "POST" }), tripParams());
+    const res = await LEAVE(
+      new Request("http://localhost/api/trips/1/leave", { method: "POST" }),
+      tripParams(),
+    );
     expect(res.status).toBe(200);
   });
 });

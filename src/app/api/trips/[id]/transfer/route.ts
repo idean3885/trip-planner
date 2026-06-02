@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+
 import { getAuthUserId, isOwner } from "@/lib/auth-helpers";
 import { onOwnerTransfer } from "@/lib/gcal/member-sync";
+import { prisma } from "@/lib/prisma";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -15,19 +16,30 @@ export async function POST(request: Request, { params }: Params) {
   }
 
   if (!(await isOwner(tripId, userId))) {
-    return NextResponse.json({ error: "주인만 양도할 수 있습니다" }, { status: 403 });
+    return NextResponse.json(
+      { error: "주인만 양도할 수 있습니다" },
+      { status: 403 },
+    );
   }
 
   const body = await request.json();
   const { targetMemberId } = body;
 
-  const target = await prisma.tripMember.findUnique({ where: { id: targetMemberId } });
+  const target = await prisma.tripMember.findUnique({
+    where: { id: targetMemberId },
+  });
   if (!target || target.tripId !== tripId) {
-    return NextResponse.json({ error: "멤버를 찾을 수 없습니다" }, { status: 404 });
+    return NextResponse.json(
+      { error: "멤버를 찾을 수 없습니다" },
+      { status: 404 },
+    );
   }
 
   if (target.role !== "HOST") {
-    return NextResponse.json({ error: "호스트에게만 양도할 수 있습니다" }, { status: 400 });
+    return NextResponse.json(
+      { error: "호스트에게만 양도할 수 있습니다" },
+      { status: 400 },
+    );
   }
 
   // 트랜잭션: 대상 → OWNER, 기존 주인 → HOST
@@ -36,12 +48,21 @@ export async function POST(request: Request, { params }: Params) {
   });
 
   if (!currentOwner) {
-    return NextResponse.json({ error: "주인 정보를 찾을 수 없습니다" }, { status: 500 });
+    return NextResponse.json(
+      { error: "주인 정보를 찾을 수 없습니다" },
+      { status: 500 },
+    );
   }
 
   await prisma.$transaction([
-    prisma.tripMember.update({ where: { id: target.id }, data: { role: "OWNER" } }),
-    prisma.tripMember.update({ where: { id: currentOwner.id }, data: { role: "HOST" } }),
+    prisma.tripMember.update({
+      where: { id: target.id },
+      data: { role: "OWNER" },
+    }),
+    prisma.tripMember.update({
+      where: { id: currentOwner.id },
+      data: { role: "HOST" },
+    }),
   ]);
 
   // 공유 캘린더 ownerId 갱신 + 옛/새 오너 ACL 정리는 service.reconcileOwnerTransfer가 처리.

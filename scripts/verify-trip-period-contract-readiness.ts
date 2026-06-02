@@ -118,9 +118,15 @@ async function main() {
   }
 
   console.log("\n안전 판단 기준:");
-  console.log("  - mismatches.length == 0 면 derived 가 명목과 일치 — DROP 안전");
-  console.log("  - mismatches > 0 면 명목이 stale 한 trip — derived 정본 정책상 OK");
-  console.log("  - empty days > 0 면 응답 startDate/endDate 가 null 노출 — UI 확인 필요");
+  console.log(
+    "  - mismatches.length == 0 면 derived 가 명목과 일치 — DROP 안전",
+  );
+  console.log(
+    "  - mismatches > 0 면 명목이 stale 한 trip — derived 정본 정책상 OK",
+  );
+  console.log(
+    "  - empty days > 0 면 응답 startDate/endDate 가 null 노출 — UI 확인 필요",
+  );
 }
 
 main()

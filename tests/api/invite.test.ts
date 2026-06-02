@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { mockAuthHelpers, mockInviteToken } = vi.hoisted(() => ({
   mockAuthHelpers: {
@@ -40,7 +40,9 @@ describe("POST /api/trips/{id}/invite — 초대 링크 생성 (#194)", () => {
     mockCreate.mockResolvedValue("TOKEN_DEV");
 
     const res = await POST(
-      jsonRequest("https://dev.trip.idean.me/api/trips/1/invite", { role: "HOST" }),
+      jsonRequest("https://dev.trip.idean.me/api/trips/1/invite", {
+        role: "HOST",
+      }),
       tripParams(),
     );
 
@@ -55,7 +57,9 @@ describe("POST /api/trips/{id}/invite — 초대 링크 생성 (#194)", () => {
     mockCreate.mockResolvedValue("TOKEN_PROD");
 
     const res = await POST(
-      jsonRequest("https://trip.idean.me/api/trips/1/invite", { role: "GUEST" }),
+      jsonRequest("https://trip.idean.me/api/trips/1/invite", {
+        role: "GUEST",
+      }),
       tripParams(),
     );
 
@@ -69,31 +73,44 @@ describe("POST /api/trips/{id}/invite — 초대 링크 생성 (#194)", () => {
     mockCreate.mockResolvedValue("TOKEN_PREVIEW");
 
     const res = await POST(
-      jsonRequest("https://trip-planner-abc.vercel.app/api/trips/1/invite", { role: "HOST" }),
+      jsonRequest("https://trip-planner-abc.vercel.app/api/trips/1/invite", {
+        role: "HOST",
+      }),
       tripParams(),
     );
 
     const body = await res.json();
-    expect(body.inviteUrl).toBe("https://trip-planner-abc.vercel.app/invite/TOKEN_PREVIEW");
+    expect(body.inviteUrl).toBe(
+      "https://trip-planner-abc.vercel.app/invite/TOKEN_PREVIEW",
+    );
   });
 
   it("returns 401 when unauthenticated", async () => {
     mockAuth.mockResolvedValue(null);
-    const res = await POST(jsonRequest("https://x.test/api/trips/1/invite", { role: "HOST" }), tripParams());
+    const res = await POST(
+      jsonRequest("https://x.test/api/trips/1/invite", { role: "HOST" }),
+      tripParams(),
+    );
     expect(res.status).toBe(401);
   });
 
   it("returns 403 when not a host", async () => {
     mockAuth.mockResolvedValue("user1");
     mockIsHost.mockResolvedValue(false);
-    const res = await POST(jsonRequest("https://x.test/api/trips/1/invite", { role: "HOST" }), tripParams());
+    const res = await POST(
+      jsonRequest("https://x.test/api/trips/1/invite", { role: "HOST" }),
+      tripParams(),
+    );
     expect(res.status).toBe(403);
   });
 
   it("returns 400 for invalid role", async () => {
     mockAuth.mockResolvedValue("user1");
     mockIsHost.mockResolvedValue(true);
-    const res = await POST(jsonRequest("https://x.test/api/trips/1/invite", { role: "OWNER" }), tripParams());
+    const res = await POST(
+      jsonRequest("https://x.test/api/trips/1/invite", { role: "OWNER" }),
+      tripParams(),
+    );
     expect(res.status).toBe(400);
   });
 });

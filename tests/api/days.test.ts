@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { mockPrisma, mockAuthHelpers } = vi.hoisted(() => ({
   mockPrisma: {
@@ -6,7 +6,9 @@ const { mockPrisma, mockAuthHelpers } = vi.hoisted(() => ({
       findUnique: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),
-      aggregate: vi.fn().mockResolvedValue({ _min: { date: null }, _max: { date: null } }),
+      aggregate: vi
+        .fn()
+        .mockResolvedValue({ _min: { date: null }, _max: { date: null } }),
     },
     trip: { findUnique: vi.fn() },
     tripMember: { findUnique: vi.fn() },

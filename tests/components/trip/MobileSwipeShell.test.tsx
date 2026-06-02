@@ -7,8 +7,9 @@
  * (onSwapBack 호출 경로 + a11y label + ESC) 만 검증한다.
  */
 
-import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
+
 import { MobileSwipeShell } from "@/components/trip/MobileSwipeShell";
 
 describe("MobileSwipeShell", () => {

@@ -11,7 +11,7 @@
  *   영향 범위 밖이라는 사실을 회귀 검증한다.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { mockPrisma, mockAuthHelpers, mockFetcher } = vi.hoisted(() => {
   const fetcher = {
@@ -52,7 +52,9 @@ const { mockPrisma, mockAuthHelpers, mockFetcher } = vi.hoisted(() => {
 
 vi.mock("@/lib/prisma", () => ({ prisma: mockPrisma }));
 vi.mock("@/lib/auth-helpers", () => mockAuthHelpers);
-vi.mock("@/lib/calendar-import/google", () => ({ googleImportFetcher: mockFetcher }));
+vi.mock("@/lib/calendar-import/google", () => ({
+  googleImportFetcher: mockFetcher,
+}));
 vi.mock("@/lib/calendar-import/apple", () => ({
   appleImportFetcher: { ...mockFetcher, provider: "APPLE" },
 }));
@@ -64,10 +66,10 @@ vi.mock("@/lib/permissions/activity", () => ({
   userCanImportCalendar: vi.fn().mockResolvedValue(true),
 }));
 
-import { GET as GET_V2_TRIP } from "@/app/api/v2/trips/[id]/route";
-import { GET as GET_V1_TRIP } from "@/app/api/trips/[id]/route";
 import { POST as POST_IMPORT } from "@/app/api/trips/[id]/calendar-import/route";
-import { runImport, EmptyTripPeriodError } from "@/lib/calendar-import/service";
+import { GET as GET_V1_TRIP } from "@/app/api/trips/[id]/route";
+import { GET as GET_V2_TRIP } from "@/app/api/v2/trips/[id]/route";
+import { EmptyTripPeriodError, runImport } from "@/lib/calendar-import/service";
 
 function tripParams(id = "1") {
   return { params: Promise.resolve({ id }) };
@@ -104,10 +106,15 @@ describe("spec 029 T015 — trip 응답이 derived 기간을 노출", () => {
       _max: { date: derivedEnd },
     });
 
-    const res = await GET_V2_TRIP(new Request("http://localhost"), tripParams());
+    const res = await GET_V2_TRIP(
+      new Request("http://localhost"),
+      tripParams(),
+    );
     expect(res.status).toBe(200);
     const body = await res.json();
-    expect(new Date(body.startDate).toISOString()).toBe(derivedStart.toISOString());
+    expect(new Date(body.startDate).toISOString()).toBe(
+      derivedStart.toISOString(),
+    );
     expect(new Date(body.endDate).toISOString()).toBe(derivedEnd.toISOString());
   });
 
@@ -125,7 +132,10 @@ describe("spec 029 T015 — trip 응답이 derived 기간을 노출", () => {
       _max: { date: null },
     });
 
-    const res = await GET_V2_TRIP(new Request("http://localhost"), tripParams());
+    const res = await GET_V2_TRIP(
+      new Request("http://localhost"),
+      tripParams(),
+    );
     const body = await res.json();
     expect(body.startDate).toBeNull();
     expect(body.endDate).toBeNull();
@@ -149,9 +159,14 @@ describe("spec 029 T015 — trip 응답이 derived 기간을 노출", () => {
       _max: { date: derivedEnd },
     });
 
-    const res = await GET_V1_TRIP(new Request("http://localhost"), tripParams());
+    const res = await GET_V1_TRIP(
+      new Request("http://localhost"),
+      tripParams(),
+    );
     const body = await res.json();
-    expect(new Date(body.startDate).toISOString()).toBe(derivedStart.toISOString());
+    expect(new Date(body.startDate).toISOString()).toBe(
+      derivedStart.toISOString(),
+    );
     expect(new Date(body.endDate).toISOString()).toBe(derivedEnd.toISOString());
   });
 });
@@ -229,6 +244,8 @@ describe("spec 029 T015 — 공유 캘린더 push 는 trip 기간 의존 없음 
     const source = await fs.readFile("src/lib/calendar/service.ts", "utf8");
     // trip 기간 의존 회귀 방지 — derived 정책 이전 패턴인 startDate/endDate select 가 다시
     // 들어오면 알아챈다. 활동 단위 sync 라 trip period 의존은 0이어야 한다.
-    expect(source).not.toMatch(/select:\s*\{[^}]*startDate:\s*true[^}]*endDate:\s*true/);
+    expect(source).not.toMatch(
+      /select:\s*\{[^}]*startDate:\s*true[^}]*endDate:\s*true/,
+    );
   });
 });

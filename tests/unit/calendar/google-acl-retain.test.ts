@@ -6,7 +6,7 @@
  * 회수 보류.
  */
 
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/lib/prisma", () => {
   const findFirst = vi.fn();
@@ -27,12 +27,15 @@ vi.mock("@/lib/gcal/acl", () => ({
 }));
 
 import { googleProvider } from "@/lib/calendar/provider/google";
-import { prisma } from "@/lib/prisma";
-import { getCalendarClient } from "@/lib/gcal/client";
 import { deleteAcl } from "@/lib/gcal/acl";
+import { getCalendarClient } from "@/lib/gcal/client";
+import { prisma } from "@/lib/prisma";
 
-const mockedFindFirst = prisma.tripCalendarLink.findFirst as unknown as ReturnType<typeof vi.fn>;
-const mockedGetClient = getCalendarClient as unknown as ReturnType<typeof vi.fn>;
+const mockedFindFirst = prisma.tripCalendarLink
+  .findFirst as unknown as ReturnType<typeof vi.fn>;
+const mockedGetClient = getCalendarClient as unknown as ReturnType<
+  typeof vi.fn
+>;
 const mockedDeleteAcl = deleteAcl as unknown as ReturnType<typeof vi.fn>;
 
 beforeEach(() => {

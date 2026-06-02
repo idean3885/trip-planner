@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // ── Mocks ──
 
@@ -46,9 +46,7 @@ describe("GET /api/auth/cli", () => {
   });
 
   it("returns 400 when port is below 1024", async () => {
-    const res = await GET(
-      makeRequest({ port: "80", state: "a".repeat(16) }),
-    );
+    const res = await GET(makeRequest({ port: "80", state: "a".repeat(16) }));
     expect(res.status).toBe(400);
     const body = await res.json();
     expect(body.error).toContain("1024-65535");
@@ -64,16 +62,12 @@ describe("GET /api/auth/cli", () => {
   });
 
   it("returns 400 when port is not a number", async () => {
-    const res = await GET(
-      makeRequest({ port: "abc", state: "a".repeat(16) }),
-    );
+    const res = await GET(makeRequest({ port: "abc", state: "a".repeat(16) }));
     expect(res.status).toBe(400);
   });
 
   it("returns 400 when state is shorter than 16 characters", async () => {
-    const res = await GET(
-      makeRequest({ port: "8080", state: "short" }),
-    );
+    const res = await GET(makeRequest({ port: "8080", state: "short" }));
     expect(res.status).toBe(400);
     const body = await res.json();
     expect(body.error).toContain("16 characters");
@@ -83,9 +77,7 @@ describe("GET /api/auth/cli", () => {
 
   it("redirects to signin when not authenticated", async () => {
     mockAuth.mockResolvedValue(null);
-    const res = await GET(
-      makeRequest({ port: "8080", state: "a".repeat(32) }),
-    );
+    const res = await GET(makeRequest({ port: "8080", state: "a".repeat(32) }));
     expect(res.status).toBe(307);
     const location = res.headers.get("location") ?? "";
     expect(location).toContain("/auth/signin");
@@ -108,9 +100,7 @@ describe("GET /api/auth/cli", () => {
     });
 
     const state = "b".repeat(32);
-    const res = await GET(
-      makeRequest({ port: "12345", state }),
-    );
+    const res = await GET(makeRequest({ port: "12345", state }));
 
     expect(res.status).toBe(307);
     const location = res.headers.get("location") ?? "";
@@ -118,10 +108,7 @@ describe("GET /api/auth/cli", () => {
     expect(location).toContain("token=tp_test_token_abc");
     expect(location).toContain(`state=${state}`);
 
-    expect(mockCreatePAT).toHaveBeenCalledWith(
-      "user-123",
-      "CLI (자동 로그인)",
-    );
+    expect(mockCreatePAT).toHaveBeenCalledWith("user-123", "CLI (자동 로그인)");
   });
 
   it("accepts port at boundary 1024", async () => {
@@ -135,9 +122,7 @@ describe("GET /api/auth/cli", () => {
       createdAt: new Date(),
     });
 
-    const res = await GET(
-      makeRequest({ port: "1024", state: "c".repeat(16) }),
-    );
+    const res = await GET(makeRequest({ port: "1024", state: "c".repeat(16) }));
     expect(res.status).toBe(307);
     expect(res.headers.get("location")).toContain("127.0.0.1:1024");
   });

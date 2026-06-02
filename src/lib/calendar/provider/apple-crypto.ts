@@ -60,11 +60,15 @@ export function decryptPassword(ciphertextB64: string, ivB64: string): string {
   const enc = buf.subarray(0, buf.length - TAG_BYTES);
   const iv = Buffer.from(ivB64, "base64");
   if (iv.length !== IV_BYTES) {
-    throw new Error(`iv length mismatch (expected ${IV_BYTES}, got ${iv.length})`);
+    throw new Error(
+      `iv length mismatch (expected ${IV_BYTES}, got ${iv.length})`,
+    );
   }
   const decipher = createDecipheriv(ALGO, key, iv);
   decipher.setAuthTag(tag);
-  return Buffer.concat([decipher.update(enc), decipher.final()]).toString("utf8");
+  return Buffer.concat([decipher.update(enc), decipher.final()]).toString(
+    "utf8",
+  );
 }
 
 /** 테스트 격리용 — process.env 변경 후 캐시된 키를 무효화한다. */

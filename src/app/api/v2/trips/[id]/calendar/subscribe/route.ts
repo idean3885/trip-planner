@@ -9,20 +9,22 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
+
 import { auth } from "@/auth";
-import {
-  subscribeCalendar,
-  unsubscribeCalendar,
-} from "@/lib/calendar/service";
+import { subscribeCalendar, unsubscribeCalendar } from "@/lib/calendar/service";
 
 async function authenticate(params: Promise<{ id: string }>) {
   const session = await auth();
   if (!session?.user?.id) {
-    return { error: NextResponse.json({ error: "unauthenticated" }, { status: 401 }) } as const;
+    return {
+      error: NextResponse.json({ error: "unauthenticated" }, { status: 401 }),
+    } as const;
   }
   const tripId = Number((await params).id);
   if (!Number.isFinite(tripId)) {
-    return { error: NextResponse.json({ error: "bad_trip_id" }, { status: 400 }) } as const;
+    return {
+      error: NextResponse.json({ error: "bad_trip_id" }, { status: 400 }),
+    } as const;
   }
   return { userId: session.user.id, tripId } as const;
 }
@@ -34,7 +36,10 @@ export async function POST(
   const a = await authenticate(params);
   if ("error" in a) return a.error;
 
-  const result = await subscribeCalendar({ userId: a.userId, tripId: a.tripId });
+  const result = await subscribeCalendar({
+    userId: a.userId,
+    tripId: a.tripId,
+  });
   return NextResponse.json(result.body, { status: result.status });
 }
 
@@ -45,6 +50,9 @@ export async function DELETE(
   const a = await authenticate(params);
   if ("error" in a) return a.error;
 
-  const result = await unsubscribeCalendar({ userId: a.userId, tripId: a.tripId });
+  const result = await unsubscribeCalendar({
+    userId: a.userId,
+    tripId: a.tripId,
+  });
   return NextResponse.json(result.body, { status: result.status });
 }

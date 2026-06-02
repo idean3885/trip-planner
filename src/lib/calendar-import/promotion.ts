@@ -11,6 +11,7 @@ import type {
   Prisma,
   ReservationStatus,
 } from "@prisma/client";
+
 import { prisma } from "@/lib/prisma";
 
 export interface PromoteInput {
@@ -43,7 +44,9 @@ function startOfUtcDay(d: Date): Date {
   return x;
 }
 
-export async function promoteDraft(input: PromoteInput): Promise<{ activityId: number }> {
+export async function promoteDraft(
+  input: PromoteInput,
+): Promise<{ activityId: number }> {
   const draft = await prisma.activityDraft.findFirst({
     where: { id: input.draftId, tripId: input.tripId },
   });

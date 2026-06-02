@@ -15,7 +15,7 @@ function gone() {
       message:
         "This endpoint has been retired. See spec 022 (v2.10.0 contract expand). Use POST /api/v2/trips/<id>/calendar/sync.",
     },
-    { status: 410, headers: { "Cache-Control": "no-store" } }
+    { status: 410, headers: { "Cache-Control": "no-store" } },
   );
 }
 

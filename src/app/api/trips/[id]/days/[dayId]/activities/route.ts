@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { getAuthUserId, getTripMember, canEdit } from "@/lib/auth-helpers";
+
 import { toTimestamp } from "@/lib/activity-time";
+import { canEdit, getAuthUserId, getTripMember } from "@/lib/auth-helpers";
+import { prisma } from "@/lib/prisma";
 
 type Params = { params: Promise<{ id: string; dayId: string }> };
 
@@ -37,21 +38,43 @@ export async function POST(request: Request, { params }: Params) {
   }
 
   if (!(await canEdit(tripId, userId))) {
-    return NextResponse.json({ error: "편집 권한이 없습니다" }, { status: 403 });
+    return NextResponse.json(
+      { error: "편집 권한이 없습니다" },
+      { status: 403 },
+    );
   }
 
   const day = await prisma.day.findUnique({
     where: { id: dayIdNum, tripId },
   });
   if (!day) {
-    return NextResponse.json({ error: "일자를 찾을 수 없습니다" }, { status: 404 });
+    return NextResponse.json(
+      { error: "일자를 찾을 수 없습니다" },
+      { status: 404 },
+    );
   }
 
   const body = await request.json();
-  const { category, title, startTime, startTimezone, endTime, endTimezone, location, memo, cost, currency, reservationStatus, sortOrder } = body;
+  const {
+    category,
+    title,
+    startTime,
+    startTimezone,
+    endTime,
+    endTimezone,
+    location,
+    memo,
+    cost,
+    currency,
+    reservationStatus,
+    sortOrder,
+  } = body;
 
   if (!category || !title) {
-    return NextResponse.json({ error: "category와 title은 필수입니다" }, { status: 400 });
+    return NextResponse.json(
+      { error: "category와 title은 필수입니다" },
+      { status: 400 },
+    );
   }
 
   const activity = await prisma.activity.create({
@@ -59,9 +82,14 @@ export async function POST(request: Request, { params }: Params) {
       dayId: dayIdNum,
       category,
       title,
-      ...(startTime !== undefined && { startTime: toTimestamp(startTime, day.date, startTimezone) ?? null }),
+      ...(startTime !== undefined && {
+        startTime: toTimestamp(startTime, day.date, startTimezone) ?? null,
+      }),
       ...(startTimezone !== undefined && { startTimezone }),
-      ...(endTime !== undefined && { endTime: toTimestamp(endTime, day.date, endTimezone ?? startTimezone) ?? null }),
+      ...(endTime !== undefined && {
+        endTime:
+          toTimestamp(endTime, day.date, endTimezone ?? startTimezone) ?? null,
+      }),
       ...(endTimezone !== undefined && { endTimezone }),
       ...(location !== undefined && { location }),
       ...(memo !== undefined && { memo }),
@@ -85,14 +113,20 @@ export async function PATCH(request: Request, { params }: Params) {
   }
 
   if (!(await canEdit(tripId, userId))) {
-    return NextResponse.json({ error: "편집 권한이 없습니다" }, { status: 403 });
+    return NextResponse.json(
+      { error: "편집 권한이 없습니다" },
+      { status: 403 },
+    );
   }
 
   const body = await request.json();
   const { orderedIds } = body;
 
   if (!Array.isArray(orderedIds) || orderedIds.length === 0) {
-    return NextResponse.json({ error: "orderedIds 배열은 필수입니다" }, { status: 400 });
+    return NextResponse.json(
+      { error: "orderedIds 배열은 필수입니다" },
+      { status: 400 },
+    );
   }
 
   await prisma.$transaction(
@@ -100,8 +134,8 @@ export async function PATCH(request: Request, { params }: Params) {
       prisma.activity.update({
         where: { id: activityId, dayId: dayIdNum, day: { tripId } },
         data: { sortOrder: index },
-      })
-    )
+      }),
+    ),
   );
 
   return NextResponse.json({ ok: true });

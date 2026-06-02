@@ -7,8 +7,8 @@
  *  - members 배열은 "granted"로 표기되지만 실제 ACL은 사용자가 직접 처리
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
 import { TripRole } from "@prisma/client";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // 외부 의존 mock
 vi.mock("tsdav", () => ({ createDAVClient: vi.fn() }));
@@ -81,9 +81,9 @@ vi.mock("@/lib/calendar/provider/apple", () => ({
   },
 }));
 
-import { connectAppleCalendar } from "@/lib/calendar/service";
 import { getTripMember } from "@/lib/auth-helpers";
 import { appleProvider } from "@/lib/calendar/provider/apple";
+import { connectAppleCalendar } from "@/lib/calendar/service";
 
 const getTripMemberMock = vi.mocked(getTripMember);
 
@@ -144,21 +144,35 @@ describe("connectAppleCalendar — capability manual 분기", () => {
       displayName: "신혼여행 (trip-planner)",
       components: ["VEVENT"],
     });
-    tripCalendarLinkCreate.mockImplementation(async ({ data }: { data: Record<string, unknown> }) => ({
-      id: 100,
-      tripId: 1,
-      ownerId: "u1",
-      provider: "APPLE",
-      calendarId: data.calendarId,
-      calendarName: data.calendarName,
-      lastSyncedAt: null,
-      lastError: null,
-      skippedCount: 0,
-    }));
+    tripCalendarLinkCreate.mockImplementation(
+      async ({ data }: { data: Record<string, unknown> }) => ({
+        id: 100,
+        tripId: 1,
+        ownerId: "u1",
+        provider: "APPLE",
+        calendarId: data.calendarId,
+        calendarName: data.calendarName,
+        lastSyncedAt: null,
+        lastError: null,
+        skippedCount: 0,
+      }),
+    );
     tripMemberFindMany.mockResolvedValue([
-      { userId: "u1", role: TripRole.OWNER, user: { id: "u1", email: "owner@example.com" } },
-      { userId: "u2", role: TripRole.HOST, user: { id: "u2", email: "host@example.com" } },
-      { userId: "u3", role: TripRole.GUEST, user: { id: "u3", email: "guest@example.com" } },
+      {
+        userId: "u1",
+        role: TripRole.OWNER,
+        user: { id: "u1", email: "owner@example.com" },
+      },
+      {
+        userId: "u2",
+        role: TripRole.HOST,
+        user: { id: "u2", email: "host@example.com" },
+      },
+      {
+        userId: "u3",
+        role: TripRole.GUEST,
+        user: { id: "u3", email: "guest@example.com" },
+      },
     ]);
 
     const r = await connectAppleCalendar({ userId: "u1", tripId: 1 });
@@ -198,8 +212,12 @@ describe("connectAppleCalendar — capability manual 분기", () => {
     });
     const r = await connectAppleCalendar({ userId: "u1", tripId: 1 });
     expect(r.status).toBe(409);
-    expect((r.body as { error: string }).error).toBe("already_linked_other_provider");
-    expect((r.body as { currentProvider: string }).currentProvider).toBe("GOOGLE");
+    expect((r.body as { error: string }).error).toBe(
+      "already_linked_other_provider",
+    );
+    expect((r.body as { currentProvider: string }).currentProvider).toBe(
+      "GOOGLE",
+    );
   });
 
   it("멤버 0명 (오너 단독) → manualAclGuidance 부재", async () => {
@@ -217,19 +235,25 @@ describe("connectAppleCalendar — capability manual 분기", () => {
       displayName: "혼자여행 (trip-planner)",
       components: ["VEVENT"],
     });
-    tripCalendarLinkCreate.mockImplementation(async ({ data }: { data: Record<string, unknown> }) => ({
-      id: 101,
-      tripId: 1,
-      ownerId: "u1",
-      provider: "APPLE",
-      calendarId: data.calendarId,
-      calendarName: data.calendarName,
-      lastSyncedAt: null,
-      lastError: null,
-      skippedCount: 0,
-    }));
+    tripCalendarLinkCreate.mockImplementation(
+      async ({ data }: { data: Record<string, unknown> }) => ({
+        id: 101,
+        tripId: 1,
+        ownerId: "u1",
+        provider: "APPLE",
+        calendarId: data.calendarId,
+        calendarName: data.calendarName,
+        lastSyncedAt: null,
+        lastError: null,
+        skippedCount: 0,
+      }),
+    );
     tripMemberFindMany.mockResolvedValue([
-      { userId: "u1", role: TripRole.OWNER, user: { id: "u1", email: "owner@example.com" } },
+      {
+        userId: "u1",
+        role: TripRole.OWNER,
+        user: { id: "u1", email: "owner@example.com" },
+      },
     ]);
     const r = await connectAppleCalendar({ userId: "u1", tripId: 1 });
     expect(r.status).toBe(200);

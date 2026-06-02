@@ -11,11 +11,12 @@
 
 import { memo, useState } from "react";
 import { toast } from "sonner";
-import { formatCalendarDate } from "@/lib/date-utils";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+
 import ActivityList, { type Activity } from "@/components/ActivityList";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { formatCalendarDate } from "@/lib/date-utils";
 
 export interface DayCreatedPayload {
   id: number;
@@ -106,7 +107,7 @@ export const DayActivitiesPane = memo(function DayActivitiesPane({
       <CardContent>
         {dayId === null ? (
           <div className="space-y-3">
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               이 날짜에 등록된 일정이 없습니다.
             </p>
             {canEdit && (
@@ -122,7 +123,11 @@ export const DayActivitiesPane = memo(function DayActivitiesPane({
           </div>
         ) : activities === null ? (
           // #669 — Day 는 있으나 아직 활동을 안 받음(윈도우 밖). 도착하면 채워진다.
-          <div className="space-y-2" role="status" aria-label="일정 불러오는 중">
+          <div
+            className="space-y-2"
+            role="status"
+            aria-label="일정 불러오는 중"
+          >
             <Skeleton className="h-16 w-full rounded-md" />
             <Skeleton className="h-16 w-full rounded-md" />
           </div>

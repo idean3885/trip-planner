@@ -8,6 +8,7 @@
 
 import type { calendar_v3 } from "@googleapis/calendar";
 import { TripRole } from "@prisma/client";
+
 import { classifyError, getStatus } from "./errors";
 
 export type AclRole = "reader" | "writer" | "owner" | "freeBusyReader";
@@ -48,7 +49,7 @@ export interface AclUpsertResult {
  */
 export async function upsertAcl(
   calendar: calendar_v3.Calendar,
-  input: AclUpsertInput
+  input: AclUpsertInput,
 ): Promise<AclUpsertResult> {
   try {
     const res = await calendar.acl.insert({
@@ -77,7 +78,7 @@ export async function upsertAcl(
  */
 export async function patchAclRole(
   calendar: calendar_v3.Calendar,
-  input: AclUpsertInput
+  input: AclUpsertInput,
 ): Promise<AclUpsertResult> {
   try {
     const res = await calendar.acl.patch({
@@ -106,7 +107,7 @@ export interface AclDeleteInput {
 /** 특정 이메일의 ACL 제거. 404는 "이미 없음"으로 성공 간주. */
 export async function deleteAcl(
   calendar: calendar_v3.Calendar,
-  input: AclDeleteInput
+  input: AclDeleteInput,
 ): Promise<AclUpsertResult> {
   try {
     const res = await calendar.acl.delete({

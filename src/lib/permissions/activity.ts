@@ -11,8 +11,9 @@
  * - 순수 함수: 단위 테스트·UI 사전 비활성화에 사용
  * - DB 헬퍼: API route에서 호출 (DB 정본 검증)
  */
-import { prisma } from "@/lib/prisma";
 import type { TripRole } from "@prisma/client";
+
+import { prisma } from "@/lib/prisma";
 
 const EDIT_ROLES: TripRole[] = ["OWNER", "HOST"];
 
@@ -23,7 +24,10 @@ export function canImportCalendar(role: TripRole | null | undefined): boolean {
 }
 
 /** DB 조회 헬퍼. trip 비멤버면 false. */
-export async function userCanImportCalendar(tripId: number, userId: string): Promise<boolean> {
+export async function userCanImportCalendar(
+  tripId: number,
+  userId: string,
+): Promise<boolean> {
   const member = await prisma.tripMember.findUnique({
     where: { tripId_userId: { tripId, userId } },
   });

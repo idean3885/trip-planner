@@ -2,13 +2,15 @@
  * v2 응답 스키마 테스트 — /api/v2/trips/[id]/days GET이 dayNumber 키를 포함하고
  * sortOrder 키는 제외하는지 검증.
  */
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { mockPrisma, mockAuthHelpers } = vi.hoisted(() => ({
   mockPrisma: {
     day: {
       findMany: vi.fn(),
-      aggregate: vi.fn().mockResolvedValue({ _min: { date: null }, _max: { date: null } }),
+      aggregate: vi
+        .fn()
+        .mockResolvedValue({ _min: { date: null }, _max: { date: null } }),
     },
     trip: { findUnique: vi.fn() },
   },
@@ -43,7 +45,10 @@ describe("v2 — GET /api/v2/trips/{id}/days", () => {
       { id: 2, tripId: 1, date: new Date("2026-06-03T00:00:00Z") },
     ]);
 
-    const res = await GET(new Request("http://localhost/api/v2/trips/1/days"), params());
+    const res = await GET(
+      new Request("http://localhost/api/v2/trips/1/days"),
+      params(),
+    );
     expect(res.status).toBe(200);
     const data = await res.json();
     expect(data[0].dayNumber).toBe(1);

@@ -45,12 +45,27 @@ const TABLE: Record<string, TzEntry> = {
   "America/Toronto": { std: -300, stdAbbr: "EST", dst: -240, dstAbbr: "EDT" },
   "America/Chicago": { std: -360, stdAbbr: "CST", dst: -300, dstAbbr: "CDT" },
   "America/Denver": { std: -420, stdAbbr: "MST", dst: -360, dstAbbr: "MDT" },
-  "America/Los_Angeles": { std: -480, stdAbbr: "PST", dst: -420, dstAbbr: "PDT" },
-  "America/Anchorage": { std: -540, stdAbbr: "AKST", dst: -480, dstAbbr: "AKDT" },
+  "America/Los_Angeles": {
+    std: -480,
+    stdAbbr: "PST",
+    dst: -420,
+    dstAbbr: "PDT",
+  },
+  "America/Anchorage": {
+    std: -540,
+    stdAbbr: "AKST",
+    dst: -480,
+    dstAbbr: "AKDT",
+  },
   "America/Honolulu": { std: -600, stdAbbr: "HST" },
   "America/Sao_Paulo": { std: -180, stdAbbr: "BRT" },
   "Australia/Sydney": { std: 600, stdAbbr: "AEST", dst: 660, dstAbbr: "AEDT" },
-  "Australia/Melbourne": { std: 600, stdAbbr: "AEST", dst: 660, dstAbbr: "AEDT" },
+  "Australia/Melbourne": {
+    std: 600,
+    stdAbbr: "AEST",
+    dst: 660,
+    dstAbbr: "AEDT",
+  },
   "Australia/Perth": { std: 480, stdAbbr: "AWST" },
   "Pacific/Auckland": { std: 720, stdAbbr: "NZST", dst: 780, dstAbbr: "NZDT" },
   UTC: { std: 0, stdAbbr: "UTC" },
@@ -68,14 +83,15 @@ function tzOffsetMinutes(utcMs: number, timezone: string): number {
     second: "2-digit",
   });
   const parts = dtf.formatToParts(new Date(utcMs));
-  const get = (type: string) => Number(parts.find((p) => p.type === type)?.value);
+  const get = (type: string) =>
+    Number(parts.find((p) => p.type === type)?.value);
   const asUtc = Date.UTC(
     get("year"),
     get("month") - 1,
     get("day"),
     get("hour"),
     get("minute"),
-    get("second")
+    get("second"),
   );
   return Math.round((asUtc - utcMs) / 60000);
 }
@@ -85,14 +101,18 @@ export function tzLabel(iana: string, at: Date = new Date()): string {
   if (entry) {
     try {
       const offset = tzOffsetMinutes(at.getTime(), iana);
-      if (entry.dst !== undefined && offset === entry.dst) return entry.dstAbbr!;
+      if (entry.dst !== undefined && offset === entry.dst)
+        return entry.dstAbbr!;
       if (offset === entry.std) return entry.stdAbbr;
     } catch {
       /* c8 ignore next -- defensive: Intl 구현체 예외 시 다음 폴백으로 */
     }
   }
   try {
-    const parts = new Intl.DateTimeFormat("en", { timeZone: iana, timeZoneName: "short" }).formatToParts(at);
+    const parts = new Intl.DateTimeFormat("en", {
+      timeZone: iana,
+      timeZoneName: "short",
+    }).formatToParts(at);
     const name = parts.find((p) => p.type === "timeZoneName")?.value;
     if (name && !name.startsWith("GMT") && !name.startsWith("UTC")) return name;
   } catch {

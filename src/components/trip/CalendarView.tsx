@@ -15,15 +15,16 @@
  *   가 주간 표시를 직접 제공하지 않아 주간 스트립을 별도로 렌더한다.
  */
 
+import { addDays, addMonths } from "date-fns";
 import * as React from "react";
 import { useMemo, useState } from "react";
-import { addDays, addMonths } from "date-fns";
-import { ko } from "react-day-picker/locale";
 import type { Matcher } from "react-day-picker";
+import { ko } from "react-day-picker/locale";
 
 import { Calendar, CalendarDayButton } from "@/components/ui/calendar";
 import { getTripColor } from "@/lib/trip-palette";
 import { cn } from "@/lib/utils";
+
 import { SwipeCarousel } from "./SwipeCarousel";
 
 export interface TripDayGroup {
@@ -245,7 +246,7 @@ function MobileCompactCalendar({
         type="button"
         onClick={() => setView((v) => (v === "month" ? "week" : "month"))}
         aria-pressed={view === "week"}
-        className="mt-1 flex w-full items-center justify-center rounded-md py-1.5 text-xs text-muted-foreground transition-colors hover:bg-muted"
+        className="text-muted-foreground hover:bg-muted mt-1 flex w-full items-center justify-center rounded-md py-1.5 text-xs transition-colors"
       >
         {view === "month" ? "주간만 보기" : "월 전체 보기"}
       </button>
@@ -346,7 +347,7 @@ function MultiTripDayButton({
             />
           ))}
           {matched.length > MAX_VISIBLE_BARS && (
-            <span className="text-[0.5rem] leading-none text-muted-foreground">
+            <span className="text-muted-foreground text-[0.5rem] leading-none">
               +{matched.length - MAX_VISIBLE_BARS}
             </span>
           )}

@@ -14,16 +14,18 @@
  */
 
 import type { calendar_v3 } from "@googleapis/calendar";
+import type { Activity, Trip, TripCalendarEventMapping } from "@prisma/client";
+
 import { prisma } from "@/lib/prisma";
+import type { FailureReason } from "@/types/gcal";
+
 import {
   classifyError,
+  type GCalClient,
   getStatus,
   isPreconditionFailed,
-  type GCalClient,
 } from "./client";
-import { formatActivityAsEvent, type ActivityForFormat } from "./format";
-import type { FailureReason } from "@/types/gcal";
-import type { Activity, TripCalendarEventMapping, Trip } from "@prisma/client";
+import { type ActivityForFormat, formatActivityAsEvent } from "./format";
 
 export interface SyncContext {
   tripCalendarLinkId: number;
@@ -49,11 +51,15 @@ export interface UnlinkResult {
 type ActivityRow = Activity & {};
 
 /** 여행에 속한 모든 활동을 dayId 순으로 조회한다. */
-export async function fetchTripActivities(tripId: number): Promise<ActivityRow[]> {
+export async function fetchTripActivities(
+  tripId: number,
+): Promise<ActivityRow[]> {
   const days = await prisma.day.findMany({
     where: { tripId },
     orderBy: { date: "asc" },
-    include: { activities: { orderBy: [{ sortOrder: "asc" }, { startTime: "asc" }] } },
+    include: {
+      activities: { orderBy: [{ sortOrder: "asc" }, { startTime: "asc" }] },
+    },
   });
   return days.flatMap((d) => d.activities);
 }
@@ -62,7 +68,7 @@ export async function fetchTripActivities(tripId: number): Promise<ActivityRow[]
 export async function syncActivities(
   client: GCalClient,
   ctx: SyncContext,
-  options: { retryOnly?: number[] } = {}
+  options: { retryOnly?: number[] } = {},
 ): Promise<SyncResult> {
   const activities = await fetchTripActivities(ctx.trip.id);
   const mappings = await prisma.tripCalendarEventMapping.findMany({
@@ -72,7 +78,13 @@ export async function syncActivities(
   mappings.forEach((m) => mapByActivity.set(m.activityId, m));
 
   const retryFilter = options.retryOnly ? new Set(options.retryOnly) : null;
-  const result: SyncResult = { created: 0, updated: 0, deleted: 0, skipped: 0, failed: [] };
+  const result: SyncResult = {
+    created: 0,
+    updated: 0,
+    deleted: 0,
+    skipped: 0,
+    failed: [],
+  };
 
   // 1) Activity 순회 → create or update
   for (const a of activities) {
@@ -106,7 +118,7 @@ export async function syncActivities(
             eventId: mapping.googleEventId,
             requestBody: event,
           },
-          { headers: { "If-Match": mapping.syncedEtag } }
+          { headers: { "If-Match": mapping.syncedEtag } },
         );
         if (res.data.etag) {
           await prisma.tripCalendarEventMapping.update({
@@ -118,7 +130,12 @@ export async function syncActivities(
       }
     } catch (err) {
       // #481 진단 — catch 진입 시 항상 raw 에러를 prod logs에 노출 (412/404 분기 포함).
-      const e = err as { code?: number; status?: number; message?: string; response?: { status?: number; data?: unknown } };
+      const e = err as {
+        code?: number;
+        status?: number;
+        message?: string;
+        response?: { status?: number; data?: unknown };
+      };
       const rawStatus = e.code ?? e.status ?? e.response?.status;
       console.error(
         `[gcal/sync] activity ${a.id} ${mapping ? "patch" : "insert"} caught`,
@@ -126,11 +143,16 @@ export async function syncActivities(
           httpStatus: rawStatus,
           message: e.message,
           googleError: e.response?.data,
-        }
+        },
       );
       if (isPreconditionFailed(err) && mapping) {
         // 412: ETag 불일치. 실제 사용자 수정 여부를 Google event.updated로 판별.
-        const outcome = await resolvePreconditionConflict(client, ctx.calendarId, mapping, event);
+        const outcome = await resolvePreconditionConflict(
+          client,
+          ctx.calendarId,
+          mapping,
+          event,
+        );
         console.error(`[gcal/sync] activity ${a.id} 412 outcome=${outcome}`);
         if (outcome === "updated") result.updated++;
         else if (outcome === "cleaned") {
@@ -142,7 +164,9 @@ export async function syncActivities(
         }
       } else if (getStatus(err) === 404 && mapping) {
         // 이벤트가 이미 삭제됨 → 매핑 정리
-        await prisma.tripCalendarEventMapping.delete({ where: { id: mapping.id } });
+        await prisma.tripCalendarEventMapping.delete({
+          where: { id: mapping.id },
+        });
       } else {
         const { reason } = classifyError(err);
         result.failed.push({ activityId: a.id, reason });
@@ -158,17 +182,23 @@ export async function syncActivities(
     try {
       await client.calendar.events.delete(
         { calendarId: ctx.calendarId, eventId: mapping.googleEventId },
-        { headers: { "If-Match": mapping.syncedEtag } }
+        { headers: { "If-Match": mapping.syncedEtag } },
       );
-      await prisma.tripCalendarEventMapping.delete({ where: { id: mapping.id } });
+      await prisma.tripCalendarEventMapping.delete({
+        where: { id: mapping.id },
+      });
       result.deleted++;
     } catch (err) {
       if (isPreconditionFailed(err)) {
         // 사용자가 직접 수정한 이벤트 — 보존, 매핑만 끊는다.
-        await prisma.tripCalendarEventMapping.delete({ where: { id: mapping.id } });
+        await prisma.tripCalendarEventMapping.delete({
+          where: { id: mapping.id },
+        });
         result.skipped++;
       } else if (getStatus(err) === 404) {
-        await prisma.tripCalendarEventMapping.delete({ where: { id: mapping.id } });
+        await prisma.tripCalendarEventMapping.delete({
+          where: { id: mapping.id },
+        });
       } else {
         const { reason } = classifyError(err);
         result.failed.push({ activityId: mapping.activityId, reason });
@@ -186,12 +216,13 @@ export async function syncActivities(
  */
 function eventContentsMatch(
   current: calendar_v3.Schema$Event,
-  desired: ReturnType<typeof formatActivityAsEvent>
+  desired: ReturnType<typeof formatActivityAsEvent>,
 ): boolean {
   const normStr = (s: string | null | undefined) => (s ?? "").trim();
   if (normStr(current.summary) !== normStr(desired.summary)) return false;
   if (normStr(current.location) !== normStr(desired.location)) return false;
-  if (normStr(current.description) !== normStr(desired.description)) return false;
+  if (normStr(current.description) !== normStr(desired.description))
+    return false;
   const toMs = (v: string | null | undefined) =>
     v ? new Date(v).getTime() : 0;
   // desired는 dateTime만 사용. current는 all-day일 수 있어 date도 폴백.
@@ -221,7 +252,7 @@ async function resolvePreconditionConflict(
   client: GCalClient,
   calendarId: string,
   mapping: TripCalendarEventMapping,
-  desiredEvent: ReturnType<typeof formatActivityAsEvent>
+  desiredEvent: ReturnType<typeof formatActivityAsEvent>,
 ): Promise<"updated" | "skipped" | "cleaned" | "failed"> {
   let currentRes;
   try {
@@ -231,7 +262,9 @@ async function resolvePreconditionConflict(
     });
   } catch (getErr) {
     if (getStatus(getErr) === 404) {
-      await prisma.tripCalendarEventMapping.delete({ where: { id: mapping.id } });
+      await prisma.tripCalendarEventMapping.delete({
+        where: { id: mapping.id },
+      });
       return "cleaned";
     }
     return "failed";
@@ -266,7 +299,7 @@ async function resolvePreconditionConflict(
   try {
     const retryRes = await client.calendar.events.patch(
       { calendarId, eventId: mapping.googleEventId, requestBody: desiredEvent },
-      { headers: { "If-Match": currentRes.data.etag ?? "" } }
+      { headers: { "If-Match": currentRes.data.etag ?? "" } },
     );
     if (retryRes.data.etag) {
       await prisma.tripCalendarEventMapping.update({
@@ -278,7 +311,9 @@ async function resolvePreconditionConflict(
     return "failed";
   } catch (retryErr) {
     if (getStatus(retryErr) === 404) {
-      await prisma.tripCalendarEventMapping.delete({ where: { id: mapping.id } });
+      await prisma.tripCalendarEventMapping.delete({
+        where: { id: mapping.id },
+      });
       return "cleaned";
     }
     return "failed";
@@ -288,7 +323,7 @@ async function resolvePreconditionConflict(
 /** 링크 해제 — 매핑된 이벤트를 모두 삭제하려 시도한다. 412면 보존. */
 export async function unlinkEvents(
   client: GCalClient,
-  ctx: Pick<SyncContext, "tripCalendarLinkId" | "calendarId">
+  ctx: Pick<SyncContext, "tripCalendarLinkId" | "calendarId">,
 ): Promise<UnlinkResult> {
   const mappings = await prisma.tripCalendarEventMapping.findMany({
     where: { tripCalendarLinkId: ctx.tripCalendarLinkId },
@@ -299,7 +334,7 @@ export async function unlinkEvents(
     try {
       await client.calendar.events.delete(
         { calendarId: ctx.calendarId, eventId: m.googleEventId },
-        { headers: { "If-Match": m.syncedEtag } }
+        { headers: { "If-Match": m.syncedEtag } },
       );
       result.deleted++;
     } catch (err) {

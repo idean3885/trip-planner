@@ -11,10 +11,12 @@
  */
 
 import { randomUUID } from "node:crypto";
+
 import { prisma } from "@/lib/prisma";
-import { createAppleClient, type AppleDAVClient } from "./apple-client";
-import { decryptPassword } from "./apple-crypto";
+
 import { extractIcsUid } from "../ics";
+import { type AppleDAVClient, createAppleClient } from "./apple-client";
+import { decryptPassword } from "./apple-crypto";
 import type {
   CalendarErrorCode,
   CalendarProvider,
@@ -56,10 +58,15 @@ async function loadClient(userId: string): Promise<AppleDAVClient | null> {
 /** HTTP status를 unknown error에서 추출. tsdav는 fetch Response 또는 Error를 throw할 수 있다. */
 function extractStatus(err: unknown): number | null {
   if (err && typeof err === "object") {
-    const obj = err as { status?: unknown; response?: { status?: unknown }; statusCode?: unknown };
+    const obj = err as {
+      status?: unknown;
+      response?: { status?: unknown };
+      statusCode?: unknown;
+    };
     if (typeof obj.status === "number") return obj.status;
     if (typeof obj.statusCode === "number") return obj.statusCode;
-    if (obj.response && typeof obj.response.status === "number") return obj.response.status;
+    if (obj.response && typeof obj.response.status === "number")
+      return obj.response.status;
   }
   if (err instanceof Error) {
     const m = err.message.match(/\b(\d{3})\b/);
@@ -121,7 +128,10 @@ export const appleProvider: CalendarProvider = {
     }
   },
 
-  async getReauthUrl(_userId: string, returnTo: string): Promise<string | null> {
+  async getReauthUrl(
+    _userId: string,
+    returnTo: string,
+  ): Promise<string | null> {
     // Apple은 OAuth 미제공 — 위자드 진입 URL 반환. tripId는 returnTo에서 추출되거나
     // 호출자가 path를 그대로 사용한다.
     const path = returnTo.startsWith("/") ? returnTo : `/${returnTo}`;
@@ -133,13 +143,15 @@ export const appleProvider: CalendarProvider = {
     if (!client) return [];
     const calendars = await client.fetchCalendars();
     return calendars
-      .filter((c) => Array.isArray(c.components) && c.components.includes("VEVENT"))
+      .filter(
+        (c) => Array.isArray(c.components) && c.components.includes("VEVENT"),
+      )
       .map((c) => ({
         calendarId: c.url,
-        displayName:
-          typeof c.displayName === "string" ? c.displayName : null,
+        displayName: typeof c.displayName === "string" ? c.displayName : null,
         components: (c.components ?? []).filter(
-          (comp): comp is "VEVENT" | "VTODO" => comp === "VEVENT" || comp === "VTODO",
+          (comp): comp is "VEVENT" | "VTODO" =>
+            comp === "VEVENT" || comp === "VTODO",
         ),
       }));
   },
@@ -156,7 +168,9 @@ export const appleProvider: CalendarProvider = {
     const calendars = await client.fetchCalendars();
     if (calendars.length === 0) {
       // 최초 사용자라 캘린더가 0개인 경우는 거의 없지만 안전 폴백
-      throw new Error("Apple CalDAV: cannot derive calendar-home URL (no existing calendars)");
+      throw new Error(
+        "Apple CalDAV: cannot derive calendar-home URL (no existing calendars)",
+      );
     }
     const sample = calendars[0].url;
     // sample: https://p<digits>-caldav.icloud.com:443/<userId>/calendars/<calId>/
@@ -200,7 +214,9 @@ export const appleProvider: CalendarProvider = {
     const uid = extractIcsUid(ics) ?? randomUUID();
     const filename = `${uid}.ics`;
     const res = await client.createCalendarObject({
-      calendar: { url: calendarId } as Parameters<typeof client.createCalendarObject>[0]["calendar"],
+      calendar: { url: calendarId } as Parameters<
+        typeof client.createCalendarObject
+      >[0]["calendar"],
       filename,
       iCalString: ics,
     });
@@ -272,7 +288,8 @@ export const appleProvider: CalendarProvider = {
   async revokeMemberAcl(): Promise<RevokeAclResult> {
     return {
       revoked: false,
-      retainedReason: "Apple은 capability manual — 사용자가 외부 Calendar 앱에서 직접 회수",
+      retainedReason:
+        "Apple은 capability manual — 사용자가 외부 Calendar 앱에서 직접 회수",
     };
   },
 

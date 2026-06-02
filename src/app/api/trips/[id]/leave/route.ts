@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+
 import { getAuthUserId, getTripMember } from "@/lib/auth-helpers";
 import { onMemberLeave } from "@/lib/gcal/member-sync";
+import { prisma } from "@/lib/prisma";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -23,7 +24,7 @@ export async function POST(request: Request, { params }: Params) {
   if (member.role === "OWNER") {
     return NextResponse.json(
       { error: "주인은 다른 호스트에게 양도한 후 탈퇴할 수 있습니다" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 

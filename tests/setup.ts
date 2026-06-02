@@ -1,4 +1,5 @@
 import "@testing-library/jest-dom/vitest";
+
 import { configure } from "@testing-library/react";
 
 // #657 — embla-carousel 은 초기화 시 window.matchMedia 를 호출한다. jsdom 은

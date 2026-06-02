@@ -43,6 +43,7 @@ export function getCanonicalOrigin(): string | null {
 
 function normalizeOrigin(raw: string): string {
   const trimmed = raw.trim().replace(/\/$/, "");
-  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) return trimmed;
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://"))
+    return trimmed;
   return `https://${trimmed}`;
 }

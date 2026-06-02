@@ -13,14 +13,15 @@
  * 세로 페이지 스크롤을 그대로 둔다(#649 회귀 방지).
  */
 
+import useEmblaCarousel from "embla-carousel-react";
 import {
+  type ReactNode,
   useCallback,
   useEffect,
   useLayoutEffect,
   useRef,
-  type ReactNode,
 } from "react";
-import useEmblaCarousel from "embla-carousel-react";
+
 import { cn } from "@/lib/utils";
 
 // SSR 에서는 useLayoutEffect 경고가 나므로 클라이언트에서만 layout effect 사용.

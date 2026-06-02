@@ -2,8 +2,8 @@
 // design/tokens.json (W3C DTCG) -> src/app/globals.css @theme sentinel block.
 // Contract: specs/012-shadcn-design-system/contracts/token-pipeline.md
 
-import { readFileSync, writeFileSync, existsSync } from "node:fs";
-import { resolve, dirname } from "node:path";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
@@ -26,7 +26,11 @@ function isLeaf(node: unknown): node is { $value: unknown } {
   return typeof node === "object" && node !== null && "$value" in node;
 }
 
-function flatten(node: unknown, prefix: string[], out: Record<string, string>): void {
+function flatten(
+  node: unknown,
+  prefix: string[],
+  out: Record<string, string>,
+): void {
   if (isLeaf(node)) {
     out[prefix.join("-")] = String(node.$value);
     return;
@@ -78,26 +82,47 @@ function main(): void {
   const beginIdx = css.indexOf(BEGIN_MARKER);
   const endIdx = css.indexOf(END_MARKER);
   if (beginIdx === -1 || endIdx === -1 || endIdx < beginIdx) {
-    fail("sentinel markers not found (expected " + BEGIN_MARKER + "..." + END_MARKER + ")");
+    fail(
+      "sentinel markers not found (expected " +
+        BEGIN_MARKER +
+        "..." +
+        END_MARKER +
+        ")",
+    );
   }
 
   const lineStart = css.lastIndexOf("\n", beginIdx) + 1;
   const lineEnd = css.indexOf("\n", endIdx);
   if (lineEnd === -1) fail("END:tokens line malformed");
 
-  const vars = Object.keys(flat).sort().map((k) => "  --" + k + ": " + flat[k] + ";");
-  const newBlock = [GENERATED_HEADER].concat(vars, ["  " + END_MARKER]).join("\n");
+  const vars = Object.keys(flat)
+    .sort()
+    .map((k) => "  --" + k + ": " + flat[k] + ";");
+  const newBlock = [GENERATED_HEADER]
+    .concat(vars, ["  " + END_MARKER])
+    .join("\n");
   const next = css.slice(0, lineStart) + newBlock + css.slice(lineEnd);
 
   if (next === css) {
-    process.stdout.write("tokens:build — idempotent (" + Object.keys(flat).length + " vars, no change)\n");
+    process.stdout.write(
+      "tokens:build — idempotent (" +
+        Object.keys(flat).length +
+        " vars, no change)\n",
+    );
     return;
   }
 
   writeFileSync(CSS_PATH, next, "utf8");
   const delta = next.length - css.length;
   const sign = delta >= 0 ? "+" : "";
-  process.stdout.write("tokens:build — wrote " + Object.keys(flat).length + " vars (" + sign + delta + " bytes)\n");
+  process.stdout.write(
+    "tokens:build — wrote " +
+      Object.keys(flat).length +
+      " vars (" +
+      sign +
+      delta +
+      " bytes)\n",
+  );
 }
 
 main();

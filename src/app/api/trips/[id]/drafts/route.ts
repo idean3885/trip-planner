@@ -5,14 +5,19 @@
  * 권한: trip 멤버 누구나(조회).
  */
 
-import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { getAuthUserId, getTripMember } from "@/lib/auth-helpers";
 import type { ActivityDraftStatus } from "@prisma/client";
+import { NextResponse } from "next/server";
+
+import { getAuthUserId, getTripMember } from "@/lib/auth-helpers";
+import { prisma } from "@/lib/prisma";
 
 type Params = { params: Promise<{ id: string }> };
 
-const ALLOWED_STATUSES: ActivityDraftStatus[] = ["PENDING", "PROMOTED", "DELETED"];
+const ALLOWED_STATUSES: ActivityDraftStatus[] = [
+  "PENDING",
+  "PROMOTED",
+  "DELETED",
+];
 
 export async function GET(request: Request, { params }: Params) {
   const { id } = await params;

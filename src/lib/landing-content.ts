@@ -1,14 +1,12 @@
-import type {
-  LucideIcon,
-} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import {
+  Bot,
+  Layers,
+  MapPin,
+  MessageSquareText,
+  Smartphone,
   Sparkles,
   Users,
-  Smartphone,
-  Layers,
-  MessageSquareText,
-  Bot,
-  MapPin,
 } from "lucide-react";
 
 export type ValueProp = {
@@ -34,7 +32,7 @@ export const landingValues: readonly ValueProp[] = [
     icon: Sparkles,
     title: "대화로 계획합니다",
     description:
-      "AI에게 \"바르셀로나 6월 4박\"이라고 말하면 숙소·항공·활동을 대신 찾아 일정에 꽂아 넣습니다.",
+      'AI에게 "바르셀로나 6월 4박"이라고 말하면 숙소·항공·활동을 대신 찾아 일정에 꽂아 넣습니다.',
   },
   {
     icon: Users,

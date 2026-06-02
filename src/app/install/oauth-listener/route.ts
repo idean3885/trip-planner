@@ -8,12 +8,10 @@
 
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+
 import { NextResponse } from "next/server";
 
-const MODULE_PATH = join(
-  process.cwd(),
-  "scripts/bootstrap/oauth-listener.mjs",
-);
+const MODULE_PATH = join(process.cwd(), "scripts/bootstrap/oauth-listener.mjs");
 const MODULE_BODY = readFileSync(MODULE_PATH, "utf-8");
 
 export function GET() {

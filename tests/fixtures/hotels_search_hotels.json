@@ -53,9 +53,7 @@
           "latitude": 38.7139,
           "longitude": -9.1394,
           "propertyClass": 2,
-          "photoUrls": [
-            "https://example.com/central-hostel-1.jpg"
-          ],
+          "photoUrls": ["https://example.com/central-hostel-1.jpg"],
           "checkin": {
             "fromTime": "14:00",
             "untilTime": "23:00"

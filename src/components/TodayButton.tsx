@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo } from "react";
 import Link from "next/link";
+import { useMemo } from "react";
+
 import { Button } from "@/components/ui/button";
 
 interface TripDayInfo {
@@ -44,7 +45,7 @@ export default function TodayButton({
   return (
     <Button
       size="lg"
-      className="w-full min-h-[48px]"
+      className="min-h-[48px] w-full"
       render={<Link href={`/trips/${tripSlug}/day/${todayDay.dayNum}`} />}
     >
       <span aria-hidden="true">📍</span>

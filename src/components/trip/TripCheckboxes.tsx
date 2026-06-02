@@ -45,7 +45,7 @@ export function TripCheckboxes({
                 type="checkbox"
                 checked={checked}
                 onChange={(e) => onToggle(t.id, e.target.checked)}
-                className="size-4 rounded border-border accent-foreground"
+                className="border-border accent-foreground size-4 rounded"
                 aria-label={`${t.title} 캘린더에 표시`}
               />
               <span

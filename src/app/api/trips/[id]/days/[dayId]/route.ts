@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { getAuthUserId, getTripMember, canEdit } from "@/lib/auth-helpers";
+
+import { canEdit, getAuthUserId, getTripMember } from "@/lib/auth-helpers";
 import { withSortOrder } from "@/lib/day-number";
+import { prisma } from "@/lib/prisma";
 import { getDerivedPeriodTx, getResolvedPeriod } from "@/lib/trip-period";
 
 type Params = { params: Promise<{ id: string; dayId: string }> };
@@ -49,7 +50,10 @@ export async function PUT(request: Request, { params }: Params) {
   }
 
   if (!(await canEdit(tripId, userId))) {
-    return NextResponse.json({ error: "편집 권한이 없습니다" }, { status: 403 });
+    return NextResponse.json(
+      { error: "편집 권한이 없습니다" },
+      { status: 403 },
+    );
   }
 
   const body = await request.json();
@@ -104,7 +108,10 @@ export async function DELETE(request: Request, { params }: Params) {
   }
 
   if (!(await canEdit(tripId, userId))) {
-    return NextResponse.json({ error: "편집 권한이 없습니다" }, { status: 403 });
+    return NextResponse.json(
+      { error: "편집 권한이 없습니다" },
+      { status: 403 },
+    );
   }
 
   await prisma.day.delete({

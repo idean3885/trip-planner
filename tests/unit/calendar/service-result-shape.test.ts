@@ -6,8 +6,8 @@
  * 정확한 status/error 코드를 가져야 한다.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
 import { TripRole } from "@prisma/client";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const findUniqueTripCalendarLink = vi.fn();
 const findUniqueTrip = vi.fn();
@@ -22,7 +22,10 @@ vi.mock("@/lib/prisma", () => ({
       findFirst: (...a: unknown[]) => findFirstTripCalendarLink(...a),
     },
     trip: { findUnique: (...a: unknown[]) => findUniqueTrip(...a) },
-    tripMember: { findMany: vi.fn(), findUnique: (...a: unknown[]) => tripMemberFindUnique(...a) },
+    tripMember: {
+      findMany: vi.fn(),
+      findUnique: (...a: unknown[]) => tripMemberFindUnique(...a),
+    },
     user: { findUnique: (...a: unknown[]) => memberFindUnique(...a) },
     memberCalendarSubscription: { findUnique: vi.fn(), upsert: vi.fn() },
   },
@@ -34,7 +37,9 @@ vi.mock("@/lib/auth-helpers", () => ({
 
 vi.mock("@/lib/gcal/auth", () => ({
   hasCalendarScope: vi.fn(),
-  buildConsentRedirectUrl: vi.fn((p: string) => `https://example/oauth?return=${p}`),
+  buildConsentRedirectUrl: vi.fn(
+    (p: string) => `https://example/oauth?return=${p}`,
+  ),
 }));
 
 vi.mock("@/lib/gcal/client", () => ({
@@ -58,8 +63,8 @@ vi.mock("@/lib/gcal/sync", () => ({
   syncActivities: vi.fn(),
 }));
 
-import * as service from "@/lib/calendar/service";
 import { getTripMember } from "@/lib/auth-helpers";
+import * as service from "@/lib/calendar/service";
 import { hasCalendarScope } from "@/lib/gcal/auth";
 
 const getTripMemberMock = vi.mocked(getTripMember);
@@ -103,9 +108,9 @@ describe("service.connectCalendar — 결과 union", () => {
     expect(result.kind).toBe("consent_required");
     expect(result.status).toBe(409);
     expect((result.body as { error: string }).error).toBe("consent_required");
-    expect((result.body as { authorizationUrl?: string }).authorizationUrl).toContain(
-      "/trips/1?gcal=link-ready",
-    );
+    expect(
+      (result.body as { authorizationUrl?: string }).authorizationUrl,
+    ).toContain("/trips/1?gcal=link-ready");
   });
 });
 
@@ -117,7 +122,10 @@ describe("service.disconnectCalendar — 결과 union", () => {
       userId: "u1",
       role: TripRole.HOST,
     } as Awaited<ReturnType<typeof getTripMember>>);
-    const result = await service.disconnectCalendar({ userId: "u1", tripId: 1 });
+    const result = await service.disconnectCalendar({
+      userId: "u1",
+      tripId: 1,
+    });
     expect(result.status).toBe(403);
     expect(result.body).toEqual({ error: "owner_only" });
   });
@@ -130,7 +138,10 @@ describe("service.disconnectCalendar — 결과 union", () => {
       role: TripRole.OWNER,
     } as Awaited<ReturnType<typeof getTripMember>>);
     findUniqueTripCalendarLink.mockResolvedValue(null);
-    const result = await service.disconnectCalendar({ userId: "u1", tripId: 1 });
+    const result = await service.disconnectCalendar({
+      userId: "u1",
+      tripId: 1,
+    });
     expect(result.status).toBe(404);
     expect(result.body).toEqual({ error: "not_linked" });
   });
@@ -215,7 +226,10 @@ describe("service.subscribeCalendar/unsubscribeCalendar — 결과 union", () =>
 
   it("unsubscribe: 멤버 아님 → not_a_member 403", async () => {
     getTripMemberMock.mockResolvedValue(null);
-    const result = await service.unsubscribeCalendar({ userId: "u1", tripId: 1 });
+    const result = await service.unsubscribeCalendar({
+      userId: "u1",
+      tripId: 1,
+    });
     expect(result.status).toBe(403);
     expect(result.body).toEqual({ error: "not_a_member" });
   });

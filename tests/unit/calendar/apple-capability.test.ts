@@ -5,7 +5,7 @@
  * spec 024)를 금지한다.
  */
 
-import { describe, it, expect, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 vi.mock("@/lib/prisma", () => ({ prisma: {} }));
 vi.mock("tsdav", () => ({ createDAVClient: vi.fn() }));

@@ -18,11 +18,12 @@
  */
 
 import { TripRole } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
+
 import {
   reconcileMemberAcl,
   reconcileOwnerTransfer,
 } from "@/lib/calendar/service";
+import { prisma } from "@/lib/prisma";
 
 /**
  * 신규 멤버 가입 시 오너 토큰으로 ACL 부여.
@@ -31,7 +32,7 @@ import {
 export async function onMemberJoin(
   tripId: number,
   userId: string,
-  role: TripRole
+  role: TripRole,
 ): Promise<void> {
   try {
     await reconcileMemberAcl({
@@ -54,7 +55,7 @@ export async function onMemberJoin(
 export async function onRoleChange(
   tripId: number,
   userId: string,
-  newRole: TripRole
+  newRole: TripRole,
 ): Promise<void> {
   if (newRole === TripRole.OWNER) {
     // 오너 이관은 별도 경로에서 처리 (onOwnerTransfer).
@@ -80,7 +81,10 @@ export async function onRoleChange(
  * `revokeMemberAcl({ retainIfStillNeeded: true })` 호출. 같은 외부 캘린더를 다른
  * 활성 trip이 공유 중이면 회수 보류 → 다른 trip 멤버 시청 보호.
  */
-export async function onMemberLeave(tripId: number, userId: string): Promise<void> {
+export async function onMemberLeave(
+  tripId: number,
+  userId: string,
+): Promise<void> {
   const link = await prisma.tripCalendarLink.findUnique({ where: { tripId } });
   if (!link) return;
 

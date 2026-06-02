@@ -1,17 +1,18 @@
 /**
  * spec 021 — 미등록 안내 상수 검증.
  */
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
+
 import {
   GCAL_DISCUSSIONS_URL,
-  UNREGISTERED_NOTICE_TITLE,
   UNREGISTERED_NOTICE_BODY,
+  UNREGISTERED_NOTICE_TITLE,
 } from "@/lib/gcal/unregistered";
 
 describe("미등록 안내 상수", () => {
   it("Discussions URL — Q&A 카테고리 + 프리필 제목·본문", () => {
     expect(GCAL_DISCUSSIONS_URL).toContain(
-      "https://github.com/idean3885/trip-planner/discussions/new"
+      "https://github.com/idean3885/trip-planner/discussions/new",
     );
     expect(GCAL_DISCUSSIONS_URL).toContain("category=q-a");
     expect(GCAL_DISCUSSIONS_URL).toContain("title=");

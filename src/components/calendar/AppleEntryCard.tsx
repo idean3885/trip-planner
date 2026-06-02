@@ -16,13 +16,14 @@
  * 해제·재연결 UI는 v2.12 통합 패널에서 제공 예정.
  */
 
-import { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import type { TripRole } from "@prisma/client";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
+
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import type { TripRole } from "@prisma/client";
 import type { SyncResponse, SyncSummary } from "@/types/gcal";
 
 interface AppleEntryCardProps {
@@ -130,10 +131,12 @@ export default function AppleEntryCard({ tripId, role }: AppleEntryCardProps) {
         <div className="space-y-1">
           <h3 className="text-sm font-medium">Apple 캘린더 연결됨</h3>
           {status?.link && (
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               마지막 반영: {formatDateTime(status.link.lastSyncedAt)}
               {status.link.skippedCount > 0 && (
-                <span className="ml-2">건너뜀 {status.link.skippedCount}건</span>
+                <span className="ml-2">
+                  건너뜀 {status.link.skippedCount}건
+                </span>
               )}
               {status.link.lastError && (
                 <span className="ml-2 text-amber-700">
@@ -143,7 +146,7 @@ export default function AppleEntryCard({ tripId, role }: AppleEntryCardProps) {
             </p>
           )}
           {!status?.link && (
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               iPhone·iPad·Mac Calendar 앱에서 본 여행 일정을 확인할 수 있습니다.
             </p>
           )}

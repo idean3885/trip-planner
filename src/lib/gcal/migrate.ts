@@ -8,9 +8,9 @@
 import { prisma } from "@/lib/prisma";
 
 export interface BackfillResult {
-  promoted: number;  // v2.8.0 오너 DEDICATED를 TripCalendarLink로 승격한 수
-  unlinked: number;  // 비-오너 GCalLink 제거 수
-  skipped: number;   // 이미 TripCalendarLink가 존재해 건너뛴 트립 수
+  promoted: number; // v2.8.0 오너 DEDICATED를 TripCalendarLink로 승격한 수
+  unlinked: number; // 비-오너 GCalLink 제거 수
+  skipped: number; // 이미 TripCalendarLink가 존재해 건너뛴 트립 수
 }
 
 /**
@@ -22,17 +22,19 @@ export interface BackfillResult {
  * 멤버 외부 계정에 남은 실제 구글 캘린더는 건드리지 않는다.
  */
 export async function backfillV28(): Promise<BackfillResult> {
-  const candidates = await prisma.$queryRaw<Array<{
-    trip_id: number;
-    owner_id: string;
-    calendar_id: string;
-    calendar_name: string | null;
-    last_synced_at: Date | null;
-    last_error: string | null;
-    skipped_count: number;
-    created_at: Date;
-    updated_at: Date;
-  }>>`
+  const candidates = await prisma.$queryRaw<
+    Array<{
+      trip_id: number;
+      owner_id: string;
+      calendar_id: string;
+      calendar_name: string | null;
+      last_synced_at: Date | null;
+      last_error: string | null;
+      skipped_count: number;
+      created_at: Date;
+      updated_at: Date;
+    }>
+  >`
     SELECT gl.trip_id, gl.user_id AS owner_id, gl.calendar_id, gl.calendar_name,
            gl.last_synced_at, gl.last_error, gl.skipped_count, gl.created_at, gl.updated_at
     FROM gcal_links gl

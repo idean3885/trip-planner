@@ -4,7 +4,11 @@
  */
 const apiAuth = [{ BearerAuth: [] }, { SessionAuth: [] }];
 const sessionOnly = [{ SessionAuth: [] }];
-const errorResponse = { content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } };
+const errorResponse = {
+  content: {
+    "application/json": { schema: { $ref: "#/components/schemas/Error" } },
+  },
+};
 
 export const openApiSpec = {
   openapi: "3.0.3",
@@ -55,7 +59,7 @@ export const openApiSpec = {
       Trip: {
         type: "object",
         description:
-          "spec 029 v3.0.0 — `startDate`/`endDate` 는 응답 출처가 등록된 일정의 min/max 일자(derive)다. 일정 0건 trip 은 두 필드가 모두 `null` 로 노출되며 UI 는 \"일정 미정\" 으로 분기한다. 입력 컬럼은 v3.0.0 contract 에서 제거됐다.",
+          'spec 029 v3.0.0 — `startDate`/`endDate` 는 응답 출처가 등록된 일정의 min/max 일자(derive)다. 일정 0건 trip 은 두 필드가 모두 `null` 로 노출되며 UI 는 "일정 미정" 으로 분기한다. 입력 컬럼은 v3.0.0 contract 에서 제거됐다.',
         properties: {
           id: { type: "integer" },
           title: { type: "string" },
@@ -108,7 +112,11 @@ export const openApiSpec = {
       Cost: {
         oneOf: [
           { type: "integer", description: "정수 비용 (요청)" },
-          { type: "string", pattern: "^[0-9]+$", description: "정수 문자열 (응답·DB Decimal 직렬화)" },
+          {
+            type: "string",
+            pattern: "^[0-9]+$",
+            description: "정수 문자열 (응답·DB Decimal 직렬화)",
+          },
         ],
         nullable: true,
         description:
@@ -121,19 +129,28 @@ export const openApiSpec = {
           dayId: { type: "integer" },
           category: {
             type: "string",
-            enum: ["SIGHTSEEING", "DINING", "TRANSPORT", "ACCOMMODATION", "SHOPPING", "OTHER"],
+            enum: [
+              "SIGHTSEEING",
+              "DINING",
+              "TRANSPORT",
+              "ACCOMMODATION",
+              "SHOPPING",
+              "OTHER",
+            ],
           },
           title: { type: "string" },
           startTime: {
             type: "string",
             format: "date-time",
             nullable: true,
-            description: "ISO 8601 datetime (UTC 직렬화). 요청 시 offset 포함 가능.",
+            description:
+              "ISO 8601 datetime (UTC 직렬화). 요청 시 offset 포함 가능.",
           },
           startTimezone: {
             type: "string",
             nullable: true,
-            description: "IANA timezone 식별자 (예: `Asia/Seoul`, `Europe/Lisbon`).",
+            description:
+              "IANA timezone 식별자 (예: `Asia/Seoul`, `Europe/Lisbon`).",
           },
           endTime: {
             type: "string",
@@ -153,11 +170,18 @@ export const openApiSpec = {
           reservationStatus: {
             type: "string",
             nullable: true,
-            enum: ["REQUIRED", "RECOMMENDED", "ON_SITE", "NOT_NEEDED", "RESERVED"],
+            enum: [
+              "REQUIRED",
+              "RECOMMENDED",
+              "ON_SITE",
+              "NOT_NEEDED",
+              "RESERVED",
+            ],
           },
           sortOrder: {
             type: "integer",
-            description: "정렬 보조키. startTime 동률 시 사용. POST 시 미지정하면 0 부여.",
+            description:
+              "정렬 보조키. startTime 동률 시 사용. POST 시 미지정하면 0 부여.",
           },
           createdAt: { type: "string", format: "date-time" },
           updatedAt: { type: "string", format: "date-time" },
@@ -188,7 +212,14 @@ export const openApiSpec = {
         responses: {
           "200": {
             description: "여행 목록",
-            content: { "application/json": { schema: { type: "array", items: { $ref: "#/components/schemas/Trip" } } } },
+            content: {
+              "application/json": {
+                schema: {
+                  type: "array",
+                  items: { $ref: "#/components/schemas/Trip" },
+                },
+              },
+            },
           },
           "401": { description: "미인증", ...errorResponse },
         },
@@ -220,14 +251,26 @@ export const openApiSpec = {
           },
         },
         responses: {
-          "201": { description: "생성된 여행", content: { "application/json": { schema: { $ref: "#/components/schemas/Trip" } } } },
-          "400": { description: "필수 필드 누락 또는 startDate/endDate body 거부", ...errorResponse },
+          "201": {
+            description: "생성된 여행",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Trip" },
+              },
+            },
+          },
+          "400": {
+            description: "필수 필드 누락 또는 startDate/endDate body 거부",
+            ...errorResponse,
+          },
           "401": { description: "미인증", ...errorResponse },
         },
       },
     },
     "/api/trips/{id}": {
-      parameters: [{ name: "id", in: "path", required: true, schema: { type: "integer" } }],
+      parameters: [
+        { name: "id", in: "path", required: true, schema: { type: "integer" } },
+      ],
       get: {
         operationId: "getTrip",
         tags: ["Trips"],
@@ -264,7 +307,10 @@ export const openApiSpec = {
         },
         responses: {
           "200": { description: "수정된 여행" },
-          "400": { description: "startDate/endDate body 입력 거부 (v3.0.0)", ...errorResponse },
+          "400": {
+            description: "startDate/endDate body 입력 거부 (v3.0.0)",
+            ...errorResponse,
+          },
           "401": { description: "미인증", ...errorResponse },
           "403": { description: "권한 부족", ...errorResponse },
           "404": { description: "여행 없음", ...errorResponse },
@@ -285,14 +331,26 @@ export const openApiSpec = {
       },
     },
     "/api/trips/{id}/days": {
-      parameters: [{ name: "id", in: "path", required: true, schema: { type: "integer" } }],
+      parameters: [
+        { name: "id", in: "path", required: true, schema: { type: "integer" } },
+      ],
       get: {
         operationId: "listDays",
         tags: ["Days"],
         summary: "일자 목록 조회",
         security: apiAuth,
         responses: {
-          "200": { description: "일자 목록", content: { "application/json": { schema: { type: "array", items: { $ref: "#/components/schemas/Day" } } } } },
+          "200": {
+            description: "일자 목록",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "array",
+                  items: { $ref: "#/components/schemas/Day" },
+                },
+              },
+            },
+          },
           "401": { description: "미인증", ...errorResponse },
           "403": { description: "멤버가 아님", ...errorResponse },
         },
@@ -336,7 +394,12 @@ export const openApiSpec = {
     "/api/trips/{id}/days/{dayId}": {
       parameters: [
         { name: "id", in: "path", required: true, schema: { type: "integer" } },
-        { name: "dayId", in: "path", required: true, schema: { type: "integer" } },
+        {
+          name: "dayId",
+          in: "path",
+          required: true,
+          schema: { type: "integer" },
+        },
       ],
       put: {
         operationId: "updateDay",
@@ -383,7 +446,12 @@ export const openApiSpec = {
     "/api/trips/{id}/days/{dayId}/activities": {
       parameters: [
         { name: "id", in: "path", required: true, schema: { type: "integer" } },
-        { name: "dayId", in: "path", required: true, schema: { type: "integer" } },
+        {
+          name: "dayId",
+          in: "path",
+          required: true,
+          schema: { type: "integer" },
+        },
       ],
       get: {
         operationId: "listActivities",
@@ -393,7 +461,17 @@ export const openApiSpec = {
           "일자의 활동 목록을 반환한다. **정렬 권장**: `startTime` 오름차순 1차, 동일 시간 시 `sortOrder` 보조.",
         security: apiAuth,
         responses: {
-          "200": { description: "활동 목록", content: { "application/json": { schema: { type: "array", items: { $ref: "#/components/schemas/Activity" } } } } },
+          "200": {
+            description: "활동 목록",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "array",
+                  items: { $ref: "#/components/schemas/Activity" },
+                },
+              },
+            },
+          },
           "401": { description: "미인증", ...errorResponse },
           "403": { description: "멤버가 아님", ...errorResponse },
         },
@@ -402,7 +480,8 @@ export const openApiSpec = {
         operationId: "createActivity",
         tags: ["Activities"],
         summary: "활동 추가",
-        description: "HOST 이상 권한 필요. `sortOrder`를 지정하지 않으면 0이 부여된다.",
+        description:
+          "HOST 이상 권한 필요. `sortOrder`를 지정하지 않으면 0이 부여된다.",
         security: apiAuth,
         requestBody: {
           required: true,
@@ -412,17 +491,43 @@ export const openApiSpec = {
                 type: "object",
                 required: ["category", "title"],
                 properties: {
-                  category: { type: "string", enum: ["SIGHTSEEING", "DINING", "TRANSPORT", "ACCOMMODATION", "SHOPPING", "OTHER"] },
+                  category: {
+                    type: "string",
+                    enum: [
+                      "SIGHTSEEING",
+                      "DINING",
+                      "TRANSPORT",
+                      "ACCOMMODATION",
+                      "SHOPPING",
+                      "OTHER",
+                    ],
+                  },
                   title: { type: "string" },
-                  startTime: { type: "string", format: "date-time", description: "ISO 8601 datetime (offset 포함 가능)" },
-                  startTimezone: { type: "string", description: "IANA timezone (예: `Asia/Seoul`)" },
+                  startTime: {
+                    type: "string",
+                    format: "date-time",
+                    description: "ISO 8601 datetime (offset 포함 가능)",
+                  },
+                  startTimezone: {
+                    type: "string",
+                    description: "IANA timezone (예: `Asia/Seoul`)",
+                  },
                   endTime: { type: "string", format: "date-time" },
                   endTimezone: { type: "string", description: "IANA timezone" },
                   location: { type: "string" },
                   memo: { type: "string" },
                   cost: { $ref: "#/components/schemas/Cost" },
                   currency: { type: "string" },
-                  reservationStatus: { type: "string", enum: ["REQUIRED", "RECOMMENDED", "ON_SITE", "NOT_NEEDED", "RESERVED"] },
+                  reservationStatus: {
+                    type: "string",
+                    enum: [
+                      "REQUIRED",
+                      "RECOMMENDED",
+                      "ON_SITE",
+                      "NOT_NEEDED",
+                      "RESERVED",
+                    ],
+                  },
                   sortOrder: { type: "integer" },
                 },
               },
@@ -443,7 +548,14 @@ export const openApiSpec = {
           },
         },
         responses: {
-          "201": { description: "생성된 활동", content: { "application/json": { schema: { $ref: "#/components/schemas/Activity" } } } },
+          "201": {
+            description: "생성된 활동",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Activity" },
+              },
+            },
+          },
           "400": { description: "필수 필드 누락", ...errorResponse },
           "401": { description: "미인증", ...errorResponse },
           "403": { description: "권한 부족", ...errorResponse },
@@ -454,7 +566,8 @@ export const openApiSpec = {
         operationId: "reorderActivities",
         tags: ["Activities"],
         summary: "활동 순서 변경",
-        description: "HOST 이상 권한 필요. `orderedIds` 배열에 명시된 순서대로 `sortOrder`가 1부터 재부여된다.",
+        description:
+          "HOST 이상 권한 필요. `orderedIds` 배열에 명시된 순서대로 `sortOrder`가 1부터 재부여된다.",
         security: apiAuth,
         requestBody: {
           required: true,
@@ -464,7 +577,11 @@ export const openApiSpec = {
                 type: "object",
                 required: ["orderedIds"],
                 properties: {
-                  orderedIds: { type: "array", items: { type: "integer" }, description: "새 순서의 활동 ID 배열" },
+                  orderedIds: {
+                    type: "array",
+                    items: { type: "integer" },
+                    description: "새 순서의 활동 ID 배열",
+                  },
                 },
               },
               example: { orderedIds: [26, 27, 28, 92] },
@@ -482,8 +599,18 @@ export const openApiSpec = {
     "/api/trips/{id}/days/{dayId}/activities/{activityId}": {
       parameters: [
         { name: "id", in: "path", required: true, schema: { type: "integer" } },
-        { name: "dayId", in: "path", required: true, schema: { type: "integer" } },
-        { name: "activityId", in: "path", required: true, schema: { type: "integer" } },
+        {
+          name: "dayId",
+          in: "path",
+          required: true,
+          schema: { type: "integer" },
+        },
+        {
+          name: "activityId",
+          in: "path",
+          required: true,
+          schema: { type: "integer" },
+        },
       ],
       put: {
         operationId: "updateActivity",
@@ -497,17 +624,39 @@ export const openApiSpec = {
               schema: {
                 type: "object",
                 properties: {
-                  category: { type: "string", enum: ["SIGHTSEEING", "DINING", "TRANSPORT", "ACCOMMODATION", "SHOPPING", "OTHER"] },
+                  category: {
+                    type: "string",
+                    enum: [
+                      "SIGHTSEEING",
+                      "DINING",
+                      "TRANSPORT",
+                      "ACCOMMODATION",
+                      "SHOPPING",
+                      "OTHER",
+                    ],
+                  },
                   title: { type: "string" },
                   startTime: { type: "string", format: "date-time" },
-                  startTimezone: { type: "string", description: "IANA timezone" },
+                  startTimezone: {
+                    type: "string",
+                    description: "IANA timezone",
+                  },
                   endTime: { type: "string", format: "date-time" },
                   endTimezone: { type: "string", description: "IANA timezone" },
                   location: { type: "string" },
                   memo: { type: "string" },
                   cost: { $ref: "#/components/schemas/Cost" },
                   currency: { type: "string" },
-                  reservationStatus: { type: "string", enum: ["REQUIRED", "RECOMMENDED", "ON_SITE", "NOT_NEEDED", "RESERVED"] },
+                  reservationStatus: {
+                    type: "string",
+                    enum: [
+                      "REQUIRED",
+                      "RECOMMENDED",
+                      "ON_SITE",
+                      "NOT_NEEDED",
+                      "RESERVED",
+                    ],
+                  },
                   sortOrder: { type: "integer" },
                 },
               },
@@ -515,7 +664,14 @@ export const openApiSpec = {
           },
         },
         responses: {
-          "200": { description: "수정된 활동", content: { "application/json": { schema: { $ref: "#/components/schemas/Activity" } } } },
+          "200": {
+            description: "수정된 활동",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Activity" },
+              },
+            },
+          },
           "401": { description: "미인증", ...errorResponse },
           "403": { description: "권한 부족", ...errorResponse },
           "404": { description: "활동 없음", ...errorResponse },
@@ -536,14 +692,26 @@ export const openApiSpec = {
       },
     },
     "/api/trips/{id}/members": {
-      parameters: [{ name: "id", in: "path", required: true, schema: { type: "integer" } }],
+      parameters: [
+        { name: "id", in: "path", required: true, schema: { type: "integer" } },
+      ],
       get: {
         operationId: "listMembers",
         tags: ["Members"],
         summary: "멤버 목록 조회",
         security: apiAuth,
         responses: {
-          "200": { description: "멤버 목록", content: { "application/json": { schema: { type: "array", items: { $ref: "#/components/schemas/TripMember" } } } } },
+          "200": {
+            description: "멤버 목록",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "array",
+                  items: { $ref: "#/components/schemas/TripMember" },
+                },
+              },
+            },
+          },
           "401": { description: "미인증", ...errorResponse },
           "403": { description: "멤버가 아님", ...errorResponse },
         },
@@ -552,7 +720,8 @@ export const openApiSpec = {
         operationId: "changeMemberRole",
         tags: ["Members"],
         summary: "멤버 역할 변경",
-        description: "promote(GUEST→HOST): HOST 필요, demote(HOST→GUEST): OWNER 필요.",
+        description:
+          "promote(GUEST→HOST): HOST 필요, demote(HOST→GUEST): OWNER 필요.",
         security: apiAuth,
         requestBody: {
           content: {
@@ -579,7 +748,14 @@ export const openApiSpec = {
         operationId: "removeMember",
         tags: ["Members"],
         summary: "멤버 제거",
-        parameters: [{ name: "memberId", in: "query", required: true, schema: { type: "integer" } }],
+        parameters: [
+          {
+            name: "memberId",
+            in: "query",
+            required: true,
+            schema: { type: "integer" },
+          },
+        ],
         security: apiAuth,
         responses: {
           "200": { description: "제거 완료" },
@@ -589,7 +765,9 @@ export const openApiSpec = {
       },
     },
     "/api/trips/{id}/invite": {
-      parameters: [{ name: "id", in: "path", required: true, schema: { type: "integer" } }],
+      parameters: [
+        { name: "id", in: "path", required: true, schema: { type: "integer" } },
+      ],
       post: {
         operationId: "createInvite",
         tags: ["Members"],
@@ -602,7 +780,9 @@ export const openApiSpec = {
               schema: {
                 type: "object",
                 required: ["role"],
-                properties: { role: { type: "string", enum: ["HOST", "GUEST"] } },
+                properties: {
+                  role: { type: "string", enum: ["HOST", "GUEST"] },
+                },
               },
             },
           },
@@ -610,7 +790,14 @@ export const openApiSpec = {
         responses: {
           "201": {
             description: "초대 URL",
-            content: { "application/json": { schema: { type: "object", properties: { inviteUrl: { type: "string" } } } } },
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: { inviteUrl: { type: "string" } },
+                },
+              },
+            },
           },
           "401": { description: "미인증", ...errorResponse },
           "403": { description: "권한 부족", ...errorResponse },
@@ -618,7 +805,9 @@ export const openApiSpec = {
       },
     },
     "/api/trips/{id}/transfer": {
-      parameters: [{ name: "id", in: "path", required: true, schema: { type: "integer" } }],
+      parameters: [
+        { name: "id", in: "path", required: true, schema: { type: "integer" } },
+      ],
       post: {
         operationId: "transferOwnership",
         tags: ["Members"],
@@ -628,7 +817,11 @@ export const openApiSpec = {
         requestBody: {
           content: {
             "application/json": {
-              schema: { type: "object", required: ["targetMemberId"], properties: { targetMemberId: { type: "integer" } } },
+              schema: {
+                type: "object",
+                required: ["targetMemberId"],
+                properties: { targetMemberId: { type: "integer" } },
+              },
             },
           },
         },
@@ -641,7 +834,9 @@ export const openApiSpec = {
       },
     },
     "/api/trips/{id}/leave": {
-      parameters: [{ name: "id", in: "path", required: true, schema: { type: "integer" } }],
+      parameters: [
+        { name: "id", in: "path", required: true, schema: { type: "integer" } },
+      ],
       post: {
         operationId: "leaveTrip",
         tags: ["Members"],
@@ -665,7 +860,14 @@ export const openApiSpec = {
         responses: {
           "200": {
             description: "토큰 목록",
-            content: { "application/json": { schema: { type: "array", items: { $ref: "#/components/schemas/PersonalAccessToken" } } } },
+            content: {
+              "application/json": {
+                schema: {
+                  type: "array",
+                  items: { $ref: "#/components/schemas/PersonalAccessToken" },
+                },
+              },
+            },
           },
           "401": { description: "미인증", ...errorResponse },
         },
@@ -674,7 +876,8 @@ export const openApiSpec = {
         operationId: "createToken",
         tags: ["Tokens"],
         summary: "토큰 수동 생성",
-        description: "세션 인증 필수. 생성된 토큰 원문은 이 응답에서만 노출된다. 권장 경로는 `install.sh`의 OAuth CLI 자동 발급이며, 본 엔드포인트는 웹 전용 사용자의 수동 발급용으로 유지된다.",
+        description:
+          "세션 인증 필수. 생성된 토큰 원문은 이 응답에서만 노출된다. 권장 경로는 `install.sh`의 OAuth CLI 자동 발급이며, 본 엔드포인트는 웹 전용 사용자의 수동 발급용으로 유지된다.",
         security: sessionOnly,
         requestBody: {
           required: true,
@@ -685,7 +888,11 @@ export const openApiSpec = {
                 required: ["name"],
                 properties: {
                   name: { type: "string", maxLength: 100 },
-                  expiresAt: { type: "string", format: "date-time", nullable: true },
+                  expiresAt: {
+                    type: "string",
+                    format: "date-time",
+                    nullable: true,
+                  },
                 },
               },
               example: { name: "claude-cli-2026-05", expiresAt: null },
@@ -702,9 +909,16 @@ export const openApiSpec = {
                   properties: {
                     id: { type: "integer" },
                     name: { type: "string" },
-                    token: { type: "string", description: "토큰 원문 (1회만 노출)" },
+                    token: {
+                      type: "string",
+                      description: "토큰 원문 (1회만 노출)",
+                    },
                     tokenPrefix: { type: "string" },
-                    expiresAt: { type: "string", format: "date-time", nullable: true },
+                    expiresAt: {
+                      type: "string",
+                      format: "date-time",
+                      nullable: true,
+                    },
                     createdAt: { type: "string", format: "date-time" },
                   },
                 },
@@ -717,7 +931,9 @@ export const openApiSpec = {
       },
     },
     "/api/tokens/{id}": {
-      parameters: [{ name: "id", in: "path", required: true, schema: { type: "integer" } }],
+      parameters: [
+        { name: "id", in: "path", required: true, schema: { type: "integer" } },
+      ],
       delete: {
         operationId: "deleteToken",
         tags: ["Tokens"],

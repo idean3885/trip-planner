@@ -4,9 +4,11 @@
  * 스페인·포르투갈 등 여행지 타임존이 정본에 있고, DraftSection 이 로컬 하드코딩
  * 대신 정본을 참조하는지(중복 0) 확인한다.
  */
-import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+
+import { describe, expect, it } from "vitest";
+
 import { TIMEZONE_OPTIONS } from "@/lib/timezones";
 
 describe("TIMEZONE_OPTIONS 정본", () => {
@@ -22,7 +24,10 @@ describe("TIMEZONE_OPTIONS 정본", () => {
 
   it("DraftSection 은 로컬 하드코딩 없이 정본을 참조한다", () => {
     const src = readFileSync(
-      resolve(__dirname, "../../src/components/calendar-sync/sections/DraftSection.tsx"),
+      resolve(
+        __dirname,
+        "../../src/components/calendar-sync/sections/DraftSection.tsx",
+      ),
       "utf8",
     );
     expect(src).toMatch(/from "@\/lib\/timezones"/);

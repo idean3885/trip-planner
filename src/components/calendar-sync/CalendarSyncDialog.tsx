@@ -7,8 +7,9 @@
  * 상태에 따라 동적으로 자란다. 도메인 호출은 v2.15.x 엔드포인트 재사용.
  */
 
-import { useCallback, useState } from "react";
 import type { TripRole } from "@prisma/client";
+import { useCallback, useState } from "react";
+
 import {
   Dialog,
   DialogContent,
@@ -16,9 +17,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import ProviderSection from "./sections/ProviderSection";
-import ImportSection from "./sections/ImportSection";
+
 import DraftSection from "./sections/DraftSection";
+import ImportSection from "./sections/ImportSection";
+import ProviderSection from "./sections/ProviderSection";
 
 interface Props {
   tripId: number;
@@ -42,12 +44,18 @@ export default function CalendarSyncDialog({
   onOpenChange,
 }: Props) {
   const [calendarLinked, setCalendarLinked] = useState(initialCalendarLinked);
-  const [calendarProvider, setCalendarProvider] = useState(initialCalendarProvider);
+  const [calendarProvider, setCalendarProvider] = useState(
+    initialCalendarProvider,
+  );
   const [calendarName, setCalendarName] = useState(initialCalendarName);
   const [draftRefreshKey, setDraftRefreshKey] = useState(0);
 
   const handleLinkChanged = useCallback(
-    (next: { linked: boolean; provider: "GOOGLE" | "APPLE" | null; name: string | null }) => {
+    (next: {
+      linked: boolean;
+      provider: "GOOGLE" | "APPLE" | null;
+      name: string | null;
+    }) => {
       setCalendarLinked(next.linked);
       setCalendarProvider(next.provider);
       setCalendarName(next.name);
@@ -85,12 +93,13 @@ export default function CalendarSyncDialog({
           />
 
           {showImport && (
-            <details className="rounded-lg border bg-card p-3">
+            <details className="bg-card rounded-lg border p-3">
               <summary className="cursor-pointer text-sm font-semibold">
                 외부 캘린더에서 일정 가져오기 (선택)
               </summary>
-              <p className="mt-1 text-xs text-muted-foreground">
-                trip-planner 일정은 위 캘린더로 자동 push됩니다. 다른 캘린더에 이미 쌓아둔 일정을 가져오고 싶을 때만 사용하세요.
+              <p className="text-muted-foreground mt-1 text-xs">
+                trip-planner 일정은 위 캘린더로 자동 push됩니다. 다른 캘린더에
+                이미 쌓아둔 일정을 가져오고 싶을 때만 사용하세요.
               </p>
               <div className="mt-3">
                 <ImportSection

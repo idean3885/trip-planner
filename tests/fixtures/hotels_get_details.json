@@ -21,16 +21,16 @@
     },
     "facilities_block": {
       "facilities": [
-        {"name": "Free WiFi"},
-        {"name": "Restaurant"},
-        {"name": "Bar"},
-        {"name": "Spa"},
-        {"name": "Fitness centre"},
-        {"name": "Concierge service"},
-        {"name": "Room service"},
-        {"name": "Luggage storage"},
-        {"name": "Airport shuttle"},
-        {"name": "Non-smoking rooms"}
+        { "name": "Free WiFi" },
+        { "name": "Restaurant" },
+        { "name": "Bar" },
+        { "name": "Spa" },
+        { "name": "Fitness centre" },
+        { "name": "Concierge service" },
+        { "name": "Room service" },
+        { "name": "Luggage storage" },
+        { "name": "Airport shuttle" },
+        { "name": "Non-smoking rooms" }
       ]
     },
     "composite_price_breakdown": {

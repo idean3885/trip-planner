@@ -1,27 +1,28 @@
+import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
-import { auth } from "@/auth";
-import { prisma } from "@/lib/prisma";
-import { computeDayNumber } from "@/lib/day-number";
-import { getResolvedPeriod } from "@/lib/trip-period";
-import { windowYmds, ACTIVITY_WINDOW_RADIUS } from "@/lib/activity-window";
-import { formatCalendarDateFull } from "@/lib/date-utils";
-import InviteButton from "@/components/InviteButton";
-import DeleteTripButton from "@/components/DeleteTripButton";
-import LeaveTripButton from "@/components/LeaveTripButton";
-import AddDayButton from "@/components/AddDayButton";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import MemberList from "@/components/MemberList";
-import CalendarSyncEntryCard from "@/components/calendar-sync/CalendarSyncEntryCard";
-import {
-  TripDetailLayout,
-  type LayoutActivity,
-  type LayoutDayIndex,
-} from "@/components/trip/TripDetailLayout";
 import { remark } from "remark";
 import remarkGfm from "remark-gfm";
 import html from "remark-html";
+
+import { auth } from "@/auth";
+import AddDayButton from "@/components/AddDayButton";
+import CalendarSyncEntryCard from "@/components/calendar-sync/CalendarSyncEntryCard";
+import DeleteTripButton from "@/components/DeleteTripButton";
+import InviteButton from "@/components/InviteButton";
+import LeaveTripButton from "@/components/LeaveTripButton";
+import MemberList from "@/components/MemberList";
+import {
+  type LayoutActivity,
+  type LayoutDayIndex,
+  TripDetailLayout,
+} from "@/components/trip/TripDetailLayout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ACTIVITY_WINDOW_RADIUS, windowYmds } from "@/lib/activity-window";
+import { formatCalendarDateFull } from "@/lib/date-utils";
+import { computeDayNumber } from "@/lib/day-number";
+import { prisma } from "@/lib/prisma";
+import { getResolvedPeriod } from "@/lib/trip-period";
 
 async function markdownToHtml(md: string): Promise<string> {
   const result = await remark()
@@ -137,7 +138,7 @@ async function DbTripPage({
       <div>
         <Link
           href="/"
-          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+          className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-sm"
         >
           <ArrowLeft className="size-3.5" aria-hidden />
           여행 목록
@@ -149,14 +150,14 @@ async function DbTripPage({
           TripDetailLayout 이 viewport 별로 처리한다. */}
       <div>
         <h1 className="text-xl font-semibold tracking-tight">{trip.title}</h1>
-        <p className="mt-1 text-sm text-muted-foreground tabular-nums">
+        <p className="text-muted-foreground mt-1 text-sm tabular-nums">
           {period.isDerived && period.startDate && period.endDate ? (
             <>
               {formatCalendarDateFull(period.startDate)} ~{" "}
               {formatCalendarDateFull(period.endDate)}
             </>
           ) : (
-            <span className="font-medium text-foreground">일정 미정</span>
+            <span className="text-foreground font-medium">일정 미정</span>
           )}
         </p>
         <div className="mt-3 flex flex-wrap items-center gap-2">

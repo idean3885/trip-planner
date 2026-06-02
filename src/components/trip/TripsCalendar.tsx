@@ -9,8 +9,9 @@
  * trip 으로 이동 — spec 031 Clarification 3 결정.
  */
 
-import { useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { useCallback, useMemo } from "react";
+
 import { CalendarView, type TripDayGroup } from "./CalendarView";
 
 export interface TripsCalendarTrip {
