@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="540" viewBox="0 0 920 540" content='&lt;mxfile host="app.diagrams.net"&gt;&lt;diagram name="system-context" id="sysctx"&gt;&lt;mxGraphModel dx="920" dy="540" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="920" pageHeight="540" math="0" shadow="0"&gt;&lt;root&gt;&lt;mxCell id="0"/&gt;&lt;mxCell id="1" parent="0"/&gt;&lt;mxCell id="tt" value="시스템 컨텍스트 — trip-planner" style="text;html=1;fontSize=16;fontStyle=1;align=left" vertex="1" parent="1"&gt;&lt;mxGeometry x="20" y="12" width="400" height="24" as="geometry"/&gt;&lt;/mxCell&gt;&lt;mxCell id="cl" value="Clients" style="text;html=1;fontStyle=2;fontColor=#666;align=left" vertex="1" parent="1"&gt;&lt;mxGeometry x="22" y="44" width="120" height="20" as="geometry"/&gt;&lt;/mxCell&gt;&lt;mxCell id="web" value="웹 브라우저" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#333333" vertex="1" parent="1"&gt;&lt;mxGeometry x="22" y="68" width="170" height="54" as="geometry"/&gt;&lt;/mxCell&gt;&lt;mxCell id="mcpcli" value="Claude Desktop · Code&#10;(MCP / AI 에이전트)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#333333" vertex="1" parent="1"&gt;&lt;mxGeometry x="22" y="160" width="170" height="54" as="geometry"/&gt;&lt;/mxCell&gt;&lt;mxCell id="vc" value="Vercel — Next.js (풀스택 단일 런타임)" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;fillColor=none;strokeColor=#1f6feb;verticalAlign=top;fontStyle=1;align=center" vertex="1" parent="1"&gt;&lt;mxGeometry x="290" y="44" width="280" height="210" as="geometry"/&gt;&lt;/mxCell&gt;&lt;mxCell id="mw" value="Middleware (세션 가드)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e8f0fe;strokeColor=#1f6feb" vertex="1" parent="1"&gt;&lt;mxGeometry x="310" y="78" width="240" height="34" as="geometry"/&gt;&lt;/mxCell&gt;&lt;mxCell id="rsc" value="Server Components (SSR)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e8f0fe;strokeColor=#1f6feb" vertex="1" parent="1"&gt;&lt;mxGeometry x="310" y="120" width="240" height="34" as="geometry"/&gt;&lt;/mxCell&gt;&lt;mxCell id="api" value="REST API Route (/api/v2)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e8f0fe;strokeColor=#1f6feb" vertex="1" parent="1"&gt;&lt;mxGeometry x="310" y="162" width="240" height="34" as="geometry"/&gt;&lt;/mxCell&gt;&lt;mxCell id="auth" value="Auth.js v5 (OAuth)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e8f0fe;strokeColor=#1f6feb" vertex="1" parent="1"&gt;&lt;mxGeometry x="310" y="204" width="240" height="34" as="geometry"/&gt;&lt;/mxCell&gt;&lt;mxCell id="mcp" value="MCP Server (Python)&#10;FastMCP · web_client (PAT Bearer)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#333333" vertex="1" parent="1"&gt;&lt;mxGeometry x="290" y="300" width="280" height="80" as="geometry"/&gt;&lt;/mxCell&gt;&lt;mxCell id="db" value="Neon Postgres&#10;(데이터 정본)" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf" vertex="1" parent="1"&gt;&lt;mxGeometry x="690" y="70" width="170" height="70" as="geometry"/&gt;&lt;/mxCell&gt;&lt;mxCell id="goog" value="Google OAuth" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00" vertex="1" parent="1"&gt;&lt;mxGeometry x="690" y="170" width="170" height="50" as="geometry"/&gt;&lt;/mxCell&gt;&lt;mxCell id="rapid" value="RapidAPI&#10;(항공·숙소 검색)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00" vertex="1" parent="1"&gt;&lt;mxGeometry x="690" y="305" width="170" height="54" as="geometry"/&gt;&lt;/mxCell&gt;&lt;mxCell id="e1" value="세션 쿠키" style="endArrow=block;html=1;strokeColor=#333333" edge="1" parent="1" source="web" target="mw"&gt;&lt;mxGeometry relative="1" as="geometry"/&gt;&lt;/mxCell&gt;&lt;mxCell id="e2" value="" style="endArrow=block;html=1;strokeColor=#333333" edge="1" parent="1" source="mcpcli" target="mcp"&gt;&lt;mxGeometry relative="1" as="geometry"/&gt;&lt;/mxCell&gt;&lt;mxCell id="e3" value="PAT Bearer" style="endArrow=block;html=1;strokeColor=#333333" edge="1" parent="1" source="mcp" target="api"&gt;&lt;mxGeometry relative="1" as="geometry"/&gt;&lt;/mxCell&gt;&lt;mxCell id="e4" value="검색" style="endArrow=block;html=1;strokeColor=#d79b00" edge="1" parent="1" source="mcp" target="rapid"&gt;&lt;mxGeometry relative="1" as="geometry"/&gt;&lt;/mxCell&gt;&lt;mxCell id="e5" value="Prisma ORM" style="endArrow=block;html=1;strokeColor=#6c8ebf" edge="1" parent="1" source="vc" target="db"&gt;&lt;mxGeometry relative="1" as="geometry"/&gt;&lt;/mxCell&gt;&lt;mxCell id="e6" value="OAuth" style="endArrow=block;html=1;strokeColor=#d79b00" edge="1" parent="1" source="auth" target="goog"&gt;&lt;mxGeometry relative="1" as="geometry"/&gt;&lt;/mxCell&gt;&lt;/root&gt;&lt;/mxGraphModel&gt;&lt;/diagram&gt;&lt;/mxfile&gt;'>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,3 L0,6 z" fill="#333333"/>
+    </marker>
+    <marker id="arrowO" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,3 L0,6 z" fill="#d79b00"/>
+    </marker>
+    <marker id="arrowB" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,3 L0,6 z" fill="#6c8ebf"/>
+    </marker>
+  </defs>
+  <style>
+    text { font-family: 'Helvetica Neue', Arial, sans-serif; }
+    .lbl { font-size: 11px; fill: #444; }
+    .ttl { font-size: 16px; font-weight: 700; fill: #222; }
+    .grp { font-size: 11px; font-style: italic; fill: #888; }
+    .box { font-size: 12px; fill: #222; }
+    .boxb { font-size: 12px; font-weight: 600; fill: #1f3a8a; }
+  </style>
+  <rect x="0" y="0" width="920" height="540" fill="#ffffff"/>
+  <text class="ttl" x="20" y="30">시스템 컨텍스트 — trip-planner</text>
+
+  <!-- Clients -->
+  <text class="grp" x="22" y="58">Clients</text>
+  <rect x="22" y="68" width="170" height="54" rx="8" fill="#f5f5f5" stroke="#333"/>
+  <text class="box" x="107" y="99" text-anchor="middle">웹 브라우저</text>
+  <rect x="22" y="160" width="170" height="54" rx="8" fill="#f5f5f5" stroke="#333"/>
+  <text class="box" x="107" y="183" text-anchor="middle">Claude Desktop · Code</text>
+  <text class="lbl" x="107" y="199" text-anchor="middle">(MCP / AI 에이전트)</text>
+
+  <!-- Next.js container -->
+  <rect x="290" y="44" width="280" height="210" rx="8" fill="none" stroke="#1f6feb" stroke-dasharray="6 4"/>
+  <text class="boxb" x="430" y="64" text-anchor="middle">Vercel — Next.js (풀스택 단일 런타임)</text>
+  <rect x="310" y="78" width="240" height="34" fill="#e8f0fe" stroke="#1f6feb"/>
+  <text class="box" x="430" y="100" text-anchor="middle">Middleware (세션 가드)</text>
+  <rect x="310" y="120" width="240" height="34" fill="#e8f0fe" stroke="#1f6feb"/>
+  <text class="box" x="430" y="142" text-anchor="middle">Server Components (SSR)</text>
+  <rect x="310" y="162" width="240" height="34" fill="#e8f0fe" stroke="#1f6feb"/>
+  <text class="box" x="430" y="184" text-anchor="middle">REST API Route (/api/v2)</text>
+  <rect x="310" y="204" width="240" height="34" fill="#e8f0fe" stroke="#1f6feb"/>
+  <text class="box" x="430" y="226" text-anchor="middle">Auth.js v5 (OAuth)</text>
+
+  <!-- MCP server -->
+  <rect x="290" y="300" width="280" height="80" rx="8" fill="#f5f5f5" stroke="#333"/>
+  <text class="box" x="430" y="332" text-anchor="middle">MCP Server (Python)</text>
+  <text class="lbl" x="430" y="352" text-anchor="middle">FastMCP · web_client (PAT Bearer)</text>
+
+  <!-- External / DB -->
+  <path d="M690,82 a85,12 0 0 0 170,0 v46 a85,12 0 0 1 -170,0 z" fill="#dae8fc" stroke="#6c8ebf"/>
+  <ellipse cx="775" cy="82" rx="85" ry="12" fill="#dae8fc" stroke="#6c8ebf"/>
+  <text class="box" x="775" y="108" text-anchor="middle">Neon Postgres</text>
+  <text class="lbl" x="775" y="123" text-anchor="middle">(데이터 정본)</text>
+  <rect x="690" y="170" width="170" height="50" rx="8" fill="#ffe6cc" stroke="#d79b00"/>
+  <text class="box" x="775" y="200" text-anchor="middle">Google OAuth</text>
+  <rect x="690" y="305" width="170" height="54" rx="8" fill="#ffe6cc" stroke="#d79b00"/>
+  <text class="box" x="775" y="329" text-anchor="middle">RapidAPI</text>
+  <text class="lbl" x="775" y="345" text-anchor="middle">(항공·숙소 검색)</text>
+
+  <!-- Edges -->
+  <line x1="192" y1="95" x2="306" y2="95" stroke="#333" marker-end="url(#arrow)"/>
+  <text class="lbl" x="249" y="89" text-anchor="middle">세션 쿠키</text>
+  <line x1="192" y1="187" x2="286" y2="320" stroke="#333" marker-end="url(#arrow)"/>
+  <line x1="430" y1="300" x2="430" y2="200" stroke="#333" marker-end="url(#arrow)"/>
+  <text class="lbl" x="445" y="258" text-anchor="start">PAT Bearer</text>
+  <line x1="570" y1="335" x2="686" y2="332" stroke="#d79b00" marker-end="url(#arrowO)"/>
+  <text class="lbl" x="628" y="326" text-anchor="middle">검색</text>
+  <line x1="570" y1="120" x2="686" y2="92" stroke="#6c8ebf" marker-end="url(#arrowB)"/>
+  <text class="lbl" x="628" y="100" text-anchor="middle">Prisma ORM</text>
+  <line x1="550" y1="221" x2="686" y2="200" stroke="#d79b00" marker-end="url(#arrowO)"/>
+  <text class="lbl" x="618" y="226" text-anchor="middle">OAuth</text>
+</svg>
