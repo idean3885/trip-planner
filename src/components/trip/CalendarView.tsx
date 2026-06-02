@@ -62,6 +62,8 @@ export interface CalendarViewProps {
   dayTitles?: Map<string, string | null>;
   /** spec 032 — 모바일 위/아래 스와이프로 월↔주 압축 토글 활성화. */
   enableMobileCompact?: boolean;
+  /** spec 051 — 스크롤로 캘린더가 상단 고정되면 주간으로 강제 접힘. */
+  collapsed?: boolean;
   className?: string;
 }
 
@@ -95,6 +97,7 @@ export function CalendarView({
   desktopFull,
   dayTitles,
   enableMobileCompact,
+  collapsed,
   className,
 }: CalendarViewProps) {
   const isMultiTrip = (tripsDays?.length ?? 0) > 0;
@@ -201,6 +204,7 @@ export function CalendarView({
       onSelect={onSelect}
       displayMonth={displayMonth}
       onMonthChange={setDisplayMonth}
+      collapsed={collapsed}
     />
   );
 }
@@ -219,6 +223,7 @@ function MobileCompactCalendar({
   onSelect,
   displayMonth,
   onMonthChange,
+  collapsed,
 }: {
   renderMonth: (month: Date, withNav: boolean) => React.ReactNode;
   tripStart: Date | null;
@@ -228,8 +233,12 @@ function MobileCompactCalendar({
   onSelect?: (date: Date | undefined) => void;
   displayMonth: Date;
   onMonthChange: (month: Date) => void;
+  collapsed?: boolean;
 }) {
   const [view, setView] = useState<"month" | "week">("month");
+  // spec 051 — 스크롤로 상단 고정되면(collapsed) 사용자 토글과 무관하게 주간으로
+  // 강제 접고, 풀리면 사용자 토글값(기본 월간)으로 복원한다.
+  const effectiveView = collapsed ? "week" : view;
   const selectedSafe = selected ?? new Date();
 
   // #657 — 드래그-팔로우 + 앞뒤 핍 스와이프(embla). 월 뷰는 달을, 주 뷰는 주를
@@ -237,8 +246,8 @@ function MobileCompactCalendar({
   // embla 가 세로 제스처를 통과시키고 SwipeCarousel 이 touch-pan-y 도 줘 세로
   // 페이지 스크롤은 그대로(#649 회귀 방지).
   return (
-    <div data-calendar-view={view}>
-      {view === "month" ? (
+    <div data-calendar-view={effectiveView}>
+      {effectiveView === "month" ? (
         <SwipeCarousel
           ariaLabel="월 달력"
           anchorKey={`m${displayMonth.getFullYear()}-${displayMonth.getMonth()}`}
@@ -264,15 +273,18 @@ function MobileCompactCalendar({
           )}
         />
       )}
-      {/* 스와이프가 어려운 환경에서도 월↔주 전환을 보장하는 명시적 탭 토글(#637). */}
-      <button
-        type="button"
-        onClick={() => setView((v) => (v === "month" ? "week" : "month"))}
-        aria-pressed={view === "week"}
-        className="text-muted-foreground hover:bg-muted mt-1 flex w-full items-center justify-center rounded-md py-1.5 text-xs transition-colors"
-      >
-        {view === "month" ? "주간만 보기" : "월 전체 보기"}
-      </button>
+      {/* 스와이프가 어려운 환경에서도 월↔주 전환을 보장하는 명시적 탭 토글(#637).
+          spec 051 — 스크롤로 자동 접힌(collapsed) 동안은 자동 제어 중이라 토글을 숨긴다. */}
+      {!collapsed && (
+        <button
+          type="button"
+          onClick={() => setView((v) => (v === "month" ? "week" : "month"))}
+          aria-pressed={view === "week"}
+          className="text-muted-foreground hover:bg-muted mt-1 flex w-full items-center justify-center rounded-md py-1.5 text-xs transition-colors"
+        >
+          {view === "month" ? "주간만 보기" : "월 전체 보기"}
+        </button>
+      )}
     </div>
   );
 }
