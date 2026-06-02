@@ -13,6 +13,15 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@/lib/auth-helpers", () => ({ getAuthUserId: mocks.getAuthUserId }));
+// spec 049 — route 직접 호출은 request scope 밖이라 after()가 throw. noop 처리.
+vi.mock("next/server", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("next/server")>()),
+  after: vi.fn(),
+}));
+// 자동 반영 모듈을 mock 해 service→prisma import chain(테스트 env DATABASE_URL 부재)을 끊는다.
+vi.mock("@/lib/calendar/auto-sync", () => ({
+  triggerCalendarAutoSync: vi.fn(),
+}));
 vi.mock("@/lib/permissions/activity", () => ({
   userCanImportCalendar: mocks.userCanImportCalendar,
 }));
