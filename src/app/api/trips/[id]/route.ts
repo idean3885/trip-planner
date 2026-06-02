@@ -1,3 +1,4 @@
+import type { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
 
 import {
@@ -21,6 +22,23 @@ export async function GET(request: Request, { params }: Params) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  // #744 — opt-in 활동 표현 확장. `?include=activities` 지정 시 각 일자에 활동
+  // 전체 표현(식별자 포함)을 붙여 한 번에 읽게 한다. 미지정 시 기존 개수 응답을
+  // 그대로 유지(하위호환). 활동 정렬은 일자별 활동 목록 GET과 동일 규칙.
+  const includeParam = new URL(request.url).searchParams.get("include");
+  const includeActivities =
+    includeParam
+      ?.split(",")
+      .map((s) => s.trim())
+      .includes("activities") ?? false;
+  const daysInclude: Prisma.DayInclude = includeActivities
+    ? {
+        activities: {
+          orderBy: [{ sortOrder: "asc" }, { startTime: "asc" }],
+        },
+      }
+    : { _count: { select: { activities: true } } };
+
   const [member, trip] = await Promise.all([
     getTripMember(tripId, userId),
     prisma.trip.findUnique({
@@ -28,7 +46,7 @@ export async function GET(request: Request, { params }: Params) {
       include: {
         days: {
           orderBy: { date: "asc" },
-          include: { _count: { select: { activities: true } } },
+          include: daysInclude,
         },
         tripMembers: {
           include: { user: { select: { id: true, name: true, image: true } } },

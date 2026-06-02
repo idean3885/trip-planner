@@ -79,6 +79,18 @@ export const openApiSpec = {
           title: { type: "string", nullable: true },
           content: { type: "string", nullable: true },
           sortOrder: { type: "integer" },
+          activities: {
+            type: "array",
+            description:
+              "일자에 속한 활동 표현. 일자 단건 조회(`GET /api/trips/{id}/days/{dayId}`)와 여행 상세에 `?include=activities` 를 지정했을 때 포함된다. 정렬은 `sortOrder` 오름차순 1차, `startTime` 보조.",
+            items: { $ref: "#/components/schemas/Activity" },
+          },
+          _count: {
+            type: "object",
+            description:
+              "여행 상세 기본 응답(확장 미지정)에서 활동 개수만 노출할 때 포함된다.",
+            properties: { activities: { type: "integer" } },
+          },
         },
       },
       TripMember: {
@@ -276,10 +288,97 @@ export const openApiSpec = {
         tags: ["Trips"],
         summary: "여행 상세 조회",
         description:
-          "여행 상세 정보, 일자 목록, 멤버 목록을 반환한다. **활동(activities)은 포함되지 않는다** — 일자별로 `GET /api/trips/{id}/days/{dayId}/activities`를 호출해야 한다.",
+          "여행 상세 정보, 일자 목록, 멤버 목록을 반환한다.\n\n기본 응답은 각 일자에 활동 **개수**(`_count.activities`)만 포함한다. `?include=activities` 를 지정하면 각 일자에 활동 **전체 표현**(`activities[]`, 식별자 포함)을 함께 반환해 여행 전체 일정을 한 번에 읽을 수 있다.",
         security: apiAuth,
+        parameters: [
+          {
+            name: "include",
+            in: "query",
+            required: false,
+            description:
+              "쉼표로 구분한 확장 키. `activities` 지정 시 각 일자에 활동 전체 표현을 포함한다. 미지정 시 활동 개수만 반환(하위호환).",
+            schema: { type: "string", enum: ["activities"] },
+            example: "activities",
+          },
+        ],
         responses: {
-          "200": { description: "여행 상세" },
+          "200": {
+            description:
+              "여행 상세. `days[]` 는 `include=activities` 지정 시 `activities[]`, 미지정 시 `_count.activities` 를 포함한다.",
+            content: {
+              "application/json": {
+                schema: {
+                  allOf: [
+                    { $ref: "#/components/schemas/Trip" },
+                    {
+                      type: "object",
+                      properties: {
+                        myRole: {
+                          type: "string",
+                          enum: ["OWNER", "HOST", "GUEST"],
+                        },
+                        days: {
+                          type: "array",
+                          items: { $ref: "#/components/schemas/Day" },
+                        },
+                        tripMembers: {
+                          type: "array",
+                          items: { $ref: "#/components/schemas/TripMember" },
+                        },
+                      },
+                    },
+                  ],
+                },
+                examples: {
+                  default: {
+                    summary: "기본(활동 개수만)",
+                    value: {
+                      id: 5,
+                      title: "신혼여행",
+                      myRole: "HOST",
+                      days: [
+                        {
+                          id: 76,
+                          date: "2026-06-07T00:00:00.000Z",
+                          title: "인천 → 리스본 (도착)",
+                          _count: { activities: 3 },
+                        },
+                      ],
+                    },
+                  },
+                  withActivities: {
+                    summary: "include=activities (활동 표현 포함)",
+                    value: {
+                      id: 5,
+                      title: "신혼여행",
+                      myRole: "HOST",
+                      days: [
+                        {
+                          id: 76,
+                          date: "2026-06-07T00:00:00.000Z",
+                          title: "인천 → 리스본 (도착)",
+                          activities: [
+                            {
+                              id: 160,
+                              dayId: 76,
+                              category: "TRANSPORT",
+                              title: "✈️ 인천→리스본 KE0921",
+                              startTime: "2026-06-07T04:00:00.000Z",
+                              startTimezone: "Asia/Seoul",
+                              endTime: "2026-06-07T19:15:00.000Z",
+                              endTimezone: "Europe/Lisbon",
+                              reservationStatus: "RESERVED",
+                              sortOrder: 1,
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  },
+                },
+              },
+            },
+          },
           "401": { description: "미인증", ...errorResponse },
           "403": { description: "멤버가 아님", ...errorResponse },
           "404": { description: "여행 없음", ...errorResponse },
@@ -401,6 +500,27 @@ export const openApiSpec = {
           schema: { type: "integer" },
         },
       ],
+      get: {
+        operationId: "getDay",
+        tags: ["Days"],
+        summary: "일자 단건 조회",
+        description:
+          "일자 정보와 그 일자에 속한 활동 전체 표현(`activities[]`, 식별자 포함)을 반환한다. 활동 정렬은 `sortOrder` 오름차순 1차, `startTime` 보조.",
+        security: apiAuth,
+        responses: {
+          "200": {
+            description: "일자 상세 (활동 포함)",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Day" },
+              },
+            },
+          },
+          "401": { description: "미인증", ...errorResponse },
+          "403": { description: "멤버가 아님", ...errorResponse },
+          "404": { description: "일자 없음", ...errorResponse },
+        },
+      },
       put: {
         operationId: "updateDay",
         tags: ["Days"],
