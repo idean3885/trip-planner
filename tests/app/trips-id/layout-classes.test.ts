@@ -39,11 +39,12 @@ describe("trip 상세 레이아웃 (spec 032 — 캘린더 중심 단일 화면)
     expect(pageSrc).not.toMatch(/from "\.\/SidePanel"/);
   });
 
-  it("page.tsx 는 동기화 카드·동행자를 직접 만들어 TripDetailLayout 에 prop 으로 넘긴다", () => {
+  it("page.tsx 는 동기화 카드는 TripDetailLayout 에, 동행자는 InviteButton 에 넘긴다 (spec 041)", () => {
     expect(pageSrc).toContain("CalendarSyncEntryCard");
     expect(pageSrc).toContain("MemberList");
     expect(pageSrc).toMatch(/<TripDetailLayout[\s\S]+syncCard=/);
-    expect(pageSrc).toMatch(/<TripDetailLayout[\s\S]+memberList=/);
+    // spec 041 — 동행자 목록은 헤더 "동행자 초대" 다이얼로그(InviteButton)로 이동.
+    expect(pageSrc).toMatch(/<InviteButton[\s\S]+memberList=/);
   });
 
   it("데스크탑 2분할 grid 는 TripDetailLayout 으로 이동했다 — lg:grid-cols-2", () => {
@@ -96,10 +97,12 @@ describe("trip 상세 레이아웃 (spec 032 — 캘린더 중심 단일 화면)
     expect(authSrc).toMatch(/hidden[^"]*sm:inline-block/);
   });
 
-  it("모바일 '자세히'는 펼침이 아니라 Dialog + TripDetailExtras 로 연다(#645)", () => {
-    expect(layoutComponentSrc).toContain("TripDetailExtras");
+  it("모바일은 '캘린더 동기화' Dialog 로 동기화 카드를 연다 (spec 041 — 동행자 분리)", () => {
+    expect(layoutComponentSrc).toContain("캘린더 동기화");
     expect(layoutComponentSrc).toContain("DialogTrigger");
     expect(layoutComponentSrc).toContain("DialogContent");
+    // 동행자(memberList)는 TripDetailLayout 에서 분리됨 — InviteButton 다이얼로그로.
+    expect(layoutComponentSrc).not.toContain("TripDetailExtras");
   });
 
   it("데스크탑 월간 캘린더는 가로폭을 채운다(spec 040 — 셀 고정폭 → grow)", () => {
