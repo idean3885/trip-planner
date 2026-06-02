@@ -102,13 +102,15 @@ describe("trip 상세 레이아웃 (spec 032 — 캘린더 중심 단일 화면)
     expect(layoutComponentSrc).toContain("DialogContent");
   });
 
-  it("데스크탑 월간 캘린더는 셀 크기를 키워 폭을 더 채운다(#645)", () => {
+  it("데스크탑 월간 캘린더는 가로폭을 채운다(spec 040 — 셀 고정폭 → grow)", () => {
     const calSrc = readFileSync(
       resolve(REPO_ROOT, "src/components/trip/CalendarView.tsx"),
       "utf8",
     );
-    // desktopFull 셀 크기가 기존 10 보다 큰 14 로 상향.
-    expect(calSrc).toMatch(/desktopFull &&[^;]*--cell-size:--spacing\(14\)/);
+    // spec 040 #704 — 셀 고정 크기(--cell-size:14) 대신 w-full + day flex-1 로
+    // 가로 100% 채움(세로는 aspect-square 로 자동). 상한 토큰을 더는 쓰지 않는다.
+    expect(calSrc).toMatch(/desktopFull &&\s*"mx-auto w-full"/);
+    expect(calSrc).not.toMatch(/--cell-size:--spacing\(14\)/);
   });
 
   it("캘린더에 세로 스크롤을 막는 touch-action 제약이 없다(#649 치명 회귀 제거)", () => {

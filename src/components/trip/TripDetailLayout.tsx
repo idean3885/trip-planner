@@ -140,6 +140,13 @@ export function TripDetailLayout({
     [dayIndex],
   );
 
+  // spec 040 — 데스크탑 넓은 셀에 노출할 날짜→Day 제목 맵(추가 조회 없이 인덱스 재사용).
+  const dayTitles = useMemo(() => {
+    const m = new Map<string, string | null>();
+    for (const d of dayIndex) m.set(new Date(d.date).toDateString(), d.title);
+    return m;
+  }, [dayIndex]);
+
   // #669 — 선택일 윈도우(±N)에서 아직 캐시에 없는 Day 의 활동을 백그라운드로
   // 받아 캐시에 채운다. 캐시가 채워지면 effect 가 재실행돼 missingFetchRange 가
   // null 을 돌려 더 받지 않는다(루프 없음).
@@ -235,20 +242,30 @@ export function TripDetailLayout({
     mm.add("(max-width: 1023px)", () => {
       const st = ScrollTrigger.create({
         snap: {
-          snapTo: (value) => {
+          // spec 040 — vh 기준 1순위. 헤더가 화면에서 사라지는 경계를 뷰포트 높이
+          // 비율로 근사하되 sticky.offsetTop 을 넘지 않게 한다. 아래로 스크롤하며
+          // 경계 구간을 지날 때만 경계에 1회 멈추고, 위로 스크롤·경계 밖에서는
+          // value 를 그대로 반환해 "위로 되돌리는 보정"을 없앤다(기존 directional:false
+          // 가 양방향으로 끌어당겨 본 되돌림 버그). 실기기에서 vh 근사가 부정확하면
+          // 캘린더 직하단 토글 문자열 offsetTop 으로 폴백한다.
+          snapTo: (value, self) => {
             const max = ScrollTrigger.maxScroll(window);
-            const boundary = sticky.offsetTop;
-            if (max <= 0 || boundary <= 0) return value;
+            if (max <= 0) return value;
+            const boundary = Math.min(
+              window.innerHeight * 0.42,
+              sticky.offsetTop || Number.POSITIVE_INFINITY,
+            );
+            if (!Number.isFinite(boundary) || boundary <= 0) return value;
             const scroll = value * max;
-            // 헤더 구간(0~경계)에서만 0 또는 경계로 정지. 일정 구간은 자유.
-            if (scroll < boundary) {
-              return (scroll < boundary / 2 ? 0 : boundary) / max;
+            const goingDown = !self || self.direction === 1;
+            if (goingDown && scroll > boundary * 0.4 && scroll < boundary) {
+              return boundary / max;
             }
             return value;
           },
           duration: 0.12,
           ease: "power2.out",
-          directional: false,
+          directional: true,
         },
       });
       return () => st.kill();
@@ -320,6 +337,7 @@ export function TripDetailLayout({
             tripStart={tripStart}
             tripEnd={tripEnd}
             daysDates={daysDates}
+            dayTitles={dayTitles}
             selected={selectedDate}
             onSelect={handleSelectDate}
             desktopFull
