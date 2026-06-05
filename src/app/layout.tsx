@@ -1,9 +1,11 @@
 import "./globals.css";
 
+import { GoogleAnalytics } from "@next/third-parties/google";
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import Link from "next/link";
 
+import AnalyticsUserId from "@/components/analytics/AnalyticsUserId";
 import AuthButton from "@/components/AuthButton";
 import Footer from "@/components/Footer";
 import ScrollToTop from "@/components/ScrollToTop";
@@ -14,9 +16,14 @@ import { Toaster } from "@/components/ui/sonner";
 // --font-heading 정본과 연결한다. className 직접 적용도 유지(폴백 보장).
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
+// spec 057 — 측정 ID / 검색 소유 확인값은 환경변수. 미설정 시 분석·검증 미적용.
+const gaId = process.env.NEXT_PUBLIC_GA_ID;
+const siteVerification = process.env.GOOGLE_SITE_VERIFICATION;
+
 export const metadata: Metadata = {
   title: "우리의 여행",
   description: "우리의 여행 일정 플래너",
+  ...(siteVerification ? { verification: { google: siteVerification } } : {}),
 };
 
 export const viewport: Viewport = {
@@ -36,6 +43,7 @@ export default function RootLayout({
         className={`${inter.className} bg-background text-foreground flex min-h-screen flex-col`}
       >
         <SessionProvider>
+          <AnalyticsUserId />
           <header className="lg:max-w-wide mx-auto flex w-full max-w-2xl items-center justify-between gap-2 px-4 pt-4 sm:gap-4">
             <div className="flex items-center gap-6">
               <Link
@@ -63,6 +71,7 @@ export default function RootLayout({
           <Footer />
           <Toaster />
         </SessionProvider>
+        {gaId ? <GoogleAnalytics gaId={gaId} /> : null}
       </body>
     </html>
   );

@@ -217,6 +217,8 @@ develop ──●──●──●───●──●──●──●──
 - TypeScript 5.x, Node.js 20+ + Next.js 16 (App Router), React 19, Tailwind CSS v4(`@theme` CSS-first), shadcn/ui(vendored), embla-carousel-react, lucide-react. 본 피처에서 신규 의존성 도입 없음. (036-mobile-detail-interaction)
 - N/A (UI 전용, 영속 데이터 스키마 변경 없음) (036-mobile-detail-interaction)
 - TypeScript 5.x, Node.js 20+ + Next.js 16 (App Router), React 19, Tailwind CSS v4(`@theme` CSS-first), shadcn/ui(vendored), embla-carousel-react, lucide-react. **신규 의존성 도입 없음** — spec 036 Active Technologies 승계. (037-mobile-nested-scroll)
+- TypeScript 5.x, Node.js 20+ (Next.js 16, App Router) + Next.js 16, React 19, Auth.js v5, Tailwind v4, shadcn/ui. **신규: `@next/third-parties`**(Next 공식 GA4 통합, 무료). 그 외 신규 없음 (057-ga4-gsc-analytics)
+- 변경 없음(분석 데이터는 외부 GA4로 적재, DB 스키마 무변경) (057-ga4-gsc-analytics)
 
 ## Recent Changes
 - 001-ax-travel-planning: Added Python 3.14 + FastMCP, httpx, python-dotenv, pytes

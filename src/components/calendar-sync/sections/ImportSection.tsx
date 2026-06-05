@@ -13,6 +13,7 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { track } from "@/lib/analytics";
 
 interface ExternalCalendar {
   provider: CalendarProviderId;
@@ -131,6 +132,7 @@ export default function ImportSection({ tripId, role, onImported }: Props) {
         return;
       }
       const result = body as ImportResultPayload;
+      track("calendar_import", { provider: target.provider }); // spec 057 — 핵심 전환(가져오기 실행)
       const lines = [
         `가져옴 ${result.importedCount}건`,
         `건너뜀 ${result.skippedCount}건`,
@@ -221,7 +223,7 @@ export default function ImportSection({ tripId, role, onImported }: Props) {
             <>
               <p>가져올 수 있는 외부 캘린더가 없습니다.</p>
               <p className="text-muted-foreground text-xs">
-                본인 계정의 모든 캘린더가 trip-planner 관리 캘린더로 분류되어
+                본인 계정의 모든 캘린더가 이 앱이 만든 캘린더로 분류되어
                 제외됐습니다.
               </p>
             </>
@@ -229,8 +231,7 @@ export default function ImportSection({ tripId, role, onImported }: Props) {
             <>
               <p>가져올 수 있는 외부 캘린더가 없습니다.</p>
               <p className="text-muted-foreground text-xs">
-                Google 또는 Apple 계정에 trip-planner 외 캘린더를 만든 뒤 다시
-                시도하세요.
+                구글·애플 계정에 다른 캘린더를 만든 뒤 다시 시도하세요.
               </p>
             </>
           )}
