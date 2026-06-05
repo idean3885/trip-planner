@@ -379,7 +379,9 @@ export function TripDetailLayout({
             desktopFull
           />
         </div>
-        <div className="min-w-0 space-y-6">{renderPanel(selectedDate, true)}</div>
+        <div className="min-w-0 space-y-6">
+          {renderPanel(selectedDate, true)}
+        </div>
       </div>
 
       {/* 모바일 <1024px — sticky 캘린더 + 선택 일정. 동기화·동행자·기간 편집은
@@ -397,10 +399,14 @@ export function TripDetailLayout({
           />
         </div>
         {/* #657 — 하단 일정도 이전·현재·다음 날 3슬라이드로 드래그-팔로우 스와이프.
-            v3.15.1 — min-h 로 일정이 없거나 적은 날에도 좌우 스와이프 영역을 확보한다
-            (빈 패널은 높이가 작아 스와이프할 영역이 없던 버그). */}
+            #772 — 하단 영역을 뷰포트 높이(100svh)로 채운다. 빈/적은 일정 날에는 패널이
+            화면보다 짧아 (1) 문서가 스크롤되지 않고 (2) 스와이프할 영역이 없었다.
+            v3.15.1 의 min-h-48(192px 고정)은 화면이 큰 기기에서 뷰포트를 못 넘겨 미해결.
+            패널만으로 한 화면을 채우면 캘린더가 월·주 어느 상태든 문서가 뷰포트를 넘겨
+            항상 스크롤·스와이프되고, 주간으로 접힌 뒤에도 스크롤 가능 상태가 남아
+            스크롤이 최상단으로 클램프되며 월간으로 다시 펼쳐지는 플립이 없다. */}
         <SwipeCarousel
-          className="min-h-48"
+          className="min-h-[100svh]"
           ariaLabel="선택 날짜 일정"
           anchorKey={selectedDate.toDateString()}
           syncHeight
