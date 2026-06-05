@@ -15,10 +15,16 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: chore-no-news 라벨 확인
+      - name: 면제 확인 (chore-no-news 라벨 / release 브랜치 / dependabot)
         id: label
+        env:
+          LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
+          HEAD_REF: ${{ github.head_ref }}
         run: |
-          if echo '${{ toJSON(github.event.pull_request.labels.*.name) }}' | grep -q '"chore-no-news"'; then
+          # release/* 브랜치 PR, dependabot/* PR 은 fragment 면제 (towncrier build 소비 / 봇 자동 PR)
+          if echo "$LABELS" | grep -q '"chore-no-news"' \
+             || [[ "$HEAD_REF" == release/* ]] \
+             || [[ "$HEAD_REF" == dependabot/* ]]; then
             echo "skip=true" >> "$GITHUB_OUTPUT"
           else
             echo "skip=false" >> "$GITHUB_OUTPUT"
