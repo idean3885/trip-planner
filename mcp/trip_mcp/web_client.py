@@ -170,7 +170,10 @@ async def api_request(
     try:
         response = await client.request(method, path, json=json, params=params)
 
-        # 401 → 자동 재인증
+        # 401 → 자동 재인증 (single-flight).
+        # spec 059 — 자동 발급 토큰은 단기 만료(30일)를 가진다. 만료된 토큰은
+        # 서버가 401 을 돌려주므로 만료도 이 경로로 자동 재로그인되어 끊김 없이
+        # 원 요청을 재시도한다. 일반(비-MCP) 소비자는 401 시 auth-login 재실행.
         if response.status_code == 401:
             async with _reauth_lock:
                 # Lock 획득 후 이미 다른 요청이 갱신했는지 확인

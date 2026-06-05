@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [3.20.0] - 2026-06-05
+
+### Added
+
+- * **API·CLI 로그인을 한 번의 브라우저 로그인으로** 끝낼 수 있습니다. 토큰을 웹에서 수기로 발급·복사하지 않고, 단일 커맨드를 실행해 Google 로그인만 하면 토큰이 자동 저장되어 이후 호출에 쓰입니다.
+  * **자동 발급 토큰에 만료(기본 30일)를 둬** 오래된 토큰을 무기한 보관하지 않습니다. 만료되면 자동으로 다시 로그인되거나 재로그인 안내를 받습니다.
+  * **기존 수기 토큰 발급은 그대로** 남겨, 미리 토큰을 세팅해두고 쓰는 방식도 계속 지원합니다.
+
+  ([#783](https://github.com/idean3885/trip-planner/issues/783))
+
+
 ## [3.19.0] - 2026-06-05
 
 No significant changes.
