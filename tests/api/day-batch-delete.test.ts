@@ -52,7 +52,8 @@ describe("POST /api/trips/{id}/days/batch-delete", () => {
     expect(res.status).toBe(400);
   });
 
-  it("부분 성공 — 존재하는 일자만 삭제(활동 cascade)·자동 반영 1회", async () => {
+  // spec 056 — 삭제는 동작하되 외부 캘린더 자동 반영은 발생하지 않는다(SSOT 단방향).
+  it("부분 성공 — 존재하는 일자만 삭제(활동 cascade)·외부 캘린더 미반영", async () => {
     mockPrisma.day.findMany.mockResolvedValue([{ id: 76 }, { id: 77 }]);
     const res = await POST(req({ ids: [76, 77, 999] }), params);
     expect(res.status).toBe(200);
@@ -62,7 +63,7 @@ describe("POST /api/trips/{id}/days/batch-delete", () => {
     expect(mockPrisma.day.deleteMany).toHaveBeenCalledWith({
       where: { id: { in: [76, 77] }, tripId: 5 },
     });
-    expect(mockAutoSync.triggerCalendarAutoSync).toHaveBeenCalledTimes(1);
+    expect(mockAutoSync.triggerCalendarAutoSync).not.toHaveBeenCalled();
   });
 
   it("모두 무효면 삭제 0건·자동 반영 미호출", async () => {
@@ -82,10 +83,10 @@ describe("POST /api/trips/{id}/days/batch-delete", () => {
   });
 
   it("잘못된 JSON 본문이면 400", async () => {
-    const bad = new Request(
-      "http://localhost/api/trips/5/days/batch-delete",
-      { method: "POST", body: "not-json" },
-    );
+    const bad = new Request("http://localhost/api/trips/5/days/batch-delete", {
+      method: "POST",
+      body: "not-json",
+    });
     const res = await POST(bad, params);
     expect(res.status).toBe(400);
   });

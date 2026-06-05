@@ -43,40 +43,31 @@ export default async function TripDetailPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ provider?: string; d?: string }>;
+  searchParams: Promise<{ d?: string }>;
 }) {
   const { id } = await params;
   const tripId = parseInt(id);
   const sp = await searchParams;
-  const providerHint = sp.provider === "google" ? "google" : null;
   // spec 043 US5 — 선택 일자를 쿼리(?d=YYYY-MM-DD)로 받아 진입/새로고침 시 복원.
   const selectedYmd = parseYmd(sp.d) ? sp.d! : null;
 
   if (isNaN(tripId)) notFound();
-  return (
-    <DbTripPage
-      tripId={tripId}
-      providerHint={providerHint}
-      selectedYmd={selectedYmd}
-    />
-  );
+  return <DbTripPage tripId={tripId} selectedYmd={selectedYmd} />;
 }
 
 /* ── DB 기반 여행 상세 ── */
 
 async function DbTripPage({
   tripId,
-  providerHint,
   selectedYmd,
 }: {
   tripId: number;
-  providerHint: "google" | null;
   selectedYmd: string | null;
 }) {
   const session = await auth();
   if (!session?.user?.id) redirect("/auth/signin");
 
-  const [member, trip, calendarLink] = await Promise.all([
+  const [member, trip] = await Promise.all([
     prisma.tripMember.findUnique({
       where: { tripId_userId: { tripId, userId: session.user.id } },
     }),
@@ -84,10 +75,6 @@ async function DbTripPage({
     prisma.trip.findUnique({
       where: { id: tripId },
       include: { days: { orderBy: { date: "asc" } } },
-    }),
-    prisma.tripCalendarLink.findUnique({
-      where: { tripId },
-      select: { provider: true, calendarName: true },
     }),
   ]);
   if (!member || !trip) notFound();
@@ -151,7 +138,7 @@ async function DbTripPage({
   return (
     <div className="space-y-6">
       {/* spec 043 US2 — 헤더는 `여행 목록 > 제목 (기간)` 브레드크럼 한 줄로만 둔다.
-          기간 편집·동행자·나가기/삭제·캘린더 동기화·선택 일자 삭제 등 동작 버튼은
+          기간 편집·동행자·나가기/삭제·캘린더 가져오기·선택 일자 삭제 등 동작 버튼은
           선택 일자(클라이언트 상태)에 의존하므로 TripDetailLayout 액션바로 모은다. */}
       <nav className="text-muted-foreground flex flex-wrap items-center gap-1.5 text-sm">
         <Link href="/" className="hover:text-foreground">
@@ -194,16 +181,7 @@ async function DbTripPage({
         canEdit={member.role !== "GUEST"}
         initialSelected={selectedYmd}
         memberList={<MemberList tripId={tripId} />}
-        syncCard={
-          <CalendarSyncEntryCard
-            tripId={tripId}
-            role={member.role}
-            calendarLinked={Boolean(calendarLink)}
-            calendarProvider={calendarLink?.provider ?? null}
-            calendarName={calendarLink?.calendarName ?? null}
-            providerHint={providerHint}
-          />
-        }
+        syncCard={<CalendarSyncEntryCard tripId={tripId} role={member.role} />}
       />
     </div>
   );

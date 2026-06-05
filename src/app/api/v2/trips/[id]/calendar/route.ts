@@ -1,75 +1,25 @@
 /**
- * v2 per-trip 공유 캘린더 API (#349, spec 019).
+ * spec 056 (외부 캘린더 내보내기 제품 노출 제거) — 연결/해제/상태 엔드포인트 폐지.
  *
- * POST   /api/v2/trips/[id]/calendar — 오너가 공유 캘린더 연결 (생성 또는 채택) + 현재 멤버 전원 ACL 자동 부여
- * DELETE /api/v2/trips/[id]/calendar — 오너가 연결 해제 (ACL 회수는 시도만, 캘린더 자체는 Google에 유지)
- * GET    /api/v2/trips/[id]/calendar — 현재 사용자 시점의 연결 상태 (오너는 전체 ACL, 멤버는 본인 subscription만)
- *
- * spec 024 (#416) — 비즈니스 로직은 src/lib/calendar/service.ts에 위임. 본 라우트는
- * session 인증·tripId 파싱 + service 결과를 NextResponse로 변환만 한다.
+ * 외부 캘린더 연결(전용 캘린더 생성+ACL)·해제·상태 조회는 내보내기(쓰기) 표면이다.
+ * trip-planner는 가져오기(읽기)만 지원하므로 410 Gone으로 고정한다. 코어(`connectCalendar`/
+ * `disconnectCalendar`/`getCalendarStatus`)는 재도입 여지를 위해 보존하되 미호출한다.
+ * 가져오기에 필요한 외부 캘린더 계정 연결 상태는 GET /api/users/me/external-calendars로 조회한다.
  */
 
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
-import { auth } from "@/auth";
-import {
-  connectCalendar,
-  disconnectCalendar,
-  getCalendarStatus,
-} from "@/lib/calendar/service";
-
-async function authenticate(req: NextRequest, params: Promise<{ id: string }>) {
-  void req;
-  const session = await auth();
-  if (!session?.user?.id) {
-    return {
-      error: NextResponse.json({ error: "unauthenticated" }, { status: 401 }),
-    } as const;
-  }
-  const tripId = Number((await params).id);
-  if (!Number.isFinite(tripId)) {
-    return {
-      error: NextResponse.json({ error: "bad_trip_id" }, { status: 400 }),
-    } as const;
-  }
-  return { userId: session.user.id, tripId } as const;
+function gone() {
+  return NextResponse.json(
+    {
+      error: "gone",
+      message:
+        "외부 캘린더 연결/동기화는 더 이상 제공되지 않습니다. trip-planner는 외부 캘린더에서 가져오기(읽기)만 지원합니다.",
+    },
+    { status: 410, headers: { "Cache-Control": "no-store" } },
+  );
 }
 
-export async function POST(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  const a = await authenticate(req, params);
-  if ("error" in a) return a.error;
-
-  const result = await connectCalendar({ userId: a.userId, tripId: a.tripId });
-  return NextResponse.json(result.body, { status: result.status });
-}
-
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  const a = await authenticate(req, params);
-  if ("error" in a) return a.error;
-
-  const result = await disconnectCalendar({
-    userId: a.userId,
-    tripId: a.tripId,
-  });
-  return NextResponse.json(result.body, { status: result.status });
-}
-
-export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  const a = await authenticate(req, params);
-  if ("error" in a) return a.error;
-
-  const result = await getCalendarStatus({
-    userId: a.userId,
-    tripId: a.tripId,
-  });
-  return NextResponse.json(result.body, { status: result.status });
-}
+export const POST = gone;
+export const DELETE = gone;
+export const GET = gone;

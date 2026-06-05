@@ -1,34 +1,23 @@
 /**
- * v2 per-trip 공유 캘린더 sync 엔드포인트 (#349, spec 019, sub-issue #359).
+ * spec 056 (외부 캘린더 내보내기 제품 노출 제거) — sync 엔드포인트 폐지.
  *
- * POST /api/v2/trips/[id]/calendar/sync — 오너·HOST가 여행의 활동을 공유 캘린더에 반영.
- *
- * spec 024 (#416) — 비즈니스 로직은 src/lib/calendar/service.ts::syncCalendar에 위임.
+ * trip-planner는 외부 캘린더에 쓰지 않고 가져오기(읽기)만 지원한다(SSOT 단방향).
+ * 활동→외부 캘린더 sync는 410 Gone으로 고정한다. sync 코어(`syncCalendar`)는
+ * 재도입 여지를 위해 보존하되 제품 표면에서 호출되지 않는다. 레거시 gcal/sync
+ * (spec 022) 410 패턴을 준용한다.
  */
 
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
-import { auth } from "@/auth";
-import { getAppOrigin } from "@/lib/app-url";
-import { syncCalendar } from "@/lib/calendar/service";
-
-export async function POST(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
-  }
-  const tripId = Number((await params).id);
-  if (!Number.isFinite(tripId)) {
-    return NextResponse.json({ error: "bad_trip_id" }, { status: 400 });
-  }
-
-  const tripUrl = `${getAppOrigin(req)}/trips/${tripId}`;
-  const result = await syncCalendar(
-    { userId: session.user.id, tripId },
-    { tripUrl },
+function gone() {
+  return NextResponse.json(
+    {
+      error: "gone",
+      message:
+        "외부 캘린더 내보내기/동기화는 더 이상 제공되지 않습니다. trip-planner는 외부 캘린더에서 가져오기(읽기)만 지원합니다.",
+    },
+    { status: 410, headers: { "Cache-Control": "no-store" } },
   );
-  return NextResponse.json(result.body, { status: result.status });
 }
+
+export const POST = gone;
