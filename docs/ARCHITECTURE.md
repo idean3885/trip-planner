@@ -13,19 +13,19 @@
 - **왜 웹·MCP가 같은 정본 하나로 모이나.** DB 접근은 Next.js 서버 한 곳으로 모은다. MCP(Python)는 DB에 직접 붙지 않고 REST API(`/api/v2`)의 클라이언트로 동작해, 두 클라이언트가 같은 데이터 정본을 본다.
 - **왜 서비스 계층 없이 라우트가 Prisma를 직접 호출하나.** 현재 규모에 맞춘 의도적 선택이다. 추상화 선투자 대비 이득이 작다고 판단했고, 한계와 전환 신호는 [아래 "현재 한계"](#현재-한계)와 ADR-0008에 함께 기록했다.
 
-대표 도식은 [`docs/diagrams/`](./diagrams/)에 draw.io(`.drawio.svg`)로 둔다. 아래 mermaid 다이어그램은 git diff로 변경 추적이 쉬운 세부 흐름용이다.
+대표 도식은 [`docs/diagrams/`](./diagrams/)에 둔다 — 편집 정본은 `.drawio`, GitHub·문서 표시는 draw.io가 내보낸 `.png`다. 아래 mermaid 다이어그램은 git diff로 변경 추적이 쉬운 세부 흐름용이다.
 
 ### 대표 도식
 
 **시스템 컨텍스트** — 클라이언트 둘(웹·MCP)이 Next.js 단일 런타임 한 곳을 경유해 같은 데이터 정본에 닿는다.
 
-![시스템 컨텍스트](./diagrams/system-context.drawio.svg)
+![시스템 컨텍스트](./diagrams/system-context.png)
 
 **배포 토폴로지** — Git 브랜치가 환경에 매핑되고, 환경별 DB가 분리(#318)된다.
 
-![배포 토폴로지](./diagrams/deploy-topology.drawio.svg)
+![배포 토폴로지](./diagrams/deploy-topology.png)
 
-> 위 두 도식은 `.drawio.svg`라 GitHub에서 벡터 이미지로 렌더되면서 draw.io·VS Code(Draw.io Integration)에서 다시 열어 편집할 수 있다.
+> 도식을 고치려면 편집 정본 `docs/diagrams/*.drawio`를 draw.io(또는 VS Code Draw.io Integration)에서 열어 수정한 뒤 PNG로 다시 내보낸다. GitHub·문서 표시는 `.png`다 — draw.io의 SVG 내보내기는 텍스트를 `foreignObject`로 담아 GitHub `<img>`에서 렌더되지 않으므로 PNG를 표시본으로 쓴다.
 
 ## 시스템 개요
 
