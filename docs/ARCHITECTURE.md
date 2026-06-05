@@ -25,7 +25,7 @@
 
 ![배포 토폴로지](./diagrams/deploy-topology.png)
 
-> 도식을 고치려면 편집 정본 `docs/diagrams/*.drawio`를 draw.io(또는 VS Code Draw.io Integration)에서 열어 수정한 뒤 PNG로 다시 내보낸다. GitHub·문서 표시는 `.png`다 — draw.io의 SVG 내보내기는 텍스트를 `foreignObject`로 담아 GitHub `<img>`에서 렌더되지 않으므로 PNG를 표시본으로 쓴다.
+> 도식을 고치려면 편집 정본 [`docs/diagrams/workspace/*.drawio`](./diagrams/workspace/)를 draw.io(또는 VS Code Draw.io Integration)에서 열어 수정한 뒤 PNG로 다시 내보낸다. GitHub·문서 표시는 `.png`다 — draw.io의 SVG 내보내기는 텍스트를 `foreignObject`로 담아 GitHub `<img>`에서 렌더되지 않으므로 PNG를 표시본으로 쓴다. 규약 상세는 [`workspace/README.md`](./diagrams/workspace/README.md).
 
 ## 시스템 개요
 
