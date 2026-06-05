@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [3.16.1] - 2026-06-05
+
+### Documentation
+
+- 아키텍처 설계 근거를 결정 기록(ADR)으로 남기고, 시스템 구성과 배포 구조를 한눈에 보는 대표 도식을 추가했습니다. 구조를 처음 접하는 사람이 "왜 이렇게 만들었는가"를 문서만으로 따라갈 수 있습니다. ([#746](https://github.com/idean3885/trip-planner/issues/746))
+
+
 ## [3.16.0] - 2026-06-05
 
 ### Removed
