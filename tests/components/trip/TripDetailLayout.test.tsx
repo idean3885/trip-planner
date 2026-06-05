@@ -134,18 +134,36 @@ describe("TripDetailLayout 모바일 스와이프·스크롤 접힘 (v3.15.1 hot
     });
   }
 
-  afterEach(() => setScrollY(0));
+  // spec 058 — 클램프 가드는 문서가 뷰포트보다 길 때만 동작하므로, 스크롤 접힘
+  // 테스트에서는 문서가 스크롤 가능(scrollHeight > innerHeight)하도록 둔다.
+  function setDocScrollable(scrollable: boolean) {
+    Object.defineProperty(window, "innerHeight", {
+      value: 800,
+      writable: true,
+      configurable: true,
+    });
+    Object.defineProperty(document.documentElement, "scrollHeight", {
+      value: scrollable ? 2000 : 800,
+      writable: true,
+      configurable: true,
+    });
+  }
 
-  it("일정 캐러셀이 뷰포트 높이를 채워 빈 날에도 스크롤·스와이프 영역이 있다", () => {
+  afterEach(() => {
+    setScrollY(0);
+    setDocScrollable(true);
+  });
+
+  it("일정 캐러셀이 화면 절반(50svh)을 채워 빈 날에도 스크롤·스와이프 영역이 있다", () => {
     renderLayout();
     const carousel = screen.getByRole("group", { name: "선택 날짜 일정" });
-    // #772 — 빈/적은 일정 날(days=[])에도 패널이 한 화면을 채워, 문서가 뷰포트를
-    // 넘겨 스크롤되고 좌우 스와이프 영역이 남는다. 고정 px(min-h-48)는 큰 화면에서
-    // 뷰포트를 못 넘겨 스크롤이 안 됐다.
-    expect(carousel.className).toContain("min-h-[100svh]");
+    // spec 058 — 빈/적은 일정 날에도 스와이프·스크롤 영역을 두되, 100svh 처럼 한
+    // 화면을 통째로 비우지 않는다. 접힘 플립은 onScroll 클램프 가드가 막는다.
+    expect(carousel.className).toContain("min-h-[50svh]");
   });
 
   it("아래로 스크롤하면 모바일 캘린더가 주간으로 접히고, 최상단 복귀 시 펼친다", () => {
+    setDocScrollable(true);
     renderLayout();
     // 초기(최상단) = 월간.
     expect(screen.getByRole("group", { name: "월 달력" })).toBeInTheDocument();
@@ -161,6 +179,7 @@ describe("TripDetailLayout 모바일 스와이프·스크롤 접힘 (v3.15.1 hot
   });
 
   it("최상단에 닿기 전 위로 조금 스크롤해도 접힌 채 둔다(일관 동작)", () => {
+    setDocScrollable(true);
     renderLayout();
     setScrollY(300);
     fireEvent.scroll(window);
@@ -169,5 +188,21 @@ describe("TripDetailLayout 모바일 스와이프·스크롤 접힘 (v3.15.1 hot
     setScrollY(150);
     fireEvent.scroll(window);
     expect(screen.getByRole("group", { name: "주 달력" })).toBeInTheDocument();
+  });
+
+  it("문서가 뷰포트보다 짧아 스크롤 불가하면 클램프된 scrollY 로 접힘 상태를 바꾸지 않는다", () => {
+    setDocScrollable(true);
+    renderLayout();
+    // 먼저 스크롤로 접는다.
+    setScrollY(300);
+    fireEvent.scroll(window);
+    expect(screen.getByRole("group", { name: "주 달력" })).toBeInTheDocument();
+    // 콘텐츠가 짧아져 스크롤 불가가 되고 브라우저가 scrollY 를 0 으로 클램프해도
+    // (spec 058 가드) 월간으로 다시 펼치지 않는다 — 튐·플립 방지.
+    setDocScrollable(false);
+    setScrollY(0);
+    fireEvent.scroll(window);
+    expect(screen.getByRole("group", { name: "주 달력" })).toBeInTheDocument();
+    expect(screen.queryByRole("group", { name: "월 달력" })).toBeNull();
   });
 });

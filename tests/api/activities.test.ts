@@ -574,3 +574,67 @@ describe("DELETE /activities/{id}", () => {
     expect(data.ok).toBe(true);
   });
 });
+
+// spec 058 — 활동 URL 항목(메모와 분리). 빈 문자열은 NULL 로 정규화.
+describe("activity url (spec 058)", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("POST persists url when provided", async () => {
+    mockAuth.mockResolvedValue("user1");
+    mockCanEdit.mockResolvedValue(true);
+    mockPrisma.day.findUnique.mockResolvedValue({
+      id: 1,
+      date: new Date("2026-06-07T00:00:00Z"),
+    });
+    mockPrisma.activity.create.mockResolvedValue({ id: 10 });
+
+    await POST(
+      makeRequest(
+        {
+          category: "TRANSPORT",
+          title: "기차",
+          url: "https://example.com/ticket",
+        },
+        "POST",
+      ),
+      params(),
+    );
+    expect(mockPrisma.activity.create).toHaveBeenCalled();
+    const arg = mockPrisma.activity.create.mock.calls[0][0];
+    expect(arg.data.url).toBe("https://example.com/ticket");
+  });
+
+  it("POST normalizes empty url to null", async () => {
+    mockAuth.mockResolvedValue("user1");
+    mockCanEdit.mockResolvedValue(true);
+    mockPrisma.day.findUnique.mockResolvedValue({
+      id: 1,
+      date: new Date("2026-06-07T00:00:00Z"),
+    });
+    mockPrisma.activity.create.mockResolvedValue({ id: 11 });
+
+    await POST(
+      makeRequest({ category: "OTHER", title: "x", url: "" }, "POST"),
+      params(),
+    );
+    const arg = mockPrisma.activity.create.mock.calls[0][0];
+    expect(arg.data.url).toBeNull();
+  });
+
+  it("PUT updates url", async () => {
+    mockAuth.mockResolvedValue("user1");
+    mockCanEdit.mockResolvedValue(true);
+    mockPrisma.day.findUnique.mockResolvedValue({
+      id: 1,
+      date: new Date("2026-06-07T00:00:00Z"),
+    });
+    mockPrisma.activity.update.mockResolvedValue({ id: 10 });
+
+    await PUT(
+      makeRequest({ title: "기차", url: "https://example.com/booking" }, "PUT"),
+      activityParams(),
+    );
+    const arg = mockPrisma.activity.update.mock.calls[0][0];
+    expect(arg.data.url).toBe("https://example.com/booking");
+  });
+});

@@ -45,6 +45,27 @@ describe("DayActivitiesPane", () => {
     ).toBeInTheDocument();
   });
 
+  // spec 058 — 컨테이너 Card(보더·배경)를 없애 활동 카드만 남긴다. 날짜 헤더는
+  // 카드 제목이 아니라 일반 제목(h2)이고, 패널 루트는 보더 없는 div 다.
+  it("패널 컨테이너에 보더가 없고 날짜 헤더는 h2 다", () => {
+    const { container } = render(
+      <DayActivitiesPane
+        tripId={1}
+        selectedDate={SELECTED}
+        dayId={null}
+        activities={null}
+        canEdit={false}
+        onDayCreated={vi.fn()}
+      />,
+    );
+    const root = container.firstChild as HTMLElement;
+    expect(root.tagName).toBe("DIV");
+    expect(root.className).not.toMatch(/\bborder\b/);
+    expect(
+      screen.getByRole("heading", { name: formatCalendarDate(SELECTED) }),
+    ).toBeInTheDocument();
+  });
+
   it("day 가 있으면 ActivityList 로 활동을 보여준다", () => {
     render(
       <DayActivitiesPane

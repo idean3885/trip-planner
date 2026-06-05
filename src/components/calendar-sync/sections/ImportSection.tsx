@@ -39,11 +39,6 @@ interface ImportResultPayload {
   failedTitles: string[];
 }
 
-const PROVIDER_LABEL: Record<CalendarProviderId, string> = {
-  GOOGLE: "Google",
-  APPLE: "Apple",
-};
-
 interface Props {
   tripId: number;
   role: TripRole;
@@ -86,7 +81,6 @@ export default function ImportSection({ tripId, role, onImported }: Props) {
   }, [canImport, loadCalendars]);
 
   const importable = (calendars ?? []).filter((c) => !c.isManagedByTripPlanner);
-  const hasManaged = (calendars ?? []).some((c) => c.isManagedByTripPlanner);
 
   const notConnected = diagnostics?.notConnected ?? [];
   const scopeInsufficient = diagnostics?.scopeInsufficient ?? [];
@@ -94,8 +88,6 @@ export default function ImportSection({ tripId, role, onImported }: Props) {
   const googleNotConnected =
     notConnected.includes("GOOGLE") && !googleScopeInsufficient;
   const appleNotConnected = notConnected.includes("APPLE");
-  const hasConnectionGap =
-    googleScopeInsufficient || googleNotConnected || appleNotConnected;
   const googleConsentHref = `/api/gcal/consent?returnTo=${encodeURIComponent(`/trips/${tripId}?calsync=open`)}`;
 
   const handleImport = useCallback(async () => {
@@ -160,120 +152,121 @@ export default function ImportSection({ tripId, role, onImported }: Props) {
     );
   }
 
+  // spec 058 — provider(애플·구글)별 섹션으로 분리해 어느 영역인지 분명히 한다.
+  // 각 섹션은 자기 provider 의 미연결 안내 / 가져올 캘린더 목록 / 빈 안내를 자기 안에서
+  // 그린다. 선택·가져오기는 두 섹션을 가로지르는 단일 라디오 그룹 + 하단 단일 버튼.
+  const PROVIDER_SECTIONS: { id: CalendarProviderId; title: string }[] = [
+    { id: "APPLE", title: "Apple 캘린더" },
+    { id: "GOOGLE", title: "Google 캘린더" },
+  ];
+
+  const renderProviderBody = (pid: CalendarProviderId) => {
+    if (pid === "GOOGLE" && googleScopeInsufficient) {
+      return (
+        <div className="space-y-2 rounded-md border p-3 text-sm">
+          <p className="text-muted-foreground text-xs">
+            이전에 받은 권한이 일정 읽기·쓰기에 한정되어 캘린더 목록을 가져올 수
+            없습니다. 다시 동의해주세요.
+          </p>
+          <a
+            href={googleConsentHref}
+            className="bg-primary text-primary-foreground inline-flex items-center rounded-md px-3 py-1.5 text-xs font-medium hover:opacity-90"
+          >
+            Google 다시 연결
+          </a>
+        </div>
+      );
+    }
+    if (pid === "GOOGLE" && googleNotConnected) {
+      return (
+        <div className="space-y-2 rounded-md border p-3 text-sm">
+          <p className="text-muted-foreground text-xs">
+            Google 계정 OAuth 동의로 연결합니다.
+          </p>
+          <a
+            href={googleConsentHref}
+            className="bg-primary text-primary-foreground inline-flex items-center rounded-md px-3 py-1.5 text-xs font-medium hover:opacity-90"
+          >
+            Google 연결
+          </a>
+        </div>
+      );
+    }
+    if (pid === "APPLE" && appleNotConnected) {
+      return (
+        <div className="space-y-2 rounded-md border p-3 text-sm">
+          <p className="text-muted-foreground text-xs">
+            Apple은 OAuth를 지원하지 않습니다. Apple ID와 앱 비밀번호를 직접
+            등록하세요.
+          </p>
+          <a
+            href="/settings/calendars"
+            className="bg-primary text-primary-foreground inline-flex items-center rounded-md px-3 py-1.5 text-xs font-medium hover:opacity-90"
+          >
+            Apple 연결하기
+          </a>
+        </div>
+      );
+    }
+    const list = importable.filter((c) => c.provider === pid);
+    if (list.length === 0) {
+      return (
+        <p className="text-muted-foreground text-xs">
+          가져올 수 있는 캘린더가 없습니다.
+        </p>
+      );
+    }
+    return (
+      <ul className="space-y-2">
+        {list.map((c) => (
+          <li key={`${c.provider}:${c.externalCalendarId}`}>
+            <label className="hover:bg-accent flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm">
+              <input
+                type="radio"
+                name="ext-calendar"
+                value={c.externalCalendarId}
+                checked={selected === c.externalCalendarId}
+                onChange={() => setSelected(c.externalCalendarId)}
+              />
+              <span className="flex-1 font-medium">
+                {c.displayName ?? "(이름 없음)"}
+              </span>
+            </label>
+          </li>
+        ))}
+      </ul>
+    );
+  };
+
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {loadingList && (
         <p className="text-muted-foreground flex items-center gap-2 text-sm">
           <Loader2 className="size-4 animate-spin" /> 목록 불러오는 중…
         </p>
       )}
 
-      {!loadingList && hasConnectionGap && (
-        <div className="space-y-2">
-          {googleScopeInsufficient && (
-            <div className="space-y-2 rounded-md border p-3 text-sm">
-              <p className="font-medium">Google 캘린더 권한이 부족합니다.</p>
-              <p className="text-muted-foreground text-xs">
-                이전에 받은 권한이 일정 읽기·쓰기에 한정되어 캘린더 목록을
-                가져올 수 없습니다. 다시 동의해주세요.
-              </p>
-              <a
-                href={googleConsentHref}
-                className="bg-primary text-primary-foreground inline-flex items-center rounded-md px-3 py-1.5 text-xs font-medium hover:opacity-90"
-              >
-                Google 다시 연결
-              </a>
-            </div>
-          )}
-          {googleNotConnected && (
-            <div className="space-y-2 rounded-md border p-3 text-sm">
-              <p className="font-medium">Google 캘린더 미연결</p>
-              <p className="text-muted-foreground text-xs">
-                Google 계정 OAuth 동의로 연결합니다.
-              </p>
-              <a
-                href={googleConsentHref}
-                className="bg-primary text-primary-foreground inline-flex items-center rounded-md px-3 py-1.5 text-xs font-medium hover:opacity-90"
-              >
-                Google 연결
-              </a>
-            </div>
-          )}
-          {appleNotConnected && (
-            <div className="space-y-2 rounded-md border p-3 text-sm">
-              <p className="font-medium">Apple 캘린더 미연결</p>
-              <p className="text-muted-foreground text-xs">
-                Apple은 OAuth를 지원하지 않습니다. Apple ID와 앱 비밀번호를 직접
-                등록하세요.
-              </p>
-              <a
-                href="/settings/calendars"
-                className="bg-primary text-primary-foreground inline-flex items-center rounded-md px-3 py-1.5 text-xs font-medium hover:opacity-90"
-              >
-                Apple 연결하기
-              </a>
-            </div>
-          )}
-        </div>
-      )}
-
-      {!loadingList && importable.length === 0 && !hasConnectionGap && (
-        <div className="space-y-2 text-sm">
-          {hasManaged ? (
-            <>
-              <p>가져올 수 있는 외부 캘린더가 없습니다.</p>
-              <p className="text-muted-foreground text-xs">
-                본인 계정의 모든 캘린더가 이 앱이 만든 캘린더로 분류되어
-                제외됐습니다.
-              </p>
-            </>
-          ) : (
-            <>
-              <p>가져올 수 있는 외부 캘린더가 없습니다.</p>
-              <p className="text-muted-foreground text-xs">
-                구글·애플 계정에 다른 캘린더를 만든 뒤 다시 시도하세요.
-              </p>
-            </>
-          )}
-        </div>
-      )}
+      {!loadingList &&
+        PROVIDER_SECTIONS.map((p) => (
+          <section key={p.id} className="space-y-2">
+            <h4 className="text-foreground text-sm font-semibold tracking-tight">
+              {p.title}
+            </h4>
+            {renderProviderBody(p.id)}
+          </section>
+        ))}
 
       {!loadingList && importable.length > 0 && (
-        <div className="space-y-3">
-          <ul className="space-y-2">
-            {importable.map((c) => (
-              <li key={`${c.provider}:${c.externalCalendarId}`}>
-                <label className="hover:bg-accent flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm">
-                  <input
-                    type="radio"
-                    name="ext-calendar"
-                    value={c.externalCalendarId}
-                    checked={selected === c.externalCalendarId}
-                    onChange={() => setSelected(c.externalCalendarId)}
-                  />
-                  <span className="flex-1">
-                    <span className="font-medium">
-                      {c.displayName ?? "(이름 없음)"}
-                    </span>
-                    <span className="text-muted-foreground ml-2 text-xs">
-                      {PROVIDER_LABEL[c.provider]}
-                    </span>
-                  </span>
-                </label>
-              </li>
-            ))}
-          </ul>
-          <Button onClick={handleImport} disabled={!selected || running}>
-            {running ? (
-              <>
-                <Loader2 className="mr-2 size-4 animate-spin" />
-                가져오는 중…
-              </>
-            ) : (
-              "가져오기"
-            )}
-          </Button>
-        </div>
+        <Button onClick={handleImport} disabled={!selected || running}>
+          {running ? (
+            <>
+              <Loader2 className="mr-2 size-4 animate-spin" />
+              가져오는 중…
+            </>
+          ) : (
+            "가져오기"
+          )}
+        </Button>
       )}
 
       {!loadingList && diagnostics?.errors && diagnostics.errors.length > 0 && (

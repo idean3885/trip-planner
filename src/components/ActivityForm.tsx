@@ -39,6 +39,7 @@ export interface ActivityFormData {
   endTime: string;
   location: string;
   memo: string;
+  url: string;
   cost: string;
   currency: string;
   reservationStatus: string;
@@ -84,6 +85,7 @@ export default function ActivityForm({
     endTime: initial?.endTime ?? "",
     location: initial?.location ?? "",
     memo: initial?.memo ?? "",
+    url: initial?.url ?? "",
     cost: initial?.cost ?? "",
     currency: initial?.currency ?? "EUR",
     reservationStatus: initial?.reservationStatus ?? "",
@@ -205,7 +207,9 @@ export default function ActivityForm({
       </label>
 
       {!form.allDay && (
-        <div className="grid grid-cols-2 gap-2">
+        // 320px(아이폰13 미니)에서 시각 입력 2개를 가로로 두면 겹친다 — 좁은 폭에서는
+        // 1열로 쌓고, 360px 이상에서만 2열로 나란히 둔다.
+        <div className="grid grid-cols-1 gap-2 min-[360px]:grid-cols-2">
           <div className="space-y-1">
             <Label
               htmlFor="activity-start"
@@ -272,6 +276,42 @@ export default function ActivityForm({
         <p className="text-muted-foreground/60 text-[11px]">
           지도·캘린더 위치로 연동됩니다. 자유 메모는 아래 메모란에 적어주세요.
         </p>
+      </div>
+
+      {/* spec 058 — 예약·티켓·문서 링크. 메모와 분리된 항목(애플 캘린더 URL 대응). */}
+      <div className="space-y-1">
+        <Label
+          htmlFor="activity-url"
+          className="text-muted-foreground text-[11px]"
+        >
+          링크
+        </Label>
+        {readOnly ? (
+          <div className="border-input min-h-8 w-full rounded-lg border bg-transparent px-2.5 py-1.5 text-sm break-all">
+            {form.url ? (
+              <a
+                href={form.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary underline underline-offset-2"
+              >
+                {form.url}
+              </a>
+            ) : (
+              <span className="text-muted-foreground">링크 없음</span>
+            )}
+          </div>
+        ) : (
+          <Input
+            id="activity-url"
+            type="url"
+            inputMode="url"
+            placeholder="예: 예약 확인 페이지 링크"
+            value={form.url}
+            onChange={(e) => update("url", e.target.value)}
+            className="h-8"
+          />
+        )}
       </div>
 
       {/* spec 048 US2 — 핵심 정보(비용·통화·예약)를 메모 위로 모은다. */}
