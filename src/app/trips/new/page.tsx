@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { track } from "@/lib/analytics";
+
 /**
  * spec 029 v3.0.0 contract — 여행 생성 폼은 제목만 받는다. 기간은 첫 일정을
  * 추가하면 derived 값으로 자동 설정. 종전 startDate/endDate 입력은 제거.
@@ -28,6 +30,7 @@ export default function NewTripPage() {
       if (!res.ok) throw new Error("생성 실패");
 
       const trip = await res.json();
+      track("trip_created"); // spec 057 — 핵심 전환(여행 생성)
       router.push(`/trips/${trip.id}`);
     } catch {
       alert("여행 생성에 실패했습니다.");

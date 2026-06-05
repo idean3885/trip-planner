@@ -4,6 +4,8 @@ import Link from "next/link";
 import { projectMeta } from "@/lib/project-meta";
 
 export default function Footer() {
+  // spec 057 — 분석이 활성일 때만 쿠키 사용 고지를 노출(개인정보 고지).
+  const analyticsEnabled = Boolean(process.env.NEXT_PUBLIC_GA_ID);
   return (
     <footer className="border-border mt-auto border-t">
       <div className="text-muted-foreground mx-auto flex w-full max-w-2xl flex-wrap items-center justify-center gap-x-4 gap-y-2 px-4 py-6 text-sm">
@@ -37,6 +39,11 @@ export default function Footer() {
           <ExternalLink className="size-3" aria-hidden />
         </Link>
       </div>
+      {analyticsEnabled && (
+        <p className="text-muted-foreground/70 mx-auto w-full max-w-2xl px-4 pb-6 text-center text-xs">
+          사용 통계를 위해 분석 쿠키를 사용합니다.
+        </p>
+      )}
     </footer>
   );
 }
