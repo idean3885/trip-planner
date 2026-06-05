@@ -3,16 +3,13 @@
  *
  * 여러 활동을 한 요청으로 삭제한다. 단건 삭제는 그대로 유지하고 배치는 추가
  * (additive). 여행 경계 안에 실제 존재하는 식별자만 삭제하고, 없거나 다른 여행
- * 소속인 식별자는 건너뜀(skipped)으로 함께 반환한다(부분 성공). 활동을 제거하므로
- * 외부 캘린더 자동 반영(spec 049)을 요청당 한 번 수행한다.
+ * 소속인 식별자는 건너뜀(skipped)으로 함께 반환한다(부분 성공).
  * 권한: trip 편집 권한(canEdit, 헌법 VI).
  */
 
-import { after, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
-import { getAppOrigin } from "@/lib/app-url";
 import { canEdit, getAuthUserId } from "@/lib/auth-helpers";
-import { triggerCalendarAutoSync } from "@/lib/calendar/auto-sync";
 import { prisma } from "@/lib/prisma";
 
 type Params = { params: Promise<{ id: string }> };
@@ -33,7 +30,10 @@ export async function POST(request: Request, { params }: Params) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   if (!(await canEdit(tripId, userId))) {
-    return NextResponse.json({ error: "편집 권한이 없습니다" }, { status: 403 });
+    return NextResponse.json(
+      { error: "편집 권한이 없습니다" },
+      { status: 403 },
+    );
   }
 
   let body: BatchBody;
@@ -64,9 +64,6 @@ export async function POST(request: Request, { params }: Params) {
     await prisma.activity.deleteMany({
       where: { id: { in: deleted }, day: { tripId } },
     });
-    // spec 049 — 응답 후 외부 캘린더 자동 반영(요청당 한 번).
-    const tripUrl = `${getAppOrigin(request)}/trips/${tripId}`;
-    after(() => triggerCalendarAutoSync(tripId, userId, tripUrl));
   }
 
   return NextResponse.json({ deleted, skipped });

@@ -52,7 +52,8 @@ describe("POST /api/trips/{id}/activities/batch-delete", () => {
     expect(res.status).toBe(400);
   });
 
-  it("부분 성공 — 존재하는 식별자만 삭제하고 나머지는 skipped, 자동 반영 1회", async () => {
+  // spec 056 — 삭제는 동작하되 외부 캘린더 자동 반영은 발생하지 않는다(SSOT 단방향).
+  it("부분 성공 — 존재하는 식별자만 삭제하고 나머지는 skipped, 외부 캘린더 미반영", async () => {
     mockPrisma.activity.findMany.mockResolvedValue([{ id: 160 }, { id: 161 }]);
     const res = await POST(req({ ids: [160, 161, 162] }), params);
     expect(res.status).toBe(200);
@@ -63,7 +64,7 @@ describe("POST /api/trips/{id}/activities/batch-delete", () => {
     expect(mockPrisma.activity.deleteMany).toHaveBeenCalledWith({
       where: { id: { in: [160, 161] }, day: { tripId: 5 } },
     });
-    expect(mockAutoSync.triggerCalendarAutoSync).toHaveBeenCalledTimes(1);
+    expect(mockAutoSync.triggerCalendarAutoSync).not.toHaveBeenCalled();
   });
 
   it("모두 무효(타 여행·없음)면 삭제 0건·자동 반영 미호출", async () => {

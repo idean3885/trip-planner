@@ -1,9 +1,7 @@
-import { after, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
 import { toTimestamp } from "@/lib/activity-time";
-import { getAppOrigin } from "@/lib/app-url";
 import { canEdit, getAuthUserId, getTripMember } from "@/lib/auth-helpers";
-import { triggerCalendarAutoSync } from "@/lib/calendar/auto-sync";
 import { prisma } from "@/lib/prisma";
 
 type Params = { params: Promise<{ id: string; dayId: string }> };
@@ -99,7 +97,8 @@ export async function POST(request: Request, { params }: Params) {
           }
         : {
             ...(startTime !== undefined && {
-              startTime: toTimestamp(startTime, day.date, startTimezone) ?? null,
+              startTime:
+                toTimestamp(startTime, day.date, startTimezone) ?? null,
             }),
             ...(startTimezone !== undefined && { startTimezone }),
             ...(endTime !== undefined && {
@@ -117,10 +116,6 @@ export async function POST(request: Request, { params }: Params) {
       sortOrder: sortOrder ?? 0,
     },
   });
-
-  // spec 049 — 응답 후 연결된 외부 캘린더에 자동 반영(미연결 시 무동작).
-  const tripUrl = `${getAppOrigin(request)}/trips/${tripId}`;
-  after(() => triggerCalendarAutoSync(tripId, userId, tripUrl));
 
   return NextResponse.json(activity, { status: 201 });
 }
