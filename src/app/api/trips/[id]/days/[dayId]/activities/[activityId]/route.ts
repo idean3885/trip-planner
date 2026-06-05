@@ -42,6 +42,7 @@ export async function PUT(request: Request, { params }: Params) {
     endTimezone,
     location,
     memo,
+    url,
     cost,
     currency,
     reservationStatus,
@@ -90,6 +91,8 @@ export async function PUT(request: Request, { params }: Params) {
       ...(endTimezone !== undefined && { endTimezone }),
       ...(location !== undefined && { location }),
       ...(memo !== undefined && { memo }),
+      // 빈 문자열은 "없음"으로 정규화해 NULL 로 저장한다.
+      ...(url !== undefined && { url: url === "" ? null : url }),
       ...(cost !== undefined && { cost }),
       ...(currency !== undefined && { currency }),
       ...(reservationStatus !== undefined && { reservationStatus }),

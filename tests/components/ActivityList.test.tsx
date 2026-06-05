@@ -133,10 +133,10 @@ describe("ActivityList", () => {
 
     // Fill all fields
     const textInputs = screen.getAllByRole("textbox");
-    // spec 048 레이아웃: title=0, location=1, currency=2, memo(textarea)=3.
+    // spec 058 레이아웃: title=0, location=1, url=2, currency=3, memo(textarea)=4.
     fireEvent.change(textInputs[0], { target: { value: "New" } }); // title
     fireEvent.change(textInputs[1], { target: { value: "Place" } }); // location
-    fireEvent.change(textInputs[3], { target: { value: "Note" } }); // memo
+    fireEvent.change(textInputs[4], { target: { value: "Note" } }); // memo
 
     const costInput = screen.getByRole("spinbutton");
     fireEvent.change(costInput, { target: { value: "25" } });
@@ -490,9 +490,9 @@ describe("ActivityList", () => {
 
     // Clear all optional fields
     const textInputs = screen.getAllByRole("textbox");
-    // spec 048: title=0, location=1, currency=2, memo=3
+    // spec 058: title=0, location=1, url=2, currency=3, memo=4
     fireEvent.change(textInputs[1], { target: { value: "" } }); // location
-    fireEvent.change(textInputs[3], { target: { value: "" } }); // memo
+    fireEvent.change(textInputs[4], { target: { value: "" } }); // memo
     const costInput = screen.getByRole("spinbutton");
     fireEvent.change(costInput, { target: { value: "" } }); // cost
     const timeInputs = document.querySelectorAll('input[type="time"]');
@@ -677,5 +677,20 @@ describe("ActivityList", () => {
     ];
     expect(lastCall[0]).toBe(1); // dayId
     expect(lastCall[1].map((a) => a.id)).toEqual([2]);
+  });
+
+  // spec 058 — 활동 0건이면 빈 상태를 카드로 분명히 보인다.
+  it("shows empty-state card when there are no activities", () => {
+    render(
+      <ActivityList tripId={1} dayId={1} activities={[]} canEdit={false} />,
+    );
+    expect(screen.getByText("등록된 활동이 없습니다.")).toBeInTheDocument();
+  });
+
+  it("hides empty-state once the add form opens", () => {
+    render(<ActivityList tripId={1} dayId={1} activities={[]} canEdit />);
+    expect(screen.getByText("등록된 활동이 없습니다.")).toBeInTheDocument();
+    fireEvent.click(screen.getByText("+ 활동 추가"));
+    expect(screen.queryByText("등록된 활동이 없습니다.")).toBeNull();
   });
 });

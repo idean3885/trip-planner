@@ -289,4 +289,31 @@ describe("ActivityCard", () => {
     // 메모 안 URL 링크는 break-all 로 끊어 넘침 방지.
     expect(screen.getByRole("link").className).toMatch(/break-all/);
   });
+
+  // spec 058 — 목록 카드 메모는 3줄로 줄인다(말줄임표). 전문은 상세 보기에서.
+  it("clamps memo to 3 lines in the list card", () => {
+    const longMemo = "한 줄\n두 줄\n세 줄\n네 줄\n다섯 줄";
+    render(<ActivityCard activity={makeActivity({ memo: longMemo })} />);
+    const memoEl = screen.getByText(/한 줄/);
+    expect(memoEl.className).toMatch(/line-clamp-3/);
+  });
+
+  // spec 058 — URL 은 메모와 분리된 항목. 있을 때만 클릭 링크로 노출.
+  it("renders url as a link when present", () => {
+    render(
+      <ActivityCard
+        activity={makeActivity({ url: "https://example.com/booking" })}
+      />,
+    );
+    const link = screen.getByRole("link", {
+      name: "https://example.com/booking",
+    });
+    expect(link).toHaveAttribute("href", "https://example.com/booking");
+    expect(link.className).toMatch(/break-all/);
+  });
+
+  it("does not render url element when url is empty", () => {
+    render(<ActivityCard activity={makeActivity({ url: null })} />);
+    expect(screen.queryByRole("link")).toBeNull();
+  });
 });

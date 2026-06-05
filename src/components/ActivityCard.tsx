@@ -70,6 +70,7 @@ interface ActivityCardProps {
     endTimezone?: string | null;
     location: string | null;
     memo: string | null;
+    url?: string | null;
     cost: Prisma.Decimal | string | number | null;
     currency: string;
     reservationStatus: ReservationStatus | null;
@@ -114,7 +115,7 @@ export default function ActivityCard({
   return (
     <Card size="sm" className="group gap-2">
       <CardContent
-        className={`flex items-start justify-between gap-2${viewable ? " cursor-pointer" : ""}`}
+        className={`flex items-start justify-between gap-2${viewable ? "cursor-pointer" : ""}`}
         role={viewable ? "button" : undefined}
         tabIndex={viewable ? 0 : undefined}
         aria-label={viewable ? `${activity.title} 상세` : undefined}
@@ -152,9 +153,23 @@ export default function ActivityCard({
             </p>
           )}
           {activity.memo && (
-            <p className="text-muted-foreground mt-1 text-xs break-words">
+            // spec 058 — 목록 카드에서는 메모를 최대 3줄로 줄인다(말줄임표). 전문은
+            // 카드 탭 → 상세(읽기 전용)에서 본다.
+            <p className="text-muted-foreground mt-1 line-clamp-3 text-xs break-words">
               <Linkify text={activity.memo} />
             </p>
+          )}
+          {activity.url && (
+            // spec 058 — 예약·티켓·문서 링크는 메모와 분리된 항목. 있을 때만 노출.
+            <a
+              href={activity.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="text-primary mt-1 block text-xs break-all underline underline-offset-2"
+            >
+              {activity.url}
+            </a>
           )}
         </div>
         <div className="flex shrink-0 flex-col items-end gap-1 text-right">
