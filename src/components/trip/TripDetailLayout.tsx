@@ -241,14 +241,24 @@ export function TripDetailLayout({
   }, [selectedDate]);
 
   // v3.15.1 — 스크롤 방향으로 모바일 캘린더 접힘을 제어한다. 아래로 스크롤하면
-  // 즉시 주간으로 접고, 최상단(scrollY ≤ 4)으로 돌아오면 월간으로 펼친다. 위로
-  // 스크롤해도 최상단에 닿기 전까지는 접힌 채 둬 일관되게 둔다. 접히며 문서가 짧아져
-  // 스크롤이 클램프되어도(짧은 콘텐츠) 최상단이 아니면 펼치지 않아 튐·플립이 없다.
+  // 즉시 주간으로 접고, 최상단(scrollY ≤ 4)으로 돌아오면 월간으로 펼친다.
+  // spec 058 — 클램프 가드: 문서가 뷰포트보다 짧아 스크롤이 불가한 상태(maxScroll≤4)
+  // 에서는 브라우저가 강제한 scrollY≈0 을 "사용자가 최상단으로 올림"으로 오인하지
+  // 않는다. 직전 버전(v3.17.1)은 이 오인을 막으려 하단을 한 화면(100svh)으로 채워
+  // 항상 스크롤 가능 상태를 유지했는데 빈 여백이 과했다. 가드를 두면 하단 높이를
+  // 줄여(스크롤 불가가 되어도) 접힘이 최상단으로 튕겨 다시 펼쳐지는 플립이 없다.
   useEffect(() => {
     if (typeof window === "undefined") return;
     lastScrollYRef.current = window.scrollY;
     const onScroll = () => {
       const y = window.scrollY;
+      const maxScroll =
+        document.documentElement.scrollHeight - window.innerHeight;
+      // 스크롤 불가(짧은 문서) — 클램프된 y 로 접힘 상태를 바꾸지 않는다.
+      if (maxScroll <= 4) {
+        lastScrollYRef.current = y;
+        return;
+      }
       if (y <= 4) {
         setIsCalendarCollapsed(false);
       } else if (y > lastScrollYRef.current) {
@@ -399,14 +409,12 @@ export function TripDetailLayout({
           />
         </div>
         {/* #657 — 하단 일정도 이전·현재·다음 날 3슬라이드로 드래그-팔로우 스와이프.
-            #772 — 하단 영역을 뷰포트 높이(100svh)로 채운다. 빈/적은 일정 날에는 패널이
-            화면보다 짧아 (1) 문서가 스크롤되지 않고 (2) 스와이프할 영역이 없었다.
-            v3.15.1 의 min-h-48(192px 고정)은 화면이 큰 기기에서 뷰포트를 못 넘겨 미해결.
-            패널만으로 한 화면을 채우면 캘린더가 월·주 어느 상태든 문서가 뷰포트를 넘겨
-            항상 스크롤·스와이프되고, 주간으로 접힌 뒤에도 스크롤 가능 상태가 남아
-            스크롤이 최상단으로 클램프되며 월간으로 다시 펼쳐지는 플립이 없다. */}
+            spec 058 — 하단 영역 최소 높이를 화면 절반(50svh)으로 둔다. 스와이프·세로
+            스크롤 영역은 충분히 두되, 빈/적은 일정 날에 한 화면을 통째로 비우지 않는다.
+            #772 의 100svh 는 빈 여백이 과했다. 접힘 플립은 높이가 아니라 위 onScroll 의
+            클램프 가드로 막으므로(짧은 문서의 scrollY≈0 무시) 높이를 줄여도 안전하다. */}
         <SwipeCarousel
-          className="min-h-[100svh]"
+          className="min-h-[50svh]"
           ariaLabel="선택 날짜 일정"
           anchorKey={selectedDate.toDateString()}
           syncHeight

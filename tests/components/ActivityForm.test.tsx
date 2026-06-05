@@ -78,11 +78,11 @@ describe("ActivityForm", () => {
     render(<ActivityForm onSubmit={onSubmit} onCancel={onCancel} />);
 
     const textInputs = screen.getAllByRole("textbox");
-    // spec 048 레이아웃: DOM 순서 title, location, currency, memo(textarea).
+    // spec 058 레이아웃: DOM 순서 title, location, url, currency, memo(textarea).
     // (비용은 number=spinbutton 이라 textbox 에서 빠진다.)
     fireEvent.change(textInputs[0], { target: { value: "Test Activity" } });
     fireEvent.change(textInputs[1], { target: { value: "Test Place" } });
-    fireEvent.change(textInputs[3], { target: { value: "A memo" } });
+    fireEvent.change(textInputs[4], { target: { value: "A memo" } });
 
     const form = document.querySelector("form")!;
     fireEvent.submit(form);
@@ -179,8 +179,8 @@ describe("ActivityForm", () => {
   it("uppercases currency input", () => {
     render(<ActivityForm onSubmit={onSubmit} onCancel={onCancel} />);
     const textInputs = screen.getAllByRole("textbox");
-    // spec 048 레이아웃: currency 는 textInputs[2](title, location, currency, memo).
-    fireEvent.change(textInputs[2], { target: { value: "usd" } });
+    // spec 058 레이아웃: currency 는 textInputs[3](title, location, url, currency, memo).
+    fireEvent.change(textInputs[3], { target: { value: "usd" } });
     expect(screen.getByDisplayValue("USD")).toBeInTheDocument();
   });
 
@@ -296,5 +296,53 @@ describe("ActivityForm", () => {
     );
     expect(screen.queryByText("편집")).toBeNull();
     expect(screen.getByText("닫기")).toBeInTheDocument();
+  });
+
+  // spec 058 — 320px 에서 시작·종료 입력이 겹치지 않도록 좁은 폭은 1열로 쌓고
+  // 360px 이상에서만 2열로 둔다.
+  it("stacks 시작/종료 in one column on narrow width, two columns ≥360px", () => {
+    const { container } = render(
+      <ActivityForm onSubmit={onSubmit} onCancel={onCancel} />,
+    );
+    const startInput = container.querySelector("#activity-start");
+    const grid = startInput?.closest("div.grid");
+    expect(grid?.className).toMatch(/grid-cols-1/);
+    expect(grid?.className).toMatch(/min-\[360px\]:grid-cols-2/);
+  });
+
+  // spec 058 — URL 은 메모와 분리된 입력 칸.
+  it("renders a separate URL input", () => {
+    render(<ActivityForm onSubmit={onSubmit} onCancel={onCancel} />);
+    expect(screen.getByLabelText("링크")).toBeInTheDocument();
+  });
+
+  it("submits url along with other fields", async () => {
+    render(<ActivityForm onSubmit={onSubmit} onCancel={onCancel} />);
+    fireEvent.change(screen.getByLabelText(/제목/), {
+      target: { value: "기차" },
+    });
+    fireEvent.change(screen.getByLabelText("링크"), {
+      target: { value: "https://example.com/ticket" },
+    });
+    fireEvent.click(screen.getByText("추가"));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+    expect(onSubmit.mock.calls[0][0]).toMatchObject({
+      url: "https://example.com/ticket",
+    });
+  });
+
+  // readOnly 상세: URL 이 있으면 링크로 노출.
+  it("readOnly 상세: url 이 있으면 링크로 보인다", () => {
+    render(
+      <ActivityForm
+        onCancel={onCancel}
+        readOnly
+        initial={{ title: "X", url: "https://example.com/booking" }}
+      />,
+    );
+    const link = screen.getByRole("link", {
+      name: "https://example.com/booking",
+    });
+    expect(link).toHaveAttribute("href", "https://example.com/booking");
   });
 });

@@ -177,6 +177,12 @@ export const openApiSpec = {
           },
           location: { type: "string", nullable: true },
           memo: { type: "string", nullable: true },
+          url: {
+            type: "string",
+            nullable: true,
+            description:
+              "예약·티켓·문서 링크(선택). 메모와 분리된 항목. 애플 캘린더 URL 대응.",
+          },
           cost: { $ref: "#/components/schemas/Cost" },
           currency: { type: "string", default: "EUR" },
           reservationStatus: {
@@ -194,7 +200,7 @@ export const openApiSpec = {
             type: "boolean",
             default: false,
             description:
-              "종일 활동 여부. true면 특정 시각 없이 그 날에 속하며, 표시는 \"종일\", 외부 캘린더에는 날짜 단위 종일 이벤트로 반영됩니다.",
+              '종일 활동 여부. true면 특정 시각 없이 그 날에 속하며, 표시는 "종일", 외부 캘린더에는 날짜 단위 종일 이벤트로 반영됩니다.',
           },
           sortOrder: {
             type: "integer",
@@ -752,6 +758,11 @@ export const openApiSpec = {
                   endTimezone: { type: "string", description: "IANA timezone" },
                   location: { type: "string" },
                   memo: { type: "string" },
+                  url: {
+                    type: "string",
+                    description:
+                      "예약·티켓·문서 링크(선택). 빈 문자열은 미설정.",
+                  },
                   cost: { $ref: "#/components/schemas/Cost" },
                   currency: { type: "string" },
                   reservationStatus: {
@@ -887,6 +898,11 @@ export const openApiSpec = {
                   endTimezone: { type: "string", description: "IANA timezone" },
                   location: { type: "string" },
                   memo: { type: "string" },
+                  url: {
+                    type: "string",
+                    description:
+                      "예약·티켓·문서 링크(선택). 빈 문자열은 미설정.",
+                  },
                   cost: { $ref: "#/components/schemas/Cost" },
                   currency: { type: "string" },
                   reservationStatus: {

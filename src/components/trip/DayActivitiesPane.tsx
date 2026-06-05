@@ -14,7 +14,7 @@ import { toast } from "sonner";
 
 import ActivityList, { type Activity } from "@/components/ActivityList";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCalendarDate } from "@/lib/date-utils";
 
@@ -95,18 +95,20 @@ export const DayActivitiesPane = memo(function DayActivitiesPane({
     }
   }
 
+  // spec 058 — 컨테이너 Card(보더·배경)를 없애 활동 카드만 남긴다. 직전에는 바깥
+  // Card 가 하단 영역 높이만큼 늘어나 큰 빈 박스로 보였다. 빈 상태·로딩은 각각
+  // 카드·스켈레톤으로 구분해 그린다.
   return (
-    <Card>
+    <div className="space-y-3">
       {showDateHeader && (
-        <CardHeader>
-          <CardTitle className="text-sm font-medium tabular-nums">
-            {formatCalendarDate(selectedDate)}
-          </CardTitle>
-        </CardHeader>
+        <h2 className="text-foreground text-sm font-medium tabular-nums">
+          {formatCalendarDate(selectedDate)}
+        </h2>
       )}
-      <CardContent>
-        {dayId === null ? (
-          <div className="space-y-3">
+      {dayId === null ? (
+        // Day 미생성(빈 날짜) — 빈 상태를 카드로 분명히 보인다.
+        <Card>
+          <CardContent className="space-y-3 py-6 text-center">
             <p className="text-muted-foreground text-sm">
               이 날짜에 등록된 일정이 없습니다.
             </p>
@@ -120,30 +122,26 @@ export const DayActivitiesPane = memo(function DayActivitiesPane({
                 + 일정 추가
               </Button>
             )}
-          </div>
-        ) : activities === null ? (
-          // #669 — Day 는 있으나 아직 활동을 안 받음(윈도우 밖). 도착하면 채워진다.
-          <div
-            className="space-y-2"
-            role="status"
-            aria-label="일정 불러오는 중"
-          >
-            <Skeleton className="h-16 w-full rounded-md" />
-            <Skeleton className="h-16 w-full rounded-md" />
-          </div>
-        ) : (
-          // key={dayId} — 날짜를 바꾸면 ActivityList 를 새 Day 의 활동으로 다시
-          // 마운트한다(#645). 활동은 상위 캐시에서 오고 CRUD 는 캐시로 통지(#669).
-          <ActivityList
-            key={dayId}
-            tripId={tripId}
-            dayId={dayId}
-            activities={activities}
-            canEdit={canEdit}
-            onActivitiesChange={onActivitiesChange}
-          />
-        )}
-      </CardContent>
-    </Card>
+          </CardContent>
+        </Card>
+      ) : activities === null ? (
+        // #669 — Day 는 있으나 아직 활동을 안 받음(윈도우 밖). 빈 상태와 구분되는 로딩.
+        <div className="space-y-2" role="status" aria-label="일정 불러오는 중">
+          <Skeleton className="h-16 w-full rounded-md" />
+          <Skeleton className="h-16 w-full rounded-md" />
+        </div>
+      ) : (
+        // key={dayId} — 날짜를 바꾸면 ActivityList 를 새 Day 의 활동으로 다시
+        // 마운트한다(#645). 활동 0건 빈 상태 카드는 ActivityList 가 그린다(spec 058).
+        <ActivityList
+          key={dayId}
+          tripId={tripId}
+          dayId={dayId}
+          activities={activities}
+          canEdit={canEdit}
+          onActivitiesChange={onActivitiesChange}
+        />
+      )}
+    </div>
   );
 });

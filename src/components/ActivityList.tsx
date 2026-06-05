@@ -8,6 +8,8 @@ import type {
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { Card, CardContent } from "@/components/ui/card";
+
 import ActivityCard from "./ActivityCard";
 import ActivityForm, { type ActivityFormData } from "./ActivityForm";
 
@@ -32,6 +34,7 @@ export interface Activity {
   endTimezone?: string | null;
   location: string | null;
   memo: string | null;
+  url?: string | null;
   cost: Prisma.Decimal | string | number | null;
   currency: string;
   reservationStatus: ReservationStatus | null;
@@ -102,6 +105,7 @@ export default function ActivityList({
     }
     if (data.location) body.location = data.location;
     if (data.memo) body.memo = data.memo;
+    if (data.url) body.url = data.url;
     if (data.cost) body.cost = parseFloat(data.cost);
     if (data.currency) body.currency = data.currency;
     if (data.reservationStatus) body.reservationStatus = data.reservationStatus;
@@ -137,6 +141,7 @@ export default function ActivityList({
       endTimezone: data.endTime ? tz : null,
       location: data.location || null,
       memo: data.memo || null,
+      url: data.url || null,
       cost: data.cost ? parseFloat(data.cost) : null,
       currency: data.currency,
       reservationStatus: data.reservationStatus || null,
@@ -213,7 +218,11 @@ export default function ActivityList({
   const allDayItems = activities.filter((a) => a.allDay);
   const timedItems = activities.filter((a) => !a.allDay);
 
-  const renderItem = (activity: Activity, isFirst: boolean, isLast: boolean) => {
+  const renderItem = (
+    activity: Activity,
+    isFirst: boolean,
+    isLast: boolean,
+  ) => {
     const initial = {
       category: activity.category,
       title: activity.title,
@@ -221,6 +230,7 @@ export default function ActivityList({
       endTime: formatTime(activity.endTime),
       location: activity.location ?? "",
       memo: activity.memo ?? "",
+      url: activity.url ?? "",
       cost: activity.cost ? String(activity.cost) : "",
       currency: activity.currency,
       reservationStatus: activity.reservationStatus ?? "",
@@ -294,6 +304,16 @@ export default function ActivityList({
       )}
       {timedItems.map((activity, idx) =>
         renderItem(activity, idx === 0, idx === timedItems.length - 1),
+      )}
+
+      {/* spec 058 — 활동 0건이면 빈 상태를 카드로 보여 비어 있음을 분명히 한다
+          (로딩 스켈레톤은 DayActivitiesPane 가 별도로 처리해 구분 유지). */}
+      {activities.length === 0 && !showForm && (
+        <Card>
+          <CardContent className="text-muted-foreground py-6 text-center text-sm">
+            등록된 활동이 없습니다.
+          </CardContent>
+        </Card>
       )}
 
       {showForm ? (

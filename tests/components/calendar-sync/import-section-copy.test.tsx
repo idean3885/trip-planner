@@ -46,9 +46,10 @@ describe("ImportSection — 빈 상태 카피", () => {
     render(<ImportSection tripId={1} role="OWNER" onImported={() => {}} />);
 
     await waitFor(() => {
+      // spec 058 — provider 섹션별 빈 안내(Apple·Google 각 1건).
       expect(
-        screen.getByText("가져올 수 있는 외부 캘린더가 없습니다."),
-      ).toBeInTheDocument();
+        screen.getAllByText("가져올 수 있는 캘린더가 없습니다."),
+      ).toHaveLength(2);
     });
     // 빈 상태 안내 어디에도 코드명이 없어야 한다.
     const region = document.body.innerHTML;
@@ -70,9 +71,10 @@ describe("ImportSection — 빈 상태 카피", () => {
     render(<ImportSection tripId={1} role="OWNER" onImported={() => {}} />);
 
     await waitFor(() => {
+      // spec 058 — provider 섹션별 빈 안내(Apple·Google 각 1건).
       expect(
-        screen.getByText("가져올 수 있는 외부 캘린더가 없습니다."),
-      ).toBeInTheDocument();
+        screen.getAllByText("가져올 수 있는 캘린더가 없습니다."),
+      ).toHaveLength(2);
     });
     expect(document.body.innerHTML).not.toContain("trip-planner");
   });

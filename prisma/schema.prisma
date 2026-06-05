@@ -149,6 +149,7 @@ model Activity {
   endTimezone       String?            @map("end_timezone") @db.VarChar(40)
   location          String?
   memo              String?            @db.Text
+  url               String?            @db.Text
   cost              Decimal?           @db.Decimal(10, 2)
   currency          String             @default("EUR") @db.VarChar(3)
   reservationStatus ReservationStatus? @map("reservation_status")

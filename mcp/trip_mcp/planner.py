@@ -196,6 +196,7 @@ def register_planner_tools(mcp: FastMCP) -> None:
         end_timezone: str = "",
         location: str = "",
         memo: str = "",
+        url: str = "",
         cost: float = 0,
         currency: str = "EUR",
         reservation_status: str = "",
@@ -213,6 +214,7 @@ def register_planner_tools(mcp: FastMCP) -> None:
             end_timezone: 종료 IANA 시간대 (예: "Europe/Lisbon", 선택)
             location: 장소명 (예: "Torre de Belém", 선택)
             memo: 메모 (선택)
+            url: 예약·티켓·문서 링크 (선택, 메모와 분리된 항목)
             cost: 예상 비용 (0이면 미입력, 선택)
             currency: 통화 코드 (기본 EUR)
             reservation_status: 예약 상태 (REQUIRED, RECOMMENDED, ON_SITE, NOT_NEEDED, RESERVED, 선택)
@@ -230,6 +232,8 @@ def register_planner_tools(mcp: FastMCP) -> None:
             body["location"] = location
         if memo:
             body["memo"] = memo.replace("\\n", "\n")
+        if url:
+            body["url"] = url
         if cost:
             body["cost"] = cost
         if reservation_status:
@@ -265,6 +269,7 @@ def register_planner_tools(mcp: FastMCP) -> None:
         end_timezone: str = "",
         location: str = "",
         memo: str = "",
+        url: str = "",
         cost: float = 0,
         currency: str = "",
         category: str = "",
@@ -283,6 +288,7 @@ def register_planner_tools(mcp: FastMCP) -> None:
             end_timezone: 종료 IANA 시간대 (예: "Europe/Lisbon")
             location: 변경할 장소명
             memo: 변경할 메모
+            url: 변경할 링크 (예약·티켓·문서, 빈 문자열이면 변경하지 않음)
             cost: 변경할 비용 (0이면 변경하지 않음)
             currency: 변경할 통화 코드
             category: 변경할 유형 (SIGHTSEEING, DINING, TRANSPORT, ACCOMMODATION, SHOPPING, OTHER)
@@ -303,6 +309,8 @@ def register_planner_tools(mcp: FastMCP) -> None:
             body["location"] = location
         if memo:
             body["memo"] = memo.replace("\\n", "\n")
+        if url:
+            body["url"] = url
         if cost:
             body["cost"] = cost
         if currency:
