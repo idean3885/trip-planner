@@ -136,11 +136,13 @@ describe("TripDetailLayout 모바일 스와이프·스크롤 접힘 (v3.15.1 hot
 
   afterEach(() => setScrollY(0));
 
-  it("일정 캐러셀에 최소 높이가 있어 빈 날에도 스와이프 영역이 있다", () => {
+  it("일정 캐러셀이 뷰포트 높이를 채워 빈 날에도 스크롤·스와이프 영역이 있다", () => {
     renderLayout();
     const carousel = screen.getByRole("group", { name: "선택 날짜 일정" });
-    // min-h 로 일정이 없는 날(days=[])에도 좌우 스와이프 영역을 확보한다.
-    expect(carousel.className).toContain("min-h-48");
+    // #772 — 빈/적은 일정 날(days=[])에도 패널이 한 화면을 채워, 문서가 뷰포트를
+    // 넘겨 스크롤되고 좌우 스와이프 영역이 남는다. 고정 px(min-h-48)는 큰 화면에서
+    // 뷰포트를 못 넘겨 스크롤이 안 됐다.
+    expect(carousel.className).toContain("min-h-[100svh]");
   });
 
   it("아래로 스크롤하면 모바일 캘린더가 주간으로 접히고, 최상단 복귀 시 펼친다", () => {
