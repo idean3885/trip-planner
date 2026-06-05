@@ -20,3 +20,6 @@
 | [0003](./0003-per-trip-shared-calendar.md) | 여행 캘린더는 여행당 1개 공유 캘린더로 통일 | Accepted | 2026-04-22 |
 | [0004](./0004-gcal-testing-mode-cost.md) | Google OAuth Testing 모드 유지 — 심사 비용이 가장 큰 유보 이유 | Accepted | 2026-04-22 |
 | [0005](./0005-expand-and-contract-pattern.md) | 무중단 DB 마이그레이션은 Expand-and-Contract 패턴으로 진행 | Accepted | 2026-04-27 |
+| [0006](./0006-external-calendar-import-policy.md) | 외부 캘린더 import은 ActivityDraft 단방향 정책 | Accepted | 2026-05-27 |
+| [0007](./0007-calendar-swipe-embla.md) | 캘린더·일정 스와이프 모션 엔진으로 embla-carousel 채택 | Accepted | 2026-05-30 |
+| [0008](./0008-nextjs-fullstack-single-runtime.md) | Next.js 풀스택 단일 런타임 + Vercel 무료 티어 | Accepted | 2026-06-03 |

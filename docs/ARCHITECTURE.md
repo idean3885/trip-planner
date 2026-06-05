@@ -2,6 +2,31 @@
 
 > **대상 독자**: 기여자·개발자 — 전체 시스템 구성 요소와 흐름을 파악하려는 분.
 
+## 설계 사상
+
+> 한 줄 요약: **1인 운영 + 무료 티어라는 제약을 운영 표면 최소화로 푼다.** 자세한 결정 근거는 [ADR-0008 — Next.js 풀스택 단일 런타임 + Vercel 무료 티어](./adr/0008-nextjs-fullstack-single-runtime.md).
+
+이 프로젝트의 구조는 세 가지 제약에서 나왔다 — 운영 인력 1명, 금전 비용 0원(헌법 II — Minimum Cost), 클라이언트 둘(웹 브라우저 + MCP/AI 에이전트).
+
+- **왜 React SPA가 아니라 서버를 도입했나.** SSR·세션 가드·OAuth·동행자 권한 검증은 서버가 있어야 풀린다. SPA로 가면 별도 백엔드 서버가 따로 필요해지고, 배포 대상·CORS·토큰 교환 인프라가 늘어 1인 운영 표면이 배가된다.
+- **왜 별도 백엔드 없이 Next.js 단일 런타임인가.** 하나의 Next.js 앱이 서버 컴포넌트 SSR·REST API·미들웨어·Auth.js OAuth를 모두 담당한다. 배포 대상 1개, CI 1개, 인증 인프라 1개로 유지 비용을 누른다.
+- **왜 웹·MCP가 같은 정본 하나로 모이나.** DB 접근은 Next.js 서버 한 곳으로 모은다. MCP(Python)는 DB에 직접 붙지 않고 REST API(`/api/v2`)의 클라이언트로 동작해, 두 클라이언트가 같은 데이터 정본을 본다.
+- **왜 서비스 계층 없이 라우트가 Prisma를 직접 호출하나.** 현재 규모에 맞춘 의도적 선택이다. 추상화 선투자 대비 이득이 작다고 판단했고, 한계와 전환 신호는 [아래 "현재 한계"](#현재-한계)와 ADR-0008에 함께 기록했다.
+
+대표 도식은 [`docs/diagrams/`](./diagrams/)에 둔다 — 편집 정본은 `.drawio`, GitHub·문서 표시는 draw.io가 내보낸 `.png`다. 아래 mermaid 다이어그램은 git diff로 변경 추적이 쉬운 세부 흐름용이다.
+
+### 대표 도식
+
+**시스템 컨텍스트** — 클라이언트 둘(웹·MCP)이 Next.js 단일 런타임 한 곳을 경유해 같은 데이터 정본에 닿는다.
+
+![시스템 컨텍스트](./diagrams/system-context.png)
+
+**배포 토폴로지** — Git 브랜치가 환경에 매핑되고, 환경별 DB가 분리(#318)된다.
+
+![배포 토폴로지](./diagrams/deploy-topology.png)
+
+> 도식을 고치려면 편집 정본 [`docs/diagrams/workspace/*.drawio`](./diagrams/workspace/)를 draw.io(또는 VS Code Draw.io Integration)에서 열어 수정한 뒤 PNG로 다시 내보낸다. GitHub·문서 표시는 `.png`다 — draw.io의 SVG 내보내기는 텍스트를 `foreignObject`로 담아 GitHub `<img>`에서 렌더되지 않으므로 PNG를 표시본으로 쓴다. 규약 상세는 [`workspace/README.md`](./diagrams/workspace/README.md).
+
 ## 시스템 개요
 
 ```mermaid

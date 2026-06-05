@@ -108,6 +108,10 @@ develop ──●──●──●───●──●──●──●──
 
 도메인·UX·반응형(viewport)·역할·엔티티·상태·동작 용어 정본은 [`docs/glossary.md`](./docs/glossary.md)입니다. 새 용어 도입 시 먼저 등재 후 spec·문서·UI 코드 주석에서 같은 명칭을 사용합니다.
 
+### 다이어그램
+
+아키텍처·시스템 다이어그램은 **소스(`.drawio`)와 결과물(`.png`)을 분리**합니다. 소스는 [`docs/diagrams/workspace/`](docs/diagrams/workspace/)에 모으고, 문서에 임베드·열람하는 결과물 `.png`는 [`docs/diagrams/`](docs/diagrams/) 직속에 둡니다. draw.io는 결과물 출력 도구일 뿐이며, 소스 수정 시 PNG를 다시 export해 **함께 커밋**합니다. 편집·export 규약 정본은 [`docs/diagrams/workspace/README.md`](docs/diagrams/workspace/README.md)입니다.
+
 ### speckit 하네스 (spec 010, 이슈 #181)
 
 모든 피처 작업 산출물은 아래 4종 메타태그로 자동 검증된다. 형식 위반은 `validate-metatag-format.sh`가 차단.
