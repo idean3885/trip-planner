@@ -1,14 +1,15 @@
 /**
- * spec 028 → spec 043 US3 — 캘린더 동기화 진입 버튼.
+ * spec 028 → spec 043 US3 → spec 056 — 캘린더 가져오기 진입 버튼.
  *
- * trip 상세 캘린더 동선의 단일 진입점. 과거 진입 "카드 + [열기]" 2단계를 없애고,
- * 액션바의 버튼 한 번으로 통합 다이얼로그(연결·가져오기·초안)를 바로 연다.
+ * trip 상세 캘린더 동선의 단일 진입점. 액션바의 버튼 한 번으로 가져오기 전용
+ * 다이얼로그(가져오기·초안)를 연다. spec 056에서 내보내기/동기화 표면을 제거하고
+ * 가져오기 전용으로 재정의했다(SSOT 단방향).
  */
 
 "use client";
 
 import type { TripRole } from "@prisma/client";
-import { CalendarSync } from "lucide-react";
+import { CalendarArrowDown } from "lucide-react";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -24,35 +25,20 @@ function initialOpenFromUrl(): boolean {
 interface Props {
   tripId: number;
   role: TripRole;
-  calendarLinked: boolean;
-  calendarProvider: "GOOGLE" | "APPLE" | null;
-  calendarName: string | null;
-  providerHint: "google" | null;
 }
 
-export default function CalendarSyncEntryCard({
-  tripId,
-  role,
-  calendarLinked,
-  calendarProvider,
-  calendarName,
-  providerHint,
-}: Props) {
+export default function CalendarSyncEntryCard({ tripId, role }: Props) {
   const [open, setOpen] = useState<boolean>(initialOpenFromUrl);
 
   return (
     <>
       <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
-        <CalendarSync className="size-4" />
-        캘린더 동기화
+        <CalendarArrowDown className="size-4" />
+        캘린더 가져오기
       </Button>
       <CalendarSyncDialog
         tripId={tripId}
         role={role}
-        initialCalendarLinked={calendarLinked}
-        initialCalendarProvider={calendarProvider}
-        initialCalendarName={calendarName}
-        providerHint={providerHint}
         open={open}
         onOpenChange={setOpen}
       />

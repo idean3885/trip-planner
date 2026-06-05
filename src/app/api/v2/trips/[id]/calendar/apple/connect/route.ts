@@ -1,34 +1,22 @@
 /**
- * spec 025 (#417) — Apple iCloud 공유 캘린더 연결.
+ * spec 056 (외부 캘린더 내보내기 제품 노출 제거) — Apple trip별 연결 엔드포인트 폐지.
  *
- * POST /api/v2/trips/[id]/calendar/apple/connect
- *
- * 사전 조건: validate 라우트로 AppleCalendarCredential 저장 완료.
- * 흐름: service.connectAppleCalendar 위임. capability "manual"로 멤버 ACL 자동 부여 0회 +
- * `manualAclGuidance` 응답 포함.
+ * 여행별 Apple 공유 캘린더 연결(전용 캘린더 생성)은 내보내기(쓰기) 표면이다. 410 Gone으로
+ * 고정한다. 코어(`connectAppleCalendar`)는 보존하되 미호출한다. 가져오기 읽기 인증인
+ * user-level AppleCalendarCredential 등록(/settings/calendars)은 유지된다.
  */
 
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
-import { auth } from "@/auth";
-import { connectAppleCalendar } from "@/lib/calendar/service";
-
-export async function POST(
-  _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
-  }
-  const tripId = Number((await params).id);
-  if (!Number.isFinite(tripId)) {
-    return NextResponse.json({ error: "bad_trip_id" }, { status: 400 });
-  }
-
-  const result = await connectAppleCalendar({
-    userId: session.user.id,
-    tripId,
-  });
-  return NextResponse.json(result.body, { status: result.status });
+function gone() {
+  return NextResponse.json(
+    {
+      error: "gone",
+      message:
+        "외부 캘린더 연결/동기화는 더 이상 제공되지 않습니다. trip-planner는 외부 캘린더에서 가져오기(읽기)만 지원합니다.",
+    },
+    { status: 410, headers: { "Cache-Control": "no-store" } },
+  );
 }
+
+export const POST = gone;

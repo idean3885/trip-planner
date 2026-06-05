@@ -6,11 +6,9 @@
  */
 
 import type { ActivityCategory, ReservationStatus } from "@prisma/client";
-import { after, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
-import { getAppOrigin } from "@/lib/app-url";
 import { getAuthUserId } from "@/lib/auth-helpers";
-import { triggerCalendarAutoSync } from "@/lib/calendar/auto-sync";
 import {
   DraftNotPromotableError,
   promoteDraft,
@@ -96,9 +94,6 @@ export async function POST(request: Request, { params }: Params) {
       endTimezone: body.endTimezone!,
       location: body.location ?? null,
     });
-    // spec 049 — 가져오기 확정 후 외부 캘린더 자동 반영.
-    const tripUrl = `${getAppOrigin(request)}/trips/${tripId}`;
-    after(() => triggerCalendarAutoSync(tripId, userId, tripUrl));
     return NextResponse.json(result, { status: 200 });
   } catch (err) {
     if (err instanceof DraftNotPromotableError) {
