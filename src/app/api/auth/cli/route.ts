@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { auth } from "@/auth";
-import { createPAT } from "@/lib/token-helpers";
+import { autoPatExpiry, createPAT } from "@/lib/token-helpers";
 
 /**
  * GET /api/auth/cli — CLI/MCP 브라우저 인증
@@ -47,7 +47,13 @@ export async function GET(request: NextRequest) {
   }
 
   // ── PAT 발급 + localhost 리다이렉트 ──
-  const result = await createPAT(session.user.id, "CLI (자동 로그인)");
+  // spec 059 — 자동 발급 토큰은 단기 만료(now+30일). 만료 시 MCP는 401 자동
+  // 재인증, 일반 소비자는 재로그인 안내. 장수명 토큰 무기한 보관 방지.
+  const result = await createPAT(
+    session.user.id,
+    "CLI (자동 로그인)",
+    autoPatExpiry(),
+  );
   const callbackUrl = `http://127.0.0.1:${port}/callback?token=${encodeURIComponent(result.rawToken)}&state=${encodeURIComponent(state)}`;
 
   return NextResponse.redirect(callbackUrl);

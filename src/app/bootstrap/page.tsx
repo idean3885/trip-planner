@@ -12,7 +12,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { getSession } from "@/lib/auth-helpers";
-import { createPAT } from "@/lib/token-helpers";
+import { autoPatExpiry, createPAT } from "@/lib/token-helpers";
 
 function isValidPort(s: string): boolean {
   if (!/^\d+$/.test(s)) return false;
@@ -68,8 +68,9 @@ export default async function BootstrapPage({
   }
 
   // 인증 OK — PAT 발급 + localhost listener 로 redirect (fragment).
+  // spec 059 — 자동 발급 토큰은 단기 만료(now+30일). 만료 시 재인증 경로 동작.
   const label = await deviceLabelFromHeaders();
-  const pat = await createPAT(session.user.id, label, null);
+  const pat = await createPAT(session.user.id, label, autoPatExpiry());
   const target = `http://127.0.0.1:${port}/callback#token=${encodeURIComponent(
     pat.rawToken,
   )}&state=${encodeURIComponent(state)}`;

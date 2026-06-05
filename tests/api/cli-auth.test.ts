@@ -9,8 +9,11 @@ vi.mock("@/auth", () => ({
 }));
 
 const mockCreatePAT = vi.fn();
+// spec 059 — 자동 발급 만료 헬퍼. 단언 편의를 위해 고정 Date 를 돌린다.
+const AUTO_EXPIRY = new Date("2099-01-01T00:00:00.000Z");
 vi.mock("@/lib/token-helpers", () => ({
   createPAT: (...args: unknown[]) => mockCreatePAT(...args),
+  autoPatExpiry: () => AUTO_EXPIRY,
 }));
 
 // ── Import after mocks ──
@@ -108,7 +111,28 @@ describe("GET /api/auth/cli", () => {
     expect(location).toContain("token=tp_test_token_abc");
     expect(location).toContain(`state=${state}`);
 
-    expect(mockCreatePAT).toHaveBeenCalledWith("user-123", "CLI (자동 로그인)");
+    // spec 059 — 자동 발급은 단기 만료(autoPatExpiry)를 함께 넘긴다(무만료 아님).
+    expect(mockCreatePAT).toHaveBeenCalledWith(
+      "user-123",
+      "CLI (자동 로그인)",
+      AUTO_EXPIRY,
+    );
+  });
+
+  it("자동 발급 토큰에 만료가 부여된다(무만료 아님)", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-9" } });
+    mockCreatePAT.mockResolvedValue({
+      rawToken: "tp_z",
+      id: 1,
+      name: "CLI (자동 로그인)",
+      tokenPrefix: "tp_z",
+      expiresAt: AUTO_EXPIRY,
+      createdAt: new Date(),
+    });
+    await GET(makeRequest({ port: "20000", state: "e".repeat(16) }));
+    const thirdArg = mockCreatePAT.mock.calls[0][2];
+    expect(thirdArg).toBeInstanceOf(Date);
+    expect(thirdArg).not.toBeNull();
   });
 
   it("accepts port at boundary 1024", async () => {

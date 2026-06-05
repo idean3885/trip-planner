@@ -221,6 +221,8 @@ develop ──●──●──●───●──●──●──●──
 - 변경 없음(분석 데이터는 외부 GA4로 적재, DB 스키마 무변경) (057-ga4-gsc-analytics)
 - TypeScript 5.x (Next.js 16 App Router, React 19), Python 3.10+ (MCP 서버) + Next.js 16, React 19, Tailwind CSS v4(`@theme` CSS-first), shadcn/ui(vendored Card 등), Prisma 7(@prisma/adapter-pg, Neon), Zod, FastMCP/httpx. **본 피처 신규 의존성 도입 없음.** (058-activity-card-url-refine)
 - Neon Postgres (Production `neondb` / Preview·Dev `neondb_dev`, #318). Prisma 마이그레이션 1건 — `activities.url` 컬럼 추가(nullable). (058-activity-card-url-refine)
+- TypeScript 5.x (Next.js 16 App Router, Auth.js v5), Node.js 20+ (`oauth-listener.mjs`), Python 3.10+ (MCP `web_client.py`), Bash (`install.sh`). + Auth.js v5(Google OAuth2), 기존 `/api/auth/cli`·`/bootstrap`·`scripts/bootstrap/oauth-listener.mjs`·`src/lib/token-helpers.ts(createPAT)`·macOS 키체인. **본 피처 신규 의존성 없음.** (059-cli-oauth-login)
+- Neon Postgres. **스키마 변경 없음** — 기존 `PersonalAccessToken.expiresAt` 재사용(자동 발급 경로가 단기 만료를 채움). 마이그레이션 0건. (059-cli-oauth-login)
 
 ## Recent Changes
 - 001-ax-travel-planning: Added Python 3.14 + FastMCP, httpx, python-dotenv, pytes
