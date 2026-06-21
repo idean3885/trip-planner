@@ -9,6 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [3.20.2] - 2026-06-21
+
+### Fixed
+
+- * **활동 일정을 탭하면 먼저 읽기 전용 상세**가 열립니다. 보기 화면에서 곧장 편집되지 않고, 상세의 "편집"을 눌러야 수정·저장할 수 있습니다.
+
+  ([#796](https://github.com/idean3885/trip-planner/issues/796))
+
+### Chore
+
+- * **레거시 API 토큰 발급 진입점**을 보안 흐름으로 통합했습니다. 자동 발급 토큰이 주소창에 노출되던 경로가 사라집니다.
+
+  ([#794](https://github.com/idean3885/trip-planner/issues/794))
+
+
 ## [3.20.1] - 2026-06-21
 
 ### Fixed
