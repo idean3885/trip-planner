@@ -1,11 +1,12 @@
 # Contract: 범용 OAuth 로그인 + 단기 만료 (059)
 
-신규 HTTP 엔드포인트 없음. 기존 `/api/auth/cli`(로그인 콜백→PAT 발급) 재사용.
+신규 HTTP 엔드포인트 없음. 기존 `/bootstrap`(로그인 콜백→PAT 발급, fragment 전달) 재사용.
 
 ## CLI 커맨드 (신규 진입점)
 
 `node scripts/auth-login.mjs` (또는 래퍼 스크립트)
-- 동작: 로컬 1회용 수신 포트 오픈 → 브라우저로 `https://trip.idean.me/api/auth/cli?port=<p>&state=<s>` 열기 → 콜백으로 토큰 수신 → OS 키체인 저장.
+- 동작: 로컬 1회용 수신 포트 오픈 → 브라우저로 `https://trip.idean.me/bootstrap?port=<p>&state=<s>` 열기 → 콜백으로 토큰 수신(fragment) → OS 키체인 저장.
+- 엔드포인트: `oauth-listener.mjs` 가 `/bootstrap` 을 연다(`/api/auth/cli` 아님). install.sh·MCP 도 `/bootstrap` fragment 흐름으로 통일 — 토큰을 URL query 가 아닌 fragment 로 전달해 서버 로그·referrer 미노출.
 - 출력: 성공/실패 분명한 안내. 실패(타임아웃·포트 점유·state 불일치) 시 토큰 미변경.
 - 종료코드: 성공 0 / 실패 비0.
 

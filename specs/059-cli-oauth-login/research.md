@@ -2,7 +2,7 @@
 
 ## R1. 범용 OAuth 로그인 커맨드
 
-- **Decision**: install.sh의 브라우저 OAuth 흐름을 독립 실행 진입점(`scripts/auth-login.mjs`)으로 추출. 기존 `scripts/bootstrap/oauth-listener.mjs`(로컬 수신·state CSRF·키체인 저장)를 그대로 호출. 사용자는 `node scripts/auth-login.mjs`(또는 래퍼) 1회 실행 → 브라우저 `/api/auth/cli` 로그인 → 토큰 키체인 저장.
+- **Decision**: install.sh의 브라우저 OAuth 흐름을 독립 실행 진입점(`scripts/auth-login.mjs`)으로 추출. 기존 `scripts/bootstrap/oauth-listener.mjs`(로컬 수신·state CSRF·키체인 저장)를 그대로 호출. 사용자는 `node scripts/auth-login.mjs`(또는 래퍼) 1회 실행 → 브라우저 `/bootstrap`(fragment 전달) 로그인 → 토큰 키체인 저장.
 - **Rationale**: 신규 의존성 0, 검증된 흐름 재사용. install.sh·MCP·임의 헬퍼가 같은 진입점을 공유.
 - **Alternatives**: MCP CLI 서브커맨드(비-MCP 소비자 무거움), 별도 바이너리(빌드·배포 인프라 공수) — 기각(이슈 #783 확정).
 

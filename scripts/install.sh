@@ -178,40 +178,62 @@ else
 
             # Python이 서버 기동 + 브라우저 열기 + 콜백 수신을 모두 처리
             BROWSER_TOKEN=$("${PYTHON_BIN}" -c "
-import http.server, urllib.parse, sys, socketserver, webbrowser
+import http.server, urllib.parse, sys, socketserver, webbrowser, time, os
 
 state = sys.argv[1]
 base_url = sys.argv[2]
 
+# /bootstrap 은 토큰을 fragment(#)로 redirect — 서버는 fragment 를 못 본다.
+# /callback 이 relay HTML 을 주면 브라우저 JS 가 location.hash 를 POST /token
+# 으로 보낸다(query redirect 대비 토큰이 서버 로그·referrer 에 안 남음).
+RELAY = ('<!doctype html><meta charset=utf-8><script>'
+         'var f=location.hash.substring(1);'
+         'fetch(\"/token?\"+f,{method:\"POST\"})'
+         '.then(function(r){document.body.textContent=\"인증 완료! 이 창을 닫고 터미널로 돌아가세요.\";})'
+         '.catch(function(){document.body.textContent=\"오류. 다시 시도해 주세요.\";});'
+         '</script><body>처리 중...</body>')
+
 class H(http.server.BaseHTTPRequestHandler):
     token = None
+    done = False
+    def _reply(self, code, body=b'', ctype='text/plain'):
+        self.send_response(code)
+        self.send_header('Content-Type', ctype + '; charset=utf-8')
+        self.end_headers()
+        if body:
+            self.wfile.write(body if isinstance(body, bytes) else body.encode())
     def do_GET(self):
         p = urllib.parse.urlparse(self.path)
-        q = urllib.parse.parse_qs(p.query)
         if p.path == '/callback':
-            if q.get('state', [''])[0] != state:
-                self.send_response(400)
-                self.end_headers()
-                self.wfile.write(b'State mismatch')
-                return
-            H.token = q.get('token', [''])[0]
-            self.send_response(200)
-            self.send_header('Content-Type', 'text/html; charset=utf-8')
-            self.end_headers()
-            html = '<html><body style=\"font-family:system-ui;text-align:center;padding:60px\">'
-            html += '<h1>인증 완료!</h1><p>이 창을 닫고 터미널로 돌아가세요.</p></body></html>'
-            self.wfile.write(html.encode())
+            self._reply(200, RELAY, 'text/html')
         else:
-            self.send_response(404)
-            self.end_headers()
+            self._reply(404)
+    def do_POST(self):
+        p = urllib.parse.urlparse(self.path)
+        if p.path != '/token':
+            self._reply(404); return
+        H.done = True
+        q = urllib.parse.parse_qs(p.query)
+        if q.get('state', [''])[0] != state:
+            self._reply(400, b'state_mismatch'); return
+        tok = q.get('token', [''])[0]
+        if not tok.startswith('tp_'):
+            self._reply(400, b'invalid_token'); return
+        H.token = tok
+        self._reply(200, b'ok')
     def log_message(self, *a): pass
 
 with socketserver.TCPServer(('127.0.0.1', 0), H) as s:
     port = s.server_address[1]
-    url = f'{base_url}/api/auth/cli?port={port}&state={state}'
+    url = f'{base_url}/bootstrap?port={port}&state={state}'
     webbrowser.open(url)
-    s.timeout = 120
-    s.handle_request()
+    deadline = time.monotonic() + int(os.environ.get('TRIP_BOOTSTRAP_TIMEOUT_SEC', '120'))
+    while not H.done:
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            break
+        s.timeout = remaining
+        s.handle_request()
     if H.token:
         print(H.token, end='')
 " "${STATE}" "https://trip.idean.me" 2>/dev/null || true)
