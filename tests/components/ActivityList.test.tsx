@@ -35,6 +35,12 @@ function makeActivity(overrides = {}) {
   };
 }
 
+// #794 — 편집은 카드 직접 진입이 아니라 본문 탭 → 읽기전용 상세 → "편집" 순.
+function openEdit(title = "벨렝 탑") {
+  fireEvent.click(screen.getByRole("button", { name: `${title} 상세` }));
+  fireEvent.click(screen.getByText("편집"));
+}
+
 describe("ActivityList", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -241,7 +247,7 @@ describe("ActivityList", () => {
         canEdit={true}
       />,
     );
-    fireEvent.click(screen.getByText("편집"));
+    openEdit();
 
     const form = document.querySelector("form")!;
     fireEvent.submit(form);
@@ -299,7 +305,7 @@ describe("ActivityList", () => {
         canEdit={true}
       />,
     );
-    fireEvent.click(screen.getByText("편집"));
+    openEdit();
     const form = document.querySelector("form")!;
     fireEvent.submit(form);
     await waitFor(() => {
@@ -345,8 +351,8 @@ describe("ActivityList", () => {
         canEdit={true}
       />,
     );
-    // 첫 activity의 편집 버튼 클릭
-    fireEvent.click(screen.getAllByText("편집")[0]);
+    // 첫 activity의 상세 → 편집
+    openEdit("First");
     const form = document.querySelector("form")!;
     fireEvent.submit(form);
     await waitFor(() => {
@@ -369,7 +375,7 @@ describe("ActivityList", () => {
         canEdit={true}
       />,
     );
-    fireEvent.click(screen.getByText("편집"));
+    openEdit();
     const costInput = screen.getByRole("spinbutton");
     fireEvent.change(costInput, { target: { value: "42.5" } });
     const form = document.querySelector("form")!;
@@ -408,7 +414,7 @@ describe("ActivityList", () => {
         canEdit={true}
       />,
     );
-    fireEvent.click(screen.getByText("편집"));
+    openEdit();
     expect(screen.getByText("수정")).toBeInTheDocument();
     expect(screen.getByDisplayValue("벨렝 탑")).toBeInTheDocument();
   });
@@ -423,7 +429,7 @@ describe("ActivityList", () => {
         canEdit={true}
       />,
     );
-    fireEvent.click(screen.getByText("편집"));
+    openEdit();
     fireEvent.click(screen.getByText("취소"));
     expect(screen.getByText("벨렝 탑")).toBeInTheDocument();
     expect(screen.queryByText("수정")).not.toBeInTheDocument();
@@ -442,7 +448,7 @@ describe("ActivityList", () => {
         canEdit={true}
       />,
     );
-    fireEvent.click(screen.getByText("편집"));
+    openEdit();
 
     const form = document.querySelector("form")!;
     fireEvent.submit(form);
@@ -486,7 +492,7 @@ describe("ActivityList", () => {
         canEdit={true}
       />,
     );
-    fireEvent.click(screen.getByText("편집"));
+    openEdit();
 
     // Clear all optional fields
     const textInputs = screen.getAllByRole("textbox");
@@ -562,7 +568,7 @@ describe("ActivityList", () => {
         canEdit={true}
       />,
     );
-    fireEvent.click(screen.getByText("편집"));
+    openEdit();
     expect(screen.getByText("수정")).toBeInTheDocument();
     // Null fields should become empty inputs, not "null"
     expect(screen.queryByDisplayValue("null")).not.toBeInTheDocument();
@@ -578,7 +584,7 @@ describe("ActivityList", () => {
         canEdit={true}
       />,
     );
-    fireEvent.click(screen.getByText("편집"));
+    openEdit();
     expect(screen.getByDisplayValue("42.50")).toBeInTheDocument();
   });
 

@@ -3,7 +3,7 @@ import type {
   Prisma,
   ReservationStatus,
 } from "@prisma/client";
-import { ArrowDown, ArrowUp, Pencil, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Trash2 } from "lucide-react";
 
 import { Linkify } from "@/components/Linkify";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -79,9 +79,8 @@ interface ActivityCardProps {
   canEdit?: boolean;
   isFirst?: boolean;
   isLast?: boolean;
-  /** spec 048 — 본문 탭 시 상세(읽기 전용) 펼침. */
+  /** spec 048 — 본문 탭 시 상세(읽기 전용) 펼침. 편집은 상세 안 "편집"으로만(#794 후속). */
   onView?: () => void;
-  onEdit?: () => void;
   onDelete?: () => void;
   onMoveUp?: () => void;
   onMoveDown?: () => void;
@@ -93,7 +92,6 @@ export default function ActivityCard({
   isFirst = false,
   isLast = false,
   onView,
-  onEdit,
   onDelete,
   onMoveUp,
   onMoveDown,
@@ -207,13 +205,6 @@ export default function ActivityCard({
             </button>
           </div>
           <div className="flex gap-1">
-            <button
-              onClick={onEdit}
-              className="text-muted-foreground hover:bg-muted hover:text-foreground inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs transition-colors"
-            >
-              <Pencil className="size-3" aria-hidden />
-              편집
-            </button>
             <button
               onClick={onDelete}
               className="text-destructive hover:bg-destructive/10 inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs transition-colors"

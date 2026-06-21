@@ -274,7 +274,6 @@ export default function ActivityList({
         isFirst={isFirst}
         isLast={isLast}
         onView={() => setViewingId(activity.id)}
-        onEdit={() => setEditingId(activity.id)}
         onDelete={() => handleDelete(activity.id)}
         onMoveUp={() => handleMove(activity.id, "up")}
         onMoveDown={() => handleMove(activity.id, "down")}
