@@ -1,60 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { auth } from "@/auth";
-import { autoPatExpiry, createPAT } from "@/lib/token-helpers";
-
 /**
- * GET /api/auth/cli — CLI/MCP 브라우저 인증
+ * GET /api/auth/cli — 레거시 CLI 인증 진입점 (#794 정리).
  *
- * 1. port + state 파라미터 검증
- * 2. 미로그인 → /auth/signin 리다이렉트 (callbackUrl로 돌아옴)
- * 3. 로그인됨 → PAT 자동 발급 → http://127.0.0.1:PORT/callback 리다이렉트
+ * spec 007 에서 도입한 query 전달 흐름(`?token=`)을 폐기하고, fragment 전달
+ * 흐름인 `/bootstrap` 으로 영구 위임한다. 모든 1차 소비자(install.sh·MCP·
+ * auth-login)는 이미 `/bootstrap` 을 직접 사용한다. 본 라우트는 과거 직접 호출
+ * 하위호환을 위한 thin alias 로만 남으며, **PAT 를 직접 발급하지 않는다**
+ * (토큰 URL query 노출 0). `port`/`state` 는 비밀이 아니므로 그대로 보존해
+ * `/bootstrap` 으로 넘긴다.
  */
-export async function GET(request: NextRequest) {
-  const { searchParams } = request.nextUrl;
-  const portStr = searchParams.get("port");
-  const state = searchParams.get("state");
-
-  // ── 파라미터 검증 ──
-  if (!portStr || !state) {
-    return NextResponse.json(
-      { error: "port and state parameters are required" },
-      { status: 400 },
-    );
-  }
-
-  const port = parseInt(portStr, 10);
-  if (isNaN(port) || port < 1024 || port > 65535) {
-    return NextResponse.json(
-      { error: "Invalid port: must be 1024-65535" },
-      { status: 400 },
-    );
-  }
-
-  if (state.length < 16) {
-    return NextResponse.json(
-      { error: "Invalid state: must be at least 16 characters" },
-      { status: 400 },
-    );
-  }
-
-  // ── 세션 확인 ──
-  const session = await auth();
-  if (!session?.user?.id) {
-    const callbackUrl = `/api/auth/cli?port=${port}&state=${encodeURIComponent(state)}`;
-    const signinUrl = `/auth/signin?callbackUrl=${encodeURIComponent(callbackUrl)}`;
-    return NextResponse.redirect(new URL(signinUrl, request.url));
-  }
-
-  // ── PAT 발급 + localhost 리다이렉트 ──
-  // spec 059 — 자동 발급 토큰은 단기 만료(now+30일). 만료 시 MCP는 401 자동
-  // 재인증, 일반 소비자는 재로그인 안내. 장수명 토큰 무기한 보관 방지.
-  const result = await createPAT(
-    session.user.id,
-    "CLI (자동 로그인)",
-    autoPatExpiry(),
-  );
-  const callbackUrl = `http://127.0.0.1:${port}/callback?token=${encodeURIComponent(result.rawToken)}&state=${encodeURIComponent(state)}`;
-
-  return NextResponse.redirect(callbackUrl);
+export function GET(request: NextRequest) {
+  const { search } = request.nextUrl;
+  return NextResponse.redirect(new URL(`/bootstrap${search}`, request.url));
 }
