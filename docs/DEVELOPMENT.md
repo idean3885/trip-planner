@@ -19,7 +19,7 @@ trip-planner/
 │   ├── app/
 │   │   ├── api/trips/        # 여행/일자/활동/멤버 API
 │   │   ├── api/tokens/       # PAT CRUD API
-│   │   ├── api/auth/cli/     # OAuth CLI 인증 엔드포인트
+│   │   ├── api/auth/cli/     # 레거시 CLI 인증 — /bootstrap 위임 alias
 │   │   ├── api/openapi/      # OpenAPI JSON
 │   │   ├── settings/         # PAT 관리 UI
 │   │   └── docs/             # API 문서 뷰어 (Scalar)
