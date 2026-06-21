@@ -8,6 +8,7 @@ import platform
 import secrets
 import socketserver
 import subprocess
+import time
 import urllib.parse
 import webbrowser
 from typing import Any, Optional
@@ -91,44 +92,81 @@ def _recreate_client(token: str) -> None:
     _client = None  # 다음 get_client() 호출 시 새로 생성
 
 
+# 토큰을 fragment(#)로 받기 위한 relay 페이지. /bootstrap 이 토큰을
+# 127.0.0.1:PORT/callback#token=...&state=... 로 redirect 하므로 서버는
+# fragment 를 볼 수 없다. /callback 은 이 HTML 을 응답하고, 브라우저 JS 가
+# location.hash 를 query 로 바꿔 POST /token 으로 다시 보낸다(서버 로그·
+# referrer 에 토큰 미노출 — query redirect 대비 보안 우위).
+_RELAY_HTML = (
+    "<!doctype html><meta charset=utf-8><title>trip-planner</title>"
+    "<script>var f=location.hash.substring(1);"
+    'fetch("/token?"+f,{method:"POST"})'
+    ".then(function(r){document.body.textContent="
+    '"인증 완료! 이 창을 닫아도 됩니다.";})'
+    '.catch(function(){document.body.textContent="오류. 다시 시도해 주세요.";});'
+    "</script><body>처리 중...</body>"
+).encode()
+
+
 def _run_callback_server(state: str, base_url: str) -> Optional[str]:
-    """localhost HTTP 서버를 기동하고 브라우저 인증 콜백을 수신한다. (블로킹)"""
+    """localhost HTTP 서버를 기동하고 브라우저 인증 콜백을 수신한다. (블로킹)
+
+    /bootstrap(fragment) 흐름: GET /callback → relay HTML 응답 → 브라우저 JS 가
+    fragment 를 POST /token 으로 전달. state 검증 + tp_ prefix 검증 후 토큰 보관.
+    """
 
     class CallbackHandler(http.server.BaseHTTPRequestHandler):
         token: Optional[str] = None
+        done: bool = False  # /token 처리 완료(성공·실패 무관) → 루프 종료
+
+        def _reply(self, code: int, body: bytes, ctype: str = "text/plain") -> None:
+            self.send_response(code)
+            self.send_header("Content-Type", f"{ctype}; charset=utf-8")
+            self.end_headers()
+            if body:
+                self.wfile.write(body)
 
         def do_GET(self) -> None:
             parsed = urllib.parse.urlparse(self.path)
-            params = urllib.parse.parse_qs(parsed.query)
             if parsed.path == "/callback":
-                received_state = params.get("state", [""])[0]
-                if received_state != state:
-                    self.send_response(400)
-                    self.end_headers()
-                    self.wfile.write(b"State mismatch")
-                    return
-                CallbackHandler.token = params.get("token", [""])[0]
-                self.send_response(200)
-                self.send_header("Content-Type", "text/html; charset=utf-8")
-                self.end_headers()
-                html = (
-                    '<html><body style="font-family:system-ui;text-align:center;padding:60px">'
-                    "<h1>인증 완료!</h1><p>이 창을 닫아도 됩니다.</p></body></html>"
-                )
-                self.wfile.write(html.encode())
+                self._reply(200, _RELAY_HTML, "text/html")
             else:
-                self.send_response(404)
-                self.end_headers()
+                self._reply(404, b"")
+
+        def do_POST(self) -> None:
+            parsed = urllib.parse.urlparse(self.path)
+            if parsed.path != "/token":
+                self._reply(404, b"")
+                return
+            CallbackHandler.done = True  # 단발 콜백 — 성공/실패 모두 즉시 종결
+            params = urllib.parse.parse_qs(parsed.query)
+            if params.get("state", [""])[0] != state:
+                self._reply(400, b"state_mismatch")
+                return
+            token = params.get("token", [""])[0]
+            if not token.startswith("tp_"):
+                self._reply(400, b"invalid_token")
+                return
+            CallbackHandler.token = token
+            self._reply(200, b"ok")
 
         def log_message(self, format: str, *args: Any) -> None:
             pass  # 로그 억제
 
+    # oauth-listener.mjs 와 동일 env 로 timeout 통일(기본 120초).
+    timeout_sec = int(os.environ.get("TRIP_BOOTSTRAP_TIMEOUT_SEC", "120"))
     with socketserver.TCPServer(("127.0.0.1", 0), CallbackHandler) as server:
         port = server.server_address[1]
-        url = f"{base_url}/api/auth/cli?port={port}&state={state}"
+        url = f"{base_url}/bootstrap?port={port}&state={state}"
         webbrowser.open(url)
-        server.timeout = 120
-        server.handle_request()
+        # GET /callback 후 POST /token 까지 다단계 — 종결(토큰 수신·실패) 또는 timeout 까지 반복.
+        deadline = time.monotonic() + timeout_sec
+        while not CallbackHandler.done:
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                break
+            server.timeout = remaining
+            server.handle_request()
         return CallbackHandler.token or None
 
 
