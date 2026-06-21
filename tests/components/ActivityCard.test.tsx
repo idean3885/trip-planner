@@ -97,18 +97,18 @@ describe("ActivityCard", () => {
     expect(screen.queryByText("삭제")).not.toBeInTheDocument();
   });
 
-  it("shows edit/delete/reorder buttons when canEdit", () => {
+  it("shows delete/reorder buttons when canEdit (편집은 상세에서만, #794)", () => {
     render(
       <ActivityCard
         activity={makeActivity()}
         canEdit
-        onEdit={vi.fn()}
         onDelete={vi.fn()}
         onMoveUp={vi.fn()}
         onMoveDown={vi.fn()}
       />,
     );
-    expect(screen.getByText("편집")).toBeInTheDocument();
+    // #794 — 카드에는 직접 편집 진입이 없다. 편집은 본문 탭 → 상세 → "편집".
+    expect(screen.queryByText("편집")).not.toBeInTheDocument();
     expect(screen.getByText("삭제")).toBeInTheDocument();
     expect(screen.getByLabelText("위로")).toBeInTheDocument();
     expect(screen.getByLabelText("아래로")).toBeInTheDocument();
@@ -140,13 +140,6 @@ describe("ActivityCard", () => {
     );
     expect(screen.getByLabelText("위로")).not.toBeDisabled();
     expect(screen.getByLabelText("아래로")).toBeDisabled();
-  });
-
-  it("calls onEdit when edit button clicked", () => {
-    const onEdit = vi.fn();
-    render(<ActivityCard activity={makeActivity()} canEdit onEdit={onEdit} />);
-    fireEvent.click(screen.getByText("편집"));
-    expect(onEdit).toHaveBeenCalledOnce();
   });
 
   it("calls onDelete when delete button clicked", () => {
@@ -250,17 +243,17 @@ describe("ActivityCard", () => {
     expect(onView).toHaveBeenCalledTimes(2);
   });
 
-  it("메모 안 링크 클릭은 수정 진입을 막는다(stopPropagation, #653)", () => {
-    const onEdit = vi.fn();
+  it("메모 안 링크 클릭은 상세 진입을 막는다(stopPropagation, #653)", () => {
+    const onView = vi.fn();
     render(
       <ActivityCard
         activity={makeActivity({ memo: "예약 https://example.com 확인" })}
         canEdit
-        onEdit={onEdit}
+        onView={onView}
       />,
     );
     fireEvent.click(screen.getByRole("link"));
-    expect(onEdit).not.toHaveBeenCalled();
+    expect(onView).not.toHaveBeenCalled();
   });
 
   it("편집 권한이 없으면 본문이 버튼이 아니다(#653)", () => {
