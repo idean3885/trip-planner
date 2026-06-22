@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [3.20.3] - 2026-06-22
+
+### Fixed
+
+- * **활동 상세 보기와 편집 화면을 명확히 구분**했습니다. 일정을 펼치면 값이 입력칸이 아닌 읽기 전용으로 보이고, "편집"을 눌러야 수정 화면으로 바뀝니다.
+
+  ([#800](https://github.com/idean3885/trip-planner/issues/800))
+
+
 ## [3.20.2] - 2026-06-21
 
 ### Fixed
