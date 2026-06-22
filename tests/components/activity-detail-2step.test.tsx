@@ -33,11 +33,12 @@ function renderList(canEdit = true) {
 }
 
 describe("활동 카드 2단계 인터랙션 (spec 048)", () => {
-  it("카드 본문 탭 → 읽기 전용 상세를 펼친다", () => {
+  it("카드 본문 탭 → 읽기 전용 상세를 펼친다(입력칸 없는 보기, #796)", () => {
     renderList();
     fireEvent.click(screen.getByRole("button", { name: /구엘 공원 상세/ }));
-    const title = screen.getByLabelText(/제목/);
-    expect(title).toHaveAttribute("readonly");
+    // 보기 화면 — 값은 평문으로 보이고 편집 입력칸이 없다(편집 폼과 구분).
+    expect(screen.getByText("구엘 공원")).toBeInTheDocument();
+    expect(screen.queryByRole("textbox")).toBeNull();
     expect(screen.getByRole("button", { name: "편집" })).toBeInTheDocument();
   });
 
