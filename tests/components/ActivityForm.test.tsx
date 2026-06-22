@@ -263,7 +263,7 @@ describe("ActivityForm", () => {
   });
 
   // spec 048 — readOnly 상세 모드
-  it("readOnly 상세: 입력 비활성 + 편집/닫기 + 메모 링크", () => {
+  it("readOnly 상세: 입력칸 없이 값만 보이고 편집/닫기 (#796)", () => {
     const onEdit = vi.fn();
     render(
       <ActivityForm
@@ -273,7 +273,9 @@ describe("ActivityForm", () => {
         initial={{ title: "구엘", memo: "https://example.com 참고" }}
       />,
     );
-    expect(screen.getByDisplayValue("구엘")).toHaveAttribute("readonly");
+    // 보기 화면 — 제목은 평문, 편집 입력칸이 없다(편집 폼과 시각적으로 구분).
+    expect(screen.getByText("구엘")).toBeInTheDocument();
+    expect(screen.queryByRole("textbox")).toBeNull();
     expect(screen.getByRole("link")).toBeInTheDocument();
     fireEvent.click(screen.getByText("편집"));
     expect(onEdit).toHaveBeenCalledOnce();

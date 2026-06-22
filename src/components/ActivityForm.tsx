@@ -70,6 +70,23 @@ function getLocalTimes(): { start: string; end: string } {
   return { start, end };
 }
 
+function ReadField({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="space-y-0.5">
+      <p className="text-muted-foreground text-[11px]">{label}</p>
+      <div className="text-foreground text-sm break-words whitespace-pre-wrap">
+        {children}
+      </div>
+    </div>
+  );
+}
+
 export default function ActivityForm({
   initial,
   onSubmit,
@@ -138,6 +155,75 @@ export default function ActivityForm({
     } finally {
       setSaving(false);
     }
+  }
+
+  // spec 048 / #796 — 읽기 전용 상세는 편집 폼과 시각적으로 구분되는 "보기"다.
+  // 입력칸이 아니라 평문 값으로 보여 편집 화면과 혼동되지 않게 한다. "편집"을
+  // 눌러야 입력 가능한 편집 폼으로 전환된다.
+  if (readOnly) {
+    const muted = (t: string) => (
+      <span className="text-muted-foreground">{t}</span>
+    );
+    const categoryLabel =
+      CATEGORY_OPTIONS.find((o) => o.value === form.category)?.label ??
+      form.category;
+    const reservationLabel =
+      RESERVATION_OPTIONS.find((o) => o.value === form.reservationStatus)
+        ?.label ?? "선택 안함";
+    const timeText = form.allDay
+      ? "종일"
+      : form.startTime || form.endTime
+        ? `${form.startTime || "?"}–${form.endTime || "?"}`
+        : null;
+    return (
+      <div className="border-border bg-muted/30 space-y-3 rounded-lg border p-4 lg:mx-auto lg:max-w-2xl">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="bg-muted text-muted-foreground inline-block rounded-md px-1.5 py-0.5 text-[11px] font-semibold">
+            {categoryLabel}
+          </span>
+          <p className="text-foreground text-base font-medium break-words">
+            {form.title || muted("제목 없음")}
+          </p>
+        </div>
+        <ReadField label="시간">{timeText ?? muted("시간 없음")}</ReadField>
+        <ReadField label="장소">
+          {form.location || muted("장소 없음")}
+        </ReadField>
+        <ReadField label="링크">
+          {form.url ? (
+            <a
+              href={form.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary underline underline-offset-2"
+            >
+              {form.url}
+            </a>
+          ) : (
+            muted("링크 없음")
+          )}
+        </ReadField>
+        <div className="grid grid-cols-2 gap-2">
+          <ReadField label="비용">
+            {form.cost ? `${form.cost} ${form.currency}` : muted("비용 없음")}
+          </ReadField>
+          <ReadField label="예약">{reservationLabel}</ReadField>
+        </div>
+        <ReadField label="메모">
+          {form.memo ? <Linkify text={form.memo} /> : muted("메모 없음")}
+        </ReadField>
+        <div className="flex justify-end gap-2 pt-1">
+          <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
+            닫기
+          </Button>
+          {onEdit && (
+            <Button type="button" size="sm" onClick={onEdit}>
+              편집
+            </Button>
+          )}
+        </div>
+      </div>
+    );
   }
 
   return (
