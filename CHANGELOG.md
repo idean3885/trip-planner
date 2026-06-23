@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [3.21.0] - 2026-06-23
+
+### Added
+
+- * **브라우저를 열 수 없는 환경에서도 한 번의 승인으로 로그인**할 수 있습니다. 안내된 주소를 기기에서 열어 본인 계정으로 승인하면 토큰이 자동으로 발급·연결되어, 토큰을 직접 복사·붙여넣지 않아도 됩니다.
+
+  ([#793](https://github.com/idean3885/trip-planner/issues/793))
+
+
 ## [3.20.3] - 2026-06-22
 
 ### Fixed
