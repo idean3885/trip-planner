@@ -9,7 +9,7 @@
 
 ## Coverage Targets
 
-- 예약상태(enum+컬럼) 제거 + 참조 일괄 정리(폼·카드·OpenAPI·MCP·문서) [why: remove-reservation] [multi-step: 3]
+- 예약상태 입력·표시·참조 일괄 제거(폼·카드·OpenAPI·MCP·문서) [why: remove-reservation] [multi-step: 3]
 - 지출시점 컬럼 추가 + 예약상태→지출시점 보정 백필 + 예약상태 컬럼 DROP 마이그레이션 [why: payment-migration] [multi-step: 2]
 - 모바일 간소화 추가 폼(제목·가격·내용 3필드 + 확장, 시간 비강제) [why: quick-add] [multi-step: 2]
 - 사전/현장 디폴트 로직(여행중 판정 + 모바일 현장 / 여행전 사전) [why: timing-default] [multi-step: 2]
