@@ -12,7 +12,7 @@
  * - 선택 일자를 쿼리(`?d=YYYY-MM-DD`)에 반영해 새로고침·공유 시 유지한다.
  */
 
-import type { ActivityCategory, ReservationStatus } from "@prisma/client";
+import type { ActivityCategory, PaymentTiming } from "@prisma/client";
 import { addDays } from "date-fns";
 import {
   type ReactNode,
@@ -50,7 +50,7 @@ export interface LayoutActivity {
   memo: string | null;
   cost: string | null;
   currency: string;
-  reservationStatus: ReservationStatus | null;
+  paymentTiming: PaymentTiming;
   sortOrder: number;
 }
 

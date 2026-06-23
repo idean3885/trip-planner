@@ -18,7 +18,7 @@ export const sampleActivity = {
   memo: "입장권은 https://www.tokyotower.co.jp 에서 사전 구매",
   cost: "1200",
   currency: "JPY",
-  reservationStatus: "RECOMMENDED" as const,
+  paymentTiming: "ADVANCE" as const,
   sortOrder: 1,
 };
 
@@ -34,6 +34,6 @@ export const sampleActivityAlt = {
   memo: null,
   cost: "15000",
   currency: "JPY",
-  reservationStatus: "REQUIRED" as const,
+  paymentTiming: "ADVANCE" as const,
   sortOrder: 2,
 };
