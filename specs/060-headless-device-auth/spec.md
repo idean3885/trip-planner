@@ -12,6 +12,8 @@
 3. **발급 토큰 정책 승계** — 이 경로로 발급되는 토큰은 기존 자동 발급 토큰과 동일하게 단기 만료(기본 30일)를 가진다. 만료 시 같은 흐름으로 재인증한다. 토큰 모델(폐기·목록·만료) 자체는 바꾸지 않는다.
 4. **기존 경로 불변** — loopback 기반 자동 발급(설치 스크립트·런타임 통합·로그인 커맨드), 웹 세션 로그인, 수기 발급은 회귀 없이 유지한다. 본 경로는 헤드리스 환경을 위한 **추가** 경로다.
 5. **승인 범위 = 본인 계정** — 승인 화면은 로그인한 사람 본인 계정에 대한 토큰을 발급한다. 대리 승인·타인 계정 발급은 범위 밖.
+6. **상태 저장소 = 기존 DB(Postgres) 단명 테이블** — 인증 요청 상태(대기↔승인)는 승인 요청과 폴링 요청이 공유해야 하는 가변 상태다. 서버리스(요청 간 인메모리 비공유) 환경이라 외부 공유 저장소가 필요하다. *교과서적 정본은 TTL 기반 Redis/KV*이지만 현 스택에 Redis가 없어, 기존 Postgres에 **단명 테이블 1종 + 만료 정리**로 둔다. 이는 일반적 device-flow 구현(Redis)과 다른 선택이므로 문서(plan·data-model)에 사유를 **간단히 부연**한다.
+7. **테이블 명명 충돌 회피** — 신규 모델명은 Auth.js 표준 모델(`User`/`Account`/`Session`/`VerificationToken`)·기존 `PersonalAccessToken`과 겹치지 않아야 한다. 특히 `VerificationToken`(Auth.js)과 혼동 금지. 후보: `DeviceAuthorizationRequest`(plan에서 확정).
 
 ## Metatag Conventions *(normative, inherited from PR #204)*
 
