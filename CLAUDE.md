@@ -223,6 +223,8 @@ develop ──●──●──●───●──●──●──●──
 - Neon Postgres (Production `neondb` / Preview·Dev `neondb_dev`, #318). Prisma 마이그레이션 1건 — `activities.url` 컬럼 추가(nullable). (058-activity-card-url-refine)
 - TypeScript 5.x (Next.js 16 App Router, Auth.js v5), Node.js 20+ (`oauth-listener.mjs`), Python 3.10+ (MCP `web_client.py`), Bash (`install.sh`). + Auth.js v5(Google OAuth2), 기존 `/api/auth/cli`·`/bootstrap`·`scripts/bootstrap/oauth-listener.mjs`·`src/lib/token-helpers.ts(createPAT)`·macOS 키체인. **본 피처 신규 의존성 없음.** (059-cli-oauth-login)
 - Neon Postgres. **스키마 변경 없음** — 기존 `PersonalAccessToken.expiresAt` 재사용(자동 발급 경로가 단기 만료를 채움). 마이그레이션 0건. (059-cli-oauth-login)
+- TypeScript 5.x, Node.js 20+ (Next.js 16 App Router) · Python 3.10+ (MCP 소비자) · Bash (CLI 래퍼) + Next.js 16, Auth.js v5(Google OAuth2·JWT 세션), Prisma 7(@prisma/adapter-pg, Neon), 기존 `src/lib/token-helpers.ts`(`createPAT`/`autoPatExpiry`), httpx(MCP). **신규 의존성 도입 없음**(Redis 미도입 — 헌법 II Minimum Cost). (060-headless-device-auth)
+- Neon Postgres (Production `neondb` / Preview·Dev `neondb_dev`, #318). 신규 테이블 1종 `DeviceAuthorizationRequest`. (060-headless-device-auth)
 
 ## Recent Changes
 - 001-ax-travel-planning: Added Python 3.14 + FastMCP, httpx, python-dotenv, pytes
