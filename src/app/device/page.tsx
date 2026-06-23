@@ -11,7 +11,7 @@ import { redirect } from "next/navigation";
 
 import DeviceApproveCard from "@/components/DeviceApproveCard";
 import { getSession } from "@/lib/auth-helpers";
-import { findByUserCode } from "@/lib/device-auth";
+import { isApprovablePending } from "@/lib/device-auth";
 
 interface SP {
   user_code?: string;
@@ -31,9 +31,7 @@ export default async function DevicePage({
     redirect(`/auth/signin?callbackUrl=${encodeURIComponent(callbackUrl)}`);
   }
 
-  const req = userCode ? await findByUserCode(userCode) : null;
-  const valid =
-    !!req && req.status === "PENDING" && req.expiresAt.getTime() >= Date.now();
+  const valid = userCode ? await isApprovablePending(userCode) : false;
 
   return (
     <div className="mx-auto max-w-md space-y-4 p-8">

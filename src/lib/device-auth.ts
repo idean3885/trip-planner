@@ -144,6 +144,19 @@ export async function findByUserCode(userCode: string) {
   return prisma.deviceAuthorizationRequest.findUnique({ where: { userCode } });
 }
 
+/**
+ * 승인 화면용 — userCode 가 승인 가능한 PENDING 요청이면 true(만료/비PENDING이면 false).
+ * 만료 판정(Date.now)을 서버 헬퍼에서 수행해, 화면 컴포넌트 렌더에서 불순 호출을 피한다.
+ */
+export async function isApprovablePending(userCode: string): Promise<boolean> {
+  const req = await prisma.deviceAuthorizationRequest.findUnique({
+    where: { userCode },
+  });
+  return (
+    !!req && req.status === "PENDING" && req.expiresAt.getTime() >= Date.now()
+  );
+}
+
 /** 승인 — 본인 userId 기록. 만료/비PENDING이면 false. */
 export async function approveDeviceRequest(
   userCode: string,
