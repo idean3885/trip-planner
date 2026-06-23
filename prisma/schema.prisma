@@ -24,6 +24,7 @@ model User {
   updatedTrips                Trip[]                       @relation("TripUpdater")
   tripMembers                 TripMember[]
   personalAccessTokens        PersonalAccessToken[]
+  deviceAuthorizationRequests DeviceAuthorizationRequest[]
   gcalLinks                   GCalLink[]
   ownedCalendarLinks          TripCalendarLink[]           @relation("TripCalendarLinkOwner")
   memberCalendarSubscriptions MemberCalendarSubscription[] @relation("MemberCalendarSubscriptionUser")
@@ -431,4 +432,30 @@ model PersonalAccessToken {
 
   @@index([userId])
   @@map("personal_access_tokens")
+}
+
+// spec 060 (#793) — 헤드리스 Device Authorization Grant.
+// 승인(브라우저)과 폴링(에이전트) 두 요청이 공유하는 단명 인증요청 상태.
+// 승인·만료로 소비되면 삭제(rawToken 미보관 — 승인 후 폴링 시 createPAT 발급).
+enum DeviceAuthStatus {
+  PENDING
+  APPROVED
+  DENIED
+}
+
+model DeviceAuthorizationRequest {
+  id             String           @id @default(cuid())
+  deviceCodeHash String           @unique @map("device_code_hash")
+  userCode       String           @unique @map("user_code")
+  status         DeviceAuthStatus @default(PENDING)
+  userId         String?          @map("user_id")
+  expiresAt      DateTime         @map("expires_at") @db.Timestamptz(3)
+  interval       Int              @default(5)
+  lastPolledAt   DateTime?        @map("last_polled_at") @db.Timestamptz(3)
+  createdAt      DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt])
+  @@map("device_authorization_requests")
 }

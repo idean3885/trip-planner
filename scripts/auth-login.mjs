@@ -44,12 +44,71 @@ export function storeTokenMac(
   });
 }
 
+export const DEVICE_BASE_URL =
+  process.env.TRIP_BOOTSTRAP_BASE_URL ?? "https://trip.idean.me";
+
+/**
+ * spec 060 (#793) — Device Authorization Grant 흐름.
+ * loopback 없이: 개시 → 사용자에게 승인 주소 안내 → 폴링으로 토큰 자동 수신.
+ * 종료 코드 규약(상위 catch와 동일): 2 timeout / 4 거부 / 1 기타.
+ */
+export async function runDeviceFlow({
+  baseUrl = DEVICE_BASE_URL,
+  fetchImpl = fetch,
+  sleep = (ms) => new Promise((r) => setTimeout(r, ms)),
+} = {}) {
+  const startRes = await fetchImpl(`${baseUrl}/api/auth/device/start`, {
+    method: "POST",
+  });
+  if (!startRes.ok) {
+    throw { code: 1, message: `device start 실패 (${startRes.status})` };
+  }
+  const d = await startRes.json();
+  let interval = Number(d.interval ?? 5);
+  const expiresIn = Number(d.expires_in ?? 600);
+  process.stderr.write(
+    `[auth] 기기(휴대폰 등)에서 다음 주소를 열어 본인 계정으로 승인하세요 (코드 ${d.user_code}):\n  ${d.verification_uri_complete}\n`,
+  );
+  const deadline = Date.now() + expiresIn * 1000;
+  while (Date.now() < deadline) {
+    await sleep(interval * 1000);
+    const poll = await fetchImpl(`${baseUrl}/api/auth/device/token`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ device_code: d.device_code }),
+    });
+    if (poll.status === 200) {
+      const t = await poll.json();
+      return { token: t.access_token };
+    }
+    let err = "";
+    try {
+      err = (await poll.json()).error ?? "";
+    } catch {
+      err = "";
+    }
+    if (err === "authorization_pending") continue;
+    if (err === "slow_down") {
+      interval += 5;
+      continue;
+    }
+    if (err === "access_denied") throw { code: 4, message: "사용자가 거부했습니다" };
+    if (err === "expired_token") throw { code: 2, message: "요청이 만료되었습니다" };
+    throw { code: 1, message: `예기치 못한 응답: ${err || poll.status}` };
+  }
+  throw { code: 2, message: "timeout" };
+}
+
 /** 로그인 → 토큰 저장. 의존성 주입으로 테스트 가능. */
 export async function main({
   runListener = runOAuthListener,
   storeToken = storeTokenMac,
+  deviceFlow = runDeviceFlow,
 } = {}) {
-  const { token } = await runListener();
+  // spec 060 — 헤드리스(브라우저-리스너 분리) 환경은 device 흐름. 기본은 loopback.
+  const useDevice =
+    !!process.env.TRIP_DEVICE_AUTH || process.argv.includes("--device");
+  const { token } = useDevice ? await deviceFlow() : await runListener();
   await storeToken(token);
   process.stderr.write(
     "[auth] 로그인 완료. 토큰을 키체인에 저장했습니다. 이제 API 를 바로 호출할 수 있습니다.\n",
