@@ -1,4 +1,4 @@
-import type { ActivityCategory, ReservationStatus } from "@prisma/client";
+import type { ActivityCategory, PaymentTiming } from "@prisma/client";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -25,7 +25,7 @@ function makeActivity(overrides = {}) {
     memo: null,
     cost: null,
     currency: "EUR",
-    reservationStatus: null as ReservationStatus | null,
+    paymentTiming: "ON_SITE" as PaymentTiming,
     allDay: false,
     sortOrder: 0,
     ...overrides,
