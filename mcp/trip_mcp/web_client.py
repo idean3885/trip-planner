@@ -170,8 +170,67 @@ def _run_callback_server(state: str, base_url: str) -> Optional[str]:
         return CallbackHandler.token or None
 
 
+async def _authenticate_via_device() -> Optional[str]:
+    """Device Authorization Grant 인증 (spec 060, #793).
+
+    브라우저-리스너 co-location(loopback)이 불가한 헤드리스 환경용. 개시 →
+    사용자에게 승인 주소 안내 → 폴링으로 토큰 자동 수신. loopback 포트 미사용.
+    """
+    base = TRIP_PLANNER_URL
+    try:
+        async with httpx.AsyncClient(base_url=base, timeout=30.0) as client:
+            started = await client.post("/api/auth/device/start")
+            started.raise_for_status()
+            d = started.json()
+            device_code = d["device_code"]
+            interval = int(d.get("interval", 5))
+            expires_in = int(d.get("expires_in", 600))
+            logger.warning(
+                "헤드리스 인증이 필요합니다. 아래 주소를 기기에서 열어 "
+                "본인 계정으로 승인하세요 (코드 %s):\n  %s",
+                d.get("user_code"),
+                d.get("verification_uri_complete"),
+            )
+            deadline = time.monotonic() + expires_in
+            while time.monotonic() < deadline:
+                await asyncio.sleep(interval)
+                poll = await client.post(
+                    "/api/auth/device/token", json={"device_code": device_code}
+                )
+                if poll.status_code == 200:
+                    return poll.json().get("access_token")
+                err = ""
+                try:
+                    payload = poll.json()
+                    err = payload.get("error", "")
+                except Exception:
+                    payload = {}
+                if err == "authorization_pending":
+                    continue
+                if err == "slow_down":
+                    interval = int(payload.get("interval", interval + 5))
+                    continue
+                if err in ("access_denied", "expired_token"):
+                    logger.warning("헤드리스 인증 종료: %s", err)
+                    return None
+                # 알 수 없는 응답 — 안전하게 종료
+                logger.warning("헤드리스 인증 예기치 못한 응답: %s", err or poll.status_code)
+                return None
+            logger.warning("헤드리스 인증 타임아웃")
+            return None
+    except Exception as e:
+        logger.warning(f"헤드리스 인증 실패: {e}")
+        return None
+
+
 async def _authenticate_via_browser() -> Optional[str]:
-    """브라우저 OAuth로 새 토큰을 발급받는다. 성공 시 토큰 문자열, 실패 시 None."""
+    """브라우저 OAuth로 새 토큰을 발급받는다. 성공 시 토큰 문자열, 실패 시 None.
+
+    spec 060 — 헤드리스 환경(TRIP_DEVICE_AUTH 설정 시)에서는 loopback 대신 device
+    흐름을 사용한다. 기본은 기존 loopback(회귀 없음).
+    """
+    if os.environ.get("TRIP_DEVICE_AUTH"):
+        return await _authenticate_via_device()
     state = secrets.token_hex(16)
     loop = asyncio.get_event_loop()
     try:
