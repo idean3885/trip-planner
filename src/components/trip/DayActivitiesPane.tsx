@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCalendarDate } from "@/lib/date-utils";
-import { summarize } from "@/lib/expense";
+import { convertToKrw, type RateMap, summarize } from "@/lib/expense";
 
 export interface DayCreatedPayload {
   id: number;
@@ -49,6 +49,8 @@ export interface DayActivitiesPaneProps {
   showDateHeader?: boolean;
   /** spec 061 — 추가 폼 지출시점 디폴트(여행중=현장 / 여행전=사전). */
   timingDefault?: import("@prisma/client").PaymentTiming;
+  /** spec 062 — (일자, 통화) 근사 환율 맵. 일별 합산 원화 병기에 쓴다. */
+  rateMap?: RateMap;
 }
 
 /** Date 를 로컬 기준 YYYY-MM-DD 로 변환 (floating-time 관행 #232). */
@@ -71,6 +73,7 @@ export const DayActivitiesPane = memo(function DayActivitiesPane({
   onActivitiesChange,
   showDateHeader = true,
   timingDefault,
+  rateMap,
 }: DayActivitiesPaneProps) {
   const [busy, setBusy] = useState(false);
 
@@ -120,6 +123,19 @@ export const DayActivitiesPane = memo(function DayActivitiesPane({
             })),
           )}
           label="이 날"
+          krw={
+            rateMap
+              ? convertToKrw(
+                  activities.map((a) => ({
+                    cost: a.cost == null ? null : String(a.cost),
+                    currency: a.currency,
+                    paymentTiming: a.paymentTiming,
+                    dateYmd: toYmd(selectedDate),
+                  })),
+                  rateMap,
+                )
+              : null
+          }
         />
       )}
       {dayId === null ? (
