@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [3.22.0] - 2026-06-24
+
+### Added
+
+- * **여행 중 지출을 제목·가격·내용만으로 빠르게 기록**할 수 있습니다. 시간·장소 같은 세부는 필요할 때 "확장"으로 채우고, 예약 여부처럼 과하게 요구되던 입력은 사라졌습니다.
+  * **지출을 사전 결제와 현장 결제로 구분**합니다. 여행 기간 중에는 현장 결제가 기본으로 잡혀 그 자리에서 바로 남기기 좋습니다.
+
+  ([#807](https://github.com/idean3885/trip-planner/issues/807))
+
+
 ## [3.21.0] - 2026-06-23
 
 ### Added
