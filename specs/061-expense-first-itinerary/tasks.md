@@ -38,7 +38,7 @@
 
 - [ ] T010 [US3] ActivityForm 지출시점(사전/현장) 토글 + 맥락 디폴트 적용(여행중→ON_SITE, 그외→ADVANCE) in `src/components/ActivityForm.tsx` [artifact: src/components/ActivityForm.tsx] [why: timing-default]
 - [ ] T011 [US3] 디폴트 결정 로직(isTripInProgress 기반) in `src/lib/expense.ts` [artifact: src/lib/expense.ts::resolveTimingDefault] [why: timing-default]
-- [ ] T012 [US3] 여행중+모바일 주간 달력 디폴트 뷰 in `src/components/trip/CalendarView.tsx` [artifact: src/components/trip/CalendarView.tsx] [why: weekly-default]
+- [x] T012 [US3] 여행중+모바일 주간 달력 디폴트 뷰 in `src/components/trip/CalendarView.tsx` [artifact: src/components/trip/CalendarView.tsx] [why: weekly-default]
 - [ ] T013 [P] [US3] 여행중 판정·디폴트·지출시점 토글 테스트 in `tests/lib/expense.test.ts` [artifact: tests/lib/expense.test.ts] [why: timing-default]
 
 ## Phase 5: US4 — 금액 합산 (P2)

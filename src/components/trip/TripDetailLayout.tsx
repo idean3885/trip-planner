@@ -85,6 +85,8 @@ export interface TripDetailLayoutProps {
   timingDefault?: PaymentTiming;
   /** spec 061 US4 — 여행 전체 금액 합산(서버 계산, 통화별 총액·사전/현장 소계). */
   tripSummary?: CurrencySummary[];
+  /** spec 061 US3 — 여행 중이면 모바일 캘린더를 주간 뷰로 진입(서버 판정). */
+  tripInProgress?: boolean;
 }
 
 /**
@@ -138,6 +140,7 @@ export function TripDetailLayout({
   syncCard,
   timingDefault,
   tripSummary,
+  tripInProgress,
 }: TripDetailLayoutProps) {
   const [dayIndex, setDayIndex] = useState<LayoutDayIndex[]>(initialDays);
   const [activitiesByDayId, setActivitiesByDayId] =
@@ -420,6 +423,7 @@ export function TripDetailLayout({
             onSelect={handleSelectDate}
             enableMobileCompact
             collapsed={isCalendarCollapsed}
+            defaultWeekView={tripInProgress}
           />
         </div>
         {/* #657 — 하단 일정도 이전·현재·다음 날 3슬라이드로 드래그-팔로우 스와이프.
