@@ -47,6 +47,28 @@ describe("CalendarView 모바일 압축", () => {
     ).not.toBeNull();
   });
 
+  it("defaultWeekView 면 주간 표시로 진입한다(spec 061 US3 — 여행 중)", () => {
+    const { container } = render(
+      <CalendarView
+        tripStart={new Date(2026, 5, 7)}
+        tripEnd={new Date(2026, 5, 21)}
+        daysDates={[new Date(2026, 5, 9)]}
+        selected={new Date(2026, 5, 9)}
+        onSelect={vi.fn()}
+        enableMobileCompact
+        defaultWeekView
+      />,
+    );
+    expect(
+      container.querySelector('[data-calendar-view="week"]'),
+    ).not.toBeNull();
+    // 진입은 주간이어도 사용자 토글로 월 전체 복귀가 가능하다.
+    fireEvent.click(screen.getByRole("button", { name: "월 전체 보기" }));
+    expect(
+      container.querySelector('[data-calendar-view="month"]'),
+    ).not.toBeNull();
+  });
+
   it("명시적 탭 토글로 월↔주를 전환한다(#637 — 스와이프 대체 경로)", () => {
     const { container } = render(
       <CalendarView

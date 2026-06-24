@@ -38,7 +38,7 @@
 
 - [ ] T010 [US3] ActivityForm 지출시점(사전/현장) 토글 + 맥락 디폴트 적용(여행중→ON_SITE, 그외→ADVANCE) in `src/components/ActivityForm.tsx` [artifact: src/components/ActivityForm.tsx] [why: timing-default]
 - [ ] T011 [US3] 디폴트 결정 로직(isTripInProgress 기반) in `src/lib/expense.ts` [artifact: src/lib/expense.ts::resolveTimingDefault] [why: timing-default]
-- [ ] T012 [US3] 여행중+모바일 주간 달력 디폴트 뷰 in `src/components/trip/CalendarView.tsx` [artifact: src/components/trip/CalendarView.tsx] [why: weekly-default]
+- [x] T012 [US3] 여행중+모바일 주간 달력 디폴트 뷰 in `src/components/trip/CalendarView.tsx` [artifact: src/components/trip/CalendarView.tsx] [why: weekly-default]
 - [ ] T013 [P] [US3] 여행중 판정·디폴트·지출시점 토글 테스트 in `tests/lib/expense.test.ts` [artifact: tests/lib/expense.test.ts] [why: timing-default]
 
 ## Phase 5: US4 — 금액 합산 (P2)
@@ -46,9 +46,9 @@
 **Goal**: 여행 총액·일별·사전/현장 소계(통화별).
 **Independent Test**: 합산 정확·통화별 구분·cost 없음 0.
 
-- [ ] T014 [US4] 합산 함수(여행 총액·일별 합계·사전/현장 소계, 통화별, cost 없음 0) in `src/lib/expense.ts` [artifact: src/lib/expense.ts::summarize] [why: cost-summary]
-- [ ] T015 [US4] 여행 상세에 총액·일별·소계 표시 in `src/components/trip/TripDetailLayout.tsx` [artifact: src/components/trip/TripDetailLayout.tsx] [why: cost-summary]
-- [ ] T016 [P] [US4] 합산 테스트(총액·일별·소계·통화별·0기여) in `tests/lib/expense.test.ts` [artifact: tests/lib/expense.test.ts::summary] [why: cost-summary]
+- [x] T014 [US4] 합산 함수(여행 총액·일별 합계·사전/현장 소계, 통화별, cost 없음 0) in `src/lib/expense.ts` [artifact: src/lib/expense.ts::summarize] [why: cost-summary]
+- [x] T015 [US4] 여행 상세에 총액·일별·소계 표시 in `src/components/trip/TripDetailLayout.tsx` [artifact: src/components/trip/TripDetailLayout.tsx] [why: cost-summary]
+- [x] T016 [P] [US4] 합산 테스트(총액·일별·소계·통화별·0기여) in `tests/lib/expense.test.ts` [artifact: tests/lib/expense.test.ts::summary] [why: cost-summary]
 
 ## Phase 6: 회귀 가드 & Polish
 

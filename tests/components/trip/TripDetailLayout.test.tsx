@@ -99,6 +99,34 @@ describe("TripDetailLayout 상단·액션바 (spec 043)", () => {
     const ymd = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
     expect(new URL(window.location.href).searchParams.get("d")).toBe(ymd);
   });
+
+  // spec 061 US4 (#811) — 여행 총액 합산.
+  it("tripSummary 가 있으면 여행 총액을 보인다", () => {
+    const today = new Date();
+    render(
+      <TripDetailLayout
+        tripId={1}
+        tripTitle="테스트 여행"
+        isOwner={false}
+        tripStart={today}
+        tripEnd={addDays(today, 2)}
+        days={[]}
+        initialActivities={{}}
+        canEdit={false}
+        initialSelected={null}
+        memberList={<div>멤버 목록</div>}
+        syncCard={<div>동기화 카드</div>}
+        tripSummary={[{ currency: "EUR", total: 120, advance: 80, onSite: 40 }]}
+      />,
+    );
+    expect(screen.getByText("여행 총액")).toBeInTheDocument();
+    expect(screen.getByText(/120 EUR/)).toBeInTheDocument();
+  });
+
+  it("tripSummary 가 비면 총액 줄을 렌더하지 않는다", () => {
+    renderLayout();
+    expect(screen.queryByText("여행 총액")).not.toBeInTheDocument();
+  });
 });
 
 describe("TripDetailLayout 모바일 스와이프·스크롤 접힘 (v3.15.1 hotfix)", () => {

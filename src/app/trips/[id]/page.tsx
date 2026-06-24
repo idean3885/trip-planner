@@ -17,7 +17,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ACTIVITY_WINDOW_RADIUS, windowYmds } from "@/lib/activity-window";
 import { formatCalendarDateFull } from "@/lib/date-utils";
 import { computeDayNumber } from "@/lib/day-number";
-import { resolveTimingDefault } from "@/lib/expense";
+import {
+  isTripInProgress,
+  resolveTimingDefault,
+  summarize,
+} from "@/lib/expense";
 import { prisma } from "@/lib/prisma";
 import { getResolvedPeriod } from "@/lib/trip-period";
 
@@ -132,6 +136,20 @@ async function DbTripPage({
     }));
   }
 
+  // spec 061 US4 (#811) — 여행 총액 합산. windowDays 는 선택일 ±N일만 담으므로
+  // 총액은 전체 활동의 금액 컬럼만 가볍게 따로 조회해 통화별로 합산한다.
+  const costRows = await prisma.activity.findMany({
+    where: { day: { tripId } },
+    select: { cost: true, currency: true, paymentTiming: true },
+  });
+  const tripSummary = summarize(
+    costRows.map((a) => ({
+      cost: a.cost ? a.cost.toString() : null,
+      currency: a.currency,
+      paymentTiming: a.paymentTiming,
+    })),
+  );
+
   const descriptionHtml = trip.description
     ? await markdownToHtml(trip.description)
     : null;
@@ -182,6 +200,11 @@ async function DbTripPage({
         canEdit={member.role !== "GUEST"}
         initialSelected={selectedYmd}
         timingDefault={resolveTimingDefault({
+          startDate: period.startDate,
+          endDate: period.endDate,
+        })}
+        tripSummary={tripSummary}
+        tripInProgress={isTripInProgress({
           startDate: period.startDate,
           endDate: period.endDate,
         })}

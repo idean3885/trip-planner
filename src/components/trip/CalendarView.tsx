@@ -64,6 +64,11 @@ export interface CalendarViewProps {
   enableMobileCompact?: boolean;
   /** spec 051 — 스크롤로 캘린더가 상단 고정되면 주간으로 강제 접힘. */
   collapsed?: boolean;
+  /**
+   * spec 061 US3 — 여행 중에는 모바일 진입 시 주간 뷰를 기본으로 둔다. 사용자가
+   * 토글하기 전 초기값에만 영향(이후 토글·스크롤 접힘은 그대로 동작).
+   */
+  defaultWeekView?: boolean;
   className?: string;
 }
 
@@ -98,6 +103,7 @@ export function CalendarView({
   dayTitles,
   enableMobileCompact,
   collapsed,
+  defaultWeekView,
   className,
 }: CalendarViewProps) {
   const isMultiTrip = (tripsDays?.length ?? 0) > 0;
@@ -211,6 +217,7 @@ export function CalendarView({
       displayMonth={displayMonth}
       onMonthChange={setDisplayMonth}
       collapsed={collapsed}
+      defaultWeekView={defaultWeekView}
     />
   );
 }
@@ -230,6 +237,7 @@ function MobileCompactCalendar({
   displayMonth,
   onMonthChange,
   collapsed,
+  defaultWeekView,
 }: {
   renderMonth: (month: Date, withNav: boolean) => React.ReactNode;
   tripStart: Date | null;
@@ -240,8 +248,13 @@ function MobileCompactCalendar({
   displayMonth: Date;
   onMonthChange: (month: Date) => void;
   collapsed?: boolean;
+  defaultWeekView?: boolean;
 }) {
-  const [view, setView] = useState<"month" | "week">("month");
+  // spec 061 US3 — 여행 중에는 주간 뷰로 진입한다(서버 판정값). 이후 사용자
+  // 토글·스크롤 접힘은 기존대로 동작하며 초기값에만 영향을 준다.
+  const [view, setView] = useState<"month" | "week">(
+    defaultWeekView ? "week" : "month",
+  );
   // spec 051 — 스크롤로 상단 고정되면(collapsed) 사용자 토글과 무관하게 주간으로
   // 강제 접고, 풀리면 사용자 토글값(기본 월간)으로 복원한다.
   const effectiveView = collapsed ? "week" : view;

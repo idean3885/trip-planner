@@ -33,9 +33,11 @@ import {
   ACTIVITY_WINDOW_RADIUS,
   missingFetchRange,
 } from "@/lib/activity-window";
+import type { CurrencySummary } from "@/lib/expense";
 
 import { CalendarView } from "./CalendarView";
 import { DayActivitiesPane, type DayCreatedPayload } from "./DayActivitiesPane";
+import { ExpenseSummary } from "./ExpenseSummary";
 import { SwipeCarousel } from "./SwipeCarousel";
 
 export interface LayoutActivity {
@@ -81,6 +83,10 @@ export interface TripDetailLayoutProps {
   syncCard: ReactNode;
   /** spec 061 — 추가 폼 지출시점 디폴트(서버 계산: 여행중=현장 / 여행전=사전). */
   timingDefault?: PaymentTiming;
+  /** spec 061 US4 — 여행 전체 금액 합산(서버 계산, 통화별 총액·사전/현장 소계). */
+  tripSummary?: CurrencySummary[];
+  /** spec 061 US3 — 여행 중이면 모바일 캘린더를 주간 뷰로 진입(서버 판정). */
+  tripInProgress?: boolean;
 }
 
 /**
@@ -133,6 +139,8 @@ export function TripDetailLayout({
   memberList,
   syncCard,
   timingDefault,
+  tripSummary,
+  tripInProgress,
 }: TripDetailLayoutProps) {
   const [dayIndex, setDayIndex] = useState<LayoutDayIndex[]>(initialDays);
   const [activitiesByDayId, setActivitiesByDayId] =
@@ -378,6 +386,11 @@ export function TripDetailLayout({
     <div className="space-y-4">
       {actionBar}
 
+      {/* spec 061 US4 (#811) — 여행 총액 합산. 빈 합산은 ExpenseSummary 가 숨긴다. */}
+      {tripSummary && tripSummary.length > 0 && (
+        <ExpenseSummary rows={tripSummary} label="여행 총액" />
+      )}
+
       {/* 데스크탑 ≥1024px — 좌(캘린더) / 우(선택 일정) 2분할. */}
       <div className="lg:gap-grid-comfy hidden lg:grid lg:grid-cols-2 lg:items-start">
         {/* spec 043 US4 — 데스크탑은 좌측 캘린더를 sticky 로 고정해 우측 일정이
@@ -410,6 +423,7 @@ export function TripDetailLayout({
             onSelect={handleSelectDate}
             enableMobileCompact
             collapsed={isCalendarCollapsed}
+            defaultWeekView={tripInProgress}
           />
         </div>
         {/* #657 — 하단 일정도 이전·현재·다음 날 3슬라이드로 드래그-팔로우 스와이프.
