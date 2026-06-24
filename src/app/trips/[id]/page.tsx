@@ -18,10 +18,12 @@ import { ACTIVITY_WINDOW_RADIUS, windowYmds } from "@/lib/activity-window";
 import { formatCalendarDateFull } from "@/lib/date-utils";
 import { computeDayNumber } from "@/lib/day-number";
 import {
+  convertToKrw,
   isTripInProgress,
   resolveTimingDefault,
   summarize,
 } from "@/lib/expense";
+import { getRatesForPairs } from "@/lib/fx/rates";
 import { prisma } from "@/lib/prisma";
 import { getResolvedPeriod } from "@/lib/trip-period";
 
@@ -35,6 +37,14 @@ async function markdownToHtml(md: string): Promise<string> {
 
 // DB-정본 전환(#239) 후 이 페이지는 항상 세션 기반 동적 렌더. (#255+ 핫픽스)
 export const dynamic = "force-dynamic";
+
+/** Date → UTC 기준 "YYYY-MM-DD" (근사 환율 맵 키와 동일 규칙). */
+function ymdUTC(date: Date): string {
+  const y = date.getUTCFullYear();
+  const m = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const d = String(date.getUTCDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
 
 /** "YYYY-MM-DD" → UTC 자정 Date. 형식 위반·무효는 null. */
 function parseYmd(value: string | undefined): Date | null {
@@ -138,9 +148,15 @@ async function DbTripPage({
 
   // spec 061 US4 (#811) — 여행 총액 합산. windowDays 는 선택일 ±N일만 담으므로
   // 총액은 전체 활동의 금액 컬럼만 가볍게 따로 조회해 통화별로 합산한다.
+  // spec 062 — 같은 조회로 (일자, 통화) 근사 환율을 확보해 원화 환산도 산출.
   const costRows = await prisma.activity.findMany({
     where: { day: { tripId } },
-    select: { cost: true, currency: true, paymentTiming: true },
+    select: {
+      cost: true,
+      currency: true,
+      paymentTiming: true,
+      day: { select: { date: true } },
+    },
   });
   const tripSummary = summarize(
     costRows.map((a) => ({
@@ -149,6 +165,18 @@ async function DbTripPage({
       paymentTiming: a.paymentTiming,
     })),
   );
+
+  // spec 062 — 자동 근사 환율 맵(현화-only fallback graceful). 일별·총액 공용.
+  const rateMap = await getRatesForPairs(
+    costRows.map((a) => ({ base: a.currency, date: a.day.date })),
+  );
+  const datedItems = costRows.map((a) => ({
+    cost: a.cost ? a.cost.toString() : null,
+    currency: a.currency,
+    paymentTiming: a.paymentTiming,
+    dateYmd: ymdUTC(a.day.date),
+  }));
+  const tripKrw = convertToKrw(datedItems, rateMap);
 
   const descriptionHtml = trip.description
     ? await markdownToHtml(trip.description)
@@ -204,6 +232,8 @@ async function DbTripPage({
           endDate: period.endDate,
         })}
         tripSummary={tripSummary}
+        tripKrw={tripKrw}
+        rateMap={rateMap}
         tripInProgress={isTripInProgress({
           startDate: period.startDate,
           endDate: period.endDate,

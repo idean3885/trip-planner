@@ -33,7 +33,7 @@ import {
   ACTIVITY_WINDOW_RADIUS,
   missingFetchRange,
 } from "@/lib/activity-window";
-import type { CurrencySummary } from "@/lib/expense";
+import type { CurrencySummary, KrwConversion, RateMap } from "@/lib/expense";
 
 import { CalendarView } from "./CalendarView";
 import { DayActivitiesPane, type DayCreatedPayload } from "./DayActivitiesPane";
@@ -85,6 +85,10 @@ export interface TripDetailLayoutProps {
   timingDefault?: PaymentTiming;
   /** spec 061 US4 — 여행 전체 금액 합산(서버 계산, 통화별 총액·사전/현장 소계). */
   tripSummary?: CurrencySummary[];
+  /** spec 062 — 여행 총액 원화 근사 환산(서버 계산, 참고용). */
+  tripKrw?: KrwConversion | null;
+  /** spec 062 — (일자, 통화) 근사 환율 맵. 일별 합산 원화 병기에 쓴다. */
+  rateMap?: RateMap;
   /** spec 061 US3 — 여행 중이면 모바일 캘린더를 주간 뷰로 진입(서버 판정). */
   tripInProgress?: boolean;
 }
@@ -140,6 +144,8 @@ export function TripDetailLayout({
   syncCard,
   timingDefault,
   tripSummary,
+  tripKrw,
+  rateMap,
   tripInProgress,
 }: TripDetailLayoutProps) {
   const [dayIndex, setDayIndex] = useState<LayoutDayIndex[]>(initialDays);
@@ -349,6 +355,7 @@ export function TripDetailLayout({
         onActivitiesChange={interactive ? handleActivitiesChange : undefined}
         showDateHeader={showDateHeader}
         timingDefault={timingDefault}
+        rateMap={rateMap}
       />
     );
   };
@@ -386,9 +393,10 @@ export function TripDetailLayout({
     <div className="space-y-4">
       {actionBar}
 
-      {/* spec 061 US4 (#811) — 여행 총액 합산. 빈 합산은 ExpenseSummary 가 숨긴다. */}
+      {/* spec 061 US4 (#811) — 여행 총액 합산. 빈 합산은 ExpenseSummary 가 숨긴다.
+          spec 062 — 원화 근사 환산(참고)을 함께 병기한다. */}
       {tripSummary && tripSummary.length > 0 && (
-        <ExpenseSummary rows={tripSummary} label="여행 총액" />
+        <ExpenseSummary rows={tripSummary} label="여행 총액" krw={tripKrw} />
       )}
 
       {/* 데스크탑 ≥1024px — 좌(캘린더) / 우(선택 일정) 2분할. */}

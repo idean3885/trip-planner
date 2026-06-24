@@ -58,3 +58,49 @@ describe("ExpenseSummary", () => {
     expect(screen.getByText(/1,000 KRW/)).toBeInTheDocument();
   });
 });
+
+// spec 062 — 원화 자동 근사 환산 병기.
+describe("ExpenseSummary 원화 병기 (spec 062)", () => {
+  const rows = [{ currency: "EUR", total: 35, advance: 0, onSite: 35 }];
+
+  it("krw 기여분이 있으면 '약 …원 (참고)'를 병기한다", () => {
+    render(
+      <ExpenseSummary
+        rows={rows}
+        label="이 날"
+        krw={{ krw: 51800, partial: false, anyConverted: true }}
+      />,
+    );
+    expect(screen.getByText(/약 51,800원/)).toBeInTheDocument();
+    expect(screen.getByText(/참고/)).toBeInTheDocument();
+  });
+
+  it("부분 반영이면 '일부 통화만'을 덧붙인다", () => {
+    render(
+      <ExpenseSummary
+        rows={rows}
+        label="이 날"
+        krw={{ krw: 51800, partial: true, anyConverted: true }}
+      />,
+    );
+    expect(screen.getByText(/일부 통화만/)).toBeInTheDocument();
+  });
+
+  it("환산 기여분이 없으면(anyConverted=false) 원화 병기를 생략한다", () => {
+    render(
+      <ExpenseSummary
+        rows={rows}
+        label="이 날"
+        krw={{ krw: 0, partial: true, anyConverted: false }}
+      />,
+    );
+    expect(screen.queryByText(/원/)).not.toBeInTheDocument();
+    expect(screen.getByText(/35 EUR/)).toBeInTheDocument();
+  });
+
+  it("회귀: krw 미전달 시 기존 현화-only 합산 그대로", () => {
+    render(<ExpenseSummary rows={rows} label="이 날" />);
+    expect(screen.getByText(/35 EUR/)).toBeInTheDocument();
+    expect(screen.queryByText(/참고/)).not.toBeInTheDocument();
+  });
+});

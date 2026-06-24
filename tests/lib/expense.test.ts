@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  convertToKrw,
   isTripInProgress,
   resolveTimingDefault,
   summarize,
@@ -78,5 +79,85 @@ describe("summarize", () => {
     const rows = summarize([{ cost: "7", currency: "EUR" }]);
     expect(rows[0].onSite).toBe(7);
     expect(rows[0].advance).toBe(0);
+  });
+});
+
+describe("convertToKrw", () => {
+  const RATES = {
+    "2026-06-14": { EUR: 1480 },
+    "2026-06-15": { EUR: 1500, JPY: 9 },
+  };
+
+  it("일자별 환율로 환산해 합한다", () => {
+    const r = convertToKrw(
+      [
+        { cost: "10", currency: "EUR", dateYmd: "2026-06-14" }, // 14800
+        { cost: "10", currency: "EUR", dateYmd: "2026-06-15" }, // 15000
+      ],
+      RATES,
+    );
+    expect(r.krw).toBe(29800);
+    expect(r.partial).toBe(false);
+    expect(r.anyConverted).toBe(true);
+  });
+
+  it("KRW 항목은 환율 없이 그대로 가산", () => {
+    const r = convertToKrw(
+      [
+        { cost: "5000", currency: "KRW", dateYmd: "2026-06-14" },
+        { cost: "10", currency: "EUR", dateYmd: "2026-06-14" }, // 14800
+      ],
+      RATES,
+    );
+    expect(r.krw).toBe(19800);
+    expect(r.partial).toBe(false);
+  });
+
+  it("환율 미확보 통화는 합에서 제외하고 partial=true", () => {
+    const r = convertToKrw(
+      [
+        { cost: "10", currency: "EUR", dateYmd: "2026-06-14" }, // 14800
+        { cost: "100", currency: "GBP", dateYmd: "2026-06-14" }, // 미확보
+      ],
+      RATES,
+    );
+    expect(r.krw).toBe(14800);
+    expect(r.partial).toBe(true);
+    expect(r.anyConverted).toBe(true);
+  });
+
+  it("모두 미확보면 anyConverted=false, krw=0, partial=true", () => {
+    const r = convertToKrw(
+      [{ cost: "100", currency: "GBP", dateYmd: "2026-06-14" }],
+      RATES,
+    );
+    expect(r.anyConverted).toBe(false);
+    expect(r.krw).toBe(0);
+    expect(r.partial).toBe(true);
+  });
+
+  it("0/미입력은 기여하지 않는다", () => {
+    const r = convertToKrw(
+      [
+        { cost: null, currency: "EUR", dateYmd: "2026-06-14" },
+        { cost: "0", currency: "EUR", dateYmd: "2026-06-14" },
+      ],
+      RATES,
+    );
+    expect(r.krw).toBe(0);
+    expect(r.partial).toBe(false);
+    expect(r.anyConverted).toBe(false);
+  });
+
+  it("같은 일자 다통화를 각 환율로 환산", () => {
+    const r = convertToKrw(
+      [
+        { cost: "10", currency: "EUR", dateYmd: "2026-06-15" }, // 15000
+        { cost: "1000", currency: "JPY", dateYmd: "2026-06-15" }, // 9000
+      ],
+      RATES,
+    );
+    expect(r.krw).toBe(24000);
+    expect(r.partial).toBe(false);
   });
 });

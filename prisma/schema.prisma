@@ -168,6 +168,20 @@ model Activity {
   @@map("activities")
 }
 
+// spec 062 (#811 후속) — 원화 자동 근사 환산 캐시. 자동 확보한 일자·통화별
+// 원화 근사 시세(현지 1단위 = 원화 N)를 재사용한다. 여행자가 편집하지 않는
+// 표시 보조 데이터 — 활동·금액 정본과 무관. (date, base) 당 한 줄.
+model ExchangeRate {
+  id        Int      @id @default(autoincrement())
+  date      DateTime @db.Date
+  base      String   @db.VarChar(3)
+  rateToKrw Decimal  @map("rate_to_krw") @db.Decimal(18, 6)
+  fetchedAt DateTime @default(now()) @map("fetched_at") @db.Timestamptz(3)
+
+  @@unique([date, base])
+  @@map("exchange_rates")
+}
+
 enum TripRole {
   OWNER
   HOST
