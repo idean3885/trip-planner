@@ -17,7 +17,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ACTIVITY_WINDOW_RADIUS, windowYmds } from "@/lib/activity-window";
 import { formatCalendarDateFull } from "@/lib/date-utils";
 import { computeDayNumber } from "@/lib/day-number";
-import { resolveTimingDefault, summarize } from "@/lib/expense";
+import {
+  isTripInProgress,
+  resolveTimingDefault,
+  summarize,
+} from "@/lib/expense";
 import { prisma } from "@/lib/prisma";
 import { getResolvedPeriod } from "@/lib/trip-period";
 
@@ -200,6 +204,10 @@ async function DbTripPage({
           endDate: period.endDate,
         })}
         tripSummary={tripSummary}
+        tripInProgress={isTripInProgress({
+          startDate: period.startDate,
+          endDate: period.endDate,
+        })}
         memberList={<MemberList tripId={tripId} />}
         syncCard={<CalendarSyncEntryCard tripId={tripId} role={member.role} />}
       />
