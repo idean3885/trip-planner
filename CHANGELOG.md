@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [4.0.0] - 2026-06-24
+
+### Breaking
+
+- * **예약 상태 항목을 완전히 제거**했습니다. 공개 API·MCP 도구·캘린더 내보내기에서 더 이상 예약 상태를 다루지 않고, 지출 시점(사전 결제·현장 결제)으로 일원화됩니다. 현장에서 거의 쓰이지 않던 입력을 덜어 일정 기록을 단순하게 합니다.
+
+  ([#811](https://github.com/idean3885/trip-planner/issues/811))
+
+
 ## [3.23.0] - 2026-06-24
 
 ### Added
