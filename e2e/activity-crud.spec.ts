@@ -49,7 +49,7 @@ test.describe("Activity CRUD E2E", () => {
         memo: "자동 테스트 https://example.com",
         cost: 15,
         currency: "EUR",
-        reservationStatus: "RECOMMENDED",
+        paymentTiming: "ADVANCE",
       },
     });
     expect(res.status()).toBe(201);

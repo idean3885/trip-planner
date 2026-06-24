@@ -5,7 +5,7 @@
  * 권한: trip OWNER·HOST (헌법 VI).
  */
 
-import type { ActivityCategory, ReservationStatus } from "@prisma/client";
+import type { ActivityCategory } from "@prisma/client";
 import { NextResponse } from "next/server";
 
 import { getAuthUserId } from "@/lib/auth-helpers";
@@ -25,17 +25,8 @@ const CATEGORIES: ActivityCategory[] = [
   "SHOPPING",
   "OTHER",
 ];
-const RESERVATION_STATUSES: ReservationStatus[] = [
-  "REQUIRED",
-  "RECOMMENDED",
-  "ON_SITE",
-  "NOT_NEEDED",
-  "RESERVED",
-];
-
 interface PromoteRequestBody {
   category?: ActivityCategory;
-  reservationStatus?: ReservationStatus;
   startTimezone?: string;
   endTimezone?: string;
   location?: string | null;
@@ -65,12 +56,6 @@ export async function POST(request: Request, { params }: Params) {
   const missing: string[] = [];
   if (!body.category || !CATEGORIES.includes(body.category))
     missing.push("category");
-  if (
-    !body.reservationStatus ||
-    !RESERVATION_STATUSES.includes(body.reservationStatus)
-  ) {
-    missing.push("reservationStatus");
-  }
   if (!body.startTimezone) missing.push("startTimezone");
   if (!body.endTimezone) missing.push("endTimezone");
   if (missing.length > 0) {
@@ -89,7 +74,6 @@ export async function POST(request: Request, { params }: Params) {
       draftId: draftIdNum,
       tripId,
       category: body.category!,
-      reservationStatus: body.reservationStatus!,
       startTimezone: body.startTimezone!,
       endTimezone: body.endTimezone!,
       location: body.location ?? null,

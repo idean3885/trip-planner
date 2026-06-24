@@ -25,14 +25,6 @@ const CATEGORY_SYMBOL: Record<string, string> = {
   OTHER: "•",
 };
 
-const RESERVATION_LABEL: Record<string, string> = {
-  REQUIRED: "사전 예약 필수",
-  RECOMMENDED: "사전 예약 권장",
-  ON_SITE: "현장 구매",
-  NOT_NEEDED: "예약 불필요",
-  RESERVED: "예약 완료",
-};
-
 export type ActivityForIcs = Pick<
   Activity,
   | "title"
@@ -43,7 +35,6 @@ export type ActivityForIcs = Pick<
   | "endTimezone"
   | "location"
   | "memo"
-  | "reservationStatus"
   | "allDay"
 >;
 
@@ -108,12 +99,6 @@ export function formatActivityAsIcs(
   const summary = `[${trip.title}] ${symbol} ${activity.title}`;
 
   const descLines: string[] = [];
-  if (activity.reservationStatus) {
-    descLines.push(
-      RESERVATION_LABEL[activity.reservationStatus] ??
-        activity.reservationStatus,
-    );
-  }
   if (activity.memo) descLines.push(activity.memo);
   if (activity.location) {
     descLines.push(`📍 ${activity.location}`);

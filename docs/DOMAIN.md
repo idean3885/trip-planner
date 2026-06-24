@@ -94,7 +94,7 @@ classDiagram
         +string location
         +string memo
         +Money cost
-        +ReservationStatus reservationStatus
+        +PaymentTiming paymentTiming
     }
 
     class TripMember {
@@ -138,7 +138,7 @@ classDiagram
 | **TimeWithZone** | instant (Timestamptz) + timezone (IANA) | 시각 + 표시 시간대. timezone NULL이면 Day 도시 기준 |
 | **Money** | amount (Decimal) + currency (VARCHAR) | 비용 + ISO 4217 통화 코드 |
 | **ActivityCategory** | enum | SIGHTSEEING, DINING, TRANSPORT, ACCOMMODATION, SHOPPING, OTHER |
-| **ReservationStatus** | enum | REQUIRED, RECOMMENDED, ON_SITE, NOT_NEEDED |
+| **PaymentTiming** | enum | ADVANCE(사전 결제), ON_SITE(현장 결제, 기본값) |
 | **TripRole** | enum | OWNER, HOST, GUEST |
 
 ## 도메인 이벤트

@@ -55,12 +55,13 @@ class TestCreateActivity:
         result = await fn(
             trip_id=1, day_id=1, category="DINING", title="Lunch",
             start_time="12:00", end_time="13:00", location="Restaurant",
-            memo="Good", cost=25.0, currency="EUR", reservation_status="RECOMMENDED",
+            memo="Good", cost=25.0, currency="EUR", payment_timing="ADVANCE",
         )
         assert "활동 추가 완료" in result
         call_body = mock_api.call_args[1]["json"]
         assert call_body["location"] == "Restaurant"
         assert call_body["cost"] == 25.0
+        assert call_body["paymentTiming"] == "ADVANCE"
 
 
 class TestUpdateActivity:
