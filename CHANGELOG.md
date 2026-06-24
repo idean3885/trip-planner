@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [4.1.0] - 2026-06-24
+
+### Added
+
+- * **현지 통화 지출에 원화 근사값을 자동으로 함께 보여줍니다.** 일자별 합산과 여행 총액 옆에 "약 …원 (참고)"이 붙어, 환율을 직접 입력하지 않아도 원화로 대략 얼마인지 알 수 있습니다. 환율을 알 수 없는 통화는 현화만 보이고, 원화 값은 정산용이 아닌 참고치입니다.
+
+  ([#820](https://github.com/idean3885/trip-planner/issues/820))
+
+
 ## [4.0.0] - 2026-06-24
 
 ### Breaking
