@@ -18,6 +18,7 @@ import { ACTIVITY_WINDOW_RADIUS, windowYmds } from "@/lib/activity-window";
 import { formatCalendarDateFull } from "@/lib/date-utils";
 import { computeDayNumber } from "@/lib/day-number";
 import { prisma } from "@/lib/prisma";
+import { resolveTimingDefault } from "@/lib/expense";
 import { getResolvedPeriod } from "@/lib/trip-period";
 
 async function markdownToHtml(md: string): Promise<string> {
@@ -180,6 +181,10 @@ async function DbTripPage({
         initialActivities={initialActivities}
         canEdit={member.role !== "GUEST"}
         initialSelected={selectedYmd}
+        timingDefault={resolveTimingDefault({
+          startDate: period.startDate,
+          endDate: period.endDate,
+        })}
         memberList={<MemberList tripId={tripId} />}
         syncCard={<CalendarSyncEntryCard tripId={tripId} role={member.role} />}
       />

@@ -79,6 +79,8 @@ export interface TripDetailLayoutProps {
   memberList: ReactNode;
   /** 외부 캘린더 동기화 진입 버튼 (서버에서 만든 노드). */
   syncCard: ReactNode;
+  /** spec 061 — 추가 폼 지출시점 디폴트(서버 계산: 여행중=현장 / 여행전=사전). */
+  timingDefault?: PaymentTiming;
 }
 
 /**
@@ -130,6 +132,7 @@ export function TripDetailLayout({
   initialSelected,
   memberList,
   syncCard,
+  timingDefault,
 }: TripDetailLayoutProps) {
   const [dayIndex, setDayIndex] = useState<LayoutDayIndex[]>(initialDays);
   const [activitiesByDayId, setActivitiesByDayId] =
@@ -337,6 +340,7 @@ export function TripDetailLayout({
         onDayCreated={handleDayCreated}
         onActivitiesChange={interactive ? handleActivitiesChange : undefined}
         showDateHeader={showDateHeader}
+        timingDefault={timingDefault}
       />
     );
   };
