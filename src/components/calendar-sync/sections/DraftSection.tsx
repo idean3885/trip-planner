@@ -17,7 +17,6 @@ import type {
   ActivityCategory,
   ActivityDraftStatus,
   CalendarProviderId,
-  ReservationStatus,
 } from "@prisma/client";
 import { Loader2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -52,7 +51,6 @@ interface DraftDTO {
 
 interface ItemOverride {
   category: ActivityCategory;
-  reservationStatus: ReservationStatus;
   startTimezone: string;
   endTimezone: string;
   /** 보정된 부동 시각(ISO). undefined 면 draft 원본 사용. */
@@ -68,14 +66,6 @@ const CATEGORY_OPTIONS: { value: ActivityCategory; label: string }[] = [
   { value: "SHOPPING", label: "쇼핑" },
   { value: "OTHER", label: "기타" },
 ];
-const RESERVATION_OPTIONS: { value: ReservationStatus; label: string }[] = [
-  { value: "REQUIRED", label: "사전 예약 필수" },
-  { value: "RECOMMENDED", label: "사전 예약 권장" },
-  { value: "ON_SITE", label: "현장 구매" },
-  { value: "NOT_NEEDED", label: "예약 불필요" },
-  { value: "RESERVED", label: "예약 완료" },
-];
-
 const pad = (n: number) => String(n).padStart(2, "0");
 
 /** 헌법 VII — 벽시계 값을 그대로 표시(관찰자 타임존 환산 없음). */
@@ -111,7 +101,6 @@ function plusOneHour(iso: string): string {
 function defaultOverride(d: DraftDTO): ItemOverride {
   return {
     category: "SIGHTSEEING",
-    reservationStatus: "NOT_NEEDED",
     startTimezone: d.startTimezone ?? "Asia/Seoul",
     endTimezone: d.endTimezone ?? d.startTimezone ?? "Asia/Seoul",
   };
@@ -239,7 +228,6 @@ export default function DraftSection({ tripId, canEdit, onMutated }: Props) {
         return {
           draftId: d.id,
           category: ov.category,
-          reservationStatus: ov.reservationStatus,
           startTimezone: ov.startTimezone,
           endTimezone: ov.endTimezone,
           startTime: ov.startTime,
@@ -434,29 +422,6 @@ export default function DraftSection({ tripId, canEdit, onMutated }: Props) {
                       </SelectTrigger>
                       <SelectContent>
                         {CATEGORY_OPTIONS.map((o) => (
-                          <SelectItem key={o.value} value={o.value}>
-                            {o.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </label>
-                  <label className="block text-xs">
-                    <span className="mb-1 block font-medium">예약 상태</span>
-                    <Select
-                      value={ov.reservationStatus}
-                      onValueChange={(v) =>
-                        v &&
-                        updateOverride(d.id, {
-                          reservationStatus: v as ReservationStatus,
-                        })
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {RESERVATION_OPTIONS.map((o) => (
                           <SelectItem key={o.value} value={o.value}>
                             {o.label}
                           </SelectItem>

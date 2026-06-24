@@ -82,7 +82,7 @@ export default function DemoShowcase() {
                 <span>Torre de Belém, Lisboa</span>
               </div>
               <div className="border-border bg-muted/40 text-muted-foreground rounded-md border p-2 text-xs">
-                예약 권장 · 성인 €8 · 현장 구매 가능
+                성인 €8 · 현장 결제
               </div>
             </CardContent>
           </Card>

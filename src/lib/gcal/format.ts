@@ -2,7 +2,7 @@
  * Activity → Google Calendar Event 변환.
  *
  * 제목: `[여행명] 카테고리기호 활동제목` (스펙 FR-013)
- * 설명: 예약 상태, 메모, 위치 지도 링크, 원본 여행 페이지 링크
+ * 설명: 메모, 위치 지도 링크, 원본 여행 페이지 링크
  * 시각: Activity.startTime/endTime(UTC) + startTimezone/endTimezone(IANA).
  *       시간대가 없으면 UTC로 폴백 (#232/#325에 의해 정상 Activity에는 IANA가 설정됨).
  */
@@ -18,14 +18,6 @@ const CATEGORY_SYMBOL: Record<string, string> = {
   ACCOMMODATION: "🏨",
   SHOPPING: "🛍️",
   OTHER: "•",
-};
-
-const RESERVATION_LABEL: Record<string, string> = {
-  REQUIRED: "사전 예약 필수",
-  RECOMMENDED: "사전 예약 권장",
-  ON_SITE: "현장 구매",
-  NOT_NEEDED: "예약 불필요",
-  RESERVED: "예약 완료",
 };
 
 export interface FormattedEvent {
@@ -51,7 +43,6 @@ export type ActivityForFormat = Pick<
   | "endTimezone"
   | "location"
   | "memo"
-  | "reservationStatus"
 >;
 
 export function formatActivityAsEvent(
@@ -63,12 +54,6 @@ export function formatActivityAsEvent(
   const summary = `[${trip.title}] ${symbol} ${activity.title}`;
 
   const descLines: string[] = [];
-  if (activity.reservationStatus) {
-    descLines.push(
-      RESERVATION_LABEL[activity.reservationStatus] ??
-        activity.reservationStatus,
-    );
-  }
   if (activity.memo) descLines.push(activity.memo);
   if (activity.location) {
     descLines.push(`📍 ${activity.location}`);

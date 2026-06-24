@@ -11,7 +11,6 @@ import type {
   ActivityCategory,
   ActivityDraftStatus,
   CalendarProviderId,
-  ReservationStatus,
 } from "@prisma/client";
 import { CalendarClock, Loader2, MoreHorizontal } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
@@ -65,12 +64,6 @@ const CATEGORY_OPTIONS: { value: ActivityCategory; label: string }[] = [
   { value: "SHOPPING", label: "쇼핑" },
   { value: "OTHER", label: "기타" },
 ];
-const RESERVATION_OPTIONS: { value: ReservationStatus; label: string }[] = [
-  { value: "REQUIRED", label: "사전 예약 필수" },
-  { value: "RECOMMENDED", label: "사전 예약 권장" },
-  { value: "ON_SITE", label: "현장 구매" },
-  { value: "NOT_NEEDED", label: "예약 불필요" },
-];
 const TIMEZONE_OPTIONS = [
   "Asia/Seoul",
   "Asia/Tokyo",
@@ -114,8 +107,6 @@ export default function DraftListPanel({
 
   // 폼 상태
   const [category, setCategory] = useState<ActivityCategory>("SIGHTSEEING");
-  const [reservationStatus, setReservationStatus] =
-    useState<ReservationStatus>("NOT_NEEDED");
   const [startTz, setStartTz] = useState<string>("Asia/Seoul");
   const [endTz, setEndTz] = useState<string>("Asia/Seoul");
 
@@ -138,7 +129,6 @@ export default function DraftListPanel({
   const openPromote = useCallback((d: DraftDTO) => {
     setPromoteTarget(d);
     setCategory("SIGHTSEEING");
-    setReservationStatus("NOT_NEEDED");
     setStartTz(d.startTimezone ?? "Asia/Seoul");
     setEndTz(d.endTimezone ?? d.startTimezone ?? "Asia/Seoul");
   }, []);
@@ -154,7 +144,6 @@ export default function DraftListPanel({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             category,
-            reservationStatus,
             startTimezone: startTz,
             endTimezone: endTz,
           }),
@@ -178,15 +167,7 @@ export default function DraftListPanel({
     } finally {
       setSubmitting(false);
     }
-  }, [
-    category,
-    endTz,
-    promoteTarget,
-    refresh,
-    reservationStatus,
-    startTz,
-    tripId,
-  ]);
+  }, [category, endTz, promoteTarget, refresh, startTz, tripId]);
 
   const handleRefreshDraft = useCallback(
     async (d: DraftDTO) => {
@@ -241,8 +222,7 @@ export default function DraftListPanel({
         외부에서 가져온 일정 ({drafts.length})
       </h3>
       <p className="text-muted-foreground mb-3 text-xs">
-        클릭하면 카테고리·예약 상태·시간대를 채워 정식 일정으로 만들 수
-        있습니다.
+        클릭하면 카테고리·시간대를 채워 정식 일정으로 만들 수 있습니다.
       </p>
       <ul className="space-y-2">
         {drafts.map((d) => (
@@ -312,26 +292,6 @@ export default function DraftListPanel({
                 </SelectTrigger>
                 <SelectContent>
                   {CATEGORY_OPTIONS.map((o) => (
-                    <SelectItem key={o.value} value={o.value}>
-                      {o.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </label>
-            <label className="block">
-              <span className="mb-1 block text-xs font-medium">예약 상태</span>
-              <Select
-                value={reservationStatus}
-                onValueChange={(v) =>
-                  setReservationStatus(v as ReservationStatus)
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {RESERVATION_OPTIONS.map((o) => (
                     <SelectItem key={o.value} value={o.value}>
                       {o.label}
                     </SelectItem>

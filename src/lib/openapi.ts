@@ -185,16 +185,11 @@ export const openApiSpec = {
           },
           cost: { $ref: "#/components/schemas/Cost" },
           currency: { type: "string", default: "EUR" },
-          reservationStatus: {
+          paymentTiming: {
             type: "string",
-            nullable: true,
-            enum: [
-              "REQUIRED",
-              "RECOMMENDED",
-              "ON_SITE",
-              "NOT_NEEDED",
-              "RESERVED",
-            ],
+            enum: ["ADVANCE", "ON_SITE"],
+            default: "ON_SITE",
+            description: "지출 시점(사전 결제 / 현장 결제). 미지정 시 현장(ON_SITE).",
           },
           allDay: {
             type: "boolean",
@@ -379,7 +374,7 @@ export const openApiSpec = {
                               startTimezone: "Asia/Seoul",
                               endTime: "2026-06-07T19:15:00.000Z",
                               endTimezone: "Europe/Lisbon",
-                              reservationStatus: "RESERVED",
+                              paymentTiming: "ADVANCE",
                               sortOrder: 1,
                             },
                           ],
@@ -765,15 +760,11 @@ export const openApiSpec = {
                   },
                   cost: { $ref: "#/components/schemas/Cost" },
                   currency: { type: "string" },
-                  reservationStatus: {
+                  paymentTiming: {
                     type: "string",
-                    enum: [
-                      "REQUIRED",
-                      "RECOMMENDED",
-                      "ON_SITE",
-                      "NOT_NEEDED",
-                      "RESERVED",
-                    ],
+                    enum: ["ADVANCE", "ON_SITE"],
+                    default: "ON_SITE",
+                    description: "지출 시점(사전 결제 / 현장 결제).",
                   },
                   allDay: {
                     type: "boolean",
@@ -794,7 +785,7 @@ export const openApiSpec = {
                 location: "포르투(OPO) → 마드리드(MAD)",
                 cost: 645870,
                 currency: "KRW",
-                reservationStatus: "REQUIRED",
+                paymentTiming: "ADVANCE",
                 sortOrder: 2,
               },
             },
@@ -905,15 +896,11 @@ export const openApiSpec = {
                   },
                   cost: { $ref: "#/components/schemas/Cost" },
                   currency: { type: "string" },
-                  reservationStatus: {
+                  paymentTiming: {
                     type: "string",
-                    enum: [
-                      "REQUIRED",
-                      "RECOMMENDED",
-                      "ON_SITE",
-                      "NOT_NEEDED",
-                      "RESERVED",
-                    ],
+                    enum: ["ADVANCE", "ON_SITE"],
+                    default: "ON_SITE",
+                    description: "지출 시점(사전 결제 / 현장 결제).",
                   },
                   allDay: {
                     type: "boolean",

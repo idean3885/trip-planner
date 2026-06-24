@@ -9,37 +9,38 @@
 
 ## Phase 1: Setup & Foundational (blocking)
 
-- [ ] T001 schema.prisma — `PaymentTiming { ADVANCE, ON_SITE }` enum + `Activity.paymentTiming`(NOT NULL default ON_SITE) 추가, `Activity.reservationStatus`·`ReservationStatus` enum 제거 in `prisma/schema.prisma` [artifact: prisma/schema.prisma] [why: payment-migration]
-- [ ] T002 data-migration — paymentTiming 추가(expand) → 예약상태 보정 백필(RESERVED/REQUIRED/RECOMMENDED→ADVANCE, ON_SITE/NOT_NEEDED/NULL→ON_SITE) → reservation_status 컬럼·타입 DROP(contract) in `prisma/migrations/expense_timing/migration.sql` [artifact: prisma/migrations/expense_timing/migration.sql] [why: payment-migration] [migration-type: data-migration]
-- [ ] T003 지출·여행중판정 헬퍼(`isTripInProgress`, 합산 함수 시그니처) in `src/lib/expense.ts` [artifact: src/lib/expense.ts] [why: timing-default]
+- [x] T001 schema.prisma — `PaymentTiming { ADVANCE, ON_SITE }` enum + `Activity.paymentTiming`(NOT NULL default ON_SITE) 추가, `Activity.reservationStatus`·`ReservationStatus` enum 제거 in `prisma/schema.prisma` [artifact: prisma/schema.prisma] [why: payment-migration]
+- [x] T002 data-migration(expand) — paymentTiming 추가 → 예약상태 보정 백필(RESERVED/REQUIRED/RECOMMENDED→ADVANCE, ON_SITE/NOT_NEEDED/NULL→ON_SITE) in `prisma/migrations/20260623000000_expense_timing/migration.sql` [artifact: prisma/migrations/20260623000000_expense_timing/migration.sql] [why: payment-migration] [migration-type: data-migration]
+- [x] T019 contract — 휴면 `reservation_status` 컬럼·`ReservationStatus` 타입 DROP (Phase B, 의미는 paymentTiming 으로 이미 이관) in `prisma/migrations/20260624000000_drop_reservation_status/migration.sql` [artifact: prisma/migrations/20260624000000_drop_reservation_status/migration.sql] [why: payment-migration] [migration-type: schema-only]
+- [x] T003 지출·여행중판정 헬퍼(`isTripInProgress`, 합산 함수 시그니처) in `src/lib/expense.ts` [artifact: src/lib/expense.ts] [why: timing-default]
 
 ## Phase 2: US1 — 모바일 간소화 추가 (P1)
 
 **Goal**: 제목·가격·내용 3필드 + 확장. 시간 비강제.
 **Independent Test**: 모바일 추가 3필드만 저장 성공, 확장 시 전체 필드.
 
-- [ ] T004 [US1] ActivityForm 간소 모드(모바일 기본 제목·가격·내용 3필드 + "확장" 토글로 전체 필드, 간소 경로 getLocalTimes 자동주입 생략) in `src/components/ActivityForm.tsx` [artifact: src/components/ActivityForm.tsx] [why: quick-add]
-- [ ] T005 [P] [US1] 간소 모드 테스트(3필드·시간 비강제 저장·확장 토글) in `tests/components/ActivityForm.test.tsx` [artifact: tests/components/ActivityForm.test.tsx] [why: quick-add]
+- [x] T004 [US1] ActivityForm 간소 모드(모바일 기본 제목·가격·내용 3필드 + "확장" 토글로 전체 필드, 간소 경로 getLocalTimes 자동주입 생략) in `src/components/ActivityForm.tsx` [artifact: src/components/ActivityForm.tsx] [why: quick-add]
+- [x] T005 [P] [US1] 간소 모드 테스트(3필드·시간 비강제 저장·확장 토글) in `tests/components/ActivityForm.test.tsx` [artifact: tests/components/ActivityForm.test.tsx] [why: quick-add]
 
 ## Phase 3: US2 — 예약상태 제거 (P1)
 
 **Goal**: 예약상태 입력·표시·참조 전수 제거. 기존 데이터 회귀 0.
 **Independent Test**: 추가/편집/상세/카드에 예약상태 부재, 기존 활동 정상.
 
-- [ ] T006 [US2] ActivityForm 예약상태 입력(select) 제거 in `src/components/ActivityForm.tsx` [artifact: src/components/ActivityForm.tsx] [why: remove-reservation]
-- [ ] T007 [US2] ActivityCard 예약상태 표시(RESERVATION_LABEL 등) 제거 in `src/components/ActivityCard.tsx` [artifact: src/components/ActivityCard.tsx] [why: remove-reservation]
-- [ ] T008 [US2] OpenAPI·활동 API zod 스키마·MCP·문서(CLAUDE.md 예약상태 섹션)의 reservationStatus 참조 제거 in `src/lib/openapi.ts` [artifact: src/lib/openapi.ts] [why: remove-reservation]
-- [ ] T009 [P] [US2] 예약상태 부재 단언 테스트 in `tests/components/ActivityCard.test.tsx` [artifact: tests/components/ActivityCard.test.tsx] [why: remove-reservation]
+- [x] T006 [US2] ActivityForm 예약상태 입력(select) 제거 in `src/components/ActivityForm.tsx` [artifact: src/components/ActivityForm.tsx] [why: remove-reservation]
+- [x] T007 [US2] ActivityCard 예약상태 표시(RESERVATION_LABEL 등) 제거 in `src/components/ActivityCard.tsx` [artifact: src/components/ActivityCard.tsx] [why: remove-reservation]
+- [x] T008 [US2] OpenAPI·활동 API zod 스키마·MCP·문서(CLAUDE.md 예약상태 섹션)의 reservationStatus 참조 제거 in `src/lib/openapi.ts` [artifact: src/lib/openapi.ts] [why: remove-reservation]
+- [x] T009 [P] [US2] 예약상태 부재 단언 테스트 in `tests/components/ActivityCard.test.tsx` [artifact: tests/components/ActivityCard.test.tsx] [why: remove-reservation]
 
 ## Phase 4: US3 — 사전/현장 지출 + 디폴트 (P1)
 
 **Goal**: 지출시점 토글 + 맥락 디폴트 + 여행중 주간 뷰.
 **Independent Test**: 여행전=사전, 여행중+모바일=현장+주간, 수동 토글.
 
-- [ ] T010 [US3] ActivityForm 지출시점(사전/현장) 토글 + 맥락 디폴트 적용(여행중→ON_SITE, 그외→ADVANCE) in `src/components/ActivityForm.tsx` [artifact: src/components/ActivityForm.tsx] [why: timing-default]
-- [ ] T011 [US3] 디폴트 결정 로직(isTripInProgress 기반) in `src/lib/expense.ts` [artifact: src/lib/expense.ts::resolveTimingDefault] [why: timing-default]
+- [x] T010 [US3] ActivityForm 지출시점(사전/현장) 토글 + 맥락 디폴트 적용(여행중→ON_SITE, 그외→ADVANCE) in `src/components/ActivityForm.tsx` [artifact: src/components/ActivityForm.tsx] [why: timing-default]
+- [x] T011 [US3] 디폴트 결정 로직(isTripInProgress 기반) in `src/lib/expense.ts` [artifact: src/lib/expense.ts::resolveTimingDefault] [why: timing-default]
 - [x] T012 [US3] 여행중+모바일 주간 달력 디폴트 뷰 in `src/components/trip/CalendarView.tsx` [artifact: src/components/trip/CalendarView.tsx] [why: weekly-default]
-- [ ] T013 [P] [US3] 여행중 판정·디폴트·지출시점 토글 테스트 in `tests/lib/expense.test.ts` [artifact: tests/lib/expense.test.ts] [why: timing-default]
+- [x] T013 [P] [US3] 여행중 판정·디폴트·지출시점 토글 테스트 in `tests/lib/expense.test.ts` [artifact: tests/lib/expense.test.ts] [why: timing-default]
 
 ## Phase 5: US4 — 금액 합산 (P2)
 
@@ -52,7 +53,7 @@
 
 ## Phase 6: 회귀 가드 & Polish
 
-- [ ] T017 [P] 기존 활동 추가/편집/삭제 흐름 회귀 가드(예약상태 제거 반영) in `tests/components/ActivityList.test.tsx` [artifact: tests/components/ActivityList.test.tsx] [why: regression]
+- [x] T017 [P] 기존 활동 추가/편집/삭제 흐름 회귀 가드(예약상태 제거 반영) in `tests/components/ActivityList.test.tsx` [artifact: tests/components/ActivityList.test.tsx] [why: regression]
 - [ ] T018 [P] towncrier 단편(지출 중심 UX, 도메인 추상화·합쇼체) in `changes/807.feat.md` [artifact: changes/807.feat.md] [why: regression]
 
 ## Dependencies

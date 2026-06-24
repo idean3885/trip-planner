@@ -56,7 +56,7 @@ describe("GET /days 윈도우 모드", () => {
             memo: null,
             cost: 120,
             currency: "EUR",
-            reservationStatus: null,
+            paymentTiming: "ON_SITE",
             sortOrder: 0,
           },
         ],

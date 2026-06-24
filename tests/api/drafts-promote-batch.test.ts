@@ -47,7 +47,6 @@ const params = { params: Promise.resolve({ id: "1" }) };
 
 const VALID = {
   category: "SIGHTSEEING",
-  reservationStatus: "NOT_NEEDED",
   startTimezone: "Asia/Seoul",
   endTimezone: "Asia/Seoul",
 };
@@ -126,15 +125,5 @@ describe("POST /drafts/promote-batch", () => {
     mocks.userCanImportCalendar.mockResolvedValue(false);
     const res = await POST(req({ items: [{ draftId: 1, ...VALID }] }), params);
     expect(res.status).toBe(403);
-  });
-
-  it("RESERVED(예약 완료) 를 허용한다 (#632)", async () => {
-    const res = await POST(
-      req({ items: [{ draftId: 1, ...VALID, reservationStatus: "RESERVED" }] }),
-      params,
-    );
-    const data = await res.json();
-    expect(data.promoted).toHaveLength(1);
-    expect(data.failed).toHaveLength(0);
   });
 });
