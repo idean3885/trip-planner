@@ -6,7 +6,13 @@
  * 생성하고 onDayCreated 콜백을 호출한다.
  */
 import type { ActivityCategory } from "@prisma/client";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { DayActivitiesPane } from "@/components/trip/DayActivitiesPane";
@@ -119,8 +125,9 @@ describe("DayActivitiesPane", () => {
         onDayCreated={vi.fn()}
       />,
     );
-    expect(screen.getByText("이 날")).toBeInTheDocument();
-    expect(screen.getByText(/30 EUR/)).toBeInTheDocument();
+    // "30 EUR" 는 합산과 활동 카드 양쪽에 나오므로 합산 영역으로 한정해 확인한다.
+    const summary = screen.getByText("이 날").parentElement as HTMLElement;
+    expect(within(summary).getByText(/30 EUR/)).toBeInTheDocument();
   });
 
   it("비용이 모두 없으면 금액 합산을 숨긴다", () => {

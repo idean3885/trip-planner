@@ -111,7 +111,16 @@ export const DayActivitiesPane = memo(function DayActivitiesPane({
         </h2>
       )}
       {activities && activities.length > 0 && (
-        <ExpenseSummary rows={summarize(activities)} label="이 날" />
+        <ExpenseSummary
+          rows={summarize(
+            activities.map((a) => ({
+              cost: a.cost == null ? null : String(a.cost),
+              currency: a.currency,
+              paymentTiming: a.paymentTiming,
+            })),
+          )}
+          label="이 날"
+        />
       )}
       {dayId === null ? (
         // Day 미생성(빈 날짜) — 빈 상태를 카드로 분명히 보인다.
