@@ -22,7 +22,7 @@ const activity: Activity = {
   memo: "예약 https://example.com 참고",
   cost: null,
   currency: "EUR",
-  reservationStatus: null,
+  paymentTiming: "ON_SITE",
   sortOrder: 0,
 };
 

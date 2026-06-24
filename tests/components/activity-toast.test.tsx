@@ -4,7 +4,7 @@
  * ActivityList 는 기존에 실패 토스트만 있었다. 추가·수정·삭제 성공 시에도
  * 성공 토스트로 결과를 알리는지 검증한다(대표로 삭제 플로우).
  */
-import type { ActivityCategory, ReservationStatus } from "@prisma/client";
+import type { ActivityCategory, PaymentTiming } from "@prisma/client";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -34,7 +34,7 @@ const activity = {
   memo: null,
   cost: null,
   currency: "EUR",
-  reservationStatus: null as ReservationStatus | null,
+  paymentTiming: "ON_SITE" as PaymentTiming,
   sortOrder: 0,
 };
 

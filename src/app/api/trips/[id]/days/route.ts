@@ -61,7 +61,7 @@ export async function GET(request: Request, { params }: Params) {
           memo: a.memo,
           cost: a.cost ? a.cost.toString() : null,
           currency: a.currency,
-          reservationStatus: a.reservationStatus,
+          paymentTiming: a.paymentTiming,
           sortOrder: a.sortOrder,
         })),
       })),

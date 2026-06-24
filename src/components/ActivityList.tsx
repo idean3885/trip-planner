@@ -1,10 +1,6 @@
 "use client";
 
-import type {
-  ActivityCategory,
-  Prisma,
-  ReservationStatus,
-} from "@prisma/client";
+import type { ActivityCategory, PaymentTiming, Prisma } from "@prisma/client";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -37,7 +33,7 @@ export interface Activity {
   url?: string | null;
   cost: Prisma.Decimal | string | number | null;
   currency: string;
-  reservationStatus: ReservationStatus | null;
+  paymentTiming: PaymentTiming;
   allDay?: boolean;
   sortOrder: number;
 }
@@ -52,6 +48,8 @@ interface ActivityListProps {
    * 패널마다 클로저를 새로 만들지 않고 단일 안정 핸들러를 쓰게 한다(#673 memo).
    */
   onActivitiesChange?: (dayId: number, next: Activity[]) => void;
+  /** spec 061 — 추가 시 지출시점 디폴트(여행중=현장 / 여행전=사전). */
+  timingDefault?: PaymentTiming;
 }
 
 export default function ActivityList({
@@ -60,6 +58,7 @@ export default function ActivityList({
   activities: initialActivities,
   canEdit,
   onActivitiesChange,
+  timingDefault = "ON_SITE",
 }: ActivityListProps) {
   const [activities, setActivities] = useState(initialActivities);
   const [showForm, setShowForm] = useState(false);
@@ -108,7 +107,7 @@ export default function ActivityList({
     if (data.url) body.url = data.url;
     if (data.cost) body.cost = parseFloat(data.cost);
     if (data.currency) body.currency = data.currency;
-    if (data.reservationStatus) body.reservationStatus = data.reservationStatus;
+    body.paymentTiming = data.paymentTiming;
     body.allDay = data.allDay;
 
     try {
@@ -144,7 +143,7 @@ export default function ActivityList({
       url: data.url || null,
       cost: data.cost ? parseFloat(data.cost) : null,
       currency: data.currency,
-      reservationStatus: data.reservationStatus || null,
+      paymentTiming: data.paymentTiming,
       allDay: data.allDay,
     };
 
@@ -233,7 +232,7 @@ export default function ActivityList({
       url: activity.url ?? "",
       cost: activity.cost ? String(activity.cost) : "",
       currency: activity.currency,
-      reservationStatus: activity.reservationStatus ?? "",
+      paymentTiming: activity.paymentTiming,
       allDay: activity.allDay ?? false,
     };
     // 편집 > 상세 > 카드 우선순위.
@@ -319,6 +318,7 @@ export default function ActivityList({
         <ActivityForm
           onSubmit={handleCreate}
           onCancel={() => setShowForm(false)}
+          timingDefault={timingDefault}
         />
       ) : (
         canEdit && (

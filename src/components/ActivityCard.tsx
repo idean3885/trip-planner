@@ -1,8 +1,4 @@
-import type {
-  ActivityCategory,
-  Prisma,
-  ReservationStatus,
-} from "@prisma/client";
+import type { ActivityCategory, PaymentTiming, Prisma } from "@prisma/client";
 import { ArrowDown, ArrowUp, Trash2 } from "lucide-react";
 
 import { Linkify } from "@/components/Linkify";
@@ -51,12 +47,10 @@ function formatTime(value: string | null, tz?: string | null): string | null {
   return value;
 }
 
-const RESERVATION_LABEL: Record<ReservationStatus, string> = {
-  REQUIRED: "사전 예약 필수",
-  RECOMMENDED: "사전 예약 권장",
-  ON_SITE: "현장 구매",
-  NOT_NEEDED: "예약 불필요",
-  RESERVED: "예약 완료",
+// spec 061 — 사전 결제만 작은 라벨로 표시(현장 결제는 기본이라 생략해 잡음 줄임).
+const PAYMENT_LABEL: Record<PaymentTiming, string> = {
+  ADVANCE: "사전 결제",
+  ON_SITE: "현장 결제",
 };
 
 interface ActivityCardProps {
@@ -73,7 +67,7 @@ interface ActivityCardProps {
     url?: string | null;
     cost: Prisma.Decimal | string | number | null;
     currency: string;
-    reservationStatus: ReservationStatus | null;
+    paymentTiming: PaymentTiming;
     allDay?: boolean;
   };
   canEdit?: boolean;
@@ -176,9 +170,9 @@ export default function ActivityCard({
               {cost.toLocaleString()} {activity.currency}
             </span>
           )}
-          {activity.reservationStatus && (
+          {activity.paymentTiming === "ADVANCE" && (
             <span className="text-muted-foreground text-[11px]">
-              {RESERVATION_LABEL[activity.reservationStatus]}
+              {PAYMENT_LABEL.ADVANCE}
             </span>
           )}
         </div>

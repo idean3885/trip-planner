@@ -17,6 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ACTIVITY_WINDOW_RADIUS, windowYmds } from "@/lib/activity-window";
 import { formatCalendarDateFull } from "@/lib/date-utils";
 import { computeDayNumber } from "@/lib/day-number";
+import { resolveTimingDefault } from "@/lib/expense";
 import { prisma } from "@/lib/prisma";
 import { getResolvedPeriod } from "@/lib/trip-period";
 
@@ -126,7 +127,7 @@ async function DbTripPage({
       memo: a.memo,
       cost: a.cost ? a.cost.toString() : null,
       currency: a.currency,
-      reservationStatus: a.reservationStatus,
+      paymentTiming: a.paymentTiming,
       sortOrder: a.sortOrder,
     }));
   }
@@ -180,6 +181,10 @@ async function DbTripPage({
         initialActivities={initialActivities}
         canEdit={member.role !== "GUEST"}
         initialSelected={selectedYmd}
+        timingDefault={resolveTimingDefault({
+          startDate: period.startDate,
+          endDate: period.endDate,
+        })}
         memberList={<MemberList tripId={tripId} />}
         syncCard={<CalendarSyncEntryCard tripId={tripId} role={member.role} />}
       />

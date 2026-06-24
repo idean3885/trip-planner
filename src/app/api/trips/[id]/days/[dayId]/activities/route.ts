@@ -68,6 +68,7 @@ export async function POST(request: Request, { params }: Params) {
     cost,
     currency,
     reservationStatus,
+    paymentTiming,
     allDay,
     sortOrder,
   } = body;
@@ -116,6 +117,7 @@ export async function POST(request: Request, { params }: Params) {
       ...(cost !== undefined && { cost }),
       ...(currency !== undefined && { currency }),
       ...(reservationStatus !== undefined && { reservationStatus }),
+      ...(paymentTiming !== undefined && { paymentTiming }),
       sortOrder: sortOrder ?? 0,
     },
   });
