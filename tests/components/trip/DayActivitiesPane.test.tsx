@@ -94,6 +94,63 @@ describe("DayActivitiesPane", () => {
     expect(screen.getByText("벨렝 탑")).toBeInTheDocument();
   });
 
+  it("비용이 있으면 그 날의 금액 합산(ExpenseSummary)을 보인다", () => {
+    render(
+      <DayActivitiesPane
+        tripId={1}
+        selectedDate={SELECTED}
+        dayId={10}
+        activities={[
+          {
+            id: 1,
+            category: "SHOPPING" as ActivityCategory,
+            title: "기념품",
+            startTime: null,
+            endTime: null,
+            location: null,
+            memo: null,
+            cost: "30",
+            currency: "EUR",
+            paymentTiming: "ON_SITE" as const,
+            sortOrder: 0,
+          },
+        ]}
+        canEdit={false}
+        onDayCreated={vi.fn()}
+      />,
+    );
+    expect(screen.getByText("이 날")).toBeInTheDocument();
+    expect(screen.getByText(/30 EUR/)).toBeInTheDocument();
+  });
+
+  it("비용이 모두 없으면 금액 합산을 숨긴다", () => {
+    render(
+      <DayActivitiesPane
+        tripId={1}
+        selectedDate={SELECTED}
+        dayId={10}
+        activities={[
+          {
+            id: 1,
+            category: "SIGHTSEEING" as ActivityCategory,
+            title: "벨렝 탑",
+            startTime: null,
+            endTime: null,
+            location: null,
+            memo: null,
+            cost: null,
+            currency: "EUR",
+            paymentTiming: "ON_SITE" as const,
+            sortOrder: 0,
+          },
+        ]}
+        canEdit={false}
+        onDayCreated={vi.fn()}
+      />,
+    );
+    expect(screen.queryByText("이 날")).not.toBeInTheDocument();
+  });
+
   it("편집 권한 없으면 빈 날짜에 추가 버튼이 없다", () => {
     render(
       <DayActivitiesPane

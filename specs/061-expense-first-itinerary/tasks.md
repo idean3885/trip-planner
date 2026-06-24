@@ -46,9 +46,9 @@
 **Goal**: 여행 총액·일별·사전/현장 소계(통화별).
 **Independent Test**: 합산 정확·통화별 구분·cost 없음 0.
 
-- [ ] T014 [US4] 합산 함수(여행 총액·일별 합계·사전/현장 소계, 통화별, cost 없음 0) in `src/lib/expense.ts` [artifact: src/lib/expense.ts::summarize] [why: cost-summary]
-- [ ] T015 [US4] 여행 상세에 총액·일별·소계 표시 in `src/components/trip/TripDetailLayout.tsx` [artifact: src/components/trip/TripDetailLayout.tsx] [why: cost-summary]
-- [ ] T016 [P] [US4] 합산 테스트(총액·일별·소계·통화별·0기여) in `tests/lib/expense.test.ts` [artifact: tests/lib/expense.test.ts::summary] [why: cost-summary]
+- [x] T014 [US4] 합산 함수(여행 총액·일별 합계·사전/현장 소계, 통화별, cost 없음 0) in `src/lib/expense.ts` [artifact: src/lib/expense.ts::summarize] [why: cost-summary]
+- [x] T015 [US4] 여행 상세에 총액·일별·소계 표시 in `src/components/trip/TripDetailLayout.tsx` [artifact: src/components/trip/TripDetailLayout.tsx] [why: cost-summary]
+- [x] T016 [P] [US4] 합산 테스트(총액·일별·소계·통화별·0기여) in `tests/lib/expense.test.ts` [artifact: tests/lib/expense.test.ts::summary] [why: cost-summary]
 
 ## Phase 6: 회귀 가드 & Polish
 
