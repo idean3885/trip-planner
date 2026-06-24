@@ -128,7 +128,6 @@ describe("ActivityList", () => {
       memo: "Note",
       cost: 25,
       currency: "USD",
-      reservationStatus: "REQUIRED",
     });
     mockFetch.mockResolvedValueOnce({ ok: true, json: async () => created });
 
@@ -186,7 +185,6 @@ describe("ActivityList", () => {
       expect(callBody.location).toBeUndefined();
       expect(callBody.memo).toBeUndefined();
       expect(callBody.cost).toBeUndefined();
-      expect(callBody.reservationStatus).toBeUndefined();
     });
   });
 
@@ -464,7 +462,6 @@ describe("ActivityList", () => {
       location: null,
       memo: null,
       cost: null,
-      reservationStatus: null,
     });
     mockFetch.mockResolvedValueOnce({ ok: true, json: async () => updated });
 
@@ -547,7 +544,6 @@ describe("ActivityList", () => {
         location: null,
         memo: null,
         cost: null,
-        reservationStatus: null,
       }),
     ];
     render(

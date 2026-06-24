@@ -81,7 +81,6 @@ describe("ICS — 종일 이벤트", () => {
     endTimezone: null,
     location: null,
     memo: null,
-    reservationStatus: null,
   };
 
   it("종일 활동은 VALUE=DATE 종일 이벤트로 내보낸다", () => {

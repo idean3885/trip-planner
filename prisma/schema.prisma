@@ -131,14 +131,6 @@ enum ActivityCategory {
   OTHER
 }
 
-enum ReservationStatus {
-  REQUIRED
-  RECOMMENDED
-  ON_SITE
-  NOT_NEEDED
-  RESERVED
-}
-
 // spec 061 (#807) — 지출 시점(사전 결제 / 현장 결제). 예약 "여부"가 아니라 돈을
 // 언제 쓰는가. 합산의 "이미 쓴 돈(현장) vs 계획된 돈(사전)" 구분 축.
 enum PaymentTiming {
@@ -160,7 +152,6 @@ model Activity {
   url               String?            @db.Text
   cost              Decimal?           @db.Decimal(10, 2)
   currency          String             @default("EUR") @db.VarChar(3)
-  reservationStatus ReservationStatus? @map("reservation_status")
   paymentTiming     PaymentTiming      @default(ON_SITE) @map("payment_timing")
   allDay            Boolean            @default(false) @map("is_all_day")
   sortOrder         Int                @default(0) @map("sort_order")

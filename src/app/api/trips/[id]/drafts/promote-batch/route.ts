@@ -7,7 +7,7 @@
  * 권한: trip OWNER·HOST (헌법 VI).
  */
 
-import type { ActivityCategory, ReservationStatus } from "@prisma/client";
+import type { ActivityCategory } from "@prisma/client";
 import { NextResponse } from "next/server";
 
 import { getAuthUserId } from "@/lib/auth-helpers";
@@ -27,18 +27,9 @@ const CATEGORIES: ActivityCategory[] = [
   "SHOPPING",
   "OTHER",
 ];
-const RESERVATION_STATUSES: ReservationStatus[] = [
-  "REQUIRED",
-  "RECOMMENDED",
-  "ON_SITE",
-  "NOT_NEEDED",
-  "RESERVED",
-];
-
 interface BatchItem {
   draftId?: number;
   category?: ActivityCategory;
-  reservationStatus?: ReservationStatus;
   startTimezone?: string;
   endTimezone?: string;
   /** 보정된 부동 시각(ISO). 없으면 draft 원본 사용. */
@@ -87,8 +78,6 @@ export async function POST(request: Request, { params }: Params) {
     if (
       !item.category ||
       !CATEGORIES.includes(item.category) ||
-      !item.reservationStatus ||
-      !RESERVATION_STATUSES.includes(item.reservationStatus) ||
       !item.startTimezone ||
       !item.endTimezone
     ) {
@@ -100,7 +89,6 @@ export async function POST(request: Request, { params }: Params) {
         draftId: item.draftId,
         tripId,
         category: item.category,
-        reservationStatus: item.reservationStatus,
         startTimezone: item.startTimezone,
         endTimezone: item.endTimezone,
         location: item.location ?? null,

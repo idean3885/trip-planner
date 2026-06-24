@@ -76,7 +76,7 @@ erDiagram
         text memo "메모"
         decimal cost "예상 비용 (10,2)"
         varchar currency "ISO 4217 통화 코드 (기본 EUR)"
-        enum reservationStatus "예약 상태: REQUIRED RECOMMENDED ON_SITE NOT_NEEDED"
+        enum paymentTiming "지출 시점: ADVANCE(사전) ON_SITE(현장, 기본값)"
         int sortOrder "일자 내 표시 순서 (0부터)"
         timestamptz createdAt "생성 시각"
         timestamptz updatedAt "수정 시각"

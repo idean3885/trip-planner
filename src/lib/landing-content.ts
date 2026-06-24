@@ -84,7 +84,7 @@ export const landingFeatures: readonly FeatureHighlight[] = [
       "Apple iCloud 여행 캘린더, 구글맵 링크, 호텔 예약 페이지까지 모바일에서 한 번에 이어집니다.",
     bullets: [
       "Timestamptz + IANA 타임존 분리 저장",
-      "예약 상태 4단계 (필수/권장/현장/불요)",
+      "사전/현장 지출 구분 + 통화별 금액 합산",
       "Neon Postgres 위에서 Prisma 스키마로 관리",
     ],
   },

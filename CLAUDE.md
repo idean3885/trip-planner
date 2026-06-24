@@ -169,12 +169,12 @@ develop ──●──●──●───●──●──●──●──
 - 마이그레이션은 **`prisma migrate deploy`만 허용** (배포 파이프라인 자동 실행)
 - 새 마이그레이션 SQL은 PR에 파일로 포함, 리뷰 필수. 헤더 `[migration-type: ...]` 강제 (speckit 하네스)
 
-### 예약 상태 (Prisma enum `ReservationStatus`)
+### 지출 시점 (Prisma enum `PaymentTiming`)
 
-- `REQUIRED` — 사전 예약 필수 (매진 위험)
-- `RECOMMENDED` — 사전 예약 권장
-- `ON_SITE` — 현장 구매 가능
-- `NOT_NEEDED` — 예약 불필요
+- `ADVANCE` — 사전 결제 (여행 전 예약·결제분)
+- `ON_SITE` — 현장 결제 (여행 중 그 자리 지출). 미지정 시 기본값
+
+> spec 061 Phase B(#811)에서 기존 `ReservationStatus`(예약 여부)를 제거하고 `PaymentTiming`(지출 시점)으로 대체했다. "예약 여부"는 현장에서 쓰이지 않아 과한 입력이었고, 지출은 여부보다 내용·시간·시점이 중요하다는 판단.
 
 ### 타임존
 

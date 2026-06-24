@@ -45,7 +45,6 @@ export async function PUT(request: Request, { params }: Params) {
     url,
     cost,
     currency,
-    reservationStatus,
     paymentTiming,
     allDay,
     sortOrder,
@@ -96,7 +95,6 @@ export async function PUT(request: Request, { params }: Params) {
       ...(url !== undefined && { url: url === "" ? null : url }),
       ...(cost !== undefined && { cost }),
       ...(currency !== undefined && { currency }),
-      ...(reservationStatus !== undefined && { reservationStatus }),
       ...(paymentTiming !== undefined && { paymentTiming }),
       ...(allDay !== undefined && { allDay }),
       // #740 — 종일로 전환하면 시각 앵커를 그 날 날짜(00:00)로, 시간대는 비운다

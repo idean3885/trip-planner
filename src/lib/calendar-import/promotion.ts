@@ -1,16 +1,14 @@
 /**
  * spec 027 US2 — ActivityDraft → 정식 Activity 승격.
  *
- * 필수 입력: activity category, reservation status, start/end timezone (IANA).
+ * 필수 입력: activity category, start/end timezone (IANA).
  * draft.dayId 가 있으면 그대로, 없으면 startTime의 일자에 매칭되는 Day를 찾는다.
  * 매칭되는 Day가 trip에 없으면 신규 생성(spec 010 day expansion 정책 호환).
+ * 승격된 활동의 지출 시점(paymentTiming)은 스키마 기본값(현장)으로 두고, 이후
+ * 일반 활동 편집에서 조절한다.
  */
 
-import type {
-  ActivityCategory,
-  Prisma,
-  ReservationStatus,
-} from "@prisma/client";
+import type { ActivityCategory, Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 
@@ -18,7 +16,6 @@ export interface PromoteInput {
   draftId: number;
   tripId: number;
   category: ActivityCategory;
-  reservationStatus: ReservationStatus;
   startTimezone: string;
   endTimezone: string;
   location?: string | null;
@@ -98,7 +95,6 @@ export async function promoteDraft(
         endTimezone: input.endTimezone,
         location: input.location ?? draft.locationText,
         memo: draft.description,
-        reservationStatus: input.reservationStatus,
       } satisfies Prisma.ActivityUncheckedCreateInput,
     });
     await tx.activityDraft.update({

@@ -199,7 +199,7 @@ def register_planner_tools(mcp: FastMCP) -> None:
         url: str = "",
         cost: float = 0,
         currency: str = "EUR",
-        reservation_status: str = "",
+        payment_timing: str = "",
     ) -> str:
         """일자에 활동을 추가한다.
 
@@ -217,7 +217,7 @@ def register_planner_tools(mcp: FastMCP) -> None:
             url: 예약·티켓·문서 링크 (선택, 메모와 분리된 항목)
             cost: 예상 비용 (0이면 미입력, 선택)
             currency: 통화 코드 (기본 EUR)
-            reservation_status: 예약 상태 (REQUIRED, RECOMMENDED, ON_SITE, NOT_NEEDED, RESERVED, 선택)
+            payment_timing: 지출 시점 (ADVANCE=사전 결제, ON_SITE=현장 결제, 미지정 시 현장)
         """
         body: dict = {"category": category, "title": title, "currency": currency}
         if start_time:
@@ -236,8 +236,8 @@ def register_planner_tools(mcp: FastMCP) -> None:
             body["url"] = url
         if cost:
             body["cost"] = cost
-        if reservation_status:
-            body["reservationStatus"] = reservation_status
+        if payment_timing:
+            body["paymentTiming"] = payment_timing
 
         result = await api_request(
             "POST", f"/api/trips/{trip_id}/days/{day_id}/activities", json=body
@@ -273,7 +273,7 @@ def register_planner_tools(mcp: FastMCP) -> None:
         cost: float = 0,
         currency: str = "",
         category: str = "",
-        reservation_status: str = "",
+        payment_timing: str = "",
     ) -> str:
         """활동을 수정한다.
 
@@ -292,7 +292,7 @@ def register_planner_tools(mcp: FastMCP) -> None:
             cost: 변경할 비용 (0이면 변경하지 않음)
             currency: 변경할 통화 코드
             category: 변경할 유형 (SIGHTSEEING, DINING, TRANSPORT, ACCOMMODATION, SHOPPING, OTHER)
-            reservation_status: 변경할 예약 상태 (REQUIRED, RECOMMENDED, ON_SITE, NOT_NEEDED, RESERVED)
+            payment_timing: 변경할 지출 시점 (ADVANCE=사전 결제, ON_SITE=현장 결제)
         """
         body: dict = {}
         if title:
@@ -317,8 +317,8 @@ def register_planner_tools(mcp: FastMCP) -> None:
             body["currency"] = currency
         if category:
             body["category"] = category
-        if reservation_status:
-            body["reservationStatus"] = reservation_status
+        if payment_timing:
+            body["paymentTiming"] = payment_timing
 
         if not body:
             return "변경할 내용이 없습니다. 수정할 필드를 지정하세요."

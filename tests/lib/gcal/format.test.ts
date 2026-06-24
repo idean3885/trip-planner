@@ -18,7 +18,6 @@ function baseActivity(
     endTimezone: "Europe/Lisbon",
     location: "Torre de Belém",
     memo: null,
-    reservationStatus: null,
     ...overrides,
   };
 }
@@ -41,16 +40,16 @@ describe("formatActivityAsEvent", () => {
     expect(event.summary).toContain("🍽️");
   });
 
-  it("예약 상태·위치 지도 링크·트립 URL이 설명에 담긴다", () => {
+  it("메모·위치 지도 링크·트립 URL이 설명에 담긴다", () => {
     const event = formatActivityAsEvent(
       baseActivity({
-        reservationStatus: "REQUIRED",
+        memo: "티켓 미리 예매",
         location: "Torre de Belém",
       }),
       TRIP,
       URL_OPTS,
     );
-    expect(event.description).toContain("사전 예약 필수");
+    expect(event.description).toContain("티켓 미리 예매");
     expect(event.description).toContain("📍 Torre de Belém");
     expect(event.description).toContain(
       "https://www.google.com/maps/search/?api=1&query=",
