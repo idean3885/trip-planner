@@ -1,4 +1,4 @@
-import type { ActivityCategory, ReservationStatus } from "@prisma/client";
+import type { ActivityCategory, PaymentTiming } from "@prisma/client";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -29,7 +29,7 @@ function makeActivity(overrides = {}) {
     memo: null,
     cost: null,
     currency: "EUR",
-    reservationStatus: null as ReservationStatus | null,
+    paymentTiming: "ON_SITE" as PaymentTiming,
     sortOrder: 0,
     ...overrides,
   };
@@ -137,20 +137,16 @@ describe("ActivityList", () => {
     );
     fireEvent.click(screen.getByText("+ 활동 추가"));
 
-    // Fill all fields
-    const textInputs = screen.getAllByRole("textbox");
-    // spec 058 레이아웃: title=0, location=1, url=2, currency=3, memo(textarea)=4.
-    fireEvent.change(textInputs[0], { target: { value: "New" } }); // title
-    fireEvent.change(textInputs[1], { target: { value: "Place" } }); // location
-    fireEvent.change(textInputs[4], { target: { value: "Note" } }); // memo
-
-    const costInput = screen.getByRole("spinbutton");
-    fireEvent.change(costInput, { target: { value: "25" } });
-
-    const selects = screen.getAllByRole("combobox");
-    fireEvent.change(selects[selects.length - 1], {
-      target: { value: "REQUIRED" },
-    }); // reservation
+    // 간소 필드(제목·가격·내용) + 확장하여 장소.
+    fireEvent.change(screen.getByLabelText(/제목/), { target: { value: "New" } });
+    fireEvent.change(screen.getByLabelText("가격"), { target: { value: "25" } });
+    fireEvent.change(screen.getByLabelText("내용"), {
+      target: { value: "Note" },
+    });
+    fireEvent.click(screen.getByText(/확장/));
+    fireEvent.change(screen.getByLabelText("장소"), {
+      target: { value: "Place" },
+    });
 
     const form = document.querySelector("form")!;
     fireEvent.submit(form);
@@ -160,12 +156,11 @@ describe("ActivityList", () => {
         "/api/trips/1/days/1/activities",
         expect.objectContaining({ method: "POST" }),
       );
-      // Check body includes optional fields
       const callBody = JSON.parse(mockFetch.mock.calls[0][1].body);
       expect(callBody.title).toBe("New");
       expect(callBody.location).toBe("Place");
       expect(callBody.memo).toBe("Note");
-      expect(callBody.reservationStatus).toBe("REQUIRED");
+      expect(callBody.paymentTiming).toBeDefined();
     });
   });
 
@@ -481,7 +476,7 @@ describe("ActivityList", () => {
         location: "Place",
         memo: "Note",
         cost: "25",
-        reservationStatus: "REQUIRED",
+        paymentTiming: "ON_SITE",
       }),
     ];
     render(
@@ -494,18 +489,13 @@ describe("ActivityList", () => {
     );
     openEdit();
 
-    // Clear all optional fields
-    const textInputs = screen.getAllByRole("textbox");
-    // spec 058: title=0, location=1, url=2, currency=3, memo=4
-    fireEvent.change(textInputs[1], { target: { value: "" } }); // location
-    fireEvent.change(textInputs[4], { target: { value: "" } }); // memo
-    const costInput = screen.getByRole("spinbutton");
-    fireEvent.change(costInput, { target: { value: "" } }); // cost
+    // 라벨로 선택 비우기(편집은 확장 상태).
+    fireEvent.change(screen.getByLabelText("장소"), { target: { value: "" } });
+    fireEvent.change(screen.getByLabelText("내용"), { target: { value: "" } });
+    fireEvent.change(screen.getByLabelText("가격"), { target: { value: "" } });
     const timeInputs = document.querySelectorAll('input[type="time"]');
-    fireEvent.change(timeInputs[0], { target: { value: "" } }); // startTime
-    fireEvent.change(timeInputs[1], { target: { value: "" } }); // endTime
-    const selects = screen.getAllByRole("combobox");
-    fireEvent.change(selects[selects.length - 1], { target: { value: "" } }); // reservation
+    fireEvent.change(timeInputs[0], { target: { value: "" } });
+    fireEvent.change(timeInputs[1], { target: { value: "" } });
 
     const form = document.querySelector("form")!;
     fireEvent.submit(form);
@@ -517,7 +507,7 @@ describe("ActivityList", () => {
       expect(callBody.location).toBeNull();
       expect(callBody.memo).toBeNull();
       expect(callBody.cost).toBeNull();
-      expect(callBody.reservationStatus).toBeNull();
+      expect(callBody.paymentTiming).toBe("ON_SITE");
     });
   });
 

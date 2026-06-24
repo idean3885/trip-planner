@@ -1,4 +1,4 @@
-import type { ActivityCategory, ReservationStatus } from "@prisma/client";
+import type { ActivityCategory, PaymentTiming } from "@prisma/client";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
@@ -15,7 +15,7 @@ function makeActivity(overrides = {}) {
     memo: null,
     cost: null,
     currency: "EUR",
-    reservationStatus: null as ReservationStatus | null,
+    paymentTiming: "ON_SITE" as PaymentTiming,
     ...overrides,
   };
 }
@@ -65,13 +65,16 @@ describe("ActivityCard", () => {
     expect(screen.getByText("15 EUR")).toBeInTheDocument();
   });
 
-  it("renders reservation status", () => {
-    render(
-      <ActivityCard
-        activity={makeActivity({ reservationStatus: "REQUIRED" })}
-      />,
+  it("사전 결제는 '사전 결제' 라벨을 표시한다 (현장은 생략)", () => {
+    const { rerender } = render(
+      <ActivityCard activity={makeActivity({ paymentTiming: "ADVANCE" })} />,
     );
-    expect(screen.getByText("사전 예약 필수")).toBeInTheDocument();
+    expect(screen.getByText("사전 결제")).toBeInTheDocument();
+    // 현장 결제는 기본이라 라벨 미표시
+    rerender(
+      <ActivityCard activity={makeActivity({ paymentTiming: "ON_SITE" })} />,
+    );
+    expect(screen.queryByText("현장 결제")).not.toBeInTheDocument();
   });
 
   it("renders memo with URL as link", () => {

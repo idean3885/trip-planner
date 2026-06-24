@@ -64,6 +64,8 @@ describe("ActivityList — 이동은 종일 그룹 경계를 건너뛴다", () =
 describe("ActivityForm — 종일 토글", () => {
   it("종일 체크 시 시각 입력이 사라진다", () => {
     render(<ActivityForm onSubmit={vi.fn()} onCancel={vi.fn()} />);
+    // spec 061 — 생성은 간소 모드. 확장해야 시간·종일 노출.
+    fireEvent.click(screen.getByText(/확장/));
     expect(screen.getByLabelText(/시작/)).toBeTruthy();
     fireEvent.click(screen.getByLabelText("종일 (시간 없음)"));
     expect(screen.queryByLabelText(/시작/)).toBeNull();
