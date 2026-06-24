@@ -99,7 +99,9 @@ export default function ActivityForm({
   });
   const [saving, setSaving] = useState(false);
   // spec 061 — 모바일 간소화: 생성은 제목·가격·내용 3필드로 시작, 편집은 전체.
+  // 편집(isEdit)은 key 재사용으로 readOnly→편집 전환 시에도 항상 전체를 보이게 파생.
   const [expanded, setExpanded] = useState(isEdit);
+  const showAll = isEdit || expanded;
 
   function update<K extends keyof ActivityFormData>(
     field: K,
@@ -263,7 +265,7 @@ export default function ActivityForm({
         />
       </div>
 
-      {!expanded && (
+      {!showAll && (
         // spec 061 — 간소 추가: 더 적을 게 있으면 확장.
         <button
           type="button"
@@ -274,7 +276,7 @@ export default function ActivityForm({
         </button>
       )}
 
-      {expanded && (
+      {showAll && (
         <div className="space-y-3">
           {/* 유형 */}
           <div className="space-y-1">
