@@ -83,7 +83,7 @@ describe("DayActivitiesPane", () => {
             memo: null,
             cost: null,
             currency: "EUR",
-            reservationStatus: null,
+            paymentTiming: "ON_SITE" as const,
             sortOrder: 0,
           },
         ]}
@@ -169,7 +169,7 @@ describe("DayActivitiesPane", () => {
       memo: null,
       cost: null,
       currency: "EUR",
-      reservationStatus: null,
+      paymentTiming: "ON_SITE" as const,
       sortOrder: 1,
     });
     const { rerender } = render(

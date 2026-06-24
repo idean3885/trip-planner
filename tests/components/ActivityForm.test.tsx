@@ -3,6 +3,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import ActivityForm from "@/components/ActivityForm";
 
+// spec 061 — 지출 중심 폼: 생성은 제목·가격·내용 간소 + 확장, 편집은 전체.
+// 예약상태 제거, 시간 선택(비강제), 지출 시점(사전/현장) 토글.
+
 describe("ActivityForm", () => {
   const onSubmit = vi.fn().mockResolvedValue(undefined);
   const onCancel = vi.fn();
@@ -11,42 +14,49 @@ describe("ActivityForm", () => {
     vi.clearAllMocks();
   });
 
-  it("renders all form fields", () => {
+  it("생성 간소 모드: 제목·가격·내용 + 확장 버튼만 노출", () => {
     render(<ActivityForm onSubmit={onSubmit} onCancel={onCancel} />);
-    expect(screen.getByText(/유형/)).toBeInTheDocument();
-    expect(screen.getByText(/제목/)).toBeInTheDocument();
-    expect(screen.getByText(/시작/)).toBeInTheDocument();
-    expect(screen.getByText(/종료/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/제목/)).toBeInTheDocument();
+    expect(screen.getByLabelText("가격")).toBeInTheDocument();
+    expect(screen.getByLabelText("내용")).toBeInTheDocument();
+    // 확장 전에는 유형·지출시점·장소·링크가 없다.
+    expect(screen.queryByLabelText("유형")).toBeNull();
+    expect(screen.queryByLabelText("지출 시점")).toBeNull();
+    expect(screen.queryByLabelText("장소")).toBeNull();
+    expect(screen.getByText(/확장/)).toBeInTheDocument();
+    // 예약 입력은 어디에도 없다.
+    expect(screen.queryByText("예약")).toBeNull();
+  });
+
+  it("확장하면 유형·지출시점·시간·장소·링크가 나타난다", () => {
+    render(<ActivityForm onSubmit={onSubmit} onCancel={onCancel} />);
+    fireEvent.click(screen.getByText(/확장/));
+    expect(screen.getByLabelText("유형")).toBeInTheDocument();
+    expect(screen.getByLabelText("지출 시점")).toBeInTheDocument();
     expect(screen.getByLabelText("장소")).toBeInTheDocument();
-    expect(screen.getByPlaceholderText("메모")).toBeInTheDocument();
-    expect(screen.getByText("비용")).toBeInTheDocument();
-    expect(screen.getByText("통화")).toBeInTheDocument();
-    expect(screen.getByText("예약")).toBeInTheDocument();
+    expect(screen.getByLabelText("링크")).toBeInTheDocument();
+    expect(screen.getByLabelText(/시작/)).toBeInTheDocument();
   });
 
-  it("shows required indicators", () => {
-    render(<ActivityForm onSubmit={onSubmit} onCancel={onCancel} />);
-    const requiredMarks = screen.getAllByText("*");
-    expect(requiredMarks.length).toBeGreaterThanOrEqual(4);
+  it("편집 모드는 전체 필드로 시작한다(확장 상태)", () => {
+    render(<ActivityForm onSubmit={onSubmit} onCancel={onCancel} isEdit />);
+    expect(screen.getByLabelText("유형")).toBeInTheDocument();
+    expect(screen.getByLabelText("지출 시점")).toBeInTheDocument();
+    expect(screen.getByText("수정")).toBeInTheDocument();
   });
 
-  it("shows 추가 button in create mode", () => {
+  it("생성 모드는 '추가' 버튼", () => {
     render(<ActivityForm onSubmit={onSubmit} onCancel={onCancel} />);
     expect(screen.getByText("추가")).toBeInTheDocument();
   });
 
-  it("shows 수정 button in edit mode", () => {
-    render(<ActivityForm onSubmit={onSubmit} onCancel={onCancel} isEdit />);
-    expect(screen.getByText("수정")).toBeInTheDocument();
-  });
-
-  it("calls onCancel when cancel clicked", () => {
+  it("취소 클릭 시 onCancel", () => {
     render(<ActivityForm onSubmit={onSubmit} onCancel={onCancel} />);
     fireEvent.click(screen.getByText("취소"));
     expect(onCancel).toHaveBeenCalledOnce();
   });
 
-  it("populates initial values in edit mode", () => {
+  it("편집 모드 초기값을 채운다", () => {
     render(
       <ActivityForm
         onSubmit={onSubmit}
@@ -61,138 +71,117 @@ describe("ActivityForm", () => {
           memo: "Good food",
           cost: "25",
           currency: "USD",
-          reservationStatus: "RECOMMENDED",
+          paymentTiming: "ADVANCE",
         }}
       />,
     );
     expect(screen.getByDisplayValue("Lunch")).toBeInTheDocument();
     expect(screen.getByDisplayValue("12:00")).toBeInTheDocument();
-    expect(screen.getByDisplayValue("13:00")).toBeInTheDocument();
     expect(screen.getByDisplayValue("Restaurant")).toBeInTheDocument();
     expect(screen.getByDisplayValue("Good food")).toBeInTheDocument();
     expect(screen.getByDisplayValue("25")).toBeInTheDocument();
     expect(screen.getByDisplayValue("USD")).toBeInTheDocument();
+    expect(
+      (screen.getByLabelText("지출 시점") as HTMLSelectElement).value,
+    ).toBe("ADVANCE");
   });
 
-  it("submits form with filled data", async () => {
+  it("간소 모드: 제목·가격·내용만으로 제출(시간 입력 없이)", async () => {
     render(<ActivityForm onSubmit={onSubmit} onCancel={onCancel} />);
-
-    const textInputs = screen.getAllByRole("textbox");
-    // spec 058 레이아웃: DOM 순서 title, location, url, currency, memo(textarea).
-    // (비용은 number=spinbutton 이라 textbox 에서 빠진다.)
-    fireEvent.change(textInputs[0], { target: { value: "Test Activity" } });
-    fireEvent.change(textInputs[1], { target: { value: "Test Place" } });
-    fireEvent.change(textInputs[4], { target: { value: "A memo" } });
-
-    const form = document.querySelector("form")!;
-    fireEvent.submit(form);
-    await waitFor(() => {
-      expect(onSubmit).toHaveBeenCalledOnce();
-      const data = onSubmit.mock.calls[0][0];
-      expect(data.title).toBe("Test Activity");
-      expect(data.location).toBe("Test Place");
-      expect(data.memo).toBe("A memo");
+    fireEvent.change(screen.getByLabelText(/제목/), {
+      target: { value: "맥주" },
     });
+    fireEvent.change(screen.getByLabelText("가격"), { target: { value: "5" } });
+    fireEvent.change(screen.getByLabelText("내용"), {
+      target: { value: "길거리 맥주" },
+    });
+    fireEvent.click(screen.getByText("추가"));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledOnce());
+    const data = onSubmit.mock.calls[0][0];
+    expect(data.title).toBe("맥주");
+    expect(data.cost).toBe("5");
+    expect(data.memo).toBe("길거리 맥주");
+    expect(data.startTime).toBe(""); // 시간 비강제
   });
 
-  it("does not submit when title is empty", async () => {
+  it("제목이 비면 제출하지 않는다", async () => {
     render(<ActivityForm onSubmit={onSubmit} onCancel={onCancel} />);
-
-    // Title is empty by default, submit form
     const form = document.querySelector("form")!;
     fireEvent.submit(form);
-
-    // onSubmit should NOT be called (title.trim() guard)
-    await new Promise((r) => setTimeout(r, 50));
+    await new Promise((r) => setTimeout(r, 30));
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
-  it("does not submit when title is whitespace only", async () => {
+  it("제목이 공백뿐이면 제출하지 않는다", async () => {
     render(<ActivityForm onSubmit={onSubmit} onCancel={onCancel} />);
-
-    const textInputs = screen.getAllByRole("textbox");
-    fireEvent.change(textInputs[0], { target: { value: "   " } });
-
+    fireEvent.change(screen.getByLabelText(/제목/), { target: { value: "   " } });
     const form = document.querySelector("form")!;
     fireEvent.submit(form);
-
-    await new Promise((r) => setTimeout(r, 50));
+    await new Promise((r) => setTimeout(r, 30));
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
-  it("auto-sets local time in create mode", async () => {
+  it("생성 시 시간을 자동 주입하지 않는다(시간 선택)", () => {
     render(<ActivityForm onSubmit={onSubmit} onCancel={onCancel} />);
-    await waitFor(() => {
-      const timeInputs = screen.getAllByDisplayValue(/^\d{2}:\d{2}$/);
-      expect(timeInputs.length).toBe(2); // start + end
-    });
+    fireEvent.click(screen.getByText(/확장/));
+    const start = screen.getByLabelText(/시작/) as HTMLInputElement;
+    const end = screen.getByLabelText(/종료/) as HTMLInputElement;
+    expect(start.value).toBe("");
+    expect(end.value).toBe("");
   });
 
-  it("does not auto-set time in edit mode", async () => {
+  it("지출 시점 디폴트를 timingDefault 로 잡는다(여행전=사전)", () => {
     render(
       <ActivityForm
         onSubmit={onSubmit}
         onCancel={onCancel}
-        isEdit
-        initial={{ startTime: "14:00", endTime: "15:00" }}
+        timingDefault="ADVANCE"
       />,
     );
-    expect(screen.getByDisplayValue("14:00")).toBeInTheDocument();
-    expect(screen.getByDisplayValue("15:00")).toBeInTheDocument();
+    fireEvent.click(screen.getByText(/확장/));
+    expect(
+      (screen.getByLabelText("지출 시점") as HTMLSelectElement).value,
+    ).toBe("ADVANCE");
   });
 
-  it("shows timezone label", async () => {
-    render(<ActivityForm onSubmit={onSubmit} onCancel={onCancel} />);
-    await waitFor(() => {
-      const labels = document.querySelectorAll("label");
-      const startLabel = Array.from(labels).find((l) =>
-        l.textContent?.includes("시작"),
-      );
-      expect(startLabel?.textContent).toMatch(/\(.+\)/);
+  it("지출 시점 디폴트 현장(여행중)", () => {
+    render(
+      <ActivityForm
+        onSubmit={onSubmit}
+        onCancel={onCancel}
+        timingDefault="ON_SITE"
+      />,
+    );
+    fireEvent.click(screen.getByText(/확장/));
+    expect(
+      (screen.getByLabelText("지출 시점") as HTMLSelectElement).value,
+    ).toBe("ON_SITE");
+  });
+
+  it("유형 select 변경", () => {
+    render(<ActivityForm onSubmit={onSubmit} onCancel={onCancel} isEdit />);
+    fireEvent.change(screen.getByLabelText("유형"), {
+      target: { value: "DINING" },
     });
-  });
-
-  it("updates category via select", () => {
-    render(<ActivityForm onSubmit={onSubmit} onCancel={onCancel} />);
-    const selects = screen.getAllByRole("combobox");
-    fireEvent.change(selects[0], { target: { value: "DINING" } });
     expect(screen.getByDisplayValue("식사")).toBeInTheDocument();
   });
 
-  it("updates reservation status via select", () => {
+  it("가격(cost) 변경", () => {
     render(<ActivityForm onSubmit={onSubmit} onCancel={onCancel} />);
-    const selects = screen.getAllByRole("combobox");
-    // Last select is reservation status
-    fireEvent.change(selects[selects.length - 1], {
-      target: { value: "REQUIRED" },
+    fireEvent.change(screen.getByLabelText("가격"), {
+      target: { value: "42.5" },
     });
-    expect(screen.getByDisplayValue("사전 예약 필수")).toBeInTheDocument();
-  });
-
-  it("updates cost field", () => {
-    render(<ActivityForm onSubmit={onSubmit} onCancel={onCancel} />);
-    const costInput = screen.getByRole("spinbutton");
-    fireEvent.change(costInput, { target: { value: "42.5" } });
     expect(screen.getByDisplayValue("42.5")).toBeInTheDocument();
   });
 
-  it("uppercases currency input", () => {
+  it("통화 입력은 대문자화", () => {
     render(<ActivityForm onSubmit={onSubmit} onCancel={onCancel} />);
-    const textInputs = screen.getAllByRole("textbox");
-    // spec 058 레이아웃: currency 는 textInputs[3](title, location, url, currency, memo).
-    fireEvent.change(textInputs[3], { target: { value: "usd" } });
+    fireEvent.change(screen.getByLabelText("통화"), { target: { value: "usd" } });
     expect(screen.getByDisplayValue("USD")).toBeInTheDocument();
   });
 
-  it("updates time fields", () => {
-    render(
-      <ActivityForm
-        onSubmit={onSubmit}
-        onCancel={onCancel}
-        isEdit
-        initial={{ startTime: "", endTime: "" }}
-      />,
-    );
+  it("시간 입력 변경(확장)", () => {
+    render(<ActivityForm onSubmit={onSubmit} onCancel={onCancel} isEdit />);
     const timeInputs = document.querySelectorAll('input[type="time"]');
     fireEvent.change(timeInputs[0], { target: { value: "10:30" } });
     fireEvent.change(timeInputs[1], { target: { value: "12:00" } });
@@ -200,82 +189,64 @@ describe("ActivityForm", () => {
     expect(screen.getByDisplayValue("12:00")).toBeInTheDocument();
   });
 
-  it("auto-sets time with minutes < 30 (rounds to :30)", async () => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date(2026, 5, 7, 14, 15)); // 14:15 → start 14:30, end 15:30
-    render(<ActivityForm onSubmit={onSubmit} onCancel={onCancel} />);
-    vi.useRealTimers();
-
-    await waitFor(() => {
-      expect(screen.getByDisplayValue("14:30")).toBeInTheDocument();
-      expect(screen.getByDisplayValue("15:30")).toBeInTheDocument();
-    });
+  it("종일 토글 시 시간 입력을 감춘다", () => {
+    render(<ActivityForm onSubmit={onSubmit} onCancel={onCancel} isEdit />);
+    expect(screen.getByLabelText(/시작/)).toBeInTheDocument();
+    fireEvent.click(screen.getByLabelText(/종일/));
+    expect(screen.queryByLabelText(/시작/)).toBeNull();
   });
 
-  it("auto-sets time with minutes >= 30 (rounds to next hour)", async () => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date(2026, 5, 7, 14, 45)); // 14:45 → start 15:00, end 16:00
-    render(<ActivityForm onSubmit={onSubmit} onCancel={onCancel} />);
-    vi.useRealTimers();
-
-    await waitFor(() => {
-      expect(screen.getByDisplayValue("15:00")).toBeInTheDocument();
-      expect(screen.getByDisplayValue("16:00")).toBeInTheDocument();
-    });
-  });
-
-  it("skips auto-set when initial startTime provided", async () => {
-    render(
-      <ActivityForm
-        onSubmit={onSubmit}
-        onCancel={onCancel}
-        initial={{ startTime: "08:00", endTime: "09:00" }}
-      />,
-    );
-    expect(screen.getByDisplayValue("08:00")).toBeInTheDocument();
-    expect(screen.getByDisplayValue("09:00")).toBeInTheDocument();
-  });
-
-  it("shows saving state during submit", async () => {
+  it("저장 중 상태 표시", async () => {
     let resolveSubmit: () => void;
     const slowSubmit = vi.fn(
-      () =>
-        new Promise<void>((r) => {
-          resolveSubmit = r;
-        }),
+      () => new Promise<void>((r) => (resolveSubmit = r)),
     );
-
     render(<ActivityForm onSubmit={slowSubmit} onCancel={onCancel} />);
-    const textInputs = screen.getAllByRole("textbox");
-    fireEvent.change(textInputs[0], { target: { value: "Saving" } });
-
-    const form = document.querySelector("form")!;
-    fireEvent.submit(form);
-
-    await waitFor(() => {
-      expect(screen.getByText("저장 중...")).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText(/제목/), {
+      target: { value: "Saving" },
     });
-
+    fireEvent.click(screen.getByText("추가"));
+    await waitFor(() =>
+      expect(screen.getByText("저장 중...")).toBeInTheDocument(),
+    );
     resolveSubmit!();
-    await waitFor(() => {
-      expect(screen.getByText("추가")).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText("추가")).toBeInTheDocument());
+  });
+
+  it("url 을 함께 제출한다(확장)", async () => {
+    render(<ActivityForm onSubmit={onSubmit} onCancel={onCancel} />);
+    fireEvent.change(screen.getByLabelText(/제목/), {
+      target: { value: "기차" },
+    });
+    fireEvent.click(screen.getByText(/확장/));
+    fireEvent.change(screen.getByLabelText("링크"), {
+      target: { value: "https://example.com/ticket" },
+    });
+    fireEvent.click(screen.getByText("추가"));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+    expect(onSubmit.mock.calls[0][0]).toMatchObject({
+      url: "https://example.com/ticket",
     });
   });
 
-  // spec 048 — readOnly 상세 모드
-  it("readOnly 상세: 입력칸 없이 값만 보이고 편집/닫기 (#796)", () => {
+  // ── readOnly 상세(보기) ──
+  it("readOnly 상세: 입력칸 없이 값만 + 지출 라벨 + 편집/닫기 (#796)", () => {
     const onEdit = vi.fn();
     render(
       <ActivityForm
         onCancel={onCancel}
         readOnly
         onEdit={onEdit}
-        initial={{ title: "구엘", memo: "https://example.com 참고" }}
+        initial={{
+          title: "구엘",
+          memo: "https://example.com 참고",
+          paymentTiming: "ADVANCE",
+        }}
       />,
     );
-    // 보기 화면 — 제목은 평문, 편집 입력칸이 없다(편집 폼과 시각적으로 구분).
     expect(screen.getByText("구엘")).toBeInTheDocument();
     expect(screen.queryByRole("textbox")).toBeNull();
+    expect(screen.getByText("사전 결제")).toBeInTheDocument(); // 지출 라벨
     expect(screen.getByRole("link")).toBeInTheDocument();
     fireEvent.click(screen.getByText("편집"));
     expect(onEdit).toHaveBeenCalledOnce();
@@ -300,40 +271,6 @@ describe("ActivityForm", () => {
     expect(screen.getByText("닫기")).toBeInTheDocument();
   });
 
-  // spec 058 — 320px 에서 시작·종료 입력이 겹치지 않도록 좁은 폭은 1열로 쌓고
-  // 360px 이상에서만 2열로 둔다.
-  it("stacks 시작/종료 in one column on narrow width, two columns ≥360px", () => {
-    const { container } = render(
-      <ActivityForm onSubmit={onSubmit} onCancel={onCancel} />,
-    );
-    const startInput = container.querySelector("#activity-start");
-    const grid = startInput?.closest("div.grid");
-    expect(grid?.className).toMatch(/grid-cols-1/);
-    expect(grid?.className).toMatch(/min-\[360px\]:grid-cols-2/);
-  });
-
-  // spec 058 — URL 은 메모와 분리된 입력 칸.
-  it("renders a separate URL input", () => {
-    render(<ActivityForm onSubmit={onSubmit} onCancel={onCancel} />);
-    expect(screen.getByLabelText("링크")).toBeInTheDocument();
-  });
-
-  it("submits url along with other fields", async () => {
-    render(<ActivityForm onSubmit={onSubmit} onCancel={onCancel} />);
-    fireEvent.change(screen.getByLabelText(/제목/), {
-      target: { value: "기차" },
-    });
-    fireEvent.change(screen.getByLabelText("링크"), {
-      target: { value: "https://example.com/ticket" },
-    });
-    fireEvent.click(screen.getByText("추가"));
-    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
-    expect(onSubmit.mock.calls[0][0]).toMatchObject({
-      url: "https://example.com/ticket",
-    });
-  });
-
-  // readOnly 상세: URL 이 있으면 링크로 노출.
   it("readOnly 상세: url 이 있으면 링크로 보인다", () => {
     render(
       <ActivityForm
@@ -346,5 +283,16 @@ describe("ActivityForm", () => {
       name: "https://example.com/booking",
     });
     expect(link).toHaveAttribute("href", "https://example.com/booking");
+  });
+
+  // spec 058 — 시작/종료 좁은 폭 1열, ≥360px 2열 (확장 시)
+  it("시작/종료는 좁은 폭 1열, ≥360px 2열", () => {
+    const { container } = render(
+      <ActivityForm onSubmit={onSubmit} onCancel={onCancel} isEdit />,
+    );
+    const startInput = container.querySelector("#activity-start");
+    const grid = startInput?.closest("div.grid");
+    expect(grid?.className).toMatch(/grid-cols-1/);
+    expect(grid?.className).toMatch(/min-\[360px\]:grid-cols-2/);
   });
 });
