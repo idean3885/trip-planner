@@ -17,8 +17,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ACTIVITY_WINDOW_RADIUS, windowYmds } from "@/lib/activity-window";
 import { formatCalendarDateFull } from "@/lib/date-utils";
 import { computeDayNumber } from "@/lib/day-number";
-import { prisma } from "@/lib/prisma";
 import { resolveTimingDefault } from "@/lib/expense";
+import { prisma } from "@/lib/prisma";
 import { getResolvedPeriod } from "@/lib/trip-period";
 
 async function markdownToHtml(md: string): Promise<string> {
