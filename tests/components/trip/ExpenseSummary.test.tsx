@@ -62,13 +62,14 @@ describe("ExpenseSummary", () => {
 // spec 062 — 원화 자동 근사 환산 병기.
 describe("ExpenseSummary 원화 병기 (spec 062)", () => {
   const rows = [{ currency: "EUR", total: 35, advance: 0, onSite: 35 }];
+  const eurRate = [{ currency: "EUR", perUnitKrw: 1480 }];
 
   it("krw 기여분이 있으면 '약 …원' + 기준 설명 도움말(?)을 병기한다", () => {
     render(
       <ExpenseSummary
         rows={rows}
         label="이날 지출"
-        krw={{ krw: 51800, partial: false, anyConverted: true }}
+        krw={{ krw: 51800, partial: false, anyConverted: true, rates: eurRate }}
       />,
     );
     expect(screen.getByText(/약 51,800원/)).toBeInTheDocument();
@@ -78,17 +79,21 @@ describe("ExpenseSummary 원화 병기 (spec 062)", () => {
     ).toBeInTheDocument();
   });
 
-  it("도움말을 클릭하면 환산 기준 말풍선이 열린다", () => {
+  it("도움말을 열면 기준 환율 + 한 줄 참고 설명이 보인다", () => {
     render(
       <ExpenseSummary
         rows={rows}
         label="이날 지출"
-        krw={{ krw: 51800, partial: false, anyConverted: true }}
+        krw={{ krw: 51800, partial: false, anyConverted: true, rates: eurRate }}
       />,
     );
     expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "원화 환산 기준 설명" }));
-    expect(screen.getByRole("tooltip")).toHaveTextContent(/참고값/);
+    const tip = screen.getByRole("tooltip");
+    expect(tip).toHaveTextContent(/1\s*EUR\s*≈\s*1,480원/);
+    expect(tip).toHaveTextContent(/참고용/);
+    // 노이즈 부연(정산용 아님 등)은 제거됐다.
+    expect(tip).not.toHaveTextContent(/정산용/);
   });
 
   it("부분 반영이면 '일부 통화만'을 덧붙인다", () => {
@@ -96,7 +101,7 @@ describe("ExpenseSummary 원화 병기 (spec 062)", () => {
       <ExpenseSummary
         rows={rows}
         label="이날 지출"
-        krw={{ krw: 51800, partial: true, anyConverted: true }}
+        krw={{ krw: 51800, partial: true, anyConverted: true, rates: eurRate }}
       />,
     );
     expect(screen.getByText(/일부 통화만/)).toBeInTheDocument();
@@ -107,7 +112,7 @@ describe("ExpenseSummary 원화 병기 (spec 062)", () => {
       <ExpenseSummary
         rows={rows}
         label="이날 지출"
-        krw={{ krw: 0, partial: true, anyConverted: false }}
+        krw={{ krw: 0, partial: true, anyConverted: false, rates: [] }}
       />,
     );
     expect(screen.queryByText(/원/)).not.toBeInTheDocument();

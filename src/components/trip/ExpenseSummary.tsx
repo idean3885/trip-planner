@@ -1,9 +1,19 @@
 import { InfoHint } from "@/components/ui/info-hint";
 import type { CurrencySummary, KrwConversion } from "@/lib/expense";
 
-/** 원화 환산 기준 설명(말풍선 본문). */
-const KRW_HINT =
-  "외부 공개 일별 환율(전일 종가 기준)로 자동 환산한 참고값입니다. 실제 환전·카드 결제 환율과 다를 수 있어 정산용이 아닙니다.";
+/** 기준 환율을 "1 EUR ≈ 1,480원" 한 줄로. 소수 둘째 자리까지. */
+function rateLine(currency: string, perUnitKrw: number): string {
+  return `1 ${currency} ≈ ${perUnitKrw.toLocaleString(undefined, {
+    maximumFractionDigits: 2,
+  })}원`;
+}
+
+/** 환산 기준 도움말 본문: 적용 기준 환율 + 한 줄 설명. */
+function buildHint(krw: KrwConversion): string {
+  const lines = krw.rates.map((r) => rateLine(r.currency, r.perUnitKrw));
+  lines.push("자동 환산한 단순 참고용입니다.");
+  return lines.join("\n");
+}
 
 /**
  * spec 061 US4 (#811) — 금액 합산 표시.
@@ -47,7 +57,7 @@ export function ExpenseSummary({
           {krw.partial && (
             <span className="text-muted-foreground/60">(일부 통화만)</span>
           )}
-          <InfoHint label="원화 환산 기준 설명" text={KRW_HINT} />
+          <InfoHint label="원화 환산 기준 설명" text={buildHint(krw)} />
         </span>
       )}
     </div>
