@@ -79,6 +79,8 @@ export interface TripDetailLayoutProps {
   canEdit: boolean;
   /** 쿼리(?d=)에서 받은 초기 선택 일자("YYYY-MM-DD"). 없으면 기본 규칙. */
   initialSelected: string | null;
+  /** spec 063 후속 — 헤더 브레드크럼(서버 생성). ☰ 메뉴와 같은 줄에 둔다. */
+  breadcrumb?: ReactNode;
   /** spec 063 후속 — 동행자 인원수(여행 정보 메뉴 표시용). */
   memberCount: number;
   /** spec 063 후속 — 여행 설명 원문(여행 정보 메뉴에서 보기·수정). */
@@ -146,6 +148,7 @@ export function TripDetailLayout({
   initialActivities,
   canEdit,
   initialSelected,
+  breadcrumb,
   memberCount,
   description,
   memberList,
@@ -404,7 +407,11 @@ export function TripDetailLayout({
 
   return (
     <div className="space-y-4">
-      {actionBar}
+      {/* spec 063 후속 — 브레드크럼(날짜)과 ☰ 메뉴를 한 줄에 둬 빈 줄을 없앤다. */}
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0 flex-1">{breadcrumb}</div>
+        {actionBar}
+      </div>
 
       {/* 여행 총액 — "총 얼마 썼는가"가 주안점이라 메인 동선(액션바 아래)에 둔다.
           현화 + 원화 근사(참고) 병기. 빈 합산은 ExpenseSummary 가 숨긴다. */}
