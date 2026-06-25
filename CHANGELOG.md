@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [4.3.1] - 2026-06-25
+
+### Fixed
+
+- * **여행 진입 화면 상단의 빈 줄을 없앴습니다.** 날짜(브레드크럼)와 우상단 메뉴(☰) 버튼을 같은 줄에 두어 위쪽 여백을 줄였습니다.
+
+  ([#833](https://github.com/idean3885/trip-planner/issues/833))
+
+
 ## [4.3.0] - 2026-06-25
 
 ### Added
