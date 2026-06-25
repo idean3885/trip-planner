@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [4.4.0] - 2026-06-25
+
+### Added
+
+- * **활동을 더 빠르게 연속으로 적을 수 있습니다.** "활동 추가" 입구를 목록 맨 위로 올려 활동이 쌓여도 스크롤 없이 바로 닿고, 한 건 저장하면 입력칸이 비워진 채 그대로 열려 있어 영수증 여러 건을 잇따라 기록하기 좋습니다.
+
+  ([#846](https://github.com/idean3885/trip-planner/issues/846))
+
+
 ## [4.3.1] - 2026-06-25
 
 ### Fixed
