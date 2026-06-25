@@ -59,7 +59,7 @@ export function InfoHint({
       {open && (
         <span
           role="tooltip"
-          className="bg-popover text-popover-foreground border-border absolute top-full left-1/2 z-50 mt-1 w-56 -translate-x-1/2 rounded-md border p-2 text-xs leading-relaxed font-normal shadow-md"
+          className="bg-popover text-popover-foreground border-border absolute top-full left-1/2 z-50 mt-1 w-max max-w-[14rem] -translate-x-1/2 rounded-md border p-2 text-xs leading-relaxed font-normal whitespace-pre-line shadow-md"
         >
           {text}
         </span>

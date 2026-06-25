@@ -160,4 +160,28 @@ describe("convertToKrw", () => {
     expect(r.krw).toBe(24000);
     expect(r.partial).toBe(false);
   });
+
+  it("적용 기준 환율을 통화별로 노출 — 다일자는 가중 평균", () => {
+    const r = convertToKrw(
+      [
+        { cost: "10", currency: "EUR", dateYmd: "2026-06-14" }, // 1480
+        { cost: "30", currency: "EUR", dateYmd: "2026-06-15" }, // 1500
+      ],
+      RATES,
+    );
+    // (10*1480 + 30*1500) / 40 = 1495
+    expect(r.rates).toEqual([{ currency: "EUR", perUnitKrw: 1495 }]);
+  });
+
+  it("미확보 통화는 기준 환율 목록에서 빠진다", () => {
+    const r = convertToKrw(
+      [
+        { cost: "10", currency: "EUR", dateYmd: "2026-06-14" },
+        { cost: "100", currency: "GBP", dateYmd: "2026-06-14" }, // 미확보
+        { cost: "5000", currency: "KRW", dateYmd: "2026-06-14" }, // 기준 통화
+      ],
+      RATES,
+    );
+    expect(r.rates).toEqual([{ currency: "EUR", perUnitKrw: 1480 }]);
+  });
 });
