@@ -72,6 +72,11 @@ export interface KrwConversion {
   partial: boolean;
   /** 한화 합에 기여한 금액이 하나라도 있는가. */
   anyConverted: boolean;
+  /**
+   * 환산에 실제 적용된 통화별 기준 환율(현지 1단위당 원화). 여러 일자가 섞이면
+   * 적용분의 가중 평균(= 통화별 원화합/현지합). 도움말에 "1 EUR ≈ N원"으로 보인다.
+   */
+  rates: { currency: string; perUnitKrw: number }[];
 }
 
 /**
@@ -88,6 +93,8 @@ export function convertToKrw(
   let krw = 0;
   let partial = false;
   let anyConverted = false;
+  // 통화별 (현지합, 원화합) — 적용된 기준 환율(가중 평균) 산출용.
+  const byCurrency = new Map<string, { foreign: number; krw: number }>();
   for (const it of items) {
     const amount = toAmount(it.cost);
     if (amount === 0) continue;
@@ -104,8 +111,15 @@ export function convertToKrw(
     }
     krw += amount * rate;
     anyConverted = true;
+    const e = byCurrency.get(currency) ?? { foreign: 0, krw: 0 };
+    e.foreign += amount;
+    e.krw += amount * rate;
+    byCurrency.set(currency, e);
   }
-  return { krw: Math.round(krw), partial, anyConverted };
+  const appliedRates = [...byCurrency.entries()]
+    .map(([currency, e]) => ({ currency, perUnitKrw: e.krw / e.foreign }))
+    .sort((a, b) => a.currency.localeCompare(b.currency));
+  return { krw: Math.round(krw), partial, anyConverted, rates: appliedRates };
 }
 
 /**
