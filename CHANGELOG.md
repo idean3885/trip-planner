@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [4.1.2] - 2026-06-25
+
+### Fixed
+
+- * **원화 환산 도움말을 간결하게 바꿨습니다.** 적용된 기준 환율(예: 1 EUR ≈ 1,480원)을 보여주고 그 아래 한 줄로 단순 참고용임만 안내합니다. 길던 부연 설명은 덜어냈습니다.
+
+  ([#820](https://github.com/idean3885/trip-planner/issues/820))
+
+
 ## [4.1.1] - 2026-06-25
 
 ### Fixed
