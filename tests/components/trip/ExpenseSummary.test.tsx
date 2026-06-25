@@ -91,6 +91,8 @@ describe("ExpenseSummary 원화 병기 (spec 062)", () => {
     fireEvent.click(screen.getByRole("button", { name: "원화 환산 기준 설명" }));
     const tip = screen.getByRole("tooltip");
     expect(tip).toHaveTextContent(/1\s*EUR\s*≈\s*1,480원/);
+    // 핵심: 종가 기준 + 참고용 — 사용자가 실거래가가 아님을 알 수 있어야 한다.
+    expect(tip).toHaveTextContent(/종가/);
     expect(tip).toHaveTextContent(/참고용/);
     // 노이즈 부연(정산용 아님 등)은 제거됐다.
     expect(tip).not.toHaveTextContent(/정산용/);
