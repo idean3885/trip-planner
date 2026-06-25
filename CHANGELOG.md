@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [4.3.0] - 2026-06-25
+
+### Added
+
+- * **여행 동작을 우상단 햄버거(☰) 메뉴 한 곳으로 모았습니다.** 화면을 채우던 버튼들을 정리하고, 기간 변경·일자 삭제·캘린더 가져오기·동행자 초대·나가기와 함께 "여행 정보"를 한 메뉴에 담았습니다.
+  * **여행 정보에서 설명을 보고 바로 수정할 수 있습니다.** 동행자 인원과 설명을 한 자리에서 확인하고, 편집 권한이 있으면 설명을 그 자리에서 고쳐 저장합니다. 여행을 만들 때뿐 아니라 진입 후에도 설명을 채울 수 있습니다.
+
+  ([#833](https://github.com/idean3885/trip-planner/issues/833))
+
+
 ## [4.2.1] - 2026-06-25
 
 ### Fixed
