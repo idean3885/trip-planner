@@ -13,7 +13,7 @@ import {
   type LayoutDayIndex,
   TripDetailLayout,
 } from "@/components/trip/TripDetailLayout";
-import { TripOverviewCard } from "@/components/trip/TripOverviewCard";
+import { TripInfoDisclosure } from "@/components/trip/TripInfoDisclosure";
 import { ACTIVITY_WINDOW_RADIUS, windowYmds } from "@/lib/activity-window";
 import { formatCalendarDateFull } from "@/lib/date-utils";
 import { computeDayNumber } from "@/lib/day-number";
@@ -206,15 +206,10 @@ async function DbTripPage({
         )}
       </nav>
 
-      {/* spec 063 — 여행 개요(종합정보). 설명이 없어도 기간·인원·총액은 보인다.
-          일정(캘린더)은 아래 TripDetailLayout 이 메인으로 담당한다. */}
-      <TripOverviewCard
-        startDate={period.startDate}
-        endDate={period.endDate}
-        dayCount={trip.days.length}
+      {/* spec 063 후속 — "여행 소개"는 부가 정보라 접힘(depth)으로 둔다. 기간은
+          위 브레드크럼, 총액은 아래 일정 화면이 담당해 중복하지 않는다. */}
+      <TripInfoDisclosure
         memberCount={trip._count.tripMembers}
-        tripSummary={tripSummary}
-        tripKrw={tripKrw}
         descriptionHtml={descriptionHtml}
       />
 
@@ -232,6 +227,8 @@ async function DbTripPage({
           startDate: period.startDate,
           endDate: period.endDate,
         })}
+        tripSummary={tripSummary}
+        tripKrw={tripKrw}
         rateMap={rateMap}
         tripInProgress={isTripInProgress({
           startDate: period.startDate,

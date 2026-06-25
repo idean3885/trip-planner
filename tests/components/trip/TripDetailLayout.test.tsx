@@ -100,9 +100,30 @@ describe("TripDetailLayout 상단·액션바 (spec 043)", () => {
     expect(new URL(window.location.href).searchParams.get("d")).toBe(ymd);
   });
 
-  // spec 063 — 여행 총액은 상단 여행 개요(TripOverviewCard)로 이동했다.
-  // 레이아웃은 더 이상 "여행 총액"을 렌더하지 않는다(일정 캘린더만 메인).
-  it("여행 총액은 레이아웃에서 렌더하지 않는다", () => {
+  // 여행 총액은 주안점이라 메인 동선(레이아웃)에 둔다.
+  it("tripSummary 가 있으면 여행 총액을 보인다", () => {
+    const today = new Date();
+    render(
+      <TripDetailLayout
+        tripId={1}
+        tripTitle="테스트 여행"
+        isOwner={false}
+        tripStart={today}
+        tripEnd={addDays(today, 2)}
+        days={[]}
+        initialActivities={{}}
+        canEdit={false}
+        initialSelected={null}
+        memberList={<div>멤버 목록</div>}
+        syncCard={<div>동기화 카드</div>}
+        tripSummary={[{ currency: "EUR", total: 120, advance: 80, onSite: 40 }]}
+      />,
+    );
+    expect(screen.getByText("여행 총액")).toBeInTheDocument();
+    expect(screen.getByText(/120 EUR/)).toBeInTheDocument();
+  });
+
+  it("tripSummary 가 비면 총액 줄을 렌더하지 않는다", () => {
     renderLayout();
     expect(screen.queryByText("여행 총액")).not.toBeInTheDocument();
   });
