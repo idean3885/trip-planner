@@ -33,11 +33,10 @@ import {
   ACTIVITY_WINDOW_RADIUS,
   missingFetchRange,
 } from "@/lib/activity-window";
-import type { CurrencySummary, KrwConversion, RateMap } from "@/lib/expense";
+import type { RateMap } from "@/lib/expense";
 
 import { CalendarView } from "./CalendarView";
 import { DayActivitiesPane, type DayCreatedPayload } from "./DayActivitiesPane";
-import { ExpenseSummary } from "./ExpenseSummary";
 import { SwipeCarousel } from "./SwipeCarousel";
 
 export interface LayoutActivity {
@@ -83,10 +82,6 @@ export interface TripDetailLayoutProps {
   syncCard: ReactNode;
   /** spec 061 — 추가 폼 지출시점 디폴트(서버 계산: 여행중=현장 / 여행전=사전). */
   timingDefault?: PaymentTiming;
-  /** spec 061 US4 — 여행 전체 금액 합산(서버 계산, 통화별 총액·사전/현장 소계). */
-  tripSummary?: CurrencySummary[];
-  /** spec 062 — 여행 총액 원화 근사 환산(서버 계산, 참고용). */
-  tripKrw?: KrwConversion | null;
   /** spec 062 — (일자, 통화) 근사 환율 맵. 일별 합산 원화 병기에 쓴다. */
   rateMap?: RateMap;
   /** spec 061 US3 — 여행 중이면 모바일 캘린더를 주간 뷰로 진입(서버 판정). */
@@ -143,8 +138,6 @@ export function TripDetailLayout({
   memberList,
   syncCard,
   timingDefault,
-  tripSummary,
-  tripKrw,
   rateMap,
   tripInProgress,
 }: TripDetailLayoutProps) {
@@ -393,11 +386,8 @@ export function TripDetailLayout({
     <div className="space-y-4">
       {actionBar}
 
-      {/* spec 061 US4 (#811) — 여행 총액 합산. 빈 합산은 ExpenseSummary 가 숨긴다.
-          spec 062 — 원화 근사 환산(참고)을 함께 병기한다. */}
-      {tripSummary && tripSummary.length > 0 && (
-        <ExpenseSummary rows={tripSummary} label="여행 총액" krw={tripKrw} />
-      )}
+      {/* spec 063 — 여행 총액은 상단 여행 개요(TripOverviewCard)로 옮겼다. 여기서는
+          일정(캘린더)만 메인으로 담당한다. */}
 
       {/* 데스크탑 ≥1024px — 좌(캘린더) / 우(선택 일정) 2분할. */}
       <div className="lg:gap-grid-comfy hidden lg:grid lg:grid-cols-2 lg:items-start">
