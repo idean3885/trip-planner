@@ -20,13 +20,13 @@
 **Goal**: 기간·인원·총액·설명을 한 자리. 설명 없어도 종합정보 노출. 일정 메인 유지.
 **Independent Test**: 상세에서 개요가 기간·인원·총액(+설명)을 보인다.
 
-- [x] T003 [US2] 여행 개요 컴포넌트(기간·인원·총액·설명, 설명 없으면 종합정보만) in `src/components/trip/TripOverviewCard.tsx` [artifact: src/components/trip/TripOverviewCard.tsx] [why: trip-overview]
+- [x] T003 [US2] 여행 개요 컴포넌트(기간·인원·총액·설명, 설명 없으면 종합정보만) in `src/components/trip/TripInfoDisclosure.tsx` [artifact: src/components/trip/TripInfoDisclosure.tsx] [why: trip-overview]
 - [x] T004 [US2] 상세 페이지가 개요에 인원·기간·총액·설명 전달(일정 메인 유지) in `src/app/trips/<id>/page.tsx` [artifact: src/app/trips/<id>/page.tsx] [why: trip-overview]
-- [x] T005 [P] [US2] 개요 표시 테스트(설명 유무·인원·총액·일정 비대체) in `tests/components/trip/TripOverviewCard.test.tsx` [artifact: tests/components/trip/TripOverviewCard.test.tsx] [why: trip-overview]
+- [x] T005 [P] [US2] 개요 표시 테스트(설명 유무·인원·총액·일정 비대체) in `tests/components/trip/TripInfoDisclosure.test.tsx` [artifact: tests/components/trip/TripInfoDisclosure.test.tsx] [why: trip-overview]
 
 ## Phase 3: 회귀 가드 & Polish
 
-- [x] T006 [P] 총액·설명 미전달 시 안전 렌더(기존 표시 유지) 회귀 가드 in `tests/components/trip/TripOverviewCard.test.tsx` [artifact: tests/components/trip/TripOverviewCard.test.tsx] [why: regression]
+- [x] T006 [P] 총액·설명 미전달 시 안전 렌더(기존 표시 유지) 회귀 가드 in `tests/components/trip/TripInfoDisclosure.test.tsx` [artifact: tests/components/trip/TripInfoDisclosure.test.tsx] [why: regression]
 
 ## Dependencies
 
