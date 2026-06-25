@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [4.2.1] - 2026-06-25
+
+### Fixed
+
+- * **여행 진입 화면을 다시 간결하게 했습니다.** 크게 펼쳐지던 "여행 개요" 카드를 없애고, 무슨 여행인지(설명·인원)는 "여행 소개" 접힘으로 옮겨 필요할 때만 펼쳐 봅니다. 위 제목 줄과 겹치던 날짜 중복도 정리했습니다. 여행 총액은 여전히 화면에서 바로 보입니다.
+  * **여행을 만들 때 설명을 함께 적을 수 있습니다(선택).** 제목 외에 어떤 여행인지 간단히 남겨둘 수 있습니다.
+
+  ([#833](https://github.com/idean3885/trip-planner/issues/833))
+
+
 ## [4.2.0] - 2026-06-25
 
 ### Added
