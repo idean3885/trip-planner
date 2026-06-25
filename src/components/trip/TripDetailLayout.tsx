@@ -39,6 +39,8 @@ import { CalendarView } from "./CalendarView";
 import { DayActivitiesPane, type DayCreatedPayload } from "./DayActivitiesPane";
 import { ExpenseSummary } from "./ExpenseSummary";
 import { SwipeCarousel } from "./SwipeCarousel";
+import { TripActionsMenu } from "./TripActionsMenu";
+import { TripInfoDialog } from "./TripInfoDialog";
 
 export interface LayoutActivity {
   id: number;
@@ -77,6 +79,10 @@ export interface TripDetailLayoutProps {
   canEdit: boolean;
   /** 쿼리(?d=)에서 받은 초기 선택 일자("YYYY-MM-DD"). 없으면 기본 규칙. */
   initialSelected: string | null;
+  /** spec 063 후속 — 동행자 인원수(여행 정보 메뉴 표시용). */
+  memberCount: number;
+  /** spec 063 후속 — 여행 설명 원문(여행 정보 메뉴에서 보기·수정). */
+  description: string | null;
   /** 동행자 초대 다이얼로그에 끼우는 멤버 목록 노드(서버 생성). */
   memberList: ReactNode;
   /** 외부 캘린더 동기화 진입 버튼 (서버에서 만든 노드). */
@@ -140,6 +146,8 @@ export function TripDetailLayout({
   initialActivities,
   canEdit,
   initialSelected,
+  memberCount,
+  description,
   memberList,
   syncCard,
   timingDefault,
@@ -360,9 +368,16 @@ export function TripDetailLayout({
     );
   };
 
-  // spec 043 US2 — 동작 버튼 한 줄. 데스크탑·모바일 공통(캘린더 위, 비고정).
+  // spec 063 후속 — 동작 버튼이 늘어 화면을 채우던 것을 우상단 햄버거(☰) 한 곳으로
+  // 모은다. "여행 정보(설명·인원, 수정 가능)"도 같은 메뉴 항목으로 둔다.
   const actionBar = (
-    <div className="flex flex-wrap items-center gap-2">
+    <TripActionsMenu>
+      <TripInfoDialog
+        tripId={tripId}
+        memberCount={memberCount}
+        description={description}
+        canEdit={canEdit}
+      />
       {canEdit && (
         <TripPeriodDialog
           tripId={tripId}
@@ -379,14 +394,12 @@ export function TripDetailLayout({
       )}
       {syncCard}
       {canEdit && <InviteButton tripId={tripId} memberList={memberList} />}
-      <div className="ml-auto flex items-center gap-2">
-        {isOwner ? (
-          <DeleteTripButton tripId={tripId} tripTitle={tripTitle} />
-        ) : (
-          <LeaveTripButton tripId={tripId} tripTitle={tripTitle} />
-        )}
-      </div>
-    </div>
+      {isOwner ? (
+        <DeleteTripButton tripId={tripId} tripTitle={tripTitle} />
+      ) : (
+        <LeaveTripButton tripId={tripId} tripTitle={tripTitle} />
+      )}
+    </TripActionsMenu>
   );
 
   return (
