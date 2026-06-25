@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [4.1.3] - 2026-06-25
+
+### Fixed
+
+- * **환율 도움말에 "일별 종가 기준"을 명시했습니다.** 표시 환율이 실거래가가 아니라 그날 종가 기준 참고값임을 한 줄로 분명히 합니다. 군더더기 없이 환율·기준·참고용만 남겼습니다.
+
+  ([#820](https://github.com/idean3885/trip-planner/issues/820))
+
+
 ## [4.1.2] - 2026-06-25
 
 ### Fixed
