@@ -13,6 +13,7 @@ import { track } from "@/lib/analytics";
 export default function NewTripPage() {
   const router = useRouter();
   const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
   const [saving, setSaving] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -24,7 +25,11 @@ export default function NewTripPage() {
       const res = await fetch("/api/trips", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: title.trim() }),
+        body: JSON.stringify({
+          title: title.trim(),
+          // 설명은 선택 — 비우면 보내지 않는다.
+          ...(description.trim() ? { description: description.trim() } : {}),
+        }),
       });
 
       if (!res.ok) throw new Error("생성 실패");
@@ -69,6 +74,19 @@ export default function NewTripPage() {
           <p className="text-muted-foreground mt-2 text-xs">
             기간은 첫 일정을 추가하면 자동으로 설정됩니다.
           </p>
+        </div>
+
+        <div>
+          <label className="text-foreground mb-1 block text-sm font-medium">
+            설명 <span className="text-muted-foreground font-normal">(선택)</span>
+          </label>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="어떤 여행인지 간단히 (선택)"
+            rows={3}
+            className={`${inputClass} resize-y`}
+          />
         </div>
 
         <button

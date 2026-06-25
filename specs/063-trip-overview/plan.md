@@ -54,9 +54,9 @@ specs/063-trip-overview/
 
 ```
 src/app/trips/page.tsx                      # 목록: 인원 _count + 지출 일괄 집계 + 카드 표시 (확장)
-src/components/trip/TripOverviewCard.tsx    # 여행 개요(기간·인원·총액·설명) (신규)
+src/components/trip/TripInfoDisclosure.tsx    # 여행 개요(기간·인원·총액·설명) (신규)
 src/app/trips/[id]/page.tsx                 # 상세: 개요 섹션 연결(인원·기간·총액·설명 전달) (확장)
-tests/components/trip/TripOverviewCard.test.tsx  # 개요 표시·회귀 (신규)
+tests/components/trip/TripInfoDisclosure.test.tsx  # 개요 표시·회귀 (신규)
 ```
 
 재사용: `src/lib/expense.ts`(`summarize`/`convertToKrw`), `src/lib/fx/rates.ts`(`getRatesForPairs`), `src/components/trip/ExpenseSummary.tsx`.
