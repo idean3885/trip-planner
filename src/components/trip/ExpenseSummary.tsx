@@ -11,7 +11,8 @@ function rateLine(currency: string, perUnitKrw: number): string {
 /** 환산 기준 도움말 본문: 적용 기준 환율 + 한 줄 설명. */
 function buildHint(krw: KrwConversion): string {
   const lines = krw.rates.map((r) => rateLine(r.currency, r.perUnitKrw));
-  lines.push("자동 환산한 단순 참고용입니다.");
+  // 핵심만: 환율 기준(일별 종가)과 성격(자동 환산·참고용). 실거래가가 아님을 한 줄로.
+  lines.push("일별 종가 기준 자동 환산 · 참고용");
   return lines.join("\n");
 }
 
