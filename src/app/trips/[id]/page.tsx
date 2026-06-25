@@ -1,9 +1,6 @@
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { remark } from "remark";
-import remarkGfm from "remark-gfm";
-import html from "remark-html";
 
 import { auth } from "@/auth";
 import CalendarSyncEntryCard from "@/components/calendar-sync/CalendarSyncEntryCard";
@@ -13,7 +10,6 @@ import {
   type LayoutDayIndex,
   TripDetailLayout,
 } from "@/components/trip/TripDetailLayout";
-import { TripInfoDisclosure } from "@/components/trip/TripInfoDisclosure";
 import { ACTIVITY_WINDOW_RADIUS, windowYmds } from "@/lib/activity-window";
 import { formatCalendarDateFull } from "@/lib/date-utils";
 import { computeDayNumber } from "@/lib/day-number";
@@ -27,13 +23,6 @@ import { getRatesForPairs } from "@/lib/fx/rates";
 import { prisma } from "@/lib/prisma";
 import { getResolvedPeriod } from "@/lib/trip-period";
 
-async function markdownToHtml(md: string): Promise<string> {
-  const result = await remark()
-    .use(remarkGfm)
-    .use(html, { sanitize: false })
-    .process(md);
-  return result.toString();
-}
 
 // DB-정본 전환(#239) 후 이 페이지는 항상 세션 기반 동적 렌더. (#255+ 핫픽스)
 export const dynamic = "force-dynamic";
@@ -181,10 +170,6 @@ async function DbTripPage({
   }));
   const tripKrw = convertToKrw(datedItems, rateMap);
 
-  const descriptionHtml = trip.description
-    ? await markdownToHtml(trip.description)
-    : null;
-
   return (
     <div className="space-y-6">
       {/* spec 043 US2 — 헤더는 `여행 목록 > 제목 (기간)` 브레드크럼 한 줄로만 둔다.
@@ -206,13 +191,8 @@ async function DbTripPage({
         )}
       </nav>
 
-      {/* spec 063 후속 — "여행 소개"는 부가 정보라 접힘(depth)으로 둔다. 기간은
-          위 브레드크럼, 총액은 아래 일정 화면이 담당해 중복하지 않는다. */}
-      <TripInfoDisclosure
-        memberCount={trip._count.tripMembers}
-        descriptionHtml={descriptionHtml}
-      />
-
+      {/* spec 063 후속 — 동작·여행정보(설명·인원)는 TripDetailLayout 의 우상단
+          햄버거 메뉴로 모은다. 브레드크럼(위)·총액(일정 화면)과 중복하지 않는다. */}
       <TripDetailLayout
         tripId={tripId}
         tripTitle={trip.title}
@@ -234,6 +214,8 @@ async function DbTripPage({
           startDate: period.startDate,
           endDate: period.endDate,
         })}
+        memberCount={trip._count.tripMembers}
+        description={trip.description}
         memberList={<MemberList tripId={tripId} />}
         syncCard={<CalendarSyncEntryCard tripId={tripId} role={member.role} />}
       />
