@@ -51,7 +51,12 @@ export function InfoHint({
         type="button"
         aria-label={label}
         aria-expanded={open}
-        onClick={() => setOpen((o) => !o)}
+        onClick={(e) => {
+          // 카드 등 상위 링크 안에 놓여도 도움말 토글이 네비게이션을 트리거하지 않게.
+          e.preventDefault();
+          e.stopPropagation();
+          setOpen((o) => !o);
+        }}
         className="border-muted-foreground/40 text-muted-foreground hover:bg-muted hover:text-foreground flex size-3.5 items-center justify-center rounded-full border text-[9px] leading-none font-semibold"
       >
         ?

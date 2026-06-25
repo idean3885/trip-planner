@@ -13,7 +13,7 @@ import {
   type LayoutDayIndex,
   TripDetailLayout,
 } from "@/components/trip/TripDetailLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { TripOverviewCard } from "@/components/trip/TripOverviewCard";
 import { ACTIVITY_WINDOW_RADIUS, windowYmds } from "@/lib/activity-window";
 import { formatCalendarDateFull } from "@/lib/date-utils";
 import { computeDayNumber } from "@/lib/day-number";
@@ -89,7 +89,10 @@ async function DbTripPage({
     // #669 — 인덱스만(활동 제외). 활동은 선택일 윈도우만 따로 받는다.
     prisma.trip.findUnique({
       where: { id: tripId },
-      include: { days: { orderBy: { date: "asc" } } },
+      include: {
+        days: { orderBy: { date: "asc" } },
+        _count: { select: { tripMembers: true } },
+      },
     }),
   ]);
   if (!member || !trip) notFound();
@@ -203,19 +206,17 @@ async function DbTripPage({
         )}
       </nav>
 
-      {descriptionHtml && (
-        <Card>
-          <CardHeader>
-            <CardTitle>여행 개요</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div
-              className="prose prose-sm max-w-none"
-              dangerouslySetInnerHTML={{ __html: descriptionHtml }}
-            />
-          </CardContent>
-        </Card>
-      )}
+      {/* spec 063 — 여행 개요(종합정보). 설명이 없어도 기간·인원·총액은 보인다.
+          일정(캘린더)은 아래 TripDetailLayout 이 메인으로 담당한다. */}
+      <TripOverviewCard
+        startDate={period.startDate}
+        endDate={period.endDate}
+        dayCount={trip.days.length}
+        memberCount={trip._count.tripMembers}
+        tripSummary={tripSummary}
+        tripKrw={tripKrw}
+        descriptionHtml={descriptionHtml}
+      />
 
       <TripDetailLayout
         tripId={tripId}
@@ -231,8 +232,6 @@ async function DbTripPage({
           startDate: period.startDate,
           endDate: period.endDate,
         })}
-        tripSummary={tripSummary}
-        tripKrw={tripKrw}
         rateMap={rateMap}
         tripInProgress={isTripInProgress({
           startDate: period.startDate,
