@@ -62,6 +62,9 @@ export default function ActivityList({
 }: ActivityListProps) {
   const [activities, setActivities] = useState(initialActivities);
   const [showForm, setShowForm] = useState(false);
+  // #846 — 저장 후에도 추가 폼을 닫지 않고 비워 연속 입력(현장 빠른 기록).
+  // formKey 를 올려 폼을 remount → 모든 필드 초기화한다.
+  const [formKey, setFormKey] = useState(0);
   const [editingId, setEditingId] = useState<number | null>(null);
   // spec 048 — 카드 탭 → 상세(읽기 전용) → 편집 2단계. viewingId 가 상세 대상.
   const [viewingId, setViewingId] = useState<number | null>(null);
@@ -122,7 +125,8 @@ export default function ActivityList({
       }
       const created = await res.json();
       commit([...activities, created]);
-      setShowForm(false);
+      // 폼은 열어둔 채 비워 다음 건을 바로 적게 한다(스크롤·재탭 없이 연속 기록).
+      setFormKey((k) => k + 1);
       toast.success("일정을 추가했습니다");
     } catch {
       toast.error("활동 생성 중 오류가 발생했습니다");
@@ -282,6 +286,27 @@ export default function ActivityList({
 
   return (
     <div className="space-y-2">
+      {/* #846 — 추가 진입점을 리스트 상단에 둔다. 활동이 쌓여도 sticky 캘린더
+          바로 아래라 스크롤 없이 손에 닿는다(현장 빠른 기록). 저장하면 폼이 비워진
+          채 유지돼 연속 입력이 된다. */}
+      {showForm ? (
+        <ActivityForm
+          key={formKey}
+          onSubmit={handleCreate}
+          onCancel={() => setShowForm(false)}
+          timingDefault={timingDefault}
+        />
+      ) : (
+        canEdit && (
+          <button
+            onClick={() => setShowForm(true)}
+            className="border-border bg-background text-muted-foreground hover:border-foreground/40 hover:text-foreground w-full rounded-xl border border-dashed py-2.5 text-sm transition-colors"
+          >
+            + 활동 추가
+          </button>
+        )
+      )}
+
       {allDayItems.length > 0 && (
         <details className="border-border bg-card/50 rounded-lg border">
           <summary className="text-foreground cursor-pointer px-3 py-2 text-sm font-semibold tracking-tight select-none">
@@ -312,23 +337,6 @@ export default function ActivityList({
             등록된 활동이 없습니다.
           </CardContent>
         </Card>
-      )}
-
-      {showForm ? (
-        <ActivityForm
-          onSubmit={handleCreate}
-          onCancel={() => setShowForm(false)}
-          timingDefault={timingDefault}
-        />
-      ) : (
-        canEdit && (
-          <button
-            onClick={() => setShowForm(true)}
-            className="border-border bg-background text-muted-foreground hover:border-foreground/40 hover:text-foreground w-full rounded-xl border border-dashed py-2.5 text-sm transition-colors"
-          >
-            + 활동 추가
-          </button>
-        )
       )}
     </div>
   );

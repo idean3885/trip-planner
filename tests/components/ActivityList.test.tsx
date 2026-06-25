@@ -188,6 +188,47 @@ describe("ActivityList", () => {
     });
   });
 
+  it("추가 진입점이 활동 목록보다 위에 있다(스크롤 없이 닿게)", () => {
+    render(
+      <ActivityList
+        tripId={1}
+        dayId={1}
+        activities={[makeActivity({ title: "벨렝 탑" })]}
+        canEdit={true}
+      />,
+    );
+    const addBtn = screen.getByText("+ 활동 추가");
+    const activity = screen.getByText("벨렝 탑");
+    // 추가 버튼이 활동 카드보다 DOM 상 앞선다.
+    expect(
+      addBtn.compareDocumentPosition(activity) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
+  it("저장 후에도 추가 폼이 비워진 채 유지된다(연속 추가)", async () => {
+    const created = makeActivity({ id: 60, title: "First" });
+    mockFetch.mockResolvedValueOnce({ ok: true, json: async () => created });
+    render(
+      <ActivityList tripId={1} dayId={1} activities={[]} canEdit={true} />,
+    );
+    fireEvent.click(screen.getByText("+ 활동 추가"));
+    fireEvent.change(screen.getAllByRole("textbox")[0], {
+      target: { value: "First" },
+    });
+    fireEvent.submit(document.querySelector("form")!);
+
+    await waitFor(() =>
+      expect(mockToast.success).toHaveBeenCalledWith("일정을 추가했습니다"),
+    );
+    // 폼이 닫히지 않고(취소 버튼 존재, + 버튼 부재) 제목이 비워진다.
+    expect(screen.getByText("취소")).toBeInTheDocument();
+    expect(screen.queryByText("+ 활동 추가")).not.toBeInTheDocument();
+    expect((screen.getAllByRole("textbox")[0] as HTMLInputElement).value).toBe(
+      "",
+    );
+  });
+
   it("calls delete API and removes card", async () => {
     const activities = [makeActivity()];
     mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({}) });
