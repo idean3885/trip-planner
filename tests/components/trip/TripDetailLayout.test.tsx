@@ -102,6 +102,33 @@ describe("TripDetailLayout 상단·액션바 (spec 043)", () => {
     expect(new URL(window.location.href).searchParams.get("d")).toBe(ymd);
   });
 
+  // spec 063 후속 — 브레드크럼(날짜)과 ☰ 메뉴를 한 행에 둔다(빈 줄 제거).
+  it("브레드크럼과 ☰ 메뉴를 함께 렌더한다", () => {
+    const today = new Date();
+    render(
+      <TripDetailLayout
+        tripId={1}
+        tripTitle="테스트 여행"
+        isOwner={false}
+        tripStart={today}
+        tripEnd={addDays(today, 2)}
+        days={[]}
+        initialActivities={{}}
+        canEdit={false}
+        initialSelected={null}
+        breadcrumb={<nav>여행 브레드크럼</nav>}
+        memberCount={2}
+        description={null}
+        memberList={<div>멤버 목록</div>}
+        syncCard={<div>동기화 카드</div>}
+      />,
+    );
+    expect(screen.getByText("여행 브레드크럼")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "여행 메뉴" }),
+    ).toBeInTheDocument();
+  });
+
   // 여행 총액은 주안점이라 메인 동선(레이아웃)에 둔다.
   it("tripSummary 가 있으면 여행 총액을 보인다", () => {
     const today = new Date();
