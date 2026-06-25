@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [4.1.1] - 2026-06-25
+
+### Fixed
+
+- * **원화 환산값 옆 "참고" 표기를 물음표 도움말로 바꿨습니다.** 물음표를 누르면(또는 마우스를 올리면) 어떤 기준으로 환산했는지 말풍선으로 설명해, 표시값이 참고용임을 더 분명히 합니다. 여행 총액과 날짜별 합산 모두 적용됩니다.
+  * **여행 중 당일 환율이 그 날의 최종값으로 확정되어 저장됩니다.** 장이 닫히기 전 잠정값으로 굳던 문제를 고쳐, 날이 지나면 최종 환율로 갱신됩니다.
+
+  ([#820](https://github.com/idean3885/trip-planner/issues/820))
+
+
 ## [4.1.0] - 2026-06-24
 
 ### Added

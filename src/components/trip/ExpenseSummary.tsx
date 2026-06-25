@@ -1,12 +1,17 @@
+import { InfoHint } from "@/components/ui/info-hint";
 import type { CurrencySummary, KrwConversion } from "@/lib/expense";
+
+/** 원화 환산 기준 설명(말풍선 본문). */
+const KRW_HINT =
+  "외부 공개 일별 환율(전일 종가 기준)로 자동 환산한 참고값입니다. 실제 환전·카드 결제 환율과 다를 수 있어 정산용이 아닙니다.";
 
 /**
  * spec 061 US4 (#811) — 금액 합산 표시.
  * 통화별 총액 + 사전/현장 소계. 빈 합산은 렌더하지 않는다(잡음 방지).
  *
  * spec 062 — 원화 자동 근사 환산 병기. `krw`가 주어지고 환산 기여분이 있으면
- * 통화 라인 뒤에 "약 …원 (참고)"을 덧붙인다. 환율 미확보분이 있으면 일부만
- * 반영됐음을 표기한다. 원화는 참고 근사치다(정산 정확값 아님).
+ * 통화 라인 뒤에 "약 …원"과 환산 기준을 설명하는 "?" 말풍선(InfoHint)을 붙인다.
+ * 일부 통화만 환산됐으면 그 사실을 함께 표기한다. 원화는 참고 근사치다.
  */
 export function ExpenseSummary({
   rows,
@@ -37,11 +42,12 @@ export function ExpenseSummary({
         </span>
       ))}
       {showKrw && (
-        <span className="text-muted-foreground/80 tabular-nums">
-          약 {krw.krw.toLocaleString()}원{" "}
-          <span className="text-muted-foreground/60">
-            (참고{krw.partial ? " · 일부 통화만" : ""})
-          </span>
+        <span className="text-muted-foreground/80 inline-flex items-center gap-1 tabular-nums">
+          <span>약 {krw.krw.toLocaleString()}원</span>
+          {krw.partial && (
+            <span className="text-muted-foreground/60">(일부 통화만)</span>
+          )}
+          <InfoHint label="원화 환산 기준 설명" text={KRW_HINT} />
         </span>
       )}
     </div>

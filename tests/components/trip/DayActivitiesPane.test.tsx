@@ -126,7 +126,7 @@ describe("DayActivitiesPane", () => {
       />,
     );
     // "30 EUR" 는 합산과 활동 카드 양쪽에 나오므로 합산 영역으로 한정해 확인한다.
-    const summary = screen.getByText("이 날").parentElement as HTMLElement;
+    const summary = screen.getByText("이날 지출").parentElement as HTMLElement;
     expect(within(summary).getByText(/30 EUR/)).toBeInTheDocument();
   });
 
@@ -155,7 +155,7 @@ describe("DayActivitiesPane", () => {
         onDayCreated={vi.fn()}
       />,
     );
-    expect(screen.queryByText("이 날")).not.toBeInTheDocument();
+    expect(screen.queryByText("이날 지출")).not.toBeInTheDocument();
   });
 
   it("편집 권한 없으면 빈 날짜에 추가 버튼이 없다", () => {

@@ -122,7 +122,7 @@ export const DayActivitiesPane = memo(function DayActivitiesPane({
               paymentTiming: a.paymentTiming,
             })),
           )}
-          label="이 날"
+          label="이날 지출"
           krw={
             rateMap
               ? convertToKrw(

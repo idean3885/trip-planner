@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import { ExpenseSummary } from "@/components/trip/ExpenseSummary";
@@ -63,23 +63,39 @@ describe("ExpenseSummary", () => {
 describe("ExpenseSummary 원화 병기 (spec 062)", () => {
   const rows = [{ currency: "EUR", total: 35, advance: 0, onSite: 35 }];
 
-  it("krw 기여분이 있으면 '약 …원 (참고)'를 병기한다", () => {
+  it("krw 기여분이 있으면 '약 …원' + 기준 설명 도움말(?)을 병기한다", () => {
     render(
       <ExpenseSummary
         rows={rows}
-        label="이 날"
+        label="이날 지출"
         krw={{ krw: 51800, partial: false, anyConverted: true }}
       />,
     );
     expect(screen.getByText(/약 51,800원/)).toBeInTheDocument();
-    expect(screen.getByText(/참고/)).toBeInTheDocument();
+    // "참고" 평문 대신 ? 도움말 버튼(말풍선 트리거)으로 기준을 설명한다.
+    expect(
+      screen.getByRole("button", { name: "원화 환산 기준 설명" }),
+    ).toBeInTheDocument();
+  });
+
+  it("도움말을 클릭하면 환산 기준 말풍선이 열린다", () => {
+    render(
+      <ExpenseSummary
+        rows={rows}
+        label="이날 지출"
+        krw={{ krw: 51800, partial: false, anyConverted: true }}
+      />,
+    );
+    expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "원화 환산 기준 설명" }));
+    expect(screen.getByRole("tooltip")).toHaveTextContent(/참고값/);
   });
 
   it("부분 반영이면 '일부 통화만'을 덧붙인다", () => {
     render(
       <ExpenseSummary
         rows={rows}
-        label="이 날"
+        label="이날 지출"
         krw={{ krw: 51800, partial: true, anyConverted: true }}
       />,
     );
@@ -90,17 +106,22 @@ describe("ExpenseSummary 원화 병기 (spec 062)", () => {
     render(
       <ExpenseSummary
         rows={rows}
-        label="이 날"
+        label="이날 지출"
         krw={{ krw: 0, partial: true, anyConverted: false }}
       />,
     );
     expect(screen.queryByText(/원/)).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "원화 환산 기준 설명" }),
+    ).not.toBeInTheDocument();
     expect(screen.getByText(/35 EUR/)).toBeInTheDocument();
   });
 
   it("회귀: krw 미전달 시 기존 현화-only 합산 그대로", () => {
-    render(<ExpenseSummary rows={rows} label="이 날" />);
+    render(<ExpenseSummary rows={rows} label="이날 지출" />);
     expect(screen.getByText(/35 EUR/)).toBeInTheDocument();
-    expect(screen.queryByText(/참고/)).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "원화 환산 기준 설명" }),
+    ).not.toBeInTheDocument();
   });
 });
