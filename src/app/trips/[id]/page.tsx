@@ -170,30 +170,30 @@ async function DbTripPage({
   }));
   const tripKrw = convertToKrw(datedItems, rateMap);
 
-  return (
-    <div className="space-y-6">
-      {/* spec 043 US2 — 헤더는 `여행 목록 > 제목 (기간)` 브레드크럼 한 줄로만 둔다.
-          기간 편집·동행자·나가기/삭제·캘린더 가져오기·선택 일자 삭제 등 동작 버튼은
-          선택 일자(클라이언트 상태)에 의존하므로 TripDetailLayout 액션바로 모은다. */}
-      <nav className="text-muted-foreground flex flex-wrap items-center gap-1.5 text-sm">
-        <Link href="/" className="hover:text-foreground">
-          여행 목록
-        </Link>
-        <ChevronRight className="size-3.5 shrink-0" aria-hidden />
-        <span className="text-foreground font-medium">{trip.title}</span>
-        {period.isDerived && period.startDate && period.endDate ? (
-          <span className="text-muted-foreground tabular-nums">
-            ({formatCalendarDateFull(period.startDate)} ~{" "}
-            {formatCalendarDateFull(period.endDate)})
-          </span>
-        ) : (
-          <span className="text-muted-foreground">(일정 미정)</span>
-        )}
-      </nav>
+  // spec 043 US2 — 헤더 브레드크럼 `여행 목록 > 제목 (기간)`. spec 063 후속:
+  // 햄버거(☰) 메뉴와 같은 줄에 두려고 TripDetailLayout 에 노드로 넘긴다(빈 줄 제거).
+  const breadcrumb = (
+    <nav className="text-muted-foreground flex flex-wrap items-center gap-1.5 text-sm">
+      <Link href="/" className="hover:text-foreground">
+        여행 목록
+      </Link>
+      <ChevronRight className="size-3.5 shrink-0" aria-hidden />
+      <span className="text-foreground font-medium">{trip.title}</span>
+      {period.isDerived && period.startDate && period.endDate ? (
+        <span className="text-muted-foreground tabular-nums">
+          ({formatCalendarDateFull(period.startDate)} ~{" "}
+          {formatCalendarDateFull(period.endDate)})
+        </span>
+      ) : (
+        <span className="text-muted-foreground">(일정 미정)</span>
+      )}
+    </nav>
+  );
 
-      {/* spec 063 후속 — 동작·여행정보(설명·인원)는 TripDetailLayout 의 우상단
-          햄버거 메뉴로 모은다. 브레드크럼(위)·총액(일정 화면)과 중복하지 않는다. */}
+  return (
+    <div>
       <TripDetailLayout
+        breadcrumb={breadcrumb}
         tripId={tripId}
         tripTitle={trip.title}
         isOwner={member.role === "OWNER"}
