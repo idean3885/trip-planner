@@ -6,7 +6,7 @@
 
 ### Evidence
 
-- 자동 테스트: `tests/components/trip/TripInfoDisclosure.test.tsx` (요약 표시 — 인원·총액)
+- 자동 테스트: `tests/components/trip/TripInfoDialog.test.tsx` (요약 표시 — 인원·총액)
 - 수동 체크리스트(실기기, 구현 후):
   - [ ] 목록 카드에 사용 금액과 "N명"이 보이는지 확인
   - [ ] 지출 없는 여행은 금액 줄이 생략되는지 확인
@@ -17,7 +17,7 @@
 
 ### Evidence
 
-- 자동 테스트: `tests/components/trip/TripInfoDisclosure.test.tsx` (설명 유무·인원·총액 표시, 설명 없을 때 종합정보 유지)
+- 자동 테스트: `tests/components/trip/TripInfoDialog.test.tsx` (설명 유무·인원·총액 표시, 설명 없을 때 종합정보 유지)
 - 수동 체크리스트(구현 후):
   - [ ] 설명 있는 여행에서 개요에 기간·인원·총액·설명이 한 자리에 보이는지
   - [ ] 설명 없는 여행에서도 기간·인원·총액이 보이는지
@@ -27,4 +27,4 @@
 
 ### Evidence
 
-- 자동 테스트: `tests/components/trip/TripInfoDisclosure.test.tsx` (총액·설명 미전달 시 안전 렌더 — 기존 목록·상세 흐름 유지)
+- 자동 테스트: `tests/components/trip/TripInfoDialog.test.tsx` (총액·설명 미전달 시 안전 렌더 — 기존 목록·상세 흐름 유지)

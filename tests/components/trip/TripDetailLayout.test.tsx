@@ -63,6 +63,8 @@ describe("TripDetailLayout 상단·액션바 (spec 043)", () => {
         initialActivities={{}}
         canEdit={false}
         initialSelected={overrides?.initialSelected ?? null}
+        memberCount={2}
+        description={null}
         memberList={<div>멤버 목록</div>}
         syncCard={<div>동기화 카드</div>}
       />,
@@ -114,6 +116,8 @@ describe("TripDetailLayout 상단·액션바 (spec 043)", () => {
         initialActivities={{}}
         canEdit={false}
         initialSelected={null}
+        memberCount={2}
+        description={null}
         memberList={<div>멤버 목록</div>}
         syncCard={<div>동기화 카드</div>}
         tripSummary={[{ currency: "EUR", total: 120, advance: 80, onSite: 40 }]}
@@ -148,6 +152,8 @@ describe("TripDetailLayout 모바일 스와이프·스크롤 접힘 (v3.15.1 hot
         initialActivities={{}}
         canEdit={false}
         initialSelected={null}
+        memberCount={2}
+        description={null}
         memberList={<div>멤버 목록</div>}
         syncCard={<div>동기화 카드</div>}
       />,
