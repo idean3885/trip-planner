@@ -11,19 +11,19 @@
  * 선택 일자에 Day 가 없으면 먼저 생성한 뒤 활동을 추가한다(빈 날짜도 한 번에).
  */
 
+import type { PaymentTiming } from "@prisma/client";
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import type { Activity } from "@/components/ActivityList";
 import ActivityForm, { type ActivityFormData } from "@/components/ActivityForm";
+import type { Activity } from "@/components/ActivityList";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import type { PaymentTiming } from "@prisma/client";
 
 /** Date → 로컬 기준 YYYY-MM-DD (floating-time 관행 #232, DayActivitiesPane 와 동일). */
 function toYmd(date: Date): string {
