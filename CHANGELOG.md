@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [4.4.1] - 2026-06-26
+
+### Fixed
+
+- * **활동을 맨 아래에서도 바로 추가할 수 있습니다.** 추가 입구를 목록 위·아래 양 끝에 둬, 활동이 많아 끝까지 내려봤을 때도 스크롤을 되돌리지 않고 그 자리에서 추가합니다.
+
+  ([#846](https://github.com/idean3885/trip-planner/issues/846))
+
+
 ## [4.4.0] - 2026-06-25
 
 ### Added
