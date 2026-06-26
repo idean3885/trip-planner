@@ -41,6 +41,7 @@ import { ExpenseSummary } from "./ExpenseSummary";
 import { SwipeCarousel } from "./SwipeCarousel";
 import { TripActionsMenu } from "./TripActionsMenu";
 import { TripInfoDialog } from "./TripInfoDialog";
+import { TripQuickAdd } from "./TripQuickAdd";
 
 export interface LayoutActivity {
   id: number;
@@ -341,6 +342,21 @@ export function TripDetailLayout({
     [],
   );
 
+  // #846 — 떠 있는 TripQuickAdd 가 활동을 새로 만들면 그 Day 캐시 끝에 덧붙인다.
+  // 빈 날짜는 handleDayCreated 가 먼저 빈 배열을 채워두므로 항상 배열이 있다.
+  const handleActivityCreated = useCallback(
+    (dayId: number, created: Activity) => {
+      setActivitiesByDayId((prev) => ({
+        ...prev,
+        [dayId]: [
+          ...(prev[dayId] ?? []),
+          created as unknown as LayoutActivity,
+        ],
+      }));
+    },
+    [],
+  );
+
   // 모바일 캐러셀의 이전·현재·다음 날짜를 selectedDate 기준으로 메모이즈 —
   // 핍 슬라이드 날짜가 매 렌더 새 Date 가 되어 memo 가 깨지던 것을 막는다(#673).
   const mobileDates = useMemo(
@@ -365,7 +381,6 @@ export function TripDetailLayout({
         onDayCreated={handleDayCreated}
         onActivitiesChange={interactive ? handleActivitiesChange : undefined}
         showDateHeader={showDateHeader}
-        timingDefault={timingDefault}
         rateMap={rateMap}
       />
     );
@@ -470,6 +485,20 @@ export function TripDetailLayout({
           }
         />
       </div>
+
+      {/* #846 — 화면 하단에 떠 있는 단일 "활동 추가". 캘린더 스와이프 캐러셀이
+          내부 sticky/fixed 를 가두므로, 추가 컨트롤을 캐러셀 밖(레이아웃 레벨)에
+          두어 스크롤·날짜와 무관하게 한 탭으로 선택 일자에 활동을 추가한다. */}
+      {canEdit && (
+        <TripQuickAdd
+          tripId={tripId}
+          selectedDate={selectedDate}
+          dayId={selectedDayId}
+          timingDefault={timingDefault}
+          onDayCreated={handleDayCreated}
+          onActivityCreated={handleActivityCreated}
+        />
+      )}
     </div>
   );
 }

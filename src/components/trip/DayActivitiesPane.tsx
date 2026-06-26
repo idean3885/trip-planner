@@ -47,8 +47,6 @@ export interface DayActivitiesPaneProps {
    * 데스크탑 2분할은 우측 일정에 날짜 맥락이 필요해 기본값(true)으로 유지한다.
    */
   showDateHeader?: boolean;
-  /** spec 061 — 추가 폼 지출시점 디폴트(여행중=현장 / 여행전=사전). */
-  timingDefault?: import("@prisma/client").PaymentTiming;
   /** spec 062 — (일자, 통화) 근사 환율 맵. 일별 합산 원화 병기에 쓴다. */
   rateMap?: RateMap;
 }
@@ -72,7 +70,6 @@ export const DayActivitiesPane = memo(function DayActivitiesPane({
   onDayCreated,
   onActivitiesChange,
   showDateHeader = true,
-  timingDefault,
   rateMap,
 }: DayActivitiesPaneProps) {
   const [busy, setBusy] = useState(false);
@@ -173,7 +170,6 @@ export const DayActivitiesPane = memo(function DayActivitiesPane({
           activities={activities}
           canEdit={canEdit}
           onActivitiesChange={onActivitiesChange}
-          timingDefault={timingDefault}
         />
       )}
     </div>
