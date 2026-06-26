@@ -61,11 +61,9 @@ export function TripQuickAdd({
 }) {
   const [open, setOpen] = useState(false);
   const [formKey, setFormKey] = useState(0);
-  const [busy, setBusy] = useState(false);
 
+  // 이중 제출은 ActivityForm 의 saving 상태가 막는다(제출 버튼 비활성).
   async function handleSubmit(data: ActivityFormData) {
-    if (busy) return;
-    setBusy(true);
     try {
       let id = dayId;
       // 빈 날짜면 Day 먼저 생성.
@@ -121,8 +119,6 @@ export function TripQuickAdd({
       toast.success("일정을 추가했습니다");
     } catch {
       toast.error("활동 생성 중 오류가 발생했습니다");
-    } finally {
-      setBusy(false);
     }
   }
 
