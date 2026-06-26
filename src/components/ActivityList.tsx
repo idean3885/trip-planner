@@ -61,7 +61,11 @@ export default function ActivityList({
   timingDefault = "ON_SITE",
 }: ActivityListProps) {
   const [activities, setActivities] = useState(initialActivities);
-  const [showForm, setShowForm] = useState(false);
+  // #846 — 추가 진입점을 리스트 위·아래 양 끝에 둔다. 활동이 쌓여도 어느 쪽 끝에서든
+  // 스크롤을 길게 하지 않고 닿는다(특히 "맨 아래에서 추가" 가능). 폼은 누른 쪽에서
+  // 열려 그 위치를 유지한다. (스와이프 캐러셀이 sticky/fixed 를 가둬 떠 있는 버튼
+  // 대신 양 끝 배치를 택함.)
+  const [addAt, setAddAt] = useState<"top" | "bottom" | null>(null);
   // #846 — 저장 후에도 추가 폼을 닫지 않고 비워 연속 입력(현장 빠른 기록).
   // formKey 를 올려 폼을 remount → 모든 필드 초기화한다.
   const [formKey, setFormKey] = useState(0);
@@ -284,28 +288,33 @@ export default function ActivityList({
     );
   };
 
-  return (
-    <div className="space-y-2">
-      {/* #846 — 추가 진입점을 리스트 상단에 둔다. 활동이 쌓여도 sticky 캘린더
-          바로 아래라 스크롤 없이 손에 닿는다(현장 빠른 기록). 저장하면 폼이 비워진
-          채 유지돼 연속 입력이 된다. */}
-      {showForm ? (
+  // #846 — 한 위치의 추가 진입점(폼 또는 버튼). 폼은 누른 쪽 한 곳에서만 열린다.
+  const renderAdd = (pos: "top" | "bottom") => {
+    if (addAt === pos) {
+      return (
         <ActivityForm
           key={formKey}
           onSubmit={handleCreate}
-          onCancel={() => setShowForm(false)}
+          onCancel={() => setAddAt(null)}
           timingDefault={timingDefault}
         />
-      ) : (
-        canEdit && (
-          <button
-            onClick={() => setShowForm(true)}
-            className="border-border bg-background text-muted-foreground hover:border-foreground/40 hover:text-foreground w-full rounded-xl border border-dashed py-2.5 text-sm transition-colors"
-          >
-            + 활동 추가
-          </button>
-        )
-      )}
+      );
+    }
+    if (addAt !== null) return null; // 반대쪽에서 폼이 열려 있음(폼은 하나)
+    return canEdit ? (
+      <button
+        onClick={() => setAddAt(pos)}
+        className="border-border bg-background text-muted-foreground hover:border-foreground/40 hover:text-foreground w-full rounded-xl border border-dashed py-2.5 text-sm transition-colors"
+      >
+        + 활동 추가
+      </button>
+    ) : null;
+  };
+
+  return (
+    <div className="space-y-2">
+      {/* #846 — 상단 추가 진입점. 저장하면 폼이 비워진 채 유지돼 연속 입력. */}
+      {renderAdd("top")}
 
       {allDayItems.length > 0 && (
         <details className="border-border bg-card/50 rounded-lg border">
@@ -331,13 +340,17 @@ export default function ActivityList({
 
       {/* spec 058 — 활동 0건이면 빈 상태를 카드로 보여 비어 있음을 분명히 한다
           (로딩 스켈레톤은 DayActivitiesPane 가 별도로 처리해 구분 유지). */}
-      {activities.length === 0 && !showForm && (
+      {activities.length === 0 && addAt === null && (
         <Card>
           <CardContent className="text-muted-foreground py-6 text-center text-sm">
             등록된 활동이 없습니다.
           </CardContent>
         </Card>
       )}
+
+      {/* #846 — 활동이 있을 때만 하단 추가 진입점도 둔다. "맨 아래로 내려도 추가"
+          가능해지고, 빈 목록(스크롤 없음)에선 상단 하나로 충분하다. */}
+      {activities.length > 0 && renderAdd("bottom")}
     </div>
   );
 }

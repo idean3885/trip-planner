@@ -188,7 +188,7 @@ describe("ActivityList", () => {
     });
   });
 
-  it("추가 진입점이 활동 목록보다 위에 있다(스크롤 없이 닿게)", () => {
+  it("추가 진입점이 활동 목록 위·아래 양 끝에 있다(맨 아래에서도 추가)", () => {
     render(
       <ActivityList
         tripId={1}
@@ -197,13 +197,38 @@ describe("ActivityList", () => {
         canEdit={true}
       />,
     );
-    const addBtn = screen.getByText("+ 활동 추가");
+    const addButtons = screen.getAllByText("+ 활동 추가");
+    expect(addButtons).toHaveLength(2);
     const activity = screen.getByText("벨렝 탑");
-    // 추가 버튼이 활동 카드보다 DOM 상 앞선다.
+    // 하나는 활동보다 위, 하나는 아래.
     expect(
-      addBtn.compareDocumentPosition(activity) &
+      addButtons[0].compareDocumentPosition(activity) &
         Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
+    expect(
+      activity.compareDocumentPosition(addButtons[1]) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
+  it("빈 목록에선 상단 진입점 하나만 둔다(스크롤 없음)", () => {
+    render(<ActivityList tripId={1} dayId={1} activities={[]} canEdit={true} />);
+    expect(screen.getAllByText("+ 활동 추가")).toHaveLength(1);
+  });
+
+  it("하단 진입점으로 열면 폼이 한 곳만 열린다", () => {
+    render(
+      <ActivityList
+        tripId={1}
+        dayId={1}
+        activities={[makeActivity({ title: "벨렝 탑" })]}
+        canEdit={true}
+      />,
+    );
+    fireEvent.click(screen.getAllByText("+ 활동 추가")[1]); // 하단 진입점
+    expect(screen.getByText("취소")).toBeInTheDocument();
+    // 폼은 하나만 → 다른 끝의 진입점 버튼은 사라진다.
+    expect(screen.queryByText("+ 활동 추가")).not.toBeInTheDocument();
   });
 
   it("저장 후에도 추가 폼이 비워진 채 유지된다(연속 추가)", async () => {
