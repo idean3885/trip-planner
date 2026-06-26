@@ -48,8 +48,6 @@ interface ActivityListProps {
    * 패널마다 클로저를 새로 만들지 않고 단일 안정 핸들러를 쓰게 한다(#673 memo).
    */
   onActivitiesChange?: (dayId: number, next: Activity[]) => void;
-  /** spec 061 — 추가 시 지출시점 디폴트(여행중=현장 / 여행전=사전). */
-  timingDefault?: PaymentTiming;
 }
 
 export default function ActivityList({
@@ -58,17 +56,10 @@ export default function ActivityList({
   activities: initialActivities,
   canEdit,
   onActivitiesChange,
-  timingDefault = "ON_SITE",
 }: ActivityListProps) {
   const [activities, setActivities] = useState(initialActivities);
-  // #846 — 추가 진입점을 리스트 위·아래 양 끝에 둔다. 활동이 쌓여도 어느 쪽 끝에서든
-  // 스크롤을 길게 하지 않고 닿는다(특히 "맨 아래에서 추가" 가능). 폼은 누른 쪽에서
-  // 열려 그 위치를 유지한다. (스와이프 캐러셀이 sticky/fixed 를 가둬 떠 있는 버튼
-  // 대신 양 끝 배치를 택함.)
-  const [addAt, setAddAt] = useState<"top" | "bottom" | null>(null);
-  // #846 — 저장 후에도 추가 폼을 닫지 않고 비워 연속 입력(현장 빠른 기록).
-  // formKey 를 올려 폼을 remount → 모든 필드 초기화한다.
-  const [formKey, setFormKey] = useState(0);
+  // #846 — 활동 추가(생성)는 화면 하단 떠 있는 TripQuickAdd 가 담당한다. 여기서는
+  // 조회·편집·삭제·정렬만 한다.
   const [editingId, setEditingId] = useState<number | null>(null);
   // spec 048 — 카드 탭 → 상세(읽기 전용) → 편집 2단계. viewingId 가 상세 대상.
   const [viewingId, setViewingId] = useState<number | null>(null);
@@ -92,48 +83,6 @@ export default function ActivityList({
     } catch {
       /* c8 ignore next -- defensive: 모든 현대 브라우저가 Intl을 지원. 테스트 도달 불가 */
       return "UTC";
-    }
-  }
-
-  async function handleCreate(data: ActivityFormData) {
-    const tz = getBrowserTimezone();
-    const body: Record<string, unknown> = {
-      category: data.category,
-      title: data.title,
-    };
-    if (data.startTime) {
-      body.startTime = data.startTime;
-      body.startTimezone = tz;
-    }
-    if (data.endTime) {
-      body.endTime = data.endTime;
-      body.endTimezone = tz;
-    }
-    if (data.location) body.location = data.location;
-    if (data.memo) body.memo = data.memo;
-    if (data.url) body.url = data.url;
-    if (data.cost) body.cost = parseFloat(data.cost);
-    if (data.currency) body.currency = data.currency;
-    body.paymentTiming = data.paymentTiming;
-    body.allDay = data.allDay;
-
-    try {
-      const res = await fetch(apiBase, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      if (!res.ok) {
-        toast.error("활동 생성에 실패했습니다");
-        return;
-      }
-      const created = await res.json();
-      commit([...activities, created]);
-      // 폼은 열어둔 채 비워 다음 건을 바로 적게 한다(스크롤·재탭 없이 연속 기록).
-      setFormKey((k) => k + 1);
-      toast.success("일정을 추가했습니다");
-    } catch {
-      toast.error("활동 생성 중 오류가 발생했습니다");
     }
   }
 
@@ -288,34 +237,8 @@ export default function ActivityList({
     );
   };
 
-  // #846 — 한 위치의 추가 진입점(폼 또는 버튼). 폼은 누른 쪽 한 곳에서만 열린다.
-  const renderAdd = (pos: "top" | "bottom") => {
-    if (addAt === pos) {
-      return (
-        <ActivityForm
-          key={formKey}
-          onSubmit={handleCreate}
-          onCancel={() => setAddAt(null)}
-          timingDefault={timingDefault}
-        />
-      );
-    }
-    if (addAt !== null) return null; // 반대쪽에서 폼이 열려 있음(폼은 하나)
-    return canEdit ? (
-      <button
-        onClick={() => setAddAt(pos)}
-        className="border-border bg-background text-muted-foreground hover:border-foreground/40 hover:text-foreground w-full rounded-xl border border-dashed py-2.5 text-sm transition-colors"
-      >
-        + 활동 추가
-      </button>
-    ) : null;
-  };
-
   return (
     <div className="space-y-2">
-      {/* #846 — 상단 추가 진입점. 저장하면 폼이 비워진 채 유지돼 연속 입력. */}
-      {renderAdd("top")}
-
       {allDayItems.length > 0 && (
         <details className="border-border bg-card/50 rounded-lg border">
           <summary className="text-foreground cursor-pointer px-3 py-2 text-sm font-semibold tracking-tight select-none">
@@ -340,17 +263,13 @@ export default function ActivityList({
 
       {/* spec 058 — 활동 0건이면 빈 상태를 카드로 보여 비어 있음을 분명히 한다
           (로딩 스켈레톤은 DayActivitiesPane 가 별도로 처리해 구분 유지). */}
-      {activities.length === 0 && addAt === null && (
+      {activities.length === 0 && (
         <Card>
           <CardContent className="text-muted-foreground py-6 text-center text-sm">
             등록된 활동이 없습니다.
           </CardContent>
         </Card>
       )}
-
-      {/* #846 — 활동이 있을 때만 하단 추가 진입점도 둔다. "맨 아래로 내려도 추가"
-          가능해지고, 빈 목록(스크롤 없음)에선 상단 하나로 충분하다. */}
-      {activities.length > 0 && renderAdd("bottom")}
     </div>
   );
 }

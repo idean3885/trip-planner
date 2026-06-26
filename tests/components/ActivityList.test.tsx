@@ -86,173 +86,9 @@ describe("ActivityList", () => {
     expect(screen.queryByText(/활동 \(/)).not.toBeInTheDocument();
   });
 
-  it("shows add button when canEdit", () => {
-    render(
-      <ActivityList tripId={1} dayId={1} activities={[]} canEdit={true} />,
-    );
-    expect(screen.getByText("+ 활동 추가")).toBeInTheDocument();
-  });
-
-  it("hides add button when cannot edit", () => {
-    render(
-      <ActivityList tripId={1} dayId={1} activities={[]} canEdit={false} />,
-    );
-    expect(screen.queryByText("+ 활동 추가")).not.toBeInTheDocument();
-  });
-
-  it("shows form when add button clicked", () => {
-    render(
-      <ActivityList tripId={1} dayId={1} activities={[]} canEdit={true} />,
-    );
-    fireEvent.click(screen.getByText("+ 활동 추가"));
-    expect(screen.getByText("추가")).toBeInTheDocument();
-    expect(screen.getByText("취소")).toBeInTheDocument();
-  });
-
-  it("hides form and shows add button when cancel clicked", () => {
-    render(
-      <ActivityList tripId={1} dayId={1} activities={[]} canEdit={true} />,
-    );
-    fireEvent.click(screen.getByText("+ 활동 추가"));
-    fireEvent.click(screen.getByText("취소"));
-    expect(screen.getByText("+ 활동 추가")).toBeInTheDocument();
-  });
-
-  it("creates activity with all optional fields", async () => {
-    const created = makeActivity({
-      id: 99,
-      title: "New",
-      startTime: "2026-06-07T10:00:00.000Z",
-      endTime: "2026-06-07T12:00:00.000Z",
-      location: "Place",
-      memo: "Note",
-      cost: 25,
-      currency: "USD",
-    });
-    mockFetch.mockResolvedValueOnce({ ok: true, json: async () => created });
-
-    render(
-      <ActivityList tripId={1} dayId={1} activities={[]} canEdit={true} />,
-    );
-    fireEvent.click(screen.getByText("+ 활동 추가"));
-
-    // 간소 필드(제목·가격·내용) + 확장하여 장소.
-    fireEvent.change(screen.getByLabelText(/제목/), { target: { value: "New" } });
-    fireEvent.change(screen.getByLabelText("가격"), { target: { value: "25" } });
-    fireEvent.change(screen.getByLabelText("내용"), {
-      target: { value: "Note" },
-    });
-    fireEvent.click(screen.getByText(/확장/));
-    fireEvent.change(screen.getByLabelText("장소"), {
-      target: { value: "Place" },
-    });
-
-    const form = document.querySelector("form")!;
-    fireEvent.submit(form);
-
-    await waitFor(() => {
-      expect(mockFetch).toHaveBeenCalledWith(
-        "/api/trips/1/days/1/activities",
-        expect.objectContaining({ method: "POST" }),
-      );
-      const callBody = JSON.parse(mockFetch.mock.calls[0][1].body);
-      expect(callBody.title).toBe("New");
-      expect(callBody.location).toBe("Place");
-      expect(callBody.memo).toBe("Note");
-      expect(callBody.paymentTiming).toBeDefined();
-    });
-  });
-
-  it("creates activity with minimal fields", async () => {
-    const created = makeActivity({ id: 50, title: "Minimal" });
-    mockFetch.mockResolvedValueOnce({ ok: true, json: async () => created });
-
-    render(
-      <ActivityList tripId={1} dayId={1} activities={[]} canEdit={true} />,
-    );
-    fireEvent.click(screen.getByText("+ 활동 추가"));
-
-    const textInputs = screen.getAllByRole("textbox");
-    fireEvent.change(textInputs[0], { target: { value: "Minimal" } });
-
-    const form = document.querySelector("form")!;
-    fireEvent.submit(form);
-
-    await waitFor(() => {
-      const callBody = JSON.parse(mockFetch.mock.calls[0][1].body);
-      expect(callBody.title).toBe("Minimal");
-      // Optional fields should NOT be in body
-      expect(callBody.location).toBeUndefined();
-      expect(callBody.memo).toBeUndefined();
-      expect(callBody.cost).toBeUndefined();
-    });
-  });
-
-  it("추가 진입점이 활동 목록 위·아래 양 끝에 있다(맨 아래에서도 추가)", () => {
-    render(
-      <ActivityList
-        tripId={1}
-        dayId={1}
-        activities={[makeActivity({ title: "벨렝 탑" })]}
-        canEdit={true}
-      />,
-    );
-    const addButtons = screen.getAllByText("+ 활동 추가");
-    expect(addButtons).toHaveLength(2);
-    const activity = screen.getByText("벨렝 탑");
-    // 하나는 활동보다 위, 하나는 아래.
-    expect(
-      addButtons[0].compareDocumentPosition(activity) &
-        Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
-    expect(
-      activity.compareDocumentPosition(addButtons[1]) &
-        Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
-  });
-
-  it("빈 목록에선 상단 진입점 하나만 둔다(스크롤 없음)", () => {
-    render(<ActivityList tripId={1} dayId={1} activities={[]} canEdit={true} />);
-    expect(screen.getAllByText("+ 활동 추가")).toHaveLength(1);
-  });
-
-  it("하단 진입점으로 열면 폼이 한 곳만 열린다", () => {
-    render(
-      <ActivityList
-        tripId={1}
-        dayId={1}
-        activities={[makeActivity({ title: "벨렝 탑" })]}
-        canEdit={true}
-      />,
-    );
-    fireEvent.click(screen.getAllByText("+ 활동 추가")[1]); // 하단 진입점
-    expect(screen.getByText("취소")).toBeInTheDocument();
-    // 폼은 하나만 → 다른 끝의 진입점 버튼은 사라진다.
-    expect(screen.queryByText("+ 활동 추가")).not.toBeInTheDocument();
-  });
-
-  it("저장 후에도 추가 폼이 비워진 채 유지된다(연속 추가)", async () => {
-    const created = makeActivity({ id: 60, title: "First" });
-    mockFetch.mockResolvedValueOnce({ ok: true, json: async () => created });
-    render(
-      <ActivityList tripId={1} dayId={1} activities={[]} canEdit={true} />,
-    );
-    fireEvent.click(screen.getByText("+ 활동 추가"));
-    fireEvent.change(screen.getAllByRole("textbox")[0], {
-      target: { value: "First" },
-    });
-    fireEvent.submit(document.querySelector("form")!);
-
-    await waitFor(() =>
-      expect(mockToast.success).toHaveBeenCalledWith("일정을 추가했습니다"),
-    );
-    // 폼이 닫히지 않고(취소 버튼 존재, + 버튼 부재) 제목이 비워진다.
-    expect(screen.getByText("취소")).toBeInTheDocument();
-    expect(screen.queryByText("+ 활동 추가")).not.toBeInTheDocument();
-    expect((screen.getAllByRole("textbox")[0] as HTMLInputElement).value).toBe(
-      "",
-    );
-  });
+  // #846 — 활동 추가(생성)는 ActivityList 가 아니라 화면 하단 떠 있는
+  // TripQuickAdd 가 담당한다. 추가 관련 검증은 TripQuickAdd.test.tsx 로 옮겼다.
+  // 여기서는 조회·편집·삭제·정렬·빈 상태만 검증한다.
 
   it("calls delete API and removes card", async () => {
     const activities = [makeActivity()];
@@ -273,24 +109,6 @@ describe("ActivityList", () => {
         "/api/trips/1/days/1/activities/1",
         expect.objectContaining({ method: "DELETE" }),
       );
-    });
-  });
-
-  it("shows error toast when create API fails", async () => {
-    mockFetch.mockResolvedValueOnce({ ok: false, status: 500 });
-
-    render(
-      <ActivityList tripId={1} dayId={1} activities={[]} canEdit={true} />,
-    );
-    fireEvent.click(screen.getByText("+ 활동 추가"));
-
-    const textInputs = screen.getAllByRole("textbox");
-    fireEvent.change(textInputs[0], { target: { value: "Fail" } });
-
-    const form = document.querySelector("form")!;
-    fireEvent.submit(form);
-    await waitFor(() => {
-      expect(mockToast.error).toHaveBeenCalledWith("활동 생성에 실패했습니다");
     });
   });
 
@@ -330,25 +148,6 @@ describe("ActivityList", () => {
     fireEvent.click(screen.getByText("삭제"));
     await waitFor(() => {
       expect(mockToast.error).toHaveBeenCalledWith("활동 삭제에 실패했습니다");
-    });
-  });
-
-  it("shows error toast when create fetch throws (network)", async () => {
-    mockFetch.mockRejectedValueOnce(new Error("network"));
-
-    render(
-      <ActivityList tripId={1} dayId={1} activities={[]} canEdit={true} />,
-    );
-    fireEvent.click(screen.getByText("+ 활동 추가"));
-    const textInputs = screen.getAllByRole("textbox");
-    fireEvent.change(textInputs[0], { target: { value: "NetFail" } });
-
-    const form = document.querySelector("form")!;
-    fireEvent.submit(form);
-    await waitFor(() => {
-      expect(mockToast.error).toHaveBeenCalledWith(
-        "활동 생성 중 오류가 발생했습니다",
-      );
     });
   });
 
@@ -745,10 +544,11 @@ describe("ActivityList", () => {
     expect(screen.getByText("등록된 활동이 없습니다.")).toBeInTheDocument();
   });
 
-  it("hides empty-state once the add form opens", () => {
+  it("shows empty-state card even when editable (add lives outside)", () => {
+    // #846 — 추가가 떠 있는 TripQuickAdd 로 빠졌으므로, 편집 가능해도 목록은
+    // 빈 상태 카드만 보인다.
     render(<ActivityList tripId={1} dayId={1} activities={[]} canEdit />);
     expect(screen.getByText("등록된 활동이 없습니다.")).toBeInTheDocument();
-    fireEvent.click(screen.getByText("+ 활동 추가"));
-    expect(screen.queryByText("등록된 활동이 없습니다.")).toBeNull();
+    expect(screen.queryByText("+ 활동 추가")).toBeNull();
   });
 });
