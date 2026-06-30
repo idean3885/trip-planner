@@ -5,7 +5,7 @@
 ## 기술 스택
 
 - **MCP 서버**: Python 3.10+, FastMCP, httpx, macOS Keychain
-- **웹앱**: Next.js 15 (App Router, SSR), Auth.js v5, Tailwind CSS v3
+- **웹앱**: Next.js 16 (App Router, SSR), Auth.js v5 (next-auth 5 beta), Tailwind CSS v4
 - **DB**: Neon Postgres, Prisma 7 (@prisma/adapter-pg TCP)
 - **인증**: Google OAuth (웹), PAT (외부 클라이언트), OAuth CLI (자동 발급)
 - **테스트**: Vitest, React Testing Library, Playwright, pytest

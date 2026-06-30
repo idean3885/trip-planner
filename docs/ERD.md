@@ -47,8 +47,6 @@ erDiagram
         int id PK "autoincrement"
         string title "여행 제목"
         text description "여행 설명 (마크다운)"
-        timestamptz startDate "여행 시작일"
-        timestamptz endDate "여행 종료일"
         string createdBy FK "생성자"
         string updatedBy FK "최종 수정자"
         timestamptz createdAt "생성 시각"
@@ -74,9 +72,11 @@ erDiagram
         varchar endTimezone "종료 표시 시간대 (IANA, NULL이면 startTimezone)"
         string location "장소명"
         text memo "메모"
+        text url "참고 링크 (예약·정보 페이지, nullable)"
         decimal cost "예상 비용 (10,2)"
         varchar currency "ISO 4217 통화 코드 (기본 EUR)"
         enum paymentTiming "지출 시점: ADVANCE(사전) ON_SITE(현장, 기본값)"
+        boolean allDay "종일 일정 여부 (is_all_day, 기본 false)"
         int sortOrder "일자 내 표시 순서 (0부터)"
         timestamptz createdAt "생성 시각"
         timestamptz updatedAt "수정 시각"
@@ -105,6 +105,7 @@ erDiagram
         int id PK "autoincrement"
         int tripId FK,UK "여행당 1개 (v2.9.0+ 정본)"
         string ownerId FK "공유 캘린더 소유 주인"
+        enum provider "캘린더 제공자: GOOGLE(기본) APPLE (spec 024)"
         string calendarId "외부 캘린더 ID"
         string calendarName "표시 이름"
         timestamptz lastSyncedAt "최근 동기화 시각"
@@ -133,6 +134,7 @@ erDiagram
         int id PK "autoincrement"
         string userId FK "per-user (레거시 v2.8.0)"
         int tripId FK "소속 여행"
+        enum provider "캘린더 제공자: GOOGLE(기본) APPLE"
         string calendarId "외부 캘린더 ID"
         enum calendarType "DEDICATED PRIMARY"
         string calendarName "표시 이름"
@@ -145,6 +147,70 @@ erDiagram
         int activityId FK "원천 활동"
         string googleEventId "외부 이벤트 ID"
         string syncedEtag "최근 동기화 ETag"
+    }
+
+    AppleCalendarCredential {
+        string userId PK,FK "소유 사용자 (1:1)"
+        string appleId "Apple ID"
+        string encryptedPassword "AES-256-GCM 암호화 app password"
+        string iv "암호화 IV (base64, 12바이트)"
+        timestamptz lastValidatedAt "최근 검증 시각"
+        string lastError "최근 오류"
+    }
+
+    ImportRun {
+        int id PK "autoincrement"
+        int tripId FK "소속 여행"
+        string triggeredByUserId FK "실행 사용자"
+        enum provider "출처: GOOGLE APPLE"
+        string externalCalendarId "외부 캘린더 ID"
+        int importedCount "가져온 수"
+        int skippedCount "건너뛴 수"
+        int failedCount "실패 수"
+        array failedTitles "실패 제목 목록"
+        timestamptz startedAt "시작 시각"
+        timestamptz finishedAt "종료 시각"
+    }
+
+    ActivityDraft {
+        int id PK "autoincrement"
+        int tripId FK "소속 여행"
+        int dayId FK "배치 일자 (nullable)"
+        int importRunId FK "소속 가져오기 실행"
+        enum provider "출처: GOOGLE APPLE"
+        string externalCalendarId "외부 캘린더 ID"
+        string externalEventId "외부 이벤트 ID"
+        string title "제목 (외부 자동 채움)"
+        timestamptz startTime "시작 (외부 자동)"
+        timestamptz endTime "종료 (외부 자동)"
+        boolean isAllDay "종일 여부"
+        string locationText "장소 텍스트"
+        text description "설명"
+        varchar startTimezone "시작 표시 시간대 (사용자 보강)"
+        varchar endTimezone "종료 표시 시간대 (사용자 보강)"
+        enum status "PENDING PROMOTED DELETED"
+        int promotedToActivityId FK,UK "승격된 활동 (nullable)"
+        timestamptz lastRefreshedAt "최근 갱신 시각"
+    }
+
+    ExchangeRate {
+        int id PK "autoincrement"
+        date date "환율 일자"
+        varchar base "기준 통화 (ISO 4217)"
+        decimal rateToKrw "현지 1단위 = 원화 N (18,6)"
+        timestamptz fetchedAt "확보 시각"
+    }
+
+    DeviceAuthorizationRequest {
+        string id PK "cuid"
+        string deviceCodeHash UK "디바이스 코드 해시"
+        string userCode UK "사용자 코드"
+        enum status "PENDING APPROVED DENIED"
+        string userId FK "승인 사용자 (nullable)"
+        timestamptz expiresAt "만료 시각"
+        int interval "폴링 간격(초, 기본 5)"
+        timestamptz lastPolledAt "최근 폴링 시각"
+        timestamptz createdAt "생성 시각"
     }
 
     User ||--o{ Account : "has"
@@ -166,7 +232,17 @@ erDiagram
     User ||--o{ GCalLink : "legacy per-user"
     GCalLink ||--o{ GCalEventMapping : "legacy maps"
     Activity ||--o{ GCalEventMapping : "legacy exported as"
+    User ||--o| AppleCalendarCredential : "stores (1:1)"
+    Trip ||--o{ ImportRun : "imported into"
+    User ||--o{ ImportRun : "triggers"
+    ImportRun ||--o{ ActivityDraft : "produces"
+    Trip ||--o{ ActivityDraft : "staged in"
+    Day ||--o{ ActivityDraft : "placed on (nullable)"
+    Activity ||--o| ActivityDraft : "promoted from"
+    User ||--o{ DeviceAuthorizationRequest : "approves"
 ```
+
+> `ExchangeRate`는 다른 엔티티와 FK 관계가 없는 독립 캐시 테이블이다 — `(date, base)`당 한 줄로 원화 근사 시세를 저장한다(spec 062).
 
 ## 설계 결정
 
@@ -178,12 +254,12 @@ erDiagram
 - nullable: 대부분 활동은 Day 도시 시간대와 동일하므로 생략 가능
 - 예: `startTimezone: "Asia/Seoul"` → 표시: `13:00 KST`
 
-### Day의 일자 번호 (dayNumber)
+### 여행 기간 (derived) 및 일자 번호
 
+- **Trip은 `startDate`/`endDate` 컬럼을 가지지 않는다** (spec 029 T051, v3.0.0 contract 단계에서 DROP). 시작·종료일은 등록된 Day의 min/max date에서 파생한다 — `src/lib/trip-period.ts::getDerivedPeriod`
 - Day는 `sortOrder` 컬럼을 가지지 않는다 (v2.7.1에서 DROP)
-- "DAY 1, DAY 2…" 표시는 `(date - trip.startDate) + 1`로 파생
+- "DAY 1, DAY 2…" 표시는 `(date - 최소 Day date) + 1`로 파생
 - `(tripId, date)` 유니크 제약으로 같은 날짜 중복 차단
-- Day 추가 시 date가 Trip 범위 밖이면 Trip.startDate/endDate가 자동 확장됨
 - v1 API(`/api/trips/...`)는 응답에 `sortOrder`를 동적 부착해 MCP 호환 유지
 
 ### 캘린더 모델 이원화 (v2.9.0~v2.10.0)
@@ -199,3 +275,26 @@ erDiagram
 | 레거시 | `GCalEventMapping` | v2.8.0 | per-user 매핑. v2.10.0에서 410 Gone 라우트로 전환 |
 
 레거시 두 테이블의 DROP은 후속 릴리즈(v2.11.0+)에서 contract 단계로 진행. 자세한 정책은 [ADR-0003 per-trip-shared-calendar](./adr/0003-per-trip-shared-calendar.md) 참조.
+
+### 캘린더 제공자 추상화 (CalendarProviderId)
+
+- `GCalLink`·`TripCalendarLink`·`ActivityDraft`·`ImportRun`이 `provider` 컬럼(`GOOGLE`/`APPLE`, 기본 `GOOGLE`)을 공유한다 (spec 024 expand)
+- Apple iCloud는 CalDAV로 연동하며, app-specific password를 `AppleCalendarCredential`에 AES-256-GCM으로 암호화해 user당 1건 저장한다 (spec 025)
+
+### 외부 캘린더 가져오기 (ActivityDraft / ImportRun)
+
+외부 캘린더(Google·Apple) 이벤트를 **외부 → 내부 단방향**으로 가져오는 staging 영역 (spec 027, ADR-0006, v2.15.0).
+
+- `ImportRun`: 한 번의 가져오기 실행 기록(가져옴·건너뜀·실패 카운트)
+- `ActivityDraft`: 가져온 이벤트 초안. 사용자가 검토 후 `promote`하면 `Activity`로 승격되고 `promotedToActivityId`로 연결된다. `(provider, externalCalendarId, externalEventId)` 유니크로 중복 가져오기를 차단
+- trip 캘린더 정본(ADR-0003)은 그대로 유지 — 가져오기는 정본을 건드리지 않는다
+
+### 헤드리스 인증 (DeviceAuthorizationRequest)
+
+- AI 에이전트·CLI가 브라우저 없이 인증하는 Device Authorization Grant 상태 (spec 060)
+- 승인(브라우저)과 폴링(에이전트) 두 요청이 공유하는 단명 레코드. 승인·만료로 소비되면 삭제되며 raw 토큰은 보관하지 않는다(승인 후 폴링 시 PAT 발급)
+
+### 원화 근사 환산 캐시 (ExchangeRate)
+
+- 일자·기준통화별 원화 근사 시세를 `(date, base)`당 한 줄로 캐시 (spec 062)
+- 여행자가 편집하지 않는 표시 보조 데이터 — 활동·금액 정본과 무관. 외부 환율 API(Frankfurter, ECB 기반)에서 자동 확보한다

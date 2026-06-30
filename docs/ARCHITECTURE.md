@@ -54,12 +54,17 @@ graph TB
     subgraph "External"
         NeonDB[(Neon Postgres)]
         Google[Google OAuth]
+        GoogleCal[Google Calendar API]
+        AppleCalDAV[Apple iCloud CalDAV]
+        FX[Frankfurter 환율 API]
+        Analytics[GA4 · Search Console]
         RapidAPI[RapidAPI<br/>Booking/Flights]
         Keychain[macOS Keychain]
     end
 
     Browser -->|세션 쿠키| Middleware --> Pages --> API
     Browser -->|Google 로그인| AuthConfig --> Google
+    Browser -.->|분석 비콘| Analytics
     ClaudeDesktop --> MCPServer
     ClaudeCLI --> MCPServer
     MCPServer --> Planner --> WebClient
@@ -68,7 +73,12 @@ graph TB
     WebClient --> Keychain
     API -->|Prisma ORM| NeonDB
     Pages -->|Prisma ORM| NeonDB
+    API -->|캘린더 sync·import| GoogleCal
+    API -->|CalDAV sync·import| AppleCalDAV
+    API -->|원화 환산| FX
 ```
+
+> 클라이언트 인증은 셋 — 웹은 세션 쿠키(Auth.js), 외부 클라이언트는 PAT Bearer, 헤드리스 에이전트는 Device Authorization Grant(spec 060). GA4·Search Console은 공개 페이지 한정 분석·검색 노출용이며 앱 화면은 noindex다(spec 057).
 
 ## 인증 흐름
 
@@ -110,15 +120,13 @@ sequenceDiagram
 
 ```mermaid
 graph LR
-    subgraph "API Routes (비즈니스 로직 + 데이터 접근 혼재)"
-        R1["/api/trips"]
-        R2["/api/trips/[id]"]
-        R3["/api/trips/[id]/days"]
-        R4["/api/trips/[id]/days/[dayId]"]
-        R5["/api/trips/[id]/days/[dayId]/activities"]
-        R6["/api/trips/[id]/days/[dayId]/activities/[id]"]
-        R7["/api/trips/[id]/members"]
-        R8["/api/tokens"]
+    subgraph "API Routes (비즈니스 로직 + 데이터 접근 혼재 · 대표 라우트, 실제 ~43개)"
+        R1["/api/trips · /[id] · /period"]
+        R2["/api/trips/[id]/days · activities"]
+        R3["/api/trips/[id]/members · invite · transfer"]
+        R4["/api/trips/[id]/calendar-import · drafts/*"]
+        R5["/api/v2/calendar/apple/*"]
+        R6["/api/tokens · auth/device/*"]
     end
 
     subgraph "Shared"
@@ -126,10 +134,12 @@ graph LR
         PR[prisma.ts<br/>DB 싱글톤]
     end
 
-    R1 & R2 & R3 & R4 & R5 & R6 & R7 & R8 --> AH
-    R1 & R2 & R3 & R4 & R5 & R6 & R7 & R8 --> PR
+    R1 & R2 & R3 & R4 & R5 & R6 --> AH
+    R1 & R2 & R3 & R4 & R5 & R6 --> PR
     PR --> DB[(Neon DB)]
 ```
+
+> 위는 자원군 대표 라우트다. 폐지된 경로(`gcal/*`, `v2/calendar/{connect,subscribe,sync}`는 410 Gone)를 포함하면 실제 라우트는 ~43개지만, 모두 동일한 **라우트 → auth-helpers → Prisma** 패턴을 따른다.
 
 **특징:**
 - 서비스/레포지토리 계층 없음 — 라우트가 Prisma를 직접 호출
@@ -174,13 +184,15 @@ graph TB
         P[planner.py<br/>일정 관리 12도구]
         SR[search.py<br/>검색 8도구]
         W[web_client.py<br/>HTTP 클라이언트]
+        RAP[rapidapi.py<br/>RapidAPI 클라이언트]
     end
 
     S --> P
     S --> SR
     P --> W
+    SR --> RAP
     W -->|PAT Bearer| API[trip.idean.me API]
-    SR -->|RapidAPI Key| RA[RapidAPI]
+    RAP -->|RapidAPI Key| RA[RapidAPI]
     W -->|토큰 저장/조회| KC[macOS Keychain]
 
     style W fill:#ff9,stroke:#333
