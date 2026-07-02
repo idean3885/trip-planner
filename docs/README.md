@@ -28,7 +28,7 @@
 | 계층 | 기술 |
 |------|------|
 | 프론트엔드 | Next.js 16 (App Router · Turbopack), React 19, Tailwind CSS v4, shadcn/ui |
-| 백엔드 | Next.js Server Components · Route Handlers, Auth.js v5 |
+| 백엔드 | Next.js Server Components · Route Handlers, Auth.js v5 (next-auth 5 beta) |
 | DB | Neon Postgres, Prisma 7 (TCP via `@prisma/adapter-pg`) |
 | MCP 서버 | Python 3.10+, FastMCP, httpx |
 | 테스트 | Vitest, Playwright, pytest |
