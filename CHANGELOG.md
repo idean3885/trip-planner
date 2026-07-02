@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [4.5.2] - 2026-07-03
+
+### Documentation
+
+- * **프로젝트 소개(README)를 개인 여행 플래너 성격으로 다시 정리**했습니다. 검색·생성·플래닝·현장 가계부로 이어지는 사용 흐름과 프로젝트 성격이 한눈에 들어옵니다.
+  * **아키텍처 문서를 그림 먼저 보고 이유는 그 아래에서 읽는 순서로 개편**했습니다. 시스템 구성과 스펙 관리 방식을 문서 하나로 빠르게 파악할 수 있습니다.
+
+  ([#862](https://github.com/idean3885/trip-planner/issues/862))
+
+
 ## [4.5.1] - 2026-07-02
 
 ### Documentation
