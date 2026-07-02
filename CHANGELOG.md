@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [4.5.1] - 2026-07-02
+
+### Documentation
+
+- 개발 문서(ERD·아키텍처·시스템 컨텍스트 다이어그램)를 현재 데이터 모델과 외부 연동 구성에 맞게 현행화했습니다. 마지막 갱신 이후 도입된 지출 시점·환율 환산·외부 캘린더 가져오기·헤드리스 인증이 문서에 반영되지 않아 실제 구조와 어긋나 있었습니다. ([#856](https://github.com/idean3885/trip-planner/issues/856))
+
+
 ## [4.5.0] - 2026-06-26
 
 ### Added

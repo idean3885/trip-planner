@@ -26,8 +26,14 @@ graph TB
         TCL[TripCalendarLink Aggregate]
         TCEM[TripCalendarEventMapping Entity]
         MCS[MemberCalendarSubscription Entity]
+        ACC[AppleCalendarCredential]
         GCL[GCalLink — 레거시]
         GCEM[GCalEventMapping — 레거시]
+    end
+
+    subgraph "가져오기 컨텍스트 (Import Context, v2.15.0+)"
+        IR[ImportRun Aggregate]
+        ADRF[ActivityDraft Entity]
     end
 
     TA -->|contains| DA
@@ -40,20 +46,26 @@ graph TB
     TCL -->|contains| MCS
     AA -.->|mapped as| TCEM
     UA -.->|owns ownerId| TCL
+    UA -.->|stores app password| ACC
     UA -.->|opts in| MCS
     TA -.->|legacy per-user| GCL
     GCL -->|contains| GCEM
+    TA -.->|imports into| IR
+    IR -->|produces| ADRF
+    ADRF -.->|promotes to| AA
 
     style TA fill:#f9f,stroke:#333
     style UA fill:#ff9,stroke:#333
     style TCL fill:#9ff,stroke:#333
+    style IR fill:#9f9,stroke:#333
     style GCL fill:#ddd,stroke:#999,stroke-dasharray: 5 5
 ```
 
-**3개 컨텍스트:**
-- **여행 컨텍스트**: Trip이 루트. Day, Activity, TripMember 포함. 기획 도메인 1~4를 구현
-- **인증 컨텍스트**: Auth.js v5 관리 영역. userId로만 다른 컨텍스트와 연결
-- **캘린더 컨텍스트** (v2.9.0+): 여행을 외부 공유 캘린더로 발행하는 별도 애그리거트. `TripCalendarLink`가 루트, 활동 ↔ 외부 이벤트 매핑(`TripCalendarEventMapping`, v2.10.0+)과 동행자 옵트인(`MemberCalendarSubscription`)을 보유. 레거시 `GCalLink`/`GCalEventMapping`(v2.8.0 per-user)은 무중단 병존, 후속 릴리즈에서 contract 예정. 정책: [ADR-0003 per-trip-shared-calendar](./adr/0003-per-trip-shared-calendar.md)
+**4개 컨텍스트:**
+- **여행 컨텍스트**: Trip이 루트. Day, Activity, TripMember 포함. 기획 도메인 1~4를 구현. 여행 기간(시작·종료일)은 컬럼이 아니라 등록된 Day의 min/max에서 파생한다 (spec 029, v3.0.0)
+- **인증 컨텍스트**: Auth.js v5 관리 영역(User·Account·Session). userId로만 다른 컨텍스트와 연결. 외부 클라이언트는 `PersonalAccessToken`, 헤드리스 에이전트는 `DeviceAuthorizationRequest`(Device Authorization Grant, spec 060)로 인증
+- **캘린더 컨텍스트** (v2.9.0+): 여행을 외부 공유 캘린더로 발행하는 별도 애그리거트. `TripCalendarLink`가 루트, 활동 ↔ 외부 이벤트 매핑(`TripCalendarEventMapping`, v2.10.0+)과 동행자 옵트인(`MemberCalendarSubscription`)을 보유. Google·Apple 제공자를 추상화하며(`CalendarProviderId`), Apple은 `AppleCalendarCredential`(암호화 app password)로 CalDAV 연동. 레거시 `GCalLink`/`GCalEventMapping`(v2.8.0 per-user)은 무중단 병존, 후속 릴리즈에서 contract 예정. 정책: [ADR-0003 per-trip-shared-calendar](./adr/0003-per-trip-shared-calendar.md)
+- **가져오기 컨텍스트** (v2.15.0+): 외부 캘린더(Google·Apple) 이벤트를 외부 → 내부 단방향으로 staging. `ImportRun`이 실행 단위, `ActivityDraft`가 초안이며 사용자 검토 후 `Activity`로 승격. 정책: [ADR-0006 external-calendar-import](./adr/0006-external-calendar-import-policy.md)
 
 ## 용어 사전
 
@@ -67,8 +79,7 @@ classDiagram
         +int id
         +string title
         +string description
-        +Date startDate
-        +Date endDate
+        +getDerivedPeriod() Period
         +createDay(date, title)
         +removeDay(dayId)
         +addMember(userId, role)
