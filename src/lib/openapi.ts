@@ -16,14 +16,16 @@ export const openApiSpec = {
     title: "Trip Planner API",
     version: "2.1.0",
     description: [
-      "여행 일정 관리 API. 세션 인증(웹 브라우저) 또는 PAT 인증(외부 클라이언트)을 지원합니다.",
+      "여행 일정 관리 API. 웹은 세션(쿠키), 외부 클라이언트·CLI는 Personal Access Token(PAT)으로 인증합니다.",
       "",
       "## 인증",
-      "- **Personal Access Token (PAT)**: 발급 페이지 [`/settings/tokens`](/settings/tokens). `Authorization: Bearer <token>` 헤더로 사용. 토큰 원문은 발급 시 1회만 노출됩니다.",
+      "- **OAuth CLI 자동 발급 (권장)**: `install.sh` 또는 `scripts/auth-login.mjs` 실행 시 브라우저 Google 로그인으로 단기 만료 PAT가 자동 발급되어 OS 키체인에 저장됩니다. 사용자가 토큰을 직접 다루지 않습니다.",
+      "- **디바이스 인증**: 브라우저를 열 수 없는 헤드리스 환경용. `POST /api/auth/device/start`로 코드를 받아 다른 기기의 `/device`에서 승인합니다.",
+      "- **PAT 수동 발급 (고급)**: 웹 전용 사용자를 위한 폴백. 발급 페이지 [`/settings`](/settings). `Authorization: Bearer <token>` 헤더로 사용하며, 토큰 원문은 발급 시 1회만 노출됩니다.",
       "- **Session Cookie**: `next-auth.session-token`. 웹 브라우저에서 자동 처리.",
       "",
       "## AI CLI / MCP 연동",
-      "trip MCP 서버는 GitHub 저장소(`https://github.com/idean3885/trip-planner`)의 `mcp/` 디렉토리에서 확인할 수 있습니다. Claude Code 등 AI CLI에서 PAT로 직접 호출하거나 MCP 서버로 연결하여 사용합니다.",
+      "trip MCP 서버 설치·사용법은 GitHub 저장소의 [`mcp/README.md`](https://github.com/idean3885/trip-planner/blob/main/mcp/README.md)에 정리돼 있습니다. `install.sh` 한 줄로 설치하면 Google 로그인만으로 인증이 끝나고, Claude Code·Cursor 등에서 자연어로 일정을 조회·편집할 수 있습니다.",
       "",
       "## 시간 표기 규약",
       "Activity의 `startTime`/`endTime`은 ISO 8601 datetime 문자열로 저장·응답됩니다(UTC 직렬화). 요청 시 `+09:00` 같은 offset을 포함해 보내면 서버가 UTC로 정규화하여 저장합니다. 원본 타임존을 보존하려면 `startTimezone`/`endTimezone`에 IANA 식별자(`Asia/Seoul`, `Europe/Lisbon` 등)를 함께 전달하세요.",
@@ -46,7 +48,7 @@ export const openApiSpec = {
         type: "http",
         scheme: "bearer",
         description:
-          "Personal Access Token. 발급 페이지: `/settings/tokens`. `Authorization: Bearer <token>` 헤더로 사용합니다. 토큰 원문은 발급 시 1회만 노출되므로 즉시 안전한 곳에 보관하세요.",
+          "Personal Access Token. 권장 경로는 install.sh의 OAuth CLI 자동 발급이며, 웹 수동 발급은 `/settings`에서 가능합니다. `Authorization: Bearer <token>` 헤더로 사용하고, 토큰 원문은 발급 시 1회만 노출되므로 즉시 안전한 곳에 보관하세요.",
       },
       SessionAuth: {
         type: "apiKey",

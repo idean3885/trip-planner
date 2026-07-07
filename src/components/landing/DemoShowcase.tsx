@@ -15,7 +15,7 @@ export default function DemoShowcase() {
         이렇게 보입니다
       </h2>
       <p className="text-muted-foreground mt-2 text-sm">
-        실제 제품과 동일한 디자인 토큰·컴포넌트로 구성된 미리보기입니다.
+        실제 화면을 그대로 옮긴 미리보기입니다.
       </p>
 
       <div className="mt-4 space-y-4">
