@@ -19,8 +19,7 @@ export const projectMeta = {
   architectureUrl:
     "https://github.com/idean3885/trip-planner/blob/main/docs/ARCHITECTURE.md",
   license: "MIT",
-  tagline:
-    "여행 계획을 대화로 만들고 동행자와 함께 다듬는 플래너입니다. 일정·숙소·활동을 한곳에 모아 두고, 모바일에서 바로 열어 씁니다.",
+  tagline: "같이 갈 사람과 대화로 계획하고, 함께 완성해 가는 여행.",
   description:
-    "여행 계획을 대화로 만들고 동행자와 함께 다듬는 플래너. 일정·숙소·활동을 한곳에 모아 모바일에서 바로 확인합니다.",
+    "같이 갈 사람과 대화로 계획하고, 함께 완성해 가는 여행. 일정·숙소·활동을 한곳에 모아 모바일에서 바로 확인합니다.",
 } as const satisfies ProjectMeta;
