@@ -11,7 +11,7 @@ export default function Hero() {
     <section className="pt-2 pb-8">
       <div className="space-y-4">
         <p className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
-          오픈소스 · AI 에이전트 · 포트폴리오 프로젝트
+          여행 계획부터 현장까지 한 곳에서
         </p>
         <h1 className="text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
           대화로 만드는 여행 플래너

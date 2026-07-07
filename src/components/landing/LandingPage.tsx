@@ -5,7 +5,6 @@ import DemoShowcase from "./DemoShowcase";
 import FeatureHighlights from "./FeatureHighlights";
 import GcalTestingNotice from "./GcalTestingNotice";
 import Hero from "./Hero";
-import TechStack from "./TechStack";
 import ValueProps from "./ValueProps";
 
 export default function LandingPage() {
@@ -16,8 +15,6 @@ export default function LandingPage() {
       <ValueProps />
       <Separator />
       <FeatureHighlights />
-      <Separator />
-      <TechStack />
       <Separator />
       <DemoShowcase />
       <Separator />
