@@ -8,7 +8,7 @@ export default function ValueProps() {
         id="values-heading"
         className="text-muted-foreground text-xs font-medium tracking-wider uppercase"
       >
-        이 프로젝트가 주는 것
+        이런 걸 할 수 있어요
       </h2>
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         {landingValues.map(({ icon: Icon, title, description }) => (

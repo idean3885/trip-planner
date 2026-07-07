@@ -15,7 +15,7 @@ interface Token {
 }
 
 const INSTALL_GUIDE_URL =
-  "https://github.com/idean3885/trip-planner#2-ai-에이전트로-검색--자동-일정-생성";
+  "https://github.com/idean3885/trip-planner/blob/main/mcp/README.md";
 
 export default function SettingsPage() {
   const { status } = useSession();
