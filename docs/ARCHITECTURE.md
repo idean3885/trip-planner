@@ -1,6 +1,6 @@
 # 아키텍처
 
-> **대상 독자**: 기여자·개발자, 그리고 이 프로젝트의 설계·운영 방식을 빠르게 훑으려는 분(채용·기술 리뷰 포함).
+> **대상 독자**: 기여자·개발자, 그리고 이 프로젝트의 설계·운영 방식을 빠르게 훑으려는 분.
 > 이 문서 하나로 **"구조를 어떻게 짰고, 스펙·품질을 어떻게 관리하는가"** 를 파악할 수 있게 구성했다. 그림을 먼저 보고, 왜 그렇게 했는지는 그림 아래에서 읽으면 된다.
 
 ## 시스템 구성도
@@ -121,12 +121,10 @@ graph TB
 
 ## 스펙·품질 관리
 
-1인 개발이지만 스펙·품질 관리는 자동 게이트로 강제한다. 업무 프로세스 전 과정의 정본은 [WORKFLOW.md](./WORKFLOW.md)이며, 아래는 그 요약이다.
+1인 개발이지만 스펙·품질은 자동 게이트로 강제한다.
 
-- **스펙 우선(speckit).** 피처마다 `spec → plan → tasks` 순으로 산출물을 만든다. 스펙은 WHAT·WHY만 담고, 구체적 도구·구현은 plan에서 정한다.
-- **메타태그 하네스.** `tasks.md`·`plan.md`·마이그레이션 SQL에 4종 메타태그(`[artifact]`·`[why]`·`[multi-step]`·`[migration-type]`)를 달고, `validate-*.sh` 스택이 형식·plan↔tasks 커버리지·drift(선언 대비 실제 산출물)를 검증한다. PR 단계는 `speckit-gate.yml`, 주간 drift 점검은 `drift-audit.yml`이 맡는다.
-- **Git Flow Lite.** `feature/*`·`hotfix/*` → `develop`(개발 통합) → `release/vX.Y.Z` → `main`(프로덕션). 버전 태그는 `main`에만 붙는다. 모든 PR은 merge commit으로 합친다.
-- **릴리즈 노트 자동화(towncrier).** 코드 변경마다 `changes/<이슈>.<타입>.md` 단편을 하나 추가한다. 릴리즈 시 단편이 `CHANGELOG.md`로 자동 합쳐지고, 태그 push가 GitHub Release·PyPI 배포·`main → develop` 동기화 PR을 자동으로 잇는다.
+- **스펙 우선(speckit).** 피처마다 `spec → plan → tasks` 순으로 스펙을 먼저 쓰고, 메타태그 하네스가 스펙과 실제 산출물의 정합을 자동 검증한다. 규모가 있어 상세는 따로 뒀다 — speckit이 무엇이고 어떻게 굴러가는지는 [specs/README.md](../specs/README.md)에서 읽는다.
+- **Git Flow Lite + towncrier.** `feature/*` → `develop` → `release/vX.Y.Z` → `main`으로 흐르고, 변경마다 릴리즈 노트 단편을 하나 남겨 릴리즈 때 `CHANGELOG.md`로 합친다. 이슈·브랜치·릴리즈 전 과정의 정본은 [WORKFLOW.md](./WORKFLOW.md).
 
 ## 세부 흐름 (구현 참조)
 
