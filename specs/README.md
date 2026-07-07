@@ -1,8 +1,41 @@
-# 스펙 도메인
+# 스펙 (speckit)
 
-기획 관점의 도메인 정의. 기술 구현은 [docs/](../docs/README.md) 참조.
+이 디렉터리는 피처별 스펙 산출물을 담습니다. 이 프로젝트는 **사양 우선(spec-driven)** 으로 굴러갑니다 — 코드보다 스펙을 먼저 쓰고, 스펙과 실제 산출물이 어긋나지 않도록 자동 게이트로 강제합니다. 여기서는 그 방식을 먼저 설명하고, 이어서 기획 도메인과 스펙 현황을 정리합니다.
+
+> 굳이 여기까지 들어온 분을 위한 상세입니다. 큰 그림만 필요하면 [docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md)의 "스펙·품질 관리" 한 절이면 충분합니다.
+
+## speckit이란
+
+GitHub Spec Kit 기반의 사양 우선 워크플로우입니다. 피처 하나를 세 단계 산출물로 나눠 만듭니다.
+
+- **spec** (`spec.md`) — 무엇을·왜(WHAT·WHY)만 담습니다. 구체적 도구·구현은 넣지 않습니다.
+- **plan** (`plan.md`) — 어떻게(HOW). 기술 선택·설계·커버리지 목표를 정합니다.
+- **tasks** (`tasks.md`) — 실행 단위 체크리스트. 각 태스크가 산출 파일과 매핑됩니다.
+
+`spec → plan → tasks` 순으로 만들고, 피처 브랜치는 `NNN-short-name`(3자리 일련번호)을 받습니다.
+
+## 메타태그 하네스
+
+스펙과 실제 코드가 시간이 지나며 어긋나는(drift) 것을 막기 위해, 산출물에 4종 메타태그를 답니다.
+
+| 태그 | 의미 | 위치 |
+|------|------|------|
+| `[artifact: <path>]` | 산출 파일 경로. drift 감사 기준 | `tasks.md` 체크박스 |
+| `[why: <tag>]` | 추적 그룹 키. plan↔tasks 커버리지 합산 | `tasks.md`, `plan.md` |
+| `[multi-step: N]` | 다단 작업의 최소 매핑 태스크 수 | `plan.md` |
+| `[migration-type: ...]` | 마이그레이션 성격(schema-only / data-migration) | 마이그레이션 SQL 헤더 |
+
+`validate-*.sh` 스택이 형식 정합·plan↔tasks 커버리지·drift(선언 대비 실제 산출물)를 검사합니다. PR 단계는 `.github/workflows/speckit-gate.yml`, 주간 drift 점검은 `drift-audit.yml`이 맡습니다. 하네스 자체의 스펙은 [_infra/010-speckit-harness/](_infra/010-speckit-harness/)에 있습니다.
+
+## rollout phase
+
+하네스는 `expand → migrate → contract` 3단계로 도입됐고, 현재는 **contract** — quickstart 증거·마이그레이션 메타·drift 오류가 머지를 차단합니다.
+
+---
 
 ## 도메인
+
+기획 관점의 도메인 정의입니다. 기술 구현은 [docs/](../docs/README.md) 참조.
 
 | # | 도메인 | 사용자 질문 | 설명 | 디렉토리 |
 |---|--------|-----------|------|---------|

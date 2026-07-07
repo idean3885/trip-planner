@@ -20,24 +20,11 @@
 - 프로젝트 전반 소개는 랜딩 하단의 **프로젝트 소개** 링크(About 페이지)에서 더 자세히 읽을 수 있습니다
 - AI 에이전트까지 쓰고 싶다면 아래 **빠른 시작**의 한 줄 curl을 보세요
 
-### 설계·운영을 빠르게 보려는 분 (채용·기술 리뷰)
+### 기술이 궁금하신 분
 
-**[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) 한 문서면 됩니다.** 시스템 구성도와 배포 토폴로지를 그림으로 먼저 보고, 그 아래에서 왜 이렇게 설계했는지(1인 운영·무료 티어 제약 → Next.js 단일 런타임)와 도메인 구조를 읽습니다. 스펙을 어떻게 관리하는지(speckit `spec → plan → tasks`, 메타태그 하네스, Git Flow Lite)도 같은 문서에 정리돼 있습니다.
+구조가 궁금하면 **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** 한 문서면 됩니다. 시스템 구성도·주요 흐름·도메인·데이터 스키마를 그림 위주로 봅니다. 스펙을 어떻게 관리하는지(speckit)도 같은 문서에 짧게 언급돼 있습니다.
 
-- 업무 프로세스 정본(이슈·브랜치·릴리즈): [docs/WORKFLOW.md](docs/WORKFLOW.md)
-- 변경 이력(towncrier): [CHANGELOG.md](CHANGELOG.md)
-
-### 코드를 깊게 보고 싶은 분 (기여자·개발자)
-
-- **[docs/README.md](docs/README.md)** — 개발 문서 엔트리(독자별 목차)
-- [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) — 개발 환경 세팅 절차
-- [docs/DOMAIN.md](docs/DOMAIN.md) — 도메인 모델
-- [docs/ERD.md](docs/ERD.md) — 데이터 스키마
-
-### 운영·감사 관점 (릴리즈·감사)
-
-- [docs/ENVIRONMENTS.md](docs/ENVIRONMENTS.md) — 배포 환경 매핑
-- [SECURITY.md](SECURITY.md) — 보안 정책
+코드까지 들어가려면 개발 문서 목차 **[docs/README.md](docs/README.md)** 에서 세팅·도메인·업무 프로세스로 이어집니다.
 
 ## 빠른 시작
 
@@ -54,7 +41,7 @@ curl -sSL https://raw.githubusercontent.com/idean3885/trip-planner/main/scripts/
 
 본 앱은 아직 앱 심사 전 단계라, **개발자가 직접 허용한 Google 계정**(최대 100명)만 구글 캘린더 연동을 사용할 수 있습니다. 앱 내 일정 조회·편집은 누구나 정상 이용 가능하며, 연동만 등록 사용자에게 한정됩니다.
 
-연동 등록을 원하시면 [공개 토론 채널의 Q&A](https://github.com/idean3885/trip-planner/discussions/new?category=q-a)에 가입 Google 이메일을 남겨 주세요. 자세한 사유는 [ADR 0004](docs/adr/0004-gcal-testing-mode-cost.md) 참고.
+연동 등록을 원하시면 [공개 토론 채널의 Q&A](https://github.com/idean3885/trip-planner/discussions/new?category=q-a)에 가입 Google 이메일을 남겨 주세요.
 
 ## 링크
 
