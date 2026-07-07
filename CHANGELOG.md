@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [4.5.3] - 2026-07-08
+
+### Documentation
+
+- 문서 첫 화면을 담백하게 정리하고, 처음 보는 분이 구조를 아키텍처 한 문서로 파악하도록 진입점을 좁혔습니다. 전면에 문서가 지나치게 많이 노출돼 무엇부터 볼지 흐릿했고, 세부 결정 기록과 스펙 관리 방식은 대다수에게 첫 화면에서 필요하지 않아 관심 있는 분만 찾아가도록 안쪽으로 옮겼습니다. ([#866](https://github.com/idean3885/trip-planner/issues/866))
+
+
 ## [4.5.2] - 2026-07-03
 
 ### Documentation
