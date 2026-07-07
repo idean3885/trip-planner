@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [4.5.5] - 2026-07-08
+
+### Fixed
+
+- 소개 페이지의 토큰 발급 링크와 설치 안내 링크가 존재하지 않는 주소로 이어져 화면이 열리지 않던 문제를 고쳤습니다. 실제 발급 위치인 설정 페이지와 설치 안내 문서로 연결되도록 정정했습니다. ([#874](https://github.com/idean3885/trip-planner/issues/874))
+
+### Documentation
+
+- AI 에이전트 연결 안내를 Google 로그인 자동 발급 중심으로 현행화하고, 헤드리스 환경용 안내를 새로 넣었습니다. 소개와 첫 화면에서는 기술 나열을 걷어내 무슨 서비스인지 먼저 읽히도록 정리했습니다. 안내가 여기저기 흩어지고 실제 기능과 어긋나 있어 처음 쓰는 분이 헷갈렸기 때문입니다. ([#874](https://github.com/idean3885/trip-planner/issues/874))
+
+
 ## [4.5.4] - 2026-07-08
 
 ### Chore
