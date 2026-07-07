@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [4.5.4] - 2026-07-08
+
+### Chore
+
+- 소개와 첫 화면의 한 줄 소개를 어떤 여행 서비스인지 바로 전해지도록 다듬었습니다. 기존 문구가 길고 밋밋해 처음 오신 분에게 무엇을 하는 곳인지 한눈에 들어오지 않았기 때문입니다. ([#870](https://github.com/idean3885/trip-planner/issues/870))
+
+
 ## [4.5.3] - 2026-07-08
 
 ### Documentation
