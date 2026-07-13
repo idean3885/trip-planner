@@ -3,7 +3,7 @@
 # 소스 파일 편집 시 speckit 산출물(spec.md, plan.md, tasks.md) 존재를 강제한다.
 #
 # 차단 조건:
-#   1. main 브랜치에서 소스 파일 편집 시도 → devex:flow 안내
+#   1. main 브랜치에서 소스 파일 편집 시도 → ops-agent:flow 안내
 #   2. 피처 브랜치에서 speckit 산출물 미완성 시 → 누락된 단계 안내
 #
 # 허용 조건:
