@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [4.5.6] - 2026-07-13
+
+### Documentation
+
+- 개발 워크플로우 문서와 설정에 남아 있던 옛 도구 안내를 현재 정본 진입점으로 현행화했습니다. 문서가 실제 사용 도구와 어긋나 있어 새 작업을 시작할 때 잘못된 안내를 따를 수 있었기 때문입니다. ([#878](https://github.com/idean3885/trip-planner/issues/878))
+
+
 ## [4.5.5] - 2026-07-08
 
 ### Fixed
