@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [4.5.7] - 2026-07-13
+
+### Chore
+
+- Google 캘린더 연동 라이브러리를 최신 메이저 버전으로 올렸습니다. 오래된 버전에 머물지 않고 보안·유지보수 지원을 받는 상태를 유지하기 위함입니다. ([#883](https://github.com/idean3885/trip-planner/issues/883))
+
+
 ## [4.5.6] - 2026-07-13
 
 ### Documentation
