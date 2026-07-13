@@ -22,8 +22,6 @@ updates:
         update-types: ["version-update:semver-major"]  # #253
       - dependency-name: "@types/node"
         update-types: ["version-update:semver-major"]  # #254
-      - dependency-name: "@googleapis/calendar"
-        update-types: ["version-update:semver-major"]  # #883
 
   - package-ecosystem: "pip"
     directory: "/"
