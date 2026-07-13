@@ -186,7 +186,7 @@ cd "$REPO_ROOT"
 SPECS_DIR="$REPO_ROOT/specs"
 mkdir -p "$SPECS_DIR"
 
-# Reuse current branch if caller (e.g. devex:flow) already set one up.
+# Reuse current branch if caller (e.g. ops-agent:flow) already set one up.
 # Conditions: on a NNN-<suffix> branch AND no spec directory exists for it yet.
 # This prevents collisions when the caller creates the worktree/branch before
 # invoking /speckit.specify.
