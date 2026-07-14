@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
 import LandingPage from "@/components/landing/LandingPage";
@@ -31,8 +30,6 @@ export const metadata: Metadata = {
 
 export default async function Home() {
   const session = await auth();
-  if (session?.user?.id) {
-    redirect("/trips");
-  }
-  return <LandingPage />;
+  const isLoggedIn = Boolean(session?.user?.id);
+  return <LandingPage isLoggedIn={isLoggedIn} />;
 }

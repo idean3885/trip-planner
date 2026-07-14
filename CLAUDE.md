@@ -227,6 +227,8 @@ develop ──●──●──●───●──●──●──●──
 - Neon Postgres (Production `neondb` / Preview·Dev `neondb_dev`, #318). 신규 테이블 1종 `DeviceAuthorizationRequest`. (060-headless-device-auth)
 - TypeScript 5.x, Node.js 20+ (Next.js 16 App Router, React 19) · Python 3.10+ (MCP) + Next.js 16, Prisma 7(@prisma/adapter-pg, Neon), Tailwind v4, shadcn/ui(vendored), embla-carousel(주간/캘린더). **신규 의존성 도입 없음**. (061-expense-first-itinerary)
 - Neon Postgres (Production `neondb` / Preview·Dev `neondb_dev`, #318). Prisma 마이그레이션 1건(**data-migration** — 컬럼 추가+백필+DROP). (061-expense-first-itinerary)
+- TypeScript 5.x, Node.js 20+ + Next.js 16 (App Router), React 19, Auth.js v5, Tailwind CSS v4, shadcn/ui (vendored Card·Button). 신규 의존성 없음. (064-landing-access-flow)
+- N/A — 데이터 스키마·마이그레이션 변경 없음. 로그인 상태(세션 유무)만 참조. (064-landing-access-flow)
 
 ## Recent Changes
 - 001-ax-travel-planning: Added Python 3.14 + FastMCP, httpx, python-dotenv, pytes
