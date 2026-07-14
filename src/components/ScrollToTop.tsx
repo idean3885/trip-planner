@@ -1,34 +1,21 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function ScrollToTop() {
+  // 스크롤이 일정 이상 내려간 동안에는 계속 노출한다. 이전에는 2초 무동작 후
+  // 사라져(opacity-0 + pointer-events-none) "위로 이동" 용도로 쓰기 어려웠다.
   const [visible, setVisible] = useState(false);
-  const [fading, setFading] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const onScroll = () => {
-      const scrolled = window.scrollY > 300;
-
-      if (scrolled) {
-        setVisible(true);
-        setFading(false);
-
-        // Reset fade timer
-        if (timerRef.current) clearTimeout(timerRef.current);
-        timerRef.current = setTimeout(() => setFading(true), 2000);
-      } else {
-        setVisible(false);
-        setFading(false);
-        if (timerRef.current) clearTimeout(timerRef.current);
-      }
+      setVisible(window.scrollY > 300);
     };
 
     window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
     return () => {
       window.removeEventListener("scroll", onScroll);
-      if (timerRef.current) clearTimeout(timerRef.current);
     };
   }, []);
 
@@ -49,9 +36,7 @@ export default function ScrollToTop() {
         };
         requestAnimationFrame(step);
       }}
-      className={`bg-foreground/80 text-background hover:bg-foreground fixed right-4 z-30 flex size-10 items-center justify-center rounded-full shadow-lg backdrop-blur-sm transition-opacity duration-500 active:scale-95 ${
-        fading ? "pointer-events-none opacity-0" : "opacity-100"
-      }`}
+      className="bg-foreground/80 text-background hover:bg-foreground fixed right-4 z-30 flex size-10 items-center justify-center rounded-full opacity-100 shadow-lg backdrop-blur-sm transition-opacity duration-300 active:scale-95"
       style={{ bottom: "calc(1.5rem + env(safe-area-inset-bottom, 0px))" }}
       aria-label="맨 위로 스크롤"
     >
