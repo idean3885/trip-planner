@@ -38,7 +38,7 @@ export default async function SignInPage({
   }>;
 }) {
   const { callbackUrl, stale, error } = await searchParams;
-  const redirectTo = callbackUrl || "/";
+  const redirectTo = callbackUrl || "/trips";
   const errorNotice = errorMessage(error);
   const isAccessDenied = error === "AccessDenied";
 
