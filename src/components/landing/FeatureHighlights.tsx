@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { landingFeatures } from "@/lib/landing-content";
 
 export default function FeatureHighlights() {
@@ -8,7 +8,7 @@ export default function FeatureHighlights() {
         id="features-heading"
         className="text-muted-foreground text-xs font-medium tracking-wider uppercase"
       >
-        할 수 있는 것
+        여행 준비를 이렇게 돕습니다
       </h2>
       <div className="mt-4 space-y-3">
         {landingFeatures.map(({ icon: Icon, title, summary, bullets }) => (
@@ -19,7 +19,9 @@ export default function FeatureHighlights() {
                   <Icon className="size-4" aria-hidden />
                 </div>
                 <div className="space-y-1">
-                  <CardTitle className="text-base">{title}</CardTitle>
+                  <h3 className="font-heading text-base leading-snug font-medium">
+                    {title}
+                  </h3>
                   <p className="text-muted-foreground text-sm">{summary}</p>
                 </div>
               </div>

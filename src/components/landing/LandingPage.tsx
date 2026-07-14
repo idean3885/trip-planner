@@ -5,14 +5,11 @@ import DemoShowcase from "./DemoShowcase";
 import FeatureHighlights from "./FeatureHighlights";
 import GcalTestingNotice from "./GcalTestingNotice";
 import Hero from "./Hero";
-import ValueProps from "./ValueProps";
 
-export default function LandingPage() {
+export default function LandingPage({ isLoggedIn }: { isLoggedIn: boolean }) {
   return (
     <article className="space-y-2">
-      <Hero />
-      <Separator />
-      <ValueProps />
+      <Hero isLoggedIn={isLoggedIn} />
       <Separator />
       <FeatureHighlights />
       <Separator />
@@ -20,7 +17,7 @@ export default function LandingPage() {
       <Separator />
       <GcalTestingNotice />
       <Separator />
-      <BottomCta />
+      <BottomCta isLoggedIn={isLoggedIn} />
     </article>
   );
 }

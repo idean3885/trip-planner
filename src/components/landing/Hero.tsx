@@ -6,7 +6,7 @@ import { projectMeta } from "@/lib/project-meta";
 
 import GithubIcon from "./GithubIcon";
 
-export default function Hero() {
+export default function Hero({ isLoggedIn }: { isLoggedIn: boolean }) {
   return (
     <section className="pt-2 pb-8">
       <div className="space-y-4">
@@ -22,9 +22,13 @@ export default function Hero() {
         <div className="flex flex-wrap items-center gap-2 pt-1">
           <Button
             nativeButton={false}
-            render={<Link href="/auth/signin?callbackUrl=/trips" />}
+            render={
+              <Link
+                href={isLoggedIn ? "/trips" : "/auth/signin?callbackUrl=/trips"}
+              />
+            }
           >
-            시작하기
+            {isLoggedIn ? "여행 목록으로" : "시작하기"}
             <ArrowRight className="size-4" aria-hidden />
           </Button>
           <Button
