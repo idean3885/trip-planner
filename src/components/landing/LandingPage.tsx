@@ -16,8 +16,13 @@ export default function LandingPage({ isLoggedIn }: { isLoggedIn: boolean }) {
       <DemoShowcase />
       <Separator />
       <GcalTestingNotice />
-      <Separator />
-      <BottomCta isLoggedIn={isLoggedIn} />
+      {/* 로그인 사용자는 상단 Hero CTA로 일원화 — 하단 반복 CTA는 비로그인 전환 퍼널에만 노출 */}
+      {!isLoggedIn && (
+        <>
+          <Separator />
+          <BottomCta />
+        </>
+      )}
     </article>
   );
 }
