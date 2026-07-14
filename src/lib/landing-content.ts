@@ -22,7 +22,7 @@ export const landingFeatures: readonly FeatureHighlight[] = [
     bullets: [
       "숙소·항공·관광지 검색",
       "일자·활동 자동 생성·순서 변경",
-      "한 줄 설치 · Google 로그인만으로 완료",
+      "Claude에 한 줄로 연결 · 로그인만으로 시작",
     ],
   },
   {

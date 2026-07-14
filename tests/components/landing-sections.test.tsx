@@ -8,11 +8,11 @@ import FeatureHighlights from "@/components/landing/FeatureHighlights";
 import { landingFeatures } from "@/lib/landing-content";
 
 describe("소개 섹션 단일화 (spec 064/section-merge)", () => {
-  it("통합 헤딩은 '여행 준비를 이렇게 돕습니다' 하나다", () => {
+  it("통합 헤딩은 '계획부터 현장까지, 이렇게 돕습니다' 하나다", () => {
     render(<FeatureHighlights />);
     const heading = screen.getByRole("heading", {
       level: 2,
-      name: "여행 준비를 이렇게 돕습니다",
+      name: "계획부터 현장까지, 이렇게 돕습니다",
     });
     expect(heading).toBeInTheDocument();
     // 이전 중복 섹션 헤딩은 더 이상 없다

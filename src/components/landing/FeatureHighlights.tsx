@@ -8,7 +8,7 @@ export default function FeatureHighlights() {
         id="features-heading"
         className="text-muted-foreground text-xs font-medium tracking-wider uppercase"
       >
-        여행 준비를 이렇게 돕습니다
+        계획부터 현장까지, 이렇게 돕습니다
       </h2>
       <div className="mt-4 space-y-3">
         {landingFeatures.map(({ icon: Icon, title, summary, bullets }) => (
