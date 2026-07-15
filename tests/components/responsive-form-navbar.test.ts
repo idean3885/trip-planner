@@ -30,7 +30,7 @@ describe("글로벌 header 데스크탑 가로 액션 (spec 026/D)", () => {
     expect(LAYOUT).toMatch(/href="\/trips"[^>]*>\s*여행 목록/);
   });
 
-  it("데스크탑 nav에 'API 문서' 링크가 포함된다", () => {
-    expect(LAYOUT).toMatch(/href="\/docs"[^>]*>\s*API 문서/);
+  it("헤더에 'API 문서' 링크가 없다 (#899 — 일반 사용자 불필요, 헤더에서 제외)", () => {
+    expect(LAYOUT).not.toContain('href="/docs"');
   });
 });

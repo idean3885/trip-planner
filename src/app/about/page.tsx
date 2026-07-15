@@ -95,13 +95,14 @@ export default function AboutPage() {
 
           <dt className="text-muted-foreground">API 문서</dt>
           <dd>
-            <Link
+            {/* Scalar 문서는 하드 내비게이션으로 진입해야 마운트된다(#899). */}
+            <a
               href="/docs"
               className="text-foreground inline-flex items-center gap-1 underline-offset-4 hover:underline"
             >
               앱 안에서 열기
               <ArrowRight className="size-3" aria-hidden />
-            </Link>
+            </a>
           </dd>
         </dl>
       </section>
