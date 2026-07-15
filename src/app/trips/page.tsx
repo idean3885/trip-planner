@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
+import EmptyTripsGuide from "@/components/trip/EmptyTripsGuide";
 import { ExpenseSummary } from "@/components/trip/ExpenseSummary";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -168,12 +169,7 @@ export default async function TripsIndexPage() {
           );
         })}
 
-        {trips.length === 0 && (
-          <div className="text-muted-foreground py-16 text-center">
-            <p className="text-base">아직 등록된 여행이 없습니다.</p>
-            <p className="mt-1 text-sm">새 여행을 만들어 보세요.</p>
-          </div>
-        )}
+        {trips.length === 0 && <EmptyTripsGuide />}
       </div>
     </div>
   );
