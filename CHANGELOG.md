@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [4.6.2] - 2026-07-15
+
+### Fixed
+
+- 상단 헤더에서 **API 문서** 링크를 없앴습니다. 일반 사용자에게는 필요 없고, 대문 아래쪽과 푸터에 이미 같은 진입점이 있기 때문입니다.
+
+  또 푸터의 **API 문서**를 눌러도 문서가 뜨지 않던 문제를 고쳤습니다. 문서 화면으로 앱 안에서 이동할 때 화면이 비어 보이던 것을, 설정 화면과 같은 방식으로 맞춰 정상적으로 열리게 했습니다. ([#899](https://github.com/idean3885/trip-planner/issues/899))
+
+
 ## [4.6.1] - 2026-07-15
 
 ### Fixed
