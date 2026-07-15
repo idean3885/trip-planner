@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [4.6.3] - 2026-07-15
+
+### Added
+
+- 로그인한 뒤 여행이 하나도 없을 때, 시작하는 두 가지 방법을 바로 안내합니다. 이전에는 "새 여행을 만들어 보세요"만 있어 무엇을 해야 할지 막막했기 때문입니다.
+
+  * **직접 만들기** — 여행·날짜·활동을 웹에서 바로 추가합니다.
+  * **AI에게 맡기기** — Claude에게 말로 맡기면 대신 찾아 일정에 넣습니다. 연결 방법 안내로 이어집니다.
+
+  ([#903](https://github.com/idean3885/trip-planner/issues/903))
+
+
 ## [4.6.2] - 2026-07-15
 
 ### Fixed
