@@ -53,12 +53,10 @@ export default function RootLayout({
                 우리의 여행
               </Link>
               {/* spec 026 묶음 D — 데스크탑 ≥1024px에서 주요 액션 가로 노출. 모바일은 로고만. */}
+              {/* API 문서는 일반 사용자에게 불필요해 헤더에서 제외(#899). 진입점은 대문 하단·푸터에 유지. */}
               <nav className="text-muted-foreground hidden items-center gap-4 text-sm lg:flex">
                 <Link href="/trips" className="hover:text-foreground">
                   여행 목록
-                </Link>
-                <Link href="/docs" className="hover:text-foreground">
-                  API 문서
                 </Link>
               </nav>
             </div>

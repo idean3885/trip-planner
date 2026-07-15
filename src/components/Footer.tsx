@@ -31,13 +31,15 @@ export default function Footer() {
         <span aria-hidden className="text-muted-foreground/60">
           ·
         </span>
-        <Link
+        {/* API 문서(Scalar)는 최초 문서 로드 시 마운트돼, 소프트 내비게이션으로는
+            빈 화면이 된다(#899). 설정 화면과 동일하게 하드 내비게이션으로 진입한다. */}
+        <a
           href="/docs"
           className="hover:text-foreground inline-flex items-center gap-1"
         >
           API 문서
           <ExternalLink className="size-3" aria-hidden />
-        </Link>
+        </a>
       </div>
       {analyticsEnabled && (
         <p className="text-muted-foreground/70 mx-auto w-full max-w-2xl px-4 pb-6 text-center text-xs">
