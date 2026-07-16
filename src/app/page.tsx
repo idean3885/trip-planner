@@ -7,24 +7,16 @@ import { projectMeta } from "@/lib/project-meta";
 export const metadata: Metadata = {
   title: projectMeta.name,
   description: projectMeta.description,
+  // OG/트위터 이미지는 src/app/opengraph-image.tsx(파일 컨벤션)가 자동 생성·주입한다(#907).
   openGraph: {
     title: projectMeta.name,
     description: projectMeta.description,
     type: "website",
-    images: [
-      {
-        url: "/landing/hero-og.png",
-        width: 1200,
-        height: 630,
-        alt: `${projectMeta.name} — ${projectMeta.tagline}`,
-      },
-    ],
   },
   twitter: {
     card: "summary_large_image",
     title: projectMeta.name,
     description: projectMeta.description,
-    images: ["/landing/hero-og.png"],
   },
 };
 
