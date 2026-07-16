@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [4.7.2] - 2026-07-17
+
+### Fixed
+
+- **여행 상세에서 주간 달력과 일정 섹션의 가로 폭을 맞췄습니다.** 모바일에서 주간 달력만 좌우로 더 넓게 벌어져 아래 일정 카드와 정렬이 어긋나던 것을 같은 폭으로 정렬했습니다. ([#915](https://github.com/idean3885/trip-planner/issues/915))
+
+
 ## [4.7.1] - 2026-07-17
 
 ### Fixed
