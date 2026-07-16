@@ -87,6 +87,7 @@ const eslintConfig = defineConfig([
       "**/twitter-image.tsx",
       "**/icon.tsx",
       "**/apple-icon.tsx",
+      "**/manifest.ts",
     ],
     rules: { "no-restricted-syntax": "off" },
   },
