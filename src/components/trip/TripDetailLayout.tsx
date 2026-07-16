@@ -283,8 +283,11 @@ export function TripDetailLayout({
       const y = window.scrollY;
       const maxScroll =
         document.documentElement.scrollHeight - window.innerHeight;
-      // 스크롤 불가(짧은 문서) — 클램프된 y 로 접힘 상태를 바꾸지 않는다.
+      // #919 — 스크롤 불가(짧은 콘텐츠)면 접힐 이유가 없다. 접힘을 풀어 월↔주 토글을
+      // 되살린다. 일정 없는 짧은 날짜를 고르면 콘텐츠가 짧아지며 브라우저가 scrollY 를
+      // 클램프해 이 핸들러가 다시 돌고, 여기서 주간 고착을 해제한다.
       if (maxScroll <= 4) {
+        setIsCalendarCollapsed(false);
         lastScrollYRef.current = y;
         return;
       }
@@ -299,6 +302,18 @@ export function TripDetailLayout({
     onScroll();
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  // #919 — 선택 날짜·활동이 바뀌어 콘텐츠 높이가 변하면 접힘을 재평가한다. 스크롤
+  // 클램프 이벤트가 안 나는 경우(이미 최상단 근처)에도 짧은 콘텐츠면 펼쳐 토글을 살린다.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const raf = requestAnimationFrame(() => {
+      const maxScroll =
+        document.documentElement.scrollHeight - window.innerHeight;
+      if (maxScroll <= 4) setIsCalendarCollapsed(false);
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [selectedDate, activitiesByDayId]);
 
   // 날짜 변경 시 강제 스크롤(#645)은 제거했다. 짧은 콘텐츠에서 스크롤 목표가 최상단
   // 근처로 계산돼 페이지가 맨 위로 튀는 버그가 있었고, 스와이프로 날짜를 바꿀 때마다
@@ -454,9 +469,10 @@ export function TripDetailLayout({
       {/* 모바일 <1024px — sticky 캘린더 + 선택 일정. 동기화·동행자·기간 편집은
           위 액션바 버튼으로 연다(spec 043 — 단일 진입). */}
       <div className="space-y-4 lg:hidden">
-        {/* #915 — 주간 달력을 일정 섹션과 같은 콘텐츠 폭에 맞춘다. 이전 -mx-4 px-4
-            풀블리드는 달력만 좌우 16px씩 넓혀 아래 일정 카드와 폭이 어긋났다. */}
-        <div className="bg-background sticky top-0 z-20 pt-1 pb-2">
+        {/* #915 — 주간 달력을 일정 섹션과 같은 콘텐츠 폭에 맞춘다(풀블리드 제거).
+            #919 — 일정 카드와 같은 라운딩·그림자·테두리(Card 토큰)로 통일해, 민 흰
+            사각형이 아래 라운드 카드와 만나며 생기던 코너 이음새 아티팩트를 없앤다. */}
+        <div className="bg-card ring-foreground/10 sticky top-0 z-20 rounded-xl p-2 shadow-xs ring-1">
           <CalendarView
             tripStart={tripStart}
             tripEnd={tripEnd}
