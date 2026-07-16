@@ -1,8 +1,5 @@
-import type { LucideIcon } from "lucide-react";
-import { MapPin, MessageSquareText, Sparkles, Wallet } from "lucide-react";
-
 export type FeatureHighlight = {
-  readonly icon: LucideIcon;
+  readonly image: string;
   readonly title: string;
   readonly summary: string;
   readonly bullets: readonly string[];
@@ -15,7 +12,7 @@ export type FeatureHighlight = {
  */
 export const landingFeatures: readonly FeatureHighlight[] = [
   {
-    icon: Sparkles,
+    image: "/landing/features/plan.png",
     title: "대화로 계획합니다",
     summary:
       'AI에게 "바르셀로나 6월 4박"이라고 말하면 숙소·항공·활동을 대신 찾아 일정에 꽂아 넣습니다.',
@@ -26,7 +23,7 @@ export const landingFeatures: readonly FeatureHighlight[] = [
     ],
   },
   {
-    icon: MessageSquareText,
+    image: "/landing/features/manage.png",
     title: "웹에서 직접 관리하고 함께 다듬습니다",
     summary:
       "여행 → 날짜 → 활동 3계층으로 직접 추가·정리하고, 동행자와 역할별 권한으로 협업합니다.",
@@ -37,7 +34,7 @@ export const landingFeatures: readonly FeatureHighlight[] = [
     ],
   },
   {
-    icon: MapPin,
+    image: "/landing/features/mobile.png",
     title: "모바일에서 현장까지 이어집니다",
     summary:
       "여행 중 스마트폰에서 오늘의 일정과 다음 이동을 확인하고, 여행 캘린더와도 이어집니다.",
@@ -48,7 +45,7 @@ export const landingFeatures: readonly FeatureHighlight[] = [
     ],
   },
   {
-    icon: Wallet,
+    image: "/landing/features/expense.png",
     title: "현장에선 가계부가 됩니다",
     summary: "예약·현장 지출을 통화별로 적어 두면 여행 경비가 한눈에 모입니다.",
     bullets: ["사전/현장 지출 구분", "통화별 금액 합산", "예약·티켓 지출 기록"],

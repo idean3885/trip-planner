@@ -162,8 +162,8 @@ the map pin is a small sky-blue #17A1FA accent. No text. Bold, minimal, high con
 | 자산 | 파일 경로 | 크기 | 연결 방식 |
 |------|----------|------|----------|
 | OG 이미지 | `src/app/opengraph-image.tsx` | 1200×630 | **코드 생성** — 파일 컨벤션이 자동 주입(AI 미사용) |
-| Hero 비주얼 | `public/landing/hero-illustration.png` | 1600×1600 (투명) | `Hero.tsx`에 `next/image`로 삽입 (후속) |
-| 기능 스팟 ×4 | `public/landing/features/{plan,manage,mobile,expense}.png` | 512×512 (투명) | `landing-content.ts` / `FeatureHighlights` 배선 (후속) |
+| Hero 비주얼 | `public/landing/hero-illustration.png` | 1100×930 (투명) | `Hero.tsx`에 `next/image`로 삽입 — **배선 완료** |
+| 기능 스팟 ×4 | `public/landing/features/{plan,manage,mobile,expense}.png` | 512×512 (투명) | `landing-content.ts` / `FeatureHighlights` — **배선 완료** |
 | 파비콘 | `src/app/favicon.ico` | 16·32·48 멀티 | Next.js App Router 자동 인식 |
 | 앱 아이콘 | `src/app/icon.png` | 512×512 | Next.js App Router 자동 인식 |
 | Apple 아이콘 | `src/app/apple-icon.png` | 180×180 | Next.js App Router 자동 인식 |
