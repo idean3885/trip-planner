@@ -58,41 +58,12 @@ Keep it quiet, sparse, and tasteful, like a hand-drawn editorial line.
 
 ## 4. 자산별 프롬프트
 
-### A. OG / 소셜 공유 이미지 (`hero-og.png`)
+### A. OG / 소셜 공유 이미지 — **코드 생성 (AI 미사용)**
 
-- **비율/크기**: 1.91:1, 1200×630 px
-- **랜딩(`src/app/page.tsx`)이 이미 이 경로를 참조**하므로 파일만 채우면 연결됩니다.
-
-**A1 — 문구 포함(1순위):**
-
-```
-[공통 스타일 블록]
-
-A 1200x630 horizontal Open Graph banner on warm ivory #F7F5EF, split layout.
-
-LEFT (text, left-aligned, comfortable margins):
-- small overline in mid gray #616161: "여행 계획부터 현장까지 한 곳에서"
-- large title in near-black #121212: "우리의 여행"
-- subtitle in mid gray #616161: "대화로 만드는 여행 플래너"
-Clean modern Korean sans-serif (Pretendard-like). Render the Korean text crisply and
-exactly as written, correct spelling. Do NOT add any English words or invented brand name.
-
-RIGHT (one small line drawing, near-black lines): a simple calendar with a few days grouped
-to mark a trip range, and one small chat bubble beside it. The trip-range days are the ONLY
-colored element — fill just those few cells with sky-blue #17A1FA. Everything else stays
-near-black line on ivory. Lots of ivory space between the two sides.
-```
-
-**A2 — 문구 없음(대안, 텍스트는 코드/디자인에서 얹기):**
-
-```
-[공통 스타일 블록]
-
-A 1200x630 horizontal image on warm ivory #F7F5EF, no text at all.
-One small centered-right line drawing: a simple calendar with a few trip-range days filled
-in sky-blue #17A1FA (the only colored element) and one small chat bubble in near-black line.
-Leave the left half as empty ivory space for a text overlay.
-```
+- **정본**: [`src/app/opengraph-image.tsx`](../src/app/opengraph-image.tsx) (Next.js 파일 컨벤션, 1200×630).
+- OG는 Nano Banana로 만들지 않습니다. 이미지 모델의 한글 렌더링이 오탈자를 내서("현장까지"→"현장까"), 문구는 실제 폰트로 서버에서 그리고 일러스트는 인라인 SVG로 넣습니다. 오탈자 위험 0.
+- 구성은 아트 디렉션 그대로입니다 — 아이보리 배경, 왼쪽 문구(오버라인·"우리의 여행"·서브타이틀), 오른쪽 캘린더 라인 드로잉 + 여행 기간 칸을 파랑 `#17A1FA` 로 채움 + 말풍선.
+- 문구·색을 바꾸려면 이미지가 아니라 이 파일을 고칩니다. 한글 폰트는 Google Fonts(Noto Sans KR) 서브셋을 런타임에 받습니다.
 
 ---
 
@@ -161,12 +132,16 @@ The total line is the sky-blue #17A1FA detail.
 
 **D1 — 캘린더 + 핀 (권장)**
 
+> 1차 시도는 가로 줄 + 핀이라 "접힌 지도"로 보여 캘린더로 안 읽혔습니다. 그리드를 또렷하게 지시합니다.
+
 ```
 [공통 스타일 블록]
-A single app icon glyph, centered, extremely simple and legible at 16px.
-A rounded-square calendar mark in near-black #121212, with a location pin shape formed at its
-top so it reads as both "calendar" and "place". Fill ONE calendar cell with sky-blue #17A1FA as
-the single accent; the rest is near-black on transparent. No text, no letters. Bold, minimal, high contrast.
+A single flat app icon, thick near-black #121212 outline on transparent background, extremely simple
+and legible at 16px. A rounded-square CALENDAR: two small binding rings on top, a header bar, and a
+clear 4x3 grid of small squares. A small location pin sits at the top-right, slightly overlapping the
+calendar edge. Fill EXACTLY ONE grid cell with sky-blue #17A1FA as the only accent; everything else
+near-black on transparent. No text, no letters, no extra lines. Bold, high contrast, generous internal
+spacing so it stays clear when small.
 ```
 
 **D2 — 말풍선 + 경로 (대안)**
@@ -186,7 +161,7 @@ the map pin is a small sky-blue #17A1FA accent. No text. Bold, minimal, high con
 
 | 자산 | 파일 경로 | 크기 | 연결 방식 |
 |------|----------|------|----------|
-| OG 이미지 | `public/landing/hero-og.png` | 1200×630 | 이미 `page.tsx`가 참조 — 파일만 배치하면 연결 |
+| OG 이미지 | `src/app/opengraph-image.tsx` | 1200×630 | **코드 생성** — 파일 컨벤션이 자동 주입(AI 미사용) |
 | Hero 비주얼 | `public/landing/hero-illustration.png` | 1600×1600 (투명) | `Hero.tsx`에 `next/image`로 삽입 (후속) |
 | 기능 스팟 ×4 | `public/landing/features/{plan,manage,mobile,expense}.png` | 512×512 (투명) | `landing-content.ts` / `FeatureHighlights` 배선 (후속) |
 | 파비콘 | `src/app/favicon.ico` | 16·32·48 멀티 | Next.js App Router 자동 인식 |
