@@ -78,6 +78,20 @@ const eslintConfig = defineConfig([
     rules: { "no-restricted-syntax": "off" },
   },
 
+  // 색상 가드 예외: next/og ImageResponse 라우트(파일 컨벤션)는 Satori가
+  // CSS 변수·토큰을 해석하지 못해 리터럴 색이 불가피. 값은 globals.css :root
+  // 팔레트를 그대로 반영하며, 팔레트 변경 시 함께 갱신한다 (#907).
+  {
+    files: [
+      "**/opengraph-image.tsx",
+      "**/twitter-image.tsx",
+      "**/icon.tsx",
+      "**/apple-icon.tsx",
+      "**/manifest.ts",
+    ],
+    rules: { "no-restricted-syntax": "off" },
+  },
+
   // Prettier 와 충돌하는 포맷 룰 비활성화 (반드시 마지막)
   eslintConfigPrettier,
 ]);

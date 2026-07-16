@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { landingFeatures } from "@/lib/landing-content";
 
@@ -11,13 +13,18 @@ export default function FeatureHighlights() {
         계획부터 현장까지, 이렇게 돕습니다
       </h2>
       <div className="mt-4 space-y-3">
-        {landingFeatures.map(({ icon: Icon, title, summary, bullets }) => (
+        {landingFeatures.map(({ image, title, summary, bullets }) => (
           <Card key={title}>
             <CardHeader>
               <div className="flex items-start gap-3">
-                <div className="bg-foreground/5 text-foreground mt-0.5 inline-flex size-9 shrink-0 items-center justify-center rounded-full">
-                  <Icon className="size-4" aria-hidden />
-                </div>
+                <Image
+                  src={image}
+                  alt=""
+                  aria-hidden
+                  width={512}
+                  height={512}
+                  className="mt-0.5 size-14 shrink-0"
+                />
                 <div className="space-y-1">
                   <h3 className="font-heading text-base leading-snug font-medium">
                     {title}

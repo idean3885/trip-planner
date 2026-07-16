@@ -30,6 +30,9 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
+  // 브라우저 UI 색 — 화면 배경(흰색)과 맞춘다. metadata 문자열이라 토큰화 불가 (#907).
+  // eslint-disable-next-line no-restricted-syntax
+  themeColor: "#ffffff",
 };
 
 export default function RootLayout({

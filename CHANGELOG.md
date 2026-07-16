@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [4.7.0] - 2026-07-16
+
+### Added
+
+- **소셜 공유 이미지·앱 아이콘·대문 일러스트를 새 브랜드 이미지로 정리했습니다.** 링크를 공유하면 서비스 이름과 소개가 담긴 대표 이미지가 표시되고, 브라우저 탭과 홈 화면 설치 아이콘에 브랜드 마크가 나오며, 대문 소개에 서비스 톤에 맞춘 일러스트가 들어갑니다. 공유 이미지 속 문구는 서버에서 실제 글꼴로 그려 오탈자가 나지 않습니다. ([#907](https://github.com/idean3885/trip-planner/issues/907))
+
+### Documentation
+
+- **브랜드 이미지 생성 프롬프트 정본을 추가했습니다.** OG·Hero·기능·앱 아이콘 이미지를 서비스 팔레트와 톤에 맞춰 만들 수 있도록 생성 지침을 한곳에 모았습니다. ([#907](https://github.com/idean3885/trip-planner/issues/907))
+
+
 ## [4.6.3] - 2026-07-15
 
 ### Added

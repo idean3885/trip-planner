@@ -16,6 +16,7 @@
 - [WORKFLOW.md](./WORKFLOW.md) — 이슈·브랜치·릴리즈·마일스톤·디자이너 협업 업무 프로세스 정본
 - [ENVIRONMENTS.md](./ENVIRONMENTS.md) — 환경 격리 원칙과 URL 도출 규칙(prod/dev/preview/local)
 - [design-handoff.md](./design-handoff.md) — 디자이너 ↔ 개발자 핸드오프 절차
+- [brand-image-prompts.md](./brand-image-prompts.md) — 브랜드 이미지(OG·Hero·기능·아이콘) 생성 프롬프트 정본
 
 ## 기술 스택 한눈에
 
