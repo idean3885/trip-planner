@@ -33,6 +33,7 @@ html {
 
 body {
   -webkit-font-smoothing: antialiased;
+  background: var(--app-canvas) fixed;
 }
 
 /* ── Tables: card layout (all breakpoints) ── */
@@ -259,6 +260,10 @@ body {
 
   /* ── shadcn 시맨틱 토큰 → 디자인 정확값 매핑 (무채색 oklch 제거) ── */
   --background: var(--white);
+  /* 페이지 캔버스 — 옅은 파스텔 그라데이션(민트→라벤더→웜). 흰 카드가 떠 보이게
+     구분감을 준다. 컴포넌트 색 토큰(--background=흰색)은 그대로 두고 body 배경에만
+     적용한다 (#911). */
+  --app-canvas: linear-gradient(165deg, #e4f1ea 0%, #e9e9f5 48%, #f6efe4 100%);
   --foreground: var(--gray-950);
   --card: var(--white);
   --card-foreground: var(--gray-950);
