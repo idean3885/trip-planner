@@ -348,10 +348,7 @@ export function TripDetailLayout({
     (dayId: number, created: Activity) => {
       setActivitiesByDayId((prev) => ({
         ...prev,
-        [dayId]: [
-          ...(prev[dayId] ?? []),
-          created as unknown as LayoutActivity,
-        ],
+        [dayId]: [...(prev[dayId] ?? []), created as unknown as LayoutActivity],
       }));
     },
     [],
@@ -457,7 +454,9 @@ export function TripDetailLayout({
       {/* 모바일 <1024px — sticky 캘린더 + 선택 일정. 동기화·동행자·기간 편집은
           위 액션바 버튼으로 연다(spec 043 — 단일 진입). */}
       <div className="space-y-4 lg:hidden">
-        <div className="bg-background sticky top-0 z-20 -mx-4 px-4 pt-1 pb-2">
+        {/* #915 — 주간 달력을 일정 섹션과 같은 콘텐츠 폭에 맞춘다. 이전 -mx-4 px-4
+            풀블리드는 달력만 좌우 16px씩 넓혀 아래 일정 카드와 폭이 어긋났다. */}
+        <div className="bg-background sticky top-0 z-20 pt-1 pb-2">
           <CalendarView
             tripStart={tripStart}
             tripEnd={tripEnd}
