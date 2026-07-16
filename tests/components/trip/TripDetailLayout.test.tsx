@@ -251,19 +251,19 @@ describe("TripDetailLayout 모바일 스와이프·스크롤 접힘 (v3.15.1 hot
     expect(screen.getByRole("group", { name: "주 달력" })).toBeInTheDocument();
   });
 
-  it("문서가 뷰포트보다 짧아 스크롤 불가하면 클램프된 scrollY 로 접힘 상태를 바꾸지 않는다", () => {
+  it("스크롤 불가(짧은 콘텐츠)가 되면 접힘을 풀어 월간으로 되돌린다 (#919)", () => {
     setDocScrollable(true);
     renderLayout();
     // 먼저 스크롤로 접는다.
     setScrollY(300);
     fireEvent.scroll(window);
     expect(screen.getByRole("group", { name: "주 달력" })).toBeInTheDocument();
-    // 콘텐츠가 짧아져 스크롤 불가가 되고 브라우저가 scrollY 를 0 으로 클램프해도
-    // (spec 058 가드) 월간으로 다시 펼치지 않는다 — 튐·플립 방지.
+    // 일정 없는 날 선택 등으로 콘텐츠가 짧아져 스크롤 불가가 되면(브라우저가 scrollY 를
+    // 0 으로 클램프) 접힘을 풀고 월간 + 토글을 되살린다 — 주간 뷰 고착 방지.
     setDocScrollable(false);
     setScrollY(0);
     fireEvent.scroll(window);
-    expect(screen.getByRole("group", { name: "주 달력" })).toBeInTheDocument();
-    expect(screen.queryByRole("group", { name: "월 달력" })).toBeNull();
+    expect(screen.getByRole("group", { name: "월 달력" })).toBeInTheDocument();
+    expect(screen.queryByRole("group", { name: "주 달력" })).toBeNull();
   });
 });
