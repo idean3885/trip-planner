@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [4.7.3] - 2026-07-17
+
+### Fixed
+
+- **여행 상세 모바일에서 주간 달력 버그 3건을 고쳤습니다.** 일정 없는 날짜를 고르면 주간 뷰로 갇혀 월간으로 되돌릴 수 없던 문제를 풀고, 주간 달력을 일정 카드와 같은 라운딩·그림자로 통일해 카드 경계에 보이던 이음새를 없앴습니다. ([#919](https://github.com/idean3885/trip-planner/issues/919))
+
+
 ## [4.7.2] - 2026-07-17
 
 ### Fixed
