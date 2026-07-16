@@ -45,7 +45,11 @@ export default auth((req) => {
   const isAuthRoute = pathname.startsWith("/auth");
   const isApiRoute = pathname.startsWith("/api/");
   const isPublicRoute =
-    pathname === "/" || pathname === "/about" || pathname.startsWith("/docs");
+    pathname === "/" ||
+    pathname === "/about" ||
+    pathname.startsWith("/docs") ||
+    // OG 이미지 라우트(확장자 없음)는 소셜 크롤러·비로그인에 공개돼야 한다.
+    pathname.startsWith("/opengraph-image");
 
   // API 라우트는 자체 인증 처리 (PAT Bearer 토큰 + 세션 병행, auth-helpers.ts)
   if (isApiRoute) return;
@@ -91,5 +95,8 @@ export default auth((req) => {
 });
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  // 확장자 있는 정적 파일(.png/.ico/.webmanifest/.xml/.txt 등)과 Next 내부 경로는
+  // 미들웨어를 태우지 않는다. 대문 일러스트·아이콘·매니페스트·robots·sitemap이
+  // 비로그인 시 /auth/signin 으로 리다이렉트되던 문제를 근본 차단 (#911).
+  matcher: ["/((?!_next/static|_next/image|.*\\..*).*)"],
 };
