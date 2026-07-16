@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [4.7.1] - 2026-07-17
+
+### Fixed
+
+- **대문 일러스트·공유 이미지가 로그인 없이도 보이도록 고쳤습니다.** 정적 이미지·앱 아이콘·매니페스트·robots·sitemap 요청이 로그인 화면으로 넘어가던 문제를 바로잡았습니다. 더불어 앱 배경을 옅은 파스텔 캔버스로 바꾸고 카드를 흰색+옅은 그림자로 띄워 목록 구분감을 높였으며, 브라우저 탭 아이콘을 작은 크기에서도 달력으로 읽히게 단순화했습니다. ([#911](https://github.com/idean3885/trip-planner/issues/911))
+
+
 ## [4.7.0] - 2026-07-16
 
 ### Added
