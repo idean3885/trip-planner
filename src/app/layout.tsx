@@ -30,9 +30,9 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  // 브라우저 UI 색 — 화면 배경(흰색)과 맞춘다. metadata 문자열이라 토큰화 불가 (#907).
+  // 브라우저 UI 색 — 페이지 캔버스 그라데이션 상단색과 맞춘다. metadata 문자열이라 토큰화 불가 (#907/#911).
   // eslint-disable-next-line no-restricted-syntax
-  themeColor: "#ffffff",
+  themeColor: "#eef6f3",
 };
 
 export default function RootLayout({
@@ -43,7 +43,7 @@ export default function RootLayout({
   return (
     <html lang="ko" className={inter.variable}>
       <body
-        className={`${inter.className} bg-background text-foreground flex min-h-screen flex-col`}
+        className={`${inter.className} text-foreground flex min-h-screen flex-col`}
       >
         <SessionProvider>
           <AnalyticsUserId />
