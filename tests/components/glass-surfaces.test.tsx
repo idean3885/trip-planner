@@ -12,7 +12,7 @@ const ROOT = resolve(__dirname, "../..");
 const read = (p: string) => readFileSync(resolve(ROOT, p), "utf8");
 
 const GLOBALS = read("src/app/globals.css");
-const LAYOUT = read("src/app/layout.tsx");
+const HEADER = read("src/components/SiteHeader.tsx"); // spec 067 — 헤더 분리
 const FOOTER = read("src/components/Footer.tsx");
 const DIALOG = read("src/components/ui/dialog.tsx");
 const DROPDOWN = read("src/components/ui/dropdown-menu.tsx");
@@ -51,7 +51,7 @@ describe("글래스 토큰·유틸 (spec 065/glass-tokens)", () => {
 
 describe("크롬·오버레이 글래스 표면 (spec 065/glass-chrome·glass-overlay)", () => {
   it("헤더가 glass-surface 바로 렌더된다", () => {
-    expect(LAYOUT).toContain("glass-surface");
+    expect(HEADER).toContain("glass-surface");
   });
 
   it("푸터가 glass-surface로 렌더된다", () => {

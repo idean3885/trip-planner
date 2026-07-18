@@ -28,11 +28,14 @@ const DAY_PAGE_PATH = resolve(
   "src/app/trips/[id]/day/[dayId]/page.tsx",
 );
 const GLOBAL_LAYOUT_PATH = resolve(REPO_ROOT, "src/app/layout.tsx");
+// spec 067 — 헤더(로고)가 SiteHeader.tsx 로 분리됨.
+const SITE_HEADER_PATH = resolve(REPO_ROOT, "src/components/SiteHeader.tsx");
 
 const pageSrc = readFileSync(PAGE_PATH, "utf8");
 const layoutComponentSrc = readFileSync(LAYOUT_COMPONENT_PATH, "utf8");
 const dayPageSrc = readFileSync(DAY_PAGE_PATH, "utf8");
 const globalLayoutSrc = readFileSync(GLOBAL_LAYOUT_PATH, "utf8");
+const siteHeaderSrc = readFileSync(SITE_HEADER_PATH, "utf8");
 
 describe("trip 상세 레이아웃 (spec 032 — 캘린더 중심 단일 화면)", () => {
   it("page.tsx 는 해체된 SidePanel 을 더 이상 import 하지 않는다", () => {
@@ -88,7 +91,7 @@ describe("trip 상세 레이아웃 (spec 032 — 캘린더 중심 단일 화면)
   it("헤더 로고는 좁은 화면에서 짓눌리지 않게 shrink-0 + whitespace-nowrap 을 쓴다(#641)", () => {
     // 13 mini(375px) 에서 로고가 한 글자씩 세로로 접히던 회귀 가드.
     // prettier-plugin-tailwindcss 정렬로 사이에 다른 클래스가 올 수 있어 인접 가정을 푼다 (spec 038)
-    expect(globalLayoutSrc).toMatch(/shrink-0[^"]*whitespace-nowrap/);
+    expect(siteHeaderSrc).toMatch(/shrink-0[^"]*whitespace-nowrap/);
   });
 
   it("AuthButton 이메일은 sm 미만에서 숨겨 헤더 가로 넘침을 막는다(#641)", () => {

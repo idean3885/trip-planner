@@ -133,7 +133,7 @@ export function CalendarView({
       ? {}
       : {
           hasActivity:
-            "relative after:absolute after:bottom-1 after:inset-x-0 after:h-0.5 after:bg-primary",
+            "relative after:absolute after:bottom-1 after:inset-x-0 after:h-0.5 after:rounded-full after:bg-[var(--cal-activity-bar)]",
         }),
     ...(extraModifierClassNames ?? {}),
   };
@@ -353,15 +353,15 @@ function WeekStrip({
             className={cn(
               "flex flex-1 flex-col items-center gap-0.5 rounded-md py-1.5 text-sm transition-colors",
               isSelected
-                ? "bg-cal-selected-bg text-cal-selected-text font-semibold"
+                ? "text-foreground bg-[var(--cal-selected-glass)] font-semibold ring-1 ring-[var(--cal-ring)] ring-inset"
                 : inRange
                   ? isWeekend
                     ? "text-cal-trip-weekend font-semibold"
-                    : "text-foreground font-semibold hover:bg-muted"
+                    : "text-foreground hover:bg-muted font-semibold"
                   : "text-cal-inactive hover:bg-muted",
               !isSelected &&
                 isToday &&
-                "shadow-[inset_0_0_0_1px_var(--cal-today-border)]",
+                "shadow-[inset_0_0_0_1.5px_var(--cal-ring)]",
             )}
           >
             <span
@@ -381,7 +381,7 @@ function WeekStrip({
               aria-hidden
               className={cn(
                 "h-0.5 w-4 rounded-full",
-                hasActivity ? "bg-primary" : "bg-transparent",
+                hasActivity ? "bg-[var(--cal-activity-bar)]" : "bg-transparent",
               )}
             />
           </button>
@@ -422,7 +422,7 @@ function SingleTripDayButton({
         ) : (
           <span
             aria-hidden
-            className="bg-primary pointer-events-none absolute inset-x-0 bottom-1 h-0.5"
+            className="pointer-events-none absolute inset-x-0 bottom-1 h-0.5 rounded-full bg-[var(--cal-activity-bar)]"
           />
         ))}
     </div>

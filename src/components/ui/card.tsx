@@ -19,8 +19,11 @@ function Card({
       data-size={size}
       data-glass={glass ? "true" : undefined}
       className={cn(
-        "group/card text-card-foreground ring-foreground/15 flex flex-col gap-4 overflow-hidden rounded-xl py-4 text-sm shadow-xs ring-1 has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:gap-3 data-[size=sm]:py-3 data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl",
-        glass ? "glass-surface" : "bg-card",
+        "group/card text-card-foreground ring-foreground/15 flex flex-col gap-4 rounded-xl py-4 text-sm shadow-xs ring-1 has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:gap-3 data-[size=sm]:py-3 data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl",
+        // spec 067 — 글래스 카드는 overflow-hidden 을 빼서 backdrop-filter 클립 충돌
+        // (모서리·세로 엣지 아티팩트)을 없앤다. border-radius 는 overflow 없이도 블러를
+        // 라운딩하고, 카드 내부 이미지는 자체 rounded-* 로 모서리를 처리한다.
+        glass ? "glass-surface" : "bg-card overflow-hidden",
         className,
       )}
       {...props}
