@@ -19,6 +19,9 @@
 ## Phase 4: US3 — 캘린더 사이즈 (P2)
 - [x] T007 [US3] `calendar.tsx` 셀 `aspect-square` → 낮은 종횡비로 축소(하단 잉여 공간 감소) [artifact: src/components/ui/calendar.tsx] [why: cal-size]
 
+## Phase 4b: 헤더 정리
+- [x] T012 헤더를 `SiteHeader` 클라이언트 컴포넌트로 분리해 대문(`/`)에서 숨긴다(앱 페이지 유지) [artifact: src/components/SiteHeader.tsx|src/app/layout.tsx] [why: chrome-header]
+
 ## Phase 5: Polish
 - [x] T008 [P] 글래스 캘린더 회귀 테스트 — 카드 overflow 제거, 캘린더 토큰 존재, 선택/오늘/기간 스타일 전환, 셀 종횡비 검증 [artifact: tests/components/glass-calendar.test.tsx] [why: cal-glass]
 - [x] T009 색상 가드 확인 — 신규 색 전량 `:root` 토큰 경유 (lint/color-guard)

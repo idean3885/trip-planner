@@ -11,6 +11,7 @@
 - 글래스 카드 테두리 렌더링 버그 수정(overflow 클립 충돌 해소) [why: card-artifact]
 - 캘린더 글래스 재설계(분리배경 제거·선택/오늘 링·기간 밴드) [why: cal-glass] [multi-step: 3]
 - 캘린더 셀 사이즈 축소 + 하단 빈 영역 감소 [why: cal-size]
+- 앱 셸 헤더 정리 — 대문에서 헤더 바 숨김(Hero 중복·공간 낭비 제거) [why: chrome-header]
 
 ## Technical Context
 
