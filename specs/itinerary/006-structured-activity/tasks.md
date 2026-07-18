@@ -196,5 +196,5 @@ Phase 7 (Polish)
 ## Notes
 
 - #126(컴포넌트 렌더링)은 #125(구조화 폼)에 통합 — ActivityCard가 US1에서 생성, US2에서 확장
-- 이슈별 브랜치로 devex:flow 진행
+- 이슈별 브랜치로 ops-agent:flow 진행
 - 커밋은 이슈 단위
