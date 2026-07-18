@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [4.11.0] - 2026-07-19
+
+### Added
+
+- **헤더의 계정 항목을 계정 메뉴 하나로 모았습니다.** 이메일·설정·로그아웃이 헤더에 펼쳐져 있던 것을, 우측 계정 버튼을 누르면 열리는 메뉴로 접었습니다. 좁은 화면에서 헤더가 넘치던 문제도 함께 정리됩니다. ([#946](https://github.com/idean3885/trip-planner/issues/946))
+
+### Fixed
+
+- **계정 메뉴를 눌렀을 때 화면이 무너지던 문제를 고쳤습니다.** 메뉴가 정상적으로 열려 이메일·설정·로그아웃이 나옵니다. ([#948](https://github.com/idean3885/trip-planner/issues/948))
+
+
 ## [4.10.0] - 2026-07-19
 
 ### Added
