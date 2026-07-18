@@ -126,7 +126,7 @@ export default function AppleEntryCard({ tripId, role }: AppleEntryCardProps) {
   }
 
   return (
-    <Card className="p-4">
+    <Card glass className="p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="space-y-1">
           <h3 className="text-sm font-medium">Apple 캘린더 연결됨</h3>
