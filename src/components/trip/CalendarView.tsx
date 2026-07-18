@@ -273,6 +273,9 @@ function MobileCompactCalendar({
           renderSlide={(off) =>
             renderMonth(addMonths(displayMonth, off), off === 0)
           }
+          // spec — 트랙 높이를 현재 달에 맞춘다. 없으면 flex 트랙이 이웃 달(6주)
+          // 높이로 커져 5주짜리 현재 달 아래에 빈 행이 떠 보인다(주간만 보기 위 공백).
+          syncHeight
         />
       ) : (
         <SwipeCarousel
