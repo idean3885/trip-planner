@@ -117,3 +117,9 @@ describe("점 색·밴드 이음새 (#940)", () => {
     expect(GLOBALS).toMatch(/\.rdp-day\.cal-range\s*\{[^}]*border-radius:\s*0/);
   });
 });
+
+describe("메뉴 드롭다운 z-index 회귀 (#942)", () => {
+  it("브레드크럼 바가 relative z-30 으로 sticky 캘린더(z-20) 위에 온다", () => {
+    expect(DETAIL).toMatch(/glass-surface[^"]*relative z-30/);
+  });
+});

@@ -439,7 +439,9 @@ export function TripDetailLayout({
           #936 — 다른 섹션과 동일한 글래스 표면으로 통일(SiteHeader 유리 바와 같은 톤). */}
       {/* #938 — 상단 헤더 유리 바와 도킹: 위 모서리 각지게 + 상단 테두리 제거해
           헤더 하단과 이어 하나의 앱바처럼 보이게 한다(SiteHeader 가 rounded-b-none). */}
-      <div className="glass-surface border-foreground/10 flex items-center justify-between gap-2 rounded-xl rounded-t-none border border-t-0 px-4 py-2.5 shadow-xs">
+      <div className="glass-surface border-foreground/10 relative z-30 flex items-center justify-between gap-2 rounded-xl rounded-t-none border border-t-0 px-4 py-2.5 shadow-xs">
+        {/* #942 — glass-surface(backdrop-filter)가 만든 stacking context에 ☰ 드롭다운이
+            갇혀 sticky 캘린더(z-20) 뒤로 숨던 회귀. 바를 z-30 으로 올려 위에 둔다. */}
         <div className="min-w-0 flex-1">{breadcrumb}</div>
         {actionBar}
       </div>
