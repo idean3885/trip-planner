@@ -328,7 +328,7 @@ body {
      솔리드 필·검은 선을 걷고 글래스 톤으로. 선택=프로스트 틴트+링, 오늘=링,
      여행기간=반투명 밴드, 일정 있는 날 연결 바=브랜드 블루(검정 대체). 값 정본=여기. */
   --cal-selected-glass: rgba(23, 161, 250, 0.18); /* 선택일 프로스트 틴트 (브랜드 블루) */
-  --cal-range-band: rgba(23, 161, 250, 0.08); /* 여행기간 반투명 밴드 */
+  --cal-range-band: rgba(23, 161, 250, 0.16); /* 여행기간 반투명 밴드 (#938 가시화 상향) */
   --cal-ring: var(--blue-500); /* 선택·오늘 얇은 브랜드 링 */
   --cal-activity-bar: var(--blue-500); /* 일정 있는 날 연결 바 (검정→브랜드) */
 
@@ -411,6 +411,8 @@ body {
   background-color: var(--cal-selected-glass) !important;
   color: var(--foreground) !important;
   box-shadow: inset 0 0 0 1.5px var(--cal-ring);
+  /* #938 — 일반 셀·기간 밴드와 같은 반경으로 통일(기본 rounded-lg 8px → cell 6.4px) */
+  border-radius: var(--cell-radius) !important;
 }
 /* spec 067 — 오늘(선택 아님) = 얇은 브랜드 블루 링 (검은 박스 제거). react-day-picker
    의 today 셀 bg-muted 를 중화하고 버튼에 링만 그린다. */

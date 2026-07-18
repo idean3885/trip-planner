@@ -14,6 +14,7 @@ const TRIP_PAGE = read("src/app/trips/[id]/page.tsx");
 const CARD = read("src/components/ui/card.tsx");
 const GLOBALS = read("src/app/globals.css");
 const DAP = read("src/components/trip/DayActivitiesPane.tsx");
+const SITE_HEADER = read("src/components/SiteHeader.tsx");
 const DETAIL = read("src/components/trip/TripDetailLayout.tsx");
 const CAL_UI = read("src/components/ui/calendar.tsx");
 const CAL_VIEW = read("src/components/trip/CalendarView.tsx");
@@ -81,5 +82,29 @@ describe("섹션 글래스 통일 + 빈 공간 (#936)", () => {
   });
   it("빈 상태('일정 없음') 카드가 glass 로 통일된다", () => {
     expect(DAP).toContain("<Card glass>");
+  });
+});
+
+describe("캘린더 글래스 무력화 수정·라운딩·도킹 (#938)", () => {
+  it("캘린더 루트 bg-background를 bg-transparent로 덮어 유리가 비친다", () => {
+    expect(CAL_VIEW).toContain("bg-transparent");
+  });
+  it("여행기간 밴드 알파를 가시 수준으로 올렸다(0.08→0.16)", () => {
+    expect(GLOBALS).toContain("rgba(23, 161, 250, 0.16)");
+    expect(GLOBALS).not.toContain("rgba(23, 161, 250, 0.08)");
+  });
+  it("선택 셀 라운딩을 --cell-radius로 통일한다", () => {
+    expect(GLOBALS).toMatch(
+      /data-selected-single="true"[^}]*border-radius: var\(--cell-radius\)/,
+    );
+  });
+  it("데스크탑 좌측 캘린더 컬럼에도 유리 표면을 씌운다", () => {
+    expect(DETAIL).toMatch(/glass-surface[^"]*lg:sticky lg:top-6/);
+  });
+  it("헤더-브레드크럼 도킹: 헤더 하단 각짐 + 브레드크럼 상단 각짐/테두리 제거", () => {
+    expect(SITE_HEADER).toContain("rounded-b-none");
+    expect(DETAIL).toMatch(
+      /rounded-t-none[^"]*border-t-0|border-t-0[^"]*rounded-t-none/,
+    );
   });
 });

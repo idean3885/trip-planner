@@ -191,7 +191,9 @@ export function CalendarView({
       className={cn(
         // spec 055 — Figma 디자인 재색을 위한 스코프 마커. globals.css `.trip-cal`
         // 규칙이 요일 헤더(일=초록·토=파랑)·여행기간 강조·선택·오늘 색을 입힌다.
-        "trip-cal",
+        // #938 — bg-transparent 로 DayPicker 루트 기본 bg-background(불투명 흰색)를
+        // 덮는다. 부모 glass-surface 유리 표면이 캘린더 안에서도 그대로 비치게 한다.
+        "trip-cal bg-transparent",
         // spec 040/043 — 데스크탑 가로 grow: 컨테이너를 채우되(root w-full) 좌우
         // 약간 여백을 두고, max-w 로 폭 상한을 둬 셀(aspect-square)이 과대해지며
         // 세로가 화면을 잡아먹는 것을 막는다(#721 — 가로 빔/세로 과대 동시 해소).

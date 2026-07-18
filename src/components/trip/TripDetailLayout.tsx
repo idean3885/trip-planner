@@ -433,10 +433,13 @@ export function TripDetailLayout({
   );
 
   return (
-    <div className="space-y-4">
+    <div className="-mt-6 space-y-4">
+      {/* #938 — 헤더와 도킹: main pt-6 간격을 당겨 붙임 */}
       {/* spec 063 후속 — 브레드크럼(날짜)과 ☰ 메뉴를 한 줄에 둬 빈 줄을 없앤다.
           #936 — 다른 섹션과 동일한 글래스 표면으로 통일(SiteHeader 유리 바와 같은 톤). */}
-      <div className="glass-surface border-foreground/10 flex items-center justify-between gap-2 rounded-xl border px-4 py-2.5 shadow-xs">
+      {/* #938 — 상단 헤더 유리 바와 도킹: 위 모서리 각지게 + 상단 테두리 제거해
+          헤더 하단과 이어 하나의 앱바처럼 보이게 한다(SiteHeader 가 rounded-b-none). */}
+      <div className="glass-surface border-foreground/10 flex items-center justify-between gap-2 rounded-xl rounded-t-none border border-t-0 px-4 py-2.5 shadow-xs">
         <div className="min-w-0 flex-1">{breadcrumb}</div>
         {actionBar}
       </div>
@@ -451,7 +454,8 @@ export function TripDetailLayout({
       <div className="lg:gap-grid-comfy hidden lg:grid lg:grid-cols-2 lg:items-start">
         {/* spec 043 US4 — 데스크탑은 좌측 캘린더를 sticky 로 고정해 우측 일정이
             길어도 캘린더가 화면에 남는다(모바일 경계 멈춤의 데스크탑 대응). */}
-        <div className="min-w-0 lg:sticky lg:top-6">
+        <div className="glass-surface border-foreground/10 min-w-0 rounded-xl border p-2 shadow-xs lg:sticky lg:top-6">
+          {/* #938 — 데스크탑 캘린더도 유리 표면 통일 */}
           <CalendarView
             tripStart={tripStart}
             tripEnd={tripEnd}
