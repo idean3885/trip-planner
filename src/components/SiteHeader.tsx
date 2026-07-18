@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import AuthButton from "@/components/AuthButton";
+import { cn } from "@/lib/utils";
 
 /**
  * spec 067 — 앱 셸 헤더(글래스 바).
@@ -18,9 +19,18 @@ export default function SiteHeader() {
   const pathname = usePathname();
   if (pathname === "/") return null;
 
+  // #938 — 여행 상세(/trips/<숫자>)에서는 바로 아래 브레드크럼 바와 도킹한다.
+  // 헤더 하단 모서리를 각지게 해 브레드크럼(rounded-t-none, border-t-0)과 하나로 이어붙인다.
+  const dockBottom = /^\/trips\/\d/.test(pathname);
+
   return (
     <header className="lg:max-w-wide mx-auto w-full max-w-2xl px-4 pt-4">
-      <div className="glass-surface border-foreground/10 flex items-center justify-between gap-2 rounded-xl border px-4 py-2.5 shadow-xs sm:gap-4">
+      <div
+        className={cn(
+          "glass-surface border-foreground/10 flex items-center justify-between gap-2 rounded-xl border px-4 py-2.5 shadow-xs sm:gap-4",
+          dockBottom && "rounded-b-none",
+        )}
+      >
         <div className="flex items-center gap-6">
           <Link
             href="/"
