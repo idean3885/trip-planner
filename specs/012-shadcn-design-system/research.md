@@ -242,10 +242,10 @@ body:
 **Decision**: `docs/WORKFLOW.md`를 단일 정본으로 두고 다음 7개 최상위 섹션을 순서대로 기술한다.
 
 1. **팀 구성·역할** — BE 개발자(도메인·게이트), 디자이너(Figma·핸드오프), AI 에이전트(Claude Code·v0.dev·MCP)
-2. **이슈 흐름** — 마일스톤 배정 → 워크트리 분기(`/devex:flow`) → 구현 → PR → 머지
+2. **이슈 흐름** — 마일스톤 배정 → 워크트리 분기(`/ops-agent:flow`) → 구현 → PR → 머지
 3. **버전·릴리즈 정책** — towncrier 단편, 마일스톤 close = release 신호, release PR, main 머지, 자동 tag/release/PyPI
 4. **디자이너 협업 흐름** — Figma 작업 → Tokens Studio export 또는 Frame 핸드오프 → v0.dev/Claude Code 변환 → 도메인·접근성·회귀 검토 → PR → 머지
-5. **AI 에이전트 활용** — Claude Code(구현/리뷰), v0.dev(컴포넌트), devex:flow(이슈→PR), MCP(trip 데이터)
+5. **AI 에이전트 활용** — Claude Code(구현/리뷰), v0.dev(컴포넌트), ops-agent:flow(이슈→PR), MCP(trip 데이터)
 6. **마일스톤 운영** — 모든 이슈 마일스톤 필수, 닫힌 마일스톤 추가 변경 금지, 버전 = 마일스톤
 7. **핫픽스 흐름** — hotfix/* 브랜치 → 단편 추가 → develop 경유 → 다음 PATCH 마일스톤
 

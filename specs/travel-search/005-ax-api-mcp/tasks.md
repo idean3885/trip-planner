@@ -183,4 +183,4 @@ Phase 7 (Polish)
 
 - US5 (코드 구조 분리)는 Phase 2 (Foundational)에서 충족: 디렉토리 이동 + 삭제가 모든 US의 전제
 - 테스트 태스크는 별도 분리하지 않음 — 각 US의 마지막 태스크가 E2E 검증
-- 커밋은 /devex:flow를 통해 이슈 단위로 진행
+- 커밋은 /ops-agent:flow를 통해 이슈 단위로 진행
