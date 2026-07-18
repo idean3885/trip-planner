@@ -40,17 +40,19 @@ describe("글래스 콘텐츠 확장 (spec 066/glass-content)", () => {
     expect(card.className).not.toContain("bg-card");
   });
 
-  it("여행 상세 모바일 주간 달력 래퍼가 glass-surface로 렌더된다", () => {
+  it("여행 상세 모바일 주간 달력 래퍼가 투명 backdrop-blur로 렌더된다(spec 068)", () => {
+    // spec 068 — 흰 글래스 박스를 걷고 투명+blur 로 캔버스 블렌딩.
     const src = read("src/components/trip/TripDetailLayout.tsx");
-    expect(src).toMatch(/glass-surface[^"]*sticky top-0 z-20/);
-    expect(src).not.toMatch(/"bg-card ring-foreground\/10 sticky top-0/);
+    expect(src).toMatch(/sticky top-0 z-20[^"]*backdrop-blur/);
+    expect(src).not.toMatch(/glass-surface[^"]*sticky top-0 z-20/);
   });
 });
 
-describe("카드 테두리 선명화 (spec 066/border-crisp)", () => {
-  it("card.tsx 기본 카드 테두리 대비가 상향됐다(ring-foreground/15)", () => {
+describe("카드 테두리 (spec 066→068/border)", () => {
+  it("card.tsx 기본 카드 테두리가 border(박스모델)로 그려진다", () => {
+    // spec 068 — ring(바깥 box-shadow)은 overflow-hidden 조상에 잘려 border 로 교체.
     const src = read("src/components/ui/card.tsx");
-    expect(src).toContain("ring-foreground/15");
-    expect(src).not.toMatch(/group\/card[^"]*ring-foreground\/10/);
+    expect(src).toContain("border-foreground/10");
+    expect(src).not.toContain("ring-foreground");
   });
 });

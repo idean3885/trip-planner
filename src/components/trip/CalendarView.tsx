@@ -121,9 +121,8 @@ export function CalendarView({
     ...(extraModifiers ?? {}),
   };
 
-  // spec 031 — 셀 하단에 가로 bar 를 그려 연속 일자를 시각적으로 연결한다.
-  // `after:inset-x-0` 으로 셀 가로 너비 전체를 채우고, 인접 셀 hasActivity 가
-  // 같은 위치/색이면 Google Calendar 멀티데이 이벤트처럼 한 줄로 이어 보인다.
+  // spec 068 — 일정 있는 날은 셀 하단 중앙에 점(dot)으로 표시한다. 과거 연속 연결
+  // 바(spec 031)는 글래스 톤에 과해 점으로 절제한다.
   const modifiersClassNames: Record<string, string> = {
     // spec 055 — 디자인은 여행기간 셀에 배경 채움을 두지 않고 텍스트로만 강조한다.
     // `.cal-range` 마커만 부여하면 globals.css `.trip-cal` 규칙이 평일=진한 본문색·
@@ -133,7 +132,7 @@ export function CalendarView({
       ? {}
       : {
           hasActivity:
-            "relative after:absolute after:bottom-1 after:inset-x-0 after:h-0.5 after:rounded-full after:bg-[var(--cal-activity-bar)]",
+            "relative after:absolute after:bottom-1 after:left-1/2 after:size-1 after:-translate-x-1/2 after:rounded-full after:bg-[var(--cal-activity-bar)]",
         }),
     ...(extraModifierClassNames ?? {}),
   };
@@ -380,7 +379,7 @@ function WeekStrip({
             <span
               aria-hidden
               className={cn(
-                "h-0.5 w-4 rounded-full",
+                "size-1 rounded-full",
                 hasActivity ? "bg-[var(--cal-activity-bar)]" : "bg-transparent",
               )}
             />
@@ -422,7 +421,7 @@ function SingleTripDayButton({
         ) : (
           <span
             aria-hidden
-            className="pointer-events-none absolute inset-x-0 bottom-1 h-0.5 rounded-full bg-[var(--cal-activity-bar)]"
+            className="pointer-events-none absolute bottom-1 left-1/2 size-1 -translate-x-1/2 rounded-full bg-[var(--cal-activity-bar)]"
           />
         ))}
     </div>

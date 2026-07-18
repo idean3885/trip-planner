@@ -20,7 +20,7 @@ export default function SiteHeader() {
 
   return (
     <header className="lg:max-w-wide mx-auto w-full max-w-2xl px-4 pt-4">
-      <div className="glass-surface ring-foreground/10 flex items-center justify-between gap-2 rounded-xl px-4 py-2.5 shadow-xs ring-1 sm:gap-4">
+      <div className="glass-surface border-foreground/10 flex items-center justify-between gap-2 rounded-xl border px-4 py-2.5 shadow-xs sm:gap-4">
         <div className="flex items-center gap-6">
           <Link
             href="/"

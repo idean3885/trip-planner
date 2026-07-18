@@ -470,10 +470,11 @@ export function TripDetailLayout({
           위 액션바 버튼으로 연다(spec 043 — 단일 진입). */}
       <div className="space-y-4 lg:hidden">
         {/* #915 — 주간 달력을 일정 섹션과 같은 콘텐츠 폭에 맞춘다(풀블리드 제거).
-            #919 — 일정 카드와 같은 라운딩·그림자·테두리(Card 토큰)로 통일해, 민 흰
-            사각형이 아래 라운드 카드와 만나며 생기던 코너 이음새 아티팩트를 없앤다. */}
-        <div className="glass-surface ring-foreground/10 sticky top-0 z-20 rounded-xl p-2 shadow-xs ring-1">
-          {/* spec 066 — 주간 달력 래퍼 글래스(셀 텍스트·상태는 유지) */}
+            spec 068 — 흰 글래스 박스(ring·shadow)를 걷고 투명 + backdrop-blur 로 캔버스에
+            블렌딩한다(상단 브레드크럼 등 다른 섹션과 통일). sticky 로 상단 고정되면 뒤
+            콘텐츠는 블러로 가려 날짜가 읽히게 한다. */}
+        <div className="sticky top-0 z-20 rounded-xl p-2 backdrop-blur-md">
+          {/* spec 068 — 투명 글래스(배경 없음, 블러만) */}
           <CalendarView
             tripStart={tripStart}
             tripEnd={tripEnd}
