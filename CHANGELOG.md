@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [4.12.2] - 2026-07-19
+
+### Fixed
+
+- **여행 상세 ☰ 메뉴를 계정 메뉴와 같은 유리 표면·등장 애니메이션으로 통일했습니다.** 불투명하게 즉시 뜨던 메뉴가 반투명 유리로 부드럽게 나타납니다. ([#964](https://github.com/idean3885/trip-planner/issues/964))
+- **여행 목록과 상세의 가로 폭이 어긋나던 문제를 고쳤습니다.** 스크롤바 유무에 따라 페이지마다 폭이 달라지지 않도록 스크롤바 자리를 항상 확보합니다. ([#965](https://github.com/idean3885/trip-planner/issues/965))
+- **여행 상세 ☰ 메뉴 항목을 계정 메뉴처럼 flat 행 + 영역 구분선으로 통일했습니다.** 제각각이던 테두리 버튼을 걷고, 정보·연동·위험 영역을 구분선으로 나눠 한눈에 들어오게 했습니다. ([#967](https://github.com/idean3885/trip-planner/issues/967))
+
+
 ## [4.12.1] - 2026-07-19
 
 ### Fixed
