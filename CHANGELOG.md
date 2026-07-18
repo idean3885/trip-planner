@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [4.12.1] - 2026-07-19
+
+### Fixed
+
+- **여행 상세에서 스와이프 목록·달력 오른쪽에 비치던 희미한 세로선을 없앴습니다.** 화면 밖 옆 슬라이드의 카드 테두리가 잘리는 경계에 걸쳐 서브픽셀로 새어 나오던 선을 제거했습니다. ([#960](https://github.com/idean3885/trip-planner/issues/960))
+
+
 ## [4.12.0] - 2026-07-19
 
 ### Added
