@@ -105,7 +105,7 @@ export default function ActivityCard({
   const viewable = Boolean(onView);
 
   return (
-    <Card size="sm" className="group gap-2">
+    <Card size="sm" glass className="group gap-2">
       <CardContent
         className={`flex items-start justify-between gap-2${viewable ? "cursor-pointer" : ""}`}
         role={viewable ? "button" : undefined}

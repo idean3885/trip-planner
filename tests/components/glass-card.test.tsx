@@ -30,11 +30,9 @@ describe("Card 글래스 변형 (spec 065/glass-container)", () => {
     expect(el.getAttribute("data-glass")).toBe("true");
   });
 
-  it("콘텐츠 카드(ActivityCard)는 glass를 쓰지 않아 불투명 유지", () => {
-    const src = readFileSync(
-      resolve(ROOT, "src/components/ActivityCard.tsx"),
-      "utf8",
-    );
+  it("스크롤 목록의 콘텐츠 카드(여행 목록)는 glass 없이 불투명 유지", () => {
+    // spec 066에서 활동 카드는 glass로 확장됐다. 여행 목록 카드는 범위 밖 — 불투명 유지.
+    const src = readFileSync(resolve(ROOT, "src/app/trips/page.tsx"), "utf8");
     expect(src).not.toMatch(/<Card[^>]*\bglass\b/);
   });
 });
