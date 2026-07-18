@@ -19,7 +19,7 @@ function Card({
       data-size={size}
       data-glass={glass ? "true" : undefined}
       className={cn(
-        "group/card text-card-foreground ring-foreground/10 flex flex-col gap-4 overflow-hidden rounded-xl py-4 text-sm shadow-xs ring-1 has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:gap-3 data-[size=sm]:py-3 data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl",
+        "group/card text-card-foreground ring-foreground/15 flex flex-col gap-4 overflow-hidden rounded-xl py-4 text-sm shadow-xs ring-1 has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:gap-3 data-[size=sm]:py-3 data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl",
         glass ? "glass-surface" : "bg-card",
         className,
       )}

@@ -472,7 +472,8 @@ export function TripDetailLayout({
         {/* #915 — 주간 달력을 일정 섹션과 같은 콘텐츠 폭에 맞춘다(풀블리드 제거).
             #919 — 일정 카드와 같은 라운딩·그림자·테두리(Card 토큰)로 통일해, 민 흰
             사각형이 아래 라운드 카드와 만나며 생기던 코너 이음새 아티팩트를 없앤다. */}
-        <div className="bg-card ring-foreground/10 sticky top-0 z-20 rounded-xl p-2 shadow-xs ring-1">
+        <div className="glass-surface ring-foreground/10 sticky top-0 z-20 rounded-xl p-2 shadow-xs ring-1">
+          {/* spec 066 — 주간 달력 래퍼 글래스(셀 텍스트·상태는 유지) */}
           <CalendarView
             tripStart={tripStart}
             tripEnd={tripEnd}
