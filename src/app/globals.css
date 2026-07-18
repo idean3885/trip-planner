@@ -29,6 +29,9 @@ html {
   -webkit-text-size-adjust: 100%;
   scroll-behavior: smooth;
   -webkit-tap-highlight-color: transparent;
+  /* #965 — 스크롤바 거터를 항상 예약한다. 스크롤바 유무(짧은 목록 vs 긴 상세)에
+     따라 가용 폭이 달라져 페이지마다 콘텐츠 폭·중앙 정렬이 튀던 것을 막는다. */
+  scrollbar-gutter: stable;
 }
 
 body {
