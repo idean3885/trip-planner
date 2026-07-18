@@ -49,9 +49,16 @@ export default function DeleteTripButton({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
+      {/* #967 — ☰ 메뉴 flat 항목 통일: solid destructive(흰 글자)는 패널이 배경을
+          벗기면 안 보이므로 ghost + 빨강 글자로 둔다(일자 삭제와 통일). 실제 확정은
+          다이얼로그 푸터의 solid destructive 버튼이 담당한다. */}
       <DialogTrigger
         render={
-          <Button variant="destructive" size="sm">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-destructive hover:text-destructive"
+          >
             여행 삭제
           </Button>
         }

@@ -63,4 +63,19 @@ describe("TripActionsMenu", () => {
     expect(panel.className).toContain("animate-in");
     expect(panel.className).toContain("zoom-in-95");
   });
+
+  it("#967 — 자식 트리거 버튼을 flat 메뉴 항목으로 스코프한다(테두리·배경 제거·전폭 좌측 정렬)", () => {
+    render(
+      <TripActionsMenu>
+        <button>여행 정보</button>
+      </TripActionsMenu>,
+    );
+    const panel = screen.getByRole("menu");
+    // 계정 메뉴 항목과 동일: 테두리·그림자·배경 제거, 전폭 좌측 정렬, hover=accent.
+    expect(panel.className).toContain("[&>button]:border-0");
+    expect(panel.className).toContain("[&>button]:bg-transparent");
+    expect(panel.className).toContain("[&>button]:w-full");
+    expect(panel.className).toContain("[&>button]:justify-start");
+    expect(panel.className).toContain("[&>button:hover]:bg-accent");
+  });
 });

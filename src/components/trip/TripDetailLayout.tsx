@@ -400,8 +400,13 @@ export function TripDetailLayout({
 
   // spec 063 후속 — 동작 버튼이 늘어 화면을 채우던 것을 우상단 햄버거(☰) 한 곳으로
   // 모은다. "여행 정보(설명·인원, 수정 가능)"도 같은 메뉴 항목으로 둔다.
+  // #967 — 계정 메뉴처럼 항목을 영역으로 나눈다: (1) 정보·편집 (2) 연동·공유
+  // (3) 위험(삭제·나가기). 각 영역은 항상 최소 1개 항목이 있어 빈 영역/이중 구분선이
+  // 생기지 않는다(여행 정보·캘린더 가져오기·나가기(삭제)는 상시 노출).
+  const menuDivider = <div aria-hidden className="bg-border -mx-1 my-1 h-px" />;
   const actionBar = (
     <TripActionsMenu>
+      {/* 정보·편집 */}
       <TripInfoDialog
         tripId={tripId}
         memberCount={memberCount}
@@ -415,6 +420,12 @@ export function TripDetailLayout({
           currentEnd={tripEnd}
         />
       )}
+      {menuDivider}
+      {/* 연동·공유 */}
+      {syncCard}
+      {canEdit && <InviteButton tripId={tripId} memberList={memberList} />}
+      {menuDivider}
+      {/* 위험 */}
       {canEdit && selectedDayId != null && (
         <DayDeleteButton
           tripId={tripId}
@@ -422,8 +433,6 @@ export function TripDetailLayout({
           onDeleted={() => handleDayDeleted(selectedDayId)}
         />
       )}
-      {syncCard}
-      {canEdit && <InviteButton tripId={tripId} memberList={memberList} />}
       {isOwner ? (
         <DeleteTripButton tripId={tripId} tripTitle={tripTitle} />
       ) : (
