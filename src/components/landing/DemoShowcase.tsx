@@ -10,7 +10,7 @@ export default function DemoShowcase() {
     <section aria-labelledby="demo-heading" className="py-8">
       <h2
         id="demo-heading"
-        className="text-muted-foreground text-xs font-medium tracking-wider uppercase"
+        className="text-foreground text-xl font-semibold tracking-tight sm:text-2xl"
       >
         이렇게 보입니다
       </h2>
