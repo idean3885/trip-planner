@@ -23,7 +23,7 @@ export default function CalendarProviderChoice({
   tripId,
 }: CalendarProviderChoiceProps) {
   return (
-    <Card className="p-4">
+    <Card glass className="p-4">
       <div className="space-y-1">
         <h3 className="text-sm font-medium">캘린더 연결</h3>
         <p className="text-muted-foreground text-xs">

@@ -24,7 +24,7 @@ export default function EmptyTripsGuide() {
       </p>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        <Card>
+        <Card glass>
           <CardHeader>
             <div className="flex items-start gap-3">
               <div className="bg-foreground/5 text-foreground mt-0.5 inline-flex size-9 shrink-0 items-center justify-center rounded-full">
@@ -48,7 +48,7 @@ export default function EmptyTripsGuide() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card glass>
           <CardHeader>
             <div className="flex items-start gap-3">
               <div className="bg-foreground/5 text-foreground mt-0.5 inline-flex size-9 shrink-0 items-center justify-center rounded-full">

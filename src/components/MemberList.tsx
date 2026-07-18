@@ -36,7 +36,7 @@ export default async function MemberList({ tripId }: MemberListProps) {
   });
 
   return (
-    <Card>
+    <Card glass>
       <CardHeader>
         <CardTitle>동행자 ({members.length})</CardTitle>
       </CardHeader>

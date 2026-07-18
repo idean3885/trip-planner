@@ -5,14 +5,22 @@ import { cn } from "@/lib/utils";
 function Card({
   className,
   size = "default",
+  glass = false,
   ...props
-}: React.ComponentProps<"div"> & { size?: "default" | "sm" }) {
+}: React.ComponentProps<"div"> & {
+  size?: "default" | "sm";
+  // spec 065 — 글래스 표면 opt-in. 기본은 불투명(bg-card). true 는 단일 인스턴스
+  // 컨테이너 카드에만 켠다(스크롤 목록의 콘텐츠 카드는 성능 위해 불투명 유지).
+  glass?: boolean;
+}) {
   return (
     <div
       data-slot="card"
       data-size={size}
+      data-glass={glass ? "true" : undefined}
       className={cn(
-        "group/card bg-card text-card-foreground ring-foreground/10 flex flex-col gap-4 overflow-hidden rounded-xl py-4 text-sm shadow-xs ring-1 has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:gap-3 data-[size=sm]:py-3 data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl",
+        "group/card text-card-foreground ring-foreground/10 flex flex-col gap-4 overflow-hidden rounded-xl py-4 text-sm shadow-xs ring-1 has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:gap-3 data-[size=sm]:py-3 data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl",
+        glass ? "glass-surface" : "bg-card",
         className,
       )}
       {...props}
