@@ -40,6 +40,26 @@ describe("SwipeCarousel", () => {
     ).not.toBeNull();
   });
 
+  it("#960 — 화면 밖 peek 슬라이드에만 가로 1px 인셋(px-px)을 줘 클립 경계 테두리 새어나옴을 막는다", () => {
+    render(
+      <SwipeCarousel
+        ariaLabel="인셋 캐러셀"
+        anchorKey="k0"
+        onCommit={vi.fn()}
+        renderSlide={(off) => <div>offset:{off}</div>}
+      />,
+    );
+    // 활성(offset 0)은 인셋 없음 — 정렬·너비 불변.
+    const active = screen.getByText("offset:0").parentElement as HTMLElement;
+    expect(active.className).not.toContain("px-px");
+    // peek(±1)은 px-px 인셋.
+    for (const off of ["-1", "1"]) {
+      const peek = screen.getByText(`offset:${off}`)
+        .parentElement as HTMLElement;
+      expect(peek.className).toContain("px-px");
+    }
+  });
+
   it("#956 — syncHeight 를 끄면 트랙의 인라인 height 를 비운다(월↔주 재사용 시 월 높이 잔존 방지)", () => {
     const props = {
       ariaLabel: "높이 캐러셀",

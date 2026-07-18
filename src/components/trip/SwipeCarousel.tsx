@@ -149,8 +149,13 @@ export function SwipeCarousel({
             aria-hidden={off !== 0}
             // contain-layout — 슬라이드별 레이아웃을 격리해 한 칸 변경이 옆 칸
             // 레이아웃 재계산으로 번지지 않게 한다(#673). 색·크기 토큰과 무관.
+            // #960 — 화면 밖 peek 슬라이드에만 가로 1px 인셋을 줘, 다음 슬라이드
+            // 카드의 좌측 테두리가 overflow-hidden 우측 클립 경계에 맞닿아 서브픽셀로
+            // 새어 나오던 희미한 세로선을 없앤다. 활성(off===0)은 그대로 두어 정렬·
+            // 너비 불변. 드래그 중 잠깐 보이는 1px 여백은 인지 불가.
             className={cn(
               "min-w-0 shrink-0 grow-0 basis-full [contain:layout]",
+              off !== 0 && "px-px",
               slideClassName,
             )}
           >
