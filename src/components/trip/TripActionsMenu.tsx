@@ -49,12 +49,19 @@ export function TripActionsMenu({ children }: { children: ReactNode }) {
       >
         <Menu className="size-4" aria-hidden />
       </button>
-      {/* 항상 마운트, 표시만 토글(열린 다이얼로그 보존). */}
+      {/* 항상 마운트, 표시만 토글(열린 다이얼로그 보존). #964 — 표면·등장
+          애니메이션을 계정 메뉴(DropdownMenuContent)와 동일하게 맞춘다: glass-overlay
+          유리 표면 + ring-1 + rounded-lg + fade/zoom/slide 등장. 자식(다이얼로그)을
+          항상 마운트해야 해 base-ui Menu 로 바꾸지 않고 표면만 통일한다(닫힘 애니메이션은
+          hidden 토글 특성상 생략). */}
       <div
         role="menu"
+        data-state={open ? "open" : "closed"}
         className={cn(
-          "bg-popover border-border absolute top-full right-0 z-50 mt-1 w-60 flex-col gap-1 rounded-md border p-1.5 shadow-md",
-          open ? "flex" : "hidden",
+          "glass-overlay text-popover-foreground ring-foreground/10 absolute top-full right-0 z-50 mt-1 w-60 origin-top-right flex-col gap-1 rounded-lg p-1.5 shadow-md ring-1 duration-100",
+          open
+            ? "animate-in fade-in-0 zoom-in-95 slide-in-from-top-2 flex"
+            : "hidden",
         )}
       >
         {children}
