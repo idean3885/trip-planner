@@ -1,12 +1,13 @@
 "use client";
 
 import { LogOut, Settings } from "lucide-react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -24,6 +25,7 @@ import {
  */
 export default function AuthButton() {
   const { data: session } = useSession();
+  const router = useRouter();
 
   if (!session?.user) return null;
 
@@ -41,14 +43,18 @@ export default function AuthButton() {
         {initial}
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
-        {/* 이메일 — 정체성 확인용 읽기전용 라벨(상단). */}
-        <DropdownMenuLabel className="truncate normal-case">
-          {label}
-        </DropdownMenuLabel>
-        <DropdownMenuItem render={<Link href="/settings" />}>
-          <Settings aria-hidden />
-          설정
-        </DropdownMenuItem>
+        {/* #948 — GroupLabel(이메일)은 반드시 Group 안에 있어야 base-ui 가 크래시하지
+            않는다. Item 에 render={<Link>} 도 크래시하므로 onClick 라우팅을 쓴다. */}
+        <DropdownMenuGroup>
+          {/* 이메일 — 정체성 확인용 읽기전용 라벨(상단). */}
+          <DropdownMenuLabel className="truncate normal-case">
+            {label}
+          </DropdownMenuLabel>
+          <DropdownMenuItem onClick={() => router.push("/settings")}>
+            <Settings aria-hidden />
+            설정
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => signOut()}>
           <LogOut aria-hidden />
