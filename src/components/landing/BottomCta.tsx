@@ -13,14 +13,13 @@ export default function BottomCta() {
     <section aria-labelledby="cta-heading" className="py-8">
       <h2
         id="cta-heading"
-        className="text-muted-foreground text-xs font-medium tracking-wider uppercase"
+        className="text-foreground text-xl font-semibold tracking-tight sm:text-2xl"
       >
         시작해 볼까요
       </h2>
-      <div className="mt-4 space-y-3">
-        <p className="text-muted-foreground text-sm">
-          Google 계정으로 로그인하면 바로 여행을 만들 수 있습니다.
-        </p>
+      {/* spec 070 — 인증수단 언급 서브텍스트 제거(로그인 화면 반복·구현세부 결합).
+          Hero CTA 와 대칭으로 제목+버튼만 둔다. */}
+      <div className="mt-4">
         <div className="flex flex-wrap gap-2">
           <Button
             nativeButton={false}

@@ -107,10 +107,18 @@ export function SwipeCarousel({
   // 외곽 overflow-hidden 으로 잘려 빈 스크롤이 생기지 않는다. 활성 슬라이드 내용이
   // 바뀌면(활동 CRUD·날짜 이동) ResizeObserver 가 다시 맞춘다.
   useIsoLayoutEffect(() => {
-    if (!syncHeight) return;
     const track = trackRef.current;
+    if (!track) return;
+    // #956 — syncHeight 가 꺼지면 인라인 height 를 비운다. 캘린더 월↔주 전환은
+    // 같은 SwipeCarousel 인스턴스를 재사용해(같은 타입·같은 위치) 트랙 DOM 이
+    // 유지되므로, 월 뷰(syncHeight=on)에서 고정한 인라인 height 가 주 뷰로 넘어와
+    // 주간 한 줄 아래 월 높이만큼 빈 영역이 남던 회귀. 끄면 콘텐츠 높이로 되돌린다.
+    if (!syncHeight) {
+      track.style.height = "";
+      return;
+    }
     const active = activeSlideRef.current;
-    if (!track || !active) return;
+    if (!active) return;
     const apply = () => {
       track.style.height = `${active.offsetHeight}px`;
     };

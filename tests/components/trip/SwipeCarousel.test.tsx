@@ -8,6 +8,12 @@ import { describe, expect, it, vi } from "vitest";
 
 import { SwipeCarousel } from "@/components/trip/SwipeCarousel";
 
+/** role=group 래퍼의 트랙(첫 자식 div)을 반환. syncHeight 가 인라인 height 를 건다. */
+function trackOf(label: string): HTMLElement {
+  const group = screen.getByRole("group", { name: label });
+  return group.firstElementChild as HTMLElement;
+}
+
 describe("SwipeCarousel", () => {
   it("이전·현재·다음 3슬라이드를 렌더하고 핍은 aria-hidden 이다", () => {
     render(
@@ -32,5 +38,20 @@ describe("SwipeCarousel", () => {
     expect(
       screen.getByText("offset:-1").closest("[aria-hidden='true']"),
     ).not.toBeNull();
+  });
+
+  it("#956 — syncHeight 를 끄면 트랙의 인라인 height 를 비운다(월↔주 재사용 시 월 높이 잔존 방지)", () => {
+    const props = {
+      ariaLabel: "높이 캐러셀",
+      anchorKey: "k0",
+      onCommit: vi.fn(),
+      renderSlide: (off: -1 | 0 | 1) => <div>offset:{off}</div>,
+    } as const;
+    // 월 뷰 상당 — syncHeight on 이면 트랙에 인라인 height 가 걸린다(jsdom 은 0px).
+    const { rerender } = render(<SwipeCarousel {...props} syncHeight />);
+    expect(trackOf("높이 캐러셀").style.height).not.toBe("");
+    // 주 뷰 전환 상당 — 같은 인스턴스 재사용. 끄면 인라인 height 가 비워져야 한다.
+    rerender(<SwipeCarousel {...props} />);
+    expect(trackOf("높이 캐러셀").style.height).toBe("");
   });
 });

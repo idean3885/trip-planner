@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [4.12.0] - 2026-07-19
+
+### Added
+
+- **대문을 정리했습니다.** 섹션 제목을 본문보다 크고 진하게 키워 구조가 한눈에 들어오게 하고, 하단 "시작해 볼까요"에서 군더더기 안내 문구를 뺐습니다. 구글 캘린더 제한 안내는 시작 버튼 뒤로 옮겨 전환을 방해하지 않게 하고, 반복되던 소개 문구를 정리했습니다. ([#954](https://github.com/idean3885/trip-planner/issues/954))
+
+### Fixed
+
+- **여행 상세 모바일에서 캘린더 주간 접힘 시 빈 영역을 없앴습니다.** 아래로 스크롤해 캘린더가 주간으로 접힐 때 그 아래 월간 높이만큼 빈 영역이 남던 문제를 고쳐, 주간 한 줄 높이로 줄어듭니다. ([#956](https://github.com/idean3885/trip-planner/issues/956))
+
+
 ## [4.11.0] - 2026-07-19
 
 ### Added
