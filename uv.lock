@@ -1015,7 +1015,7 @@ wheels = [
 
 [[package]]
 name = "trip-planner-mcp"
-version = "4.8.0"
+version = "4.9.0"
 source = { editable = "." }
 dependencies = [
     { name = "httpx" },
