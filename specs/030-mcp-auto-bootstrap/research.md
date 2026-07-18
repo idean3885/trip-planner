@@ -42,7 +42,7 @@ Phase 0 산출.
 
 **Rationale**:
 - macOS Keychain은 OS 표준 + 사용자 본인 권한으로만 접근. 평문 노출 0
-- `~/.claude/toolkits/dooray/`의 키체인 사용 패턴 정합 (사내 toolkit 참조)
+- `~/.claude/toolkits/ops-agent-vault/`의 키체인 사용 패턴 정합 (사내 ops-agent-vault 참조)
 - Linux fallback file은 0600(소유자 r/w만)으로 권한 제한
 
 **Alternatives considered**:
