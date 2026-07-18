@@ -1,30 +1,60 @@
 "use client";
 
+import { LogOut, Settings } from "lucide-react";
 import Link from "next/link";
 import { signOut, useSession } from "next-auth/react";
 
-import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
+/**
+ * spec 069 — 헤더 계정 메뉴.
+ *
+ * 이전에는 이메일·설정·로그아웃을 헤더에 flat 하게 나열하고, 좁은 화면 넘침(#641)을
+ * 뷰포트별 표시/숨김 분기로 봉합했다 — "웹/모바일 단일 반응형" 원칙 위반.
+ * 세 항목을 단일 계정 메뉴(이니셜 원형 트리거 → 드롭다운)로 접어 분기를 없앤다.
+ * 여행 컨텍스트 액션(TripActionsMenu, ☰)과는 스코프가 달라 병합하지 않고 분리 유지한다.
+ * 드롭다운은 포털 기반이라 sticky 캘린더 등과의 z-index 충돌이 없다.
+ */
 export default function AuthButton() {
   const { data: session } = useSession();
 
   if (!session?.user) return null;
 
-  const displayName = session.user.email || session.user.name || "사용자";
+  const name = session.user.name ?? "";
+  const email = session.user.email ?? "";
+  const label = email || name || "사용자";
+  const initial = (name || email || "?").trim().charAt(0).toUpperCase() || "?";
 
   return (
-    <div className="flex min-w-0 items-center gap-1 sm:gap-3">
-      {/* 좁은 화면(13 mini, 375px)에서 헤더 가로 넘침을 막는다(#641):
-          긴 이메일은 sm 미만에서 숨기고, sm 이상에서도 폭을 제한해 줄임표 처리. */}
-      <span className="text-muted-foreground hidden max-w-[12rem] truncate text-sm sm:inline-block">
-        {displayName}
-      </span>
-      <Button variant="ghost" size="sm" render={<Link href="/settings" />}>
-        설정
-      </Button>
-      <Button variant="ghost" size="sm" onClick={() => signOut()}>
-        로그아웃
-      </Button>
-    </div>
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        aria-label="계정 메뉴"
+        className="border-border bg-card text-foreground hover:bg-muted focus-visible:ring-ring flex size-9 shrink-0 items-center justify-center rounded-full border text-sm font-semibold transition-colors outline-none focus-visible:ring-2"
+      >
+        {initial}
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-56">
+        {/* 이메일 — 정체성 확인용 읽기전용 라벨(상단). */}
+        <DropdownMenuLabel className="truncate normal-case">
+          {label}
+        </DropdownMenuLabel>
+        <DropdownMenuItem render={<Link href="/settings" />}>
+          <Settings aria-hidden />
+          설정
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={() => signOut()}>
+          <LogOut aria-hidden />
+          로그아웃
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

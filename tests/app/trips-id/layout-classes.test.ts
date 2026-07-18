@@ -94,12 +94,15 @@ describe("trip 상세 레이아웃 (spec 032 — 캘린더 중심 단일 화면)
     expect(siteHeaderSrc).toMatch(/shrink-0[^"]*whitespace-nowrap/);
   });
 
-  it("AuthButton 이메일은 sm 미만에서 숨겨 헤더 가로 넘침을 막는다(#641)", () => {
+  it("AuthButton 은 계정 메뉴로 접혀 뷰포트 분기 없이 헤더 넘침을 막는다(spec 069)", () => {
+    // spec 069 — #641 의 sm 뷰포트 분기 봉합을 걷고, 이메일·설정·로그아웃을 단일
+    // 계정 메뉴(DropdownMenu)로 접었다. 뷰포트 분기 클래스가 없어야 한다.
     const authSrc = readFileSync(
       resolve(REPO_ROOT, "src/components/AuthButton.tsx"),
       "utf8",
     );
-    expect(authSrc).toMatch(/hidden[^"]*sm:inline-block/);
+    expect(authSrc).toContain("DropdownMenu");
+    expect(authSrc).not.toContain("sm:inline-block");
   });
 
   it("동기화 진입은 액션바의 단일 버튼(syncCard)으로 모은다 (spec 043 US3)", () => {
