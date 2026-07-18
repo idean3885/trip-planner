@@ -434,8 +434,9 @@ export function TripDetailLayout({
 
   return (
     <div className="space-y-4">
-      {/* spec 063 후속 — 브레드크럼(날짜)과 ☰ 메뉴를 한 줄에 둬 빈 줄을 없앤다. */}
-      <div className="flex items-start justify-between gap-2">
+      {/* spec 063 후속 — 브레드크럼(날짜)과 ☰ 메뉴를 한 줄에 둬 빈 줄을 없앤다.
+          #936 — 다른 섹션과 동일한 글래스 표면으로 통일(SiteHeader 유리 바와 같은 톤). */}
+      <div className="glass-surface border-foreground/10 flex items-center justify-between gap-2 rounded-xl border px-4 py-2.5 shadow-xs">
         <div className="min-w-0 flex-1">{breadcrumb}</div>
         {actionBar}
       </div>
@@ -470,11 +471,11 @@ export function TripDetailLayout({
           위 액션바 버튼으로 연다(spec 043 — 단일 진입). */}
       <div className="space-y-4 lg:hidden">
         {/* #915 — 주간 달력을 일정 섹션과 같은 콘텐츠 폭에 맞춘다(풀블리드 제거).
-            spec 068 — 흰 글래스 박스(ring·shadow)를 걷고 투명 + backdrop-blur 로 캔버스에
-            블렌딩한다(상단 브레드크럼 등 다른 섹션과 통일). sticky 로 상단 고정되면 뒤
-            콘텐츠는 블러로 가려 날짜가 읽히게 한다. */}
-        <div className="sticky top-0 z-20 rounded-xl p-2 backdrop-blur-md">
-          {/* spec 068 — 투명 글래스(배경 없음, 블러만) */}
+            #936 — 다른 섹션(브레드크럼·일정·빈상태)과 동일한 글래스 표면으로 통일한다
+            (SiteHeader 유리 바와 같은 glass-surface + border + rounded + shadow). 앞서
+            투명+블러는 표면이 없어 글래스가 깨져 보였다. sticky 유지. */}
+        <div className="glass-surface border-foreground/10 sticky top-0 z-20 rounded-xl border p-2 shadow-xs">
+          {/* #936 — 통일 글래스 표면 */}
           <CalendarView
             tripStart={tripStart}
             tripEnd={tripEnd}

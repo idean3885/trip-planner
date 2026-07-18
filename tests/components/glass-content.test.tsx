@@ -40,11 +40,11 @@ describe("글래스 콘텐츠 확장 (spec 066/glass-content)", () => {
     expect(card.className).not.toContain("bg-card");
   });
 
-  it("여행 상세 모바일 주간 달력 래퍼가 투명 backdrop-blur로 렌더된다(spec 068)", () => {
-    // spec 068 — 흰 글래스 박스를 걷고 투명+blur 로 캔버스 블렌딩.
+  it("여행 상세 모바일 주간 달력 래퍼가 글래스 표면으로 렌더된다(#936 통일)", () => {
+    // spec 068 의 투명+blur 를 #936 에서 glass-surface+border 로 되돌려 섹션 통일.
     const src = read("src/components/trip/TripDetailLayout.tsx");
-    expect(src).toMatch(/sticky top-0 z-20[^"]*backdrop-blur/);
-    expect(src).not.toMatch(/glass-surface[^"]*sticky top-0 z-20/);
+    expect(src).toMatch(/glass-surface[^"]*sticky top-0 z-20/);
+    expect(src).not.toMatch(/sticky top-0 z-20[^"]*backdrop-blur/);
   });
 });
 

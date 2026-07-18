@@ -13,6 +13,7 @@ const read = (p: string) => readFileSync(resolve(ROOT, p), "utf8");
 const TRIP_PAGE = read("src/app/trips/[id]/page.tsx");
 const CARD = read("src/components/ui/card.tsx");
 const GLOBALS = read("src/app/globals.css");
+const DAP = read("src/components/trip/DayActivitiesPane.tsx");
 const DETAIL = read("src/components/trip/TripDetailLayout.tsx");
 const CAL_UI = read("src/components/ui/calendar.tsx");
 const CAL_VIEW = read("src/components/trip/CalendarView.tsx");
@@ -45,9 +46,11 @@ describe("카드 테두리 근본 수정 (spec 068/card-border)", () => {
 });
 
 describe("캘린더 블렌딩·사이즈 (spec 068/calendar-blend)", () => {
-  it("캘린더 래퍼가 흰 글래스 박스 대신 backdrop-blur(투명)로 렌더", () => {
-    expect(DETAIL).toMatch(/sticky top-0 z-20[^"]*backdrop-blur/);
-    expect(DETAIL).not.toMatch(/glass-surface[^"]*sticky top-0 z-20/);
+  it("캘린더 래퍼가 글래스 표면(glass-surface+border)으로 통일된다(#936)", () => {
+    // #936 — 투명+블러는 표면이 없어 글래스가 깨져 보여, SiteHeader 유리 바와 같은
+    // glass-surface + border 로 되돌려 다른 섹션과 통일한다.
+    expect(DETAIL).toMatch(/glass-surface[^"]*sticky top-0 z-20/);
+    expect(DETAIL).not.toMatch(/sticky top-0 z-20[^"]*backdrop-blur/);
   });
   it("셀 종횡비가 7/5 로 더 낮아졌다", () => {
     expect(CAL_UI).toContain("aspect-[7/5]");
@@ -64,5 +67,19 @@ describe("일정 표시 (spec 068/activity-dot)", () => {
   it("기간 밴드가 세그먼트 끝만 라운딩한다(가운데 연속)", () => {
     expect(GLOBALS).toContain(":not(.cal-range) + .cal-range");
     expect(GLOBALS).toContain(".cal-range:has(+ :not(.cal-range))");
+  });
+});
+
+describe("섹션 글래스 통일 + 빈 공간 (#936)", () => {
+  it("월 캘린더 캐러셀이 syncHeight로 트랙 높이를 현재 달에 맞춘다(빈 공간 제거)", () => {
+    expect(CAL_VIEW).toContain("syncHeight");
+  });
+  it("브레드크럼+메뉴 줄이 글래스 섹션으로 통일된다", () => {
+    expect(DETAIL).toMatch(
+      /glass-surface[^"]*flex items-center justify-between/,
+    );
+  });
+  it("빈 상태('일정 없음') 카드가 glass 로 통일된다", () => {
+    expect(DAP).toContain("<Card glass>");
   });
 });

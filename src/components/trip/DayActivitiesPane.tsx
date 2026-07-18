@@ -136,8 +136,8 @@ export const DayActivitiesPane = memo(function DayActivitiesPane({
         />
       )}
       {dayId === null ? (
-        // Day 미생성(빈 날짜) — 빈 상태를 카드로 분명히 보인다.
-        <Card>
+        // Day 미생성(빈 날짜) — 빈 상태를 글래스 카드로 분명히 보인다(#936 통일).
+        <Card glass>
           <CardContent className="space-y-3 py-6 text-center">
             <p className="text-muted-foreground text-sm">
               이 날짜에 등록된 일정이 없습니다.
