@@ -47,23 +47,28 @@ export default function RootLayout({
       >
         <SessionProvider>
           <AnalyticsUserId />
-          <header className="lg:max-w-wide mx-auto flex w-full max-w-2xl items-center justify-between gap-2 px-4 pt-4 sm:gap-4">
-            <div className="flex items-center gap-6">
-              <Link
-                href="/"
-                className="text-foreground/80 hover:text-foreground shrink-0 text-sm font-semibold whitespace-nowrap"
-              >
-                우리의 여행
-              </Link>
-              {/* spec 026 묶음 D — 데스크탑 ≥1024px에서 주요 액션 가로 노출. 모바일은 로고만. */}
-              {/* API 문서는 일반 사용자에게 불필요해 헤더에서 제외(#899). 진입점은 대문 하단·푸터에 유지. */}
-              <nav className="text-muted-foreground hidden items-center gap-4 text-sm lg:flex">
-                <Link href="/trips" className="hover:text-foreground">
-                  여행 목록
+          {/* spec 065 — 헤더는 글래스 바(반투명+블러). sticky 미승격(여행 상세 모바일
+              주간 달력 sticky offset 충돌 회피). 화면 가장자리에서 px-4 만큼 인셋된
+              떠 있는 유리 바 — 카드 톤과 통일(rounded-xl·ring·shadow-xs). */}
+          <header className="lg:max-w-wide mx-auto w-full max-w-2xl px-4 pt-4">
+            <div className="glass-surface ring-foreground/10 flex items-center justify-between gap-2 rounded-xl px-4 py-2.5 shadow-xs ring-1 sm:gap-4">
+              <div className="flex items-center gap-6">
+                <Link
+                  href="/"
+                  className="text-foreground/80 hover:text-foreground shrink-0 text-sm font-semibold whitespace-nowrap"
+                >
+                  우리의 여행
                 </Link>
-              </nav>
+                {/* spec 026 묶음 D — 데스크탑 ≥1024px에서 주요 액션 가로 노출. 모바일은 로고만. */}
+                {/* API 문서는 일반 사용자에게 불필요해 헤더에서 제외(#899). 진입점은 대문 하단·푸터에 유지. */}
+                <nav className="text-muted-foreground hidden items-center gap-4 text-sm lg:flex">
+                  <Link href="/trips" className="hover:text-foreground">
+                    여행 목록
+                  </Link>
+                </nav>
+              </div>
+              <AuthButton />
             </div>
-            <AuthButton />
           </header>
           <main className="lg:max-w-wide mx-auto w-full max-w-2xl flex-1 px-4 py-6 pb-16">
             {children}
