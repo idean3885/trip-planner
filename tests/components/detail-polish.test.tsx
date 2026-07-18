@@ -53,8 +53,8 @@ describe("캘린더 블렌딩·사이즈 (spec 068/calendar-blend)", () => {
     expect(DETAIL).toMatch(/glass-surface[^"]*sticky top-0 z-20/);
     expect(DETAIL).not.toMatch(/sticky top-0 z-20[^"]*backdrop-blur/);
   });
-  it("셀 종횡비가 7/5 로 더 낮아졌다", () => {
-    expect(CAL_UI).toContain("aspect-[7/5]");
+  it("셀 종횡비가 5/3 로 더 낮아졌다(#940 선택 박스·높이 축소)", () => {
+    expect(CAL_UI).toContain("aspect-[5/3]");
     expect(CAL_UI).not.toContain("aspect-square");
   });
 });
@@ -106,5 +106,14 @@ describe("캘린더 글래스 무력화 수정·라운딩·도킹 (#938)", () =>
     expect(DETAIL).toMatch(
       /rounded-t-none[^"]*border-t-0|border-t-0[^"]*rounded-t-none/,
     );
+  });
+});
+
+describe("점 색·밴드 이음새 (#940)", () => {
+  it("일정 점 색이 코랄(--pink-400)로 파랑 밴드와 구분된다", () => {
+    expect(GLOBALS).toMatch(/--cal-activity-bar:\s*var\(--pink-400\)/);
+  });
+  it("여행기간 밴드 기본 라운딩을 0으로 두어 가운데가 이어진다", () => {
+    expect(GLOBALS).toMatch(/\.rdp-day\.cal-range\s*\{[^}]*border-radius:\s*0/);
   });
 });
