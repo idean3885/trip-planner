@@ -8,9 +8,9 @@ export default function FeatureHighlights() {
     <section aria-labelledby="features-heading" className="py-8">
       <h2
         id="features-heading"
-        className="text-muted-foreground text-xs font-medium tracking-wider uppercase"
+        className="text-foreground text-xl font-semibold tracking-tight sm:text-2xl"
       >
-        계획부터 현장까지, 이렇게 돕습니다
+        여행 준비를 이렇게 돕습니다
       </h2>
       <div className="mt-4 space-y-3">
         {landingFeatures.map(({ image, title, summary, bullets }) => (
