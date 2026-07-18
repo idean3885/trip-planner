@@ -23,7 +23,6 @@ import { getRatesForPairs } from "@/lib/fx/rates";
 import { prisma } from "@/lib/prisma";
 import { getResolvedPeriod } from "@/lib/trip-period";
 
-
 // DB-정본 전환(#239) 후 이 페이지는 항상 세션 기반 동적 렌더. (#255+ 핫픽스)
 export const dynamic = "force-dynamic";
 
@@ -174,7 +173,7 @@ async function DbTripPage({
   // 햄버거(☰) 메뉴와 같은 줄에 두려고 TripDetailLayout 에 노드로 넘긴다(빈 줄 제거).
   const breadcrumb = (
     <nav className="text-muted-foreground flex flex-wrap items-center gap-1.5 text-sm">
-      <Link href="/" className="hover:text-foreground">
+      <Link href="/trips" className="hover:text-foreground">
         여행 목록
       </Link>
       <ChevronRight className="size-3.5 shrink-0" aria-hidden />

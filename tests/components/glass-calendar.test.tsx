@@ -64,7 +64,7 @@ describe("글래스 캘린더 토큰·스타일 (spec 067/cal-glass)", () => {
 
 describe("캘린더 사이즈 (spec 067/cal-size)", () => {
   it("셀 종횡비가 정사각보다 낮다(가로>세로)", () => {
-    expect(CAL_UI).toContain("aspect-[6/5]");
+    expect(CAL_UI).toContain("aspect-[7/5]");
     expect(CAL_UI).not.toContain("aspect-square");
   });
 });
