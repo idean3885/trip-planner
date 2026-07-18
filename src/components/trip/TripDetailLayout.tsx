@@ -433,9 +433,15 @@ export function TripDetailLayout({
   );
 
   return (
-    <div className="space-y-4">
-      {/* spec 063 후속 — 브레드크럼(날짜)과 ☰ 메뉴를 한 줄에 둬 빈 줄을 없앤다. */}
-      <div className="flex items-start justify-between gap-2">
+    <div className="-mt-6 space-y-4">
+      {/* #938 — 헤더와 도킹: main pt-6 간격을 당겨 붙임 */}
+      {/* spec 063 후속 — 브레드크럼(날짜)과 ☰ 메뉴를 한 줄에 둬 빈 줄을 없앤다.
+          #936 — 다른 섹션과 동일한 글래스 표면으로 통일(SiteHeader 유리 바와 같은 톤). */}
+      {/* #938 — 상단 헤더 유리 바와 도킹: 위 모서리 각지게 + 상단 테두리 제거해
+          헤더 하단과 이어 하나의 앱바처럼 보이게 한다(SiteHeader 가 rounded-b-none). */}
+      <div className="glass-surface border-foreground/10 relative z-30 flex items-center justify-between gap-2 rounded-xl rounded-t-none border border-t-0 px-4 py-2.5 shadow-xs">
+        {/* #942 — glass-surface(backdrop-filter)가 만든 stacking context에 ☰ 드롭다운이
+            갇혀 sticky 캘린더(z-20) 뒤로 숨던 회귀. 바를 z-30 으로 올려 위에 둔다. */}
         <div className="min-w-0 flex-1">{breadcrumb}</div>
         {actionBar}
       </div>
@@ -450,7 +456,8 @@ export function TripDetailLayout({
       <div className="lg:gap-grid-comfy hidden lg:grid lg:grid-cols-2 lg:items-start">
         {/* spec 043 US4 — 데스크탑은 좌측 캘린더를 sticky 로 고정해 우측 일정이
             길어도 캘린더가 화면에 남는다(모바일 경계 멈춤의 데스크탑 대응). */}
-        <div className="min-w-0 lg:sticky lg:top-6">
+        <div className="glass-surface border-foreground/10 min-w-0 rounded-xl border p-2 shadow-xs lg:sticky lg:top-6">
+          {/* #938 — 데스크탑 캘린더도 유리 표면 통일 */}
           <CalendarView
             tripStart={tripStart}
             tripEnd={tripEnd}
@@ -470,10 +477,11 @@ export function TripDetailLayout({
           위 액션바 버튼으로 연다(spec 043 — 단일 진입). */}
       <div className="space-y-4 lg:hidden">
         {/* #915 — 주간 달력을 일정 섹션과 같은 콘텐츠 폭에 맞춘다(풀블리드 제거).
-            #919 — 일정 카드와 같은 라운딩·그림자·테두리(Card 토큰)로 통일해, 민 흰
-            사각형이 아래 라운드 카드와 만나며 생기던 코너 이음새 아티팩트를 없앤다. */}
-        <div className="glass-surface ring-foreground/10 sticky top-0 z-20 rounded-xl p-2 shadow-xs ring-1">
-          {/* spec 066 — 주간 달력 래퍼 글래스(셀 텍스트·상태는 유지) */}
+            #936 — 다른 섹션(브레드크럼·일정·빈상태)과 동일한 글래스 표면으로 통일한다
+            (SiteHeader 유리 바와 같은 glass-surface + border + rounded + shadow). 앞서
+            투명+블러는 표면이 없어 글래스가 깨져 보였다. sticky 유지. */}
+        <div className="glass-surface border-foreground/10 sticky top-0 z-20 rounded-xl border p-2 shadow-xs">
+          {/* #936 — 통일 글래스 표면 */}
           <CalendarView
             tripStart={tripStart}
             tripEnd={tripEnd}

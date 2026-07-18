@@ -121,9 +121,8 @@ export function CalendarView({
     ...(extraModifiers ?? {}),
   };
 
-  // spec 031 — 셀 하단에 가로 bar 를 그려 연속 일자를 시각적으로 연결한다.
-  // `after:inset-x-0` 으로 셀 가로 너비 전체를 채우고, 인접 셀 hasActivity 가
-  // 같은 위치/색이면 Google Calendar 멀티데이 이벤트처럼 한 줄로 이어 보인다.
+  // spec 068 — 일정 있는 날은 셀 하단 중앙에 점(dot)으로 표시한다. 과거 연속 연결
+  // 바(spec 031)는 글래스 톤에 과해 점으로 절제한다.
   const modifiersClassNames: Record<string, string> = {
     // spec 055 — 디자인은 여행기간 셀에 배경 채움을 두지 않고 텍스트로만 강조한다.
     // `.cal-range` 마커만 부여하면 globals.css `.trip-cal` 규칙이 평일=진한 본문색·
@@ -133,7 +132,7 @@ export function CalendarView({
       ? {}
       : {
           hasActivity:
-            "relative after:absolute after:bottom-1 after:inset-x-0 after:h-0.5 after:bg-primary",
+            "relative after:absolute after:bottom-1 after:left-1/2 after:size-1 after:-translate-x-1/2 after:rounded-full after:bg-[var(--cal-activity-bar)]",
         }),
     ...(extraModifierClassNames ?? {}),
   };
@@ -192,7 +191,9 @@ export function CalendarView({
       className={cn(
         // spec 055 — Figma 디자인 재색을 위한 스코프 마커. globals.css `.trip-cal`
         // 규칙이 요일 헤더(일=초록·토=파랑)·여행기간 강조·선택·오늘 색을 입힌다.
-        "trip-cal",
+        // #938 — bg-transparent 로 DayPicker 루트 기본 bg-background(불투명 흰색)를
+        // 덮는다. 부모 glass-surface 유리 표면이 캘린더 안에서도 그대로 비치게 한다.
+        "trip-cal bg-transparent",
         // spec 040/043 — 데스크탑 가로 grow: 컨테이너를 채우되(root w-full) 좌우
         // 약간 여백을 두고, max-w 로 폭 상한을 둬 셀(aspect-square)이 과대해지며
         // 세로가 화면을 잡아먹는 것을 막는다(#721 — 가로 빔/세로 과대 동시 해소).
@@ -274,6 +275,9 @@ function MobileCompactCalendar({
           renderSlide={(off) =>
             renderMonth(addMonths(displayMonth, off), off === 0)
           }
+          // spec — 트랙 높이를 현재 달에 맞춘다. 없으면 flex 트랙이 이웃 달(6주)
+          // 높이로 커져 5주짜리 현재 달 아래에 빈 행이 떠 보인다(주간만 보기 위 공백).
+          syncHeight
         />
       ) : (
         <SwipeCarousel
@@ -353,15 +357,15 @@ function WeekStrip({
             className={cn(
               "flex flex-1 flex-col items-center gap-0.5 rounded-md py-1.5 text-sm transition-colors",
               isSelected
-                ? "bg-cal-selected-bg text-cal-selected-text font-semibold"
+                ? "text-foreground bg-[var(--cal-selected-glass)] font-semibold ring-1 ring-[var(--cal-ring)] ring-inset"
                 : inRange
                   ? isWeekend
                     ? "text-cal-trip-weekend font-semibold"
-                    : "text-foreground font-semibold hover:bg-muted"
+                    : "text-foreground hover:bg-muted font-semibold"
                   : "text-cal-inactive hover:bg-muted",
               !isSelected &&
                 isToday &&
-                "shadow-[inset_0_0_0_1px_var(--cal-today-border)]",
+                "shadow-[inset_0_0_0_1.5px_var(--cal-ring)]",
             )}
           >
             <span
@@ -380,8 +384,8 @@ function WeekStrip({
             <span
               aria-hidden
               className={cn(
-                "h-0.5 w-4 rounded-full",
-                hasActivity ? "bg-primary" : "bg-transparent",
+                "size-1 rounded-full",
+                hasActivity ? "bg-[var(--cal-activity-bar)]" : "bg-transparent",
               )}
             />
           </button>
@@ -422,7 +426,7 @@ function SingleTripDayButton({
         ) : (
           <span
             aria-hidden
-            className="bg-primary pointer-events-none absolute inset-x-0 bottom-1 h-0.5"
+            className="pointer-events-none absolute bottom-1 left-1/2 size-1 -translate-x-1/2 rounded-full bg-[var(--cal-activity-bar)]"
           />
         ))}
     </div>

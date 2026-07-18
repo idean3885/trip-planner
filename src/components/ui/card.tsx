@@ -19,8 +19,12 @@ function Card({
       data-size={size}
       data-glass={glass ? "true" : undefined}
       className={cn(
-        "group/card text-card-foreground ring-foreground/15 flex flex-col gap-4 overflow-hidden rounded-xl py-4 text-sm shadow-xs ring-1 has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:gap-3 data-[size=sm]:py-3 data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl",
-        glass ? "glass-surface" : "bg-card",
+        // spec 068 — 테두리를 ring(바깥 box-shadow) 대신 border(박스모델)로. ring 은
+        // overflow-hidden 조상(스와이프 캐러셀 등)이 좌/우/상단을 잘라 테두리가 군데군데
+        // 사라지던 고질 버그의 원인. border 는 요소 자기 박스 안이라 조상 overflow 무관.
+        "group/card text-card-foreground border-foreground/10 flex flex-col gap-4 rounded-xl border py-4 text-sm shadow-xs has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:gap-3 data-[size=sm]:py-3 data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl",
+        // 글래스 카드는 overflow-hidden 을 빼서 backdrop-filter 클립 충돌도 피한다.
+        glass ? "glass-surface" : "bg-card overflow-hidden",
         className,
       )}
       {...props}

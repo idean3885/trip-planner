@@ -3,7 +3,7 @@
  *
  * 월 그리드 루트에 `.trip-cal` 스코프 마커가 붙고, 여행기간 셀에 `.cal-range`
  * 마커가 부여되며(배경 채움 대신 텍스트 강조), 모바일 주간 스트립이 디자인 색
- * 체계(선택=연녹 배경, 여행주말=초록, 요일 라벨 일=초록·토=파랑)를 적용하는지 본다.
+ * 체계(선택=글래스 틴트+링[spec 067], 여행주말=초록, 요일 라벨 일=초록·토=파랑)를 본다.
  */
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
@@ -62,7 +62,10 @@ describe("주간 스트립 — 디자인 색 체계", () => {
     );
     fireEvent.click(screen.getByRole("button", { name: "주간만 보기" }));
     // off===0(현재 주) 스트립 = 선택 버튼(aria-pressed)이 있는 grid.
-    const grids = screen.getAllByRole("grid", { name: "선택 주", hidden: true });
+    const grids = screen.getAllByRole("grid", {
+      name: "선택 주",
+      hidden: true,
+    });
     const current = grids.find((g) =>
       within(g).queryByRole("button", { pressed: true }),
     );
@@ -70,18 +73,17 @@ describe("주간 스트립 — 디자인 색 체계", () => {
     return { ...utils, current };
   }
 
-  it("선택일 버튼이 연녹 선택 배경(bg-cal-selected-bg)을 쓴다", () => {
+  it("선택일 버튼이 반투명 글래스 틴트 + 브랜드 링을 쓴다(spec 067)", () => {
+    // spec 067 — 솔리드 연녹 박스를 걷고 글래스 톤(프로스트 틴트 + 얇은 링)으로 전환.
     const { current } = renderWeek();
     const selectedBtn = within(current).getByRole("button", { pressed: true });
-    expect(selectedBtn.className).toContain("bg-cal-selected-bg");
-    expect(selectedBtn.className).toContain("text-cal-selected-text");
+    expect(selectedBtn.className).toContain("bg-[var(--cal-selected-glass)]");
+    expect(selectedBtn.className).toContain("ring-[var(--cal-ring)]");
   });
 
   it("요일 라벨이 일=초록·토=파랑·평일=그레이 토큰을 쓴다", () => {
     const { current } = renderWeek();
-    const labels = within(current).getAllByText(
-      /^(일|월|화|수|목|금|토)$/,
-    );
+    const labels = within(current).getAllByText(/^(일|월|화|수|목|금|토)$/);
     const sun = labels.find((el) => el.textContent === "일")!;
     const sat = labels.find((el) => el.textContent === "토")!;
     const mon = labels.find((el) => el.textContent === "월")!;
@@ -94,9 +96,7 @@ describe("주간 스트립 — 디자인 색 체계", () => {
     const { current } = renderWeek();
     // 06-07 일요일 셀 버튼(여행기간 안 주말).
     const buttons = within(current).getAllByRole("button");
-    const sundayCell = buttons.find((b) =>
-      within(b).queryByText("7"),
-    );
+    const sundayCell = buttons.find((b) => within(b).queryByText("7"));
     expect(sundayCell?.className).toContain("text-cal-trip-weekend");
   });
 });
