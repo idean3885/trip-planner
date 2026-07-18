@@ -58,7 +58,11 @@ export function TripActionsMenu({ children }: { children: ReactNode }) {
         role="menu"
         data-state={open ? "open" : "closed"}
         className={cn(
-          "glass-overlay text-popover-foreground ring-foreground/10 absolute top-full right-0 z-50 mt-1 w-60 origin-top-right flex-col gap-1 rounded-lg p-1.5 shadow-md ring-1 duration-100",
+          "glass-overlay text-popover-foreground ring-foreground/10 absolute top-full right-0 z-50 mt-1 w-60 origin-top-right flex-col gap-0.5 rounded-lg p-1.5 shadow-md ring-1 duration-100",
+          // #967 — 자식 트리거 버튼을 계정 메뉴(DropdownMenuItem)와 같은 flat 항목으로
+          // 스코프한다: 테두리·그림자·배경을 벗기고 전폭 좌측 정렬, hover=bg-accent.
+          // 각 컴포넌트의 variant 를 건드리지 않아 다른 사용처(컴포넌트 갤러리)는 그대로다.
+          "[&>button:hover]:bg-accent [&>button]:h-auto [&>button]:w-full [&>button]:justify-start [&>button]:gap-1.5 [&>button]:rounded-md [&>button]:border-0 [&>button]:bg-transparent [&>button]:px-2 [&>button]:py-1.5 [&>button]:font-normal [&>button]:shadow-none",
           open
             ? "animate-in fade-in-0 zoom-in-95 slide-in-from-top-2 flex"
             : "hidden",
