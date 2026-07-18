@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [4.8.0] - 2026-07-18
+
+### Added
+
+- **앱 표면에 글래스모피즘을 적용했습니다.** 헤더·푸터·대화상자·선택 메뉴와 일부 안내 패널이 뒤 배경이 비쳐 보이는 반투명 유리 느낌으로 바뀝니다. 기존 색·브랜드 이미지·문구는 그대로 두고 표면 질감만 더했으며, 목록의 일정 카드와 달력은 읽기 쉽도록 기존처럼 불투명하게 유지합니다. 유리 효과를 지원하지 않는 브라우저에서는 배경을 더 진하게 채워 글자가 흐릿해지지 않습니다. ([#924](https://github.com/idean3885/trip-planner/issues/924))
+
+
 ## [4.7.3] - 2026-07-17
 
 ### Fixed
