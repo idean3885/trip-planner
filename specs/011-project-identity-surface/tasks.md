@@ -21,7 +21,7 @@ description: "Task list for 011-project-identity-surface"
 
 ## Path Conventions
 
-Next.js App Router 단일 앱 구조. 소스 경로는 `src/` 기준, 저장소 루트 경로는 본 워크트리(`/Users/nhn/git-project/idean3885/trip-planner-200/`) 기준.
+Next.js App Router 단일 앱 구조. 소스 경로는 `src/` 기준, 저장소 루트 경로는 본 워크트리(`/Users/<user>/git-project/idean3885/trip-planner-200/`) 기준.
 
 ---
 

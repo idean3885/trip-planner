@@ -31,9 +31,9 @@
 | 원칙 | 검증 | 결과 |
 |------|------|------|
 | **I. AX-First** | 모든 검색·분석·생성이 Claude Desktop/Code를 통해 수행됨. MCP 도구 + CLI 스크립트가 데이터 수집, Claude가 분석·추천·생성 담당. 식당·교통은 Claude 웹 검색으로 딥 리서치. 사용자는 자연어로 요청하고 결과를 확인·피드백만 함 | PASS |
-| **II. Minimum Cost** | Booking.com RapidAPI $8.99/월만 사용. AppPaaS 무료 (사내 인프라). 식당·교통은 Claude 웹 검색 (추가 API 없음). 별도 Claude API 과금 없음 | PASS |
-| **III. Mobile-First Delivery** | AppPaaS Next.js 웹앱으로 모바일 반응형 제공. 리스트 형태, 일별 개별 페이지, 탭 가능한 링크 | PASS |
-| **IV. Incremental Release** | v1은 CLI 스크립트 + 마크다운 생성 + AppPaaS 웹앱. 각 US별 독립 구현·검증 가능 | PASS |
+| **II. Minimum Cost** | Booking.com RapidAPI $8.99/월만 사용. 사내 PaaS 무료 (사내 인프라). 식당·교통은 Claude 웹 검색 (추가 API 없음). 별도 Claude API 과금 없음 | PASS |
+| **III. Mobile-First Delivery** | 사내 PaaS Next.js 웹앱으로 모바일 반응형 제공. 리스트 형태, 일별 개별 페이지, 탭 가능한 링크 | PASS |
+| **IV. Incremental Release** | v1은 CLI 스크립트 + 마크다운 생성 + 사내 PaaS 웹앱. 각 US별 독립 구현·검증 가능 | PASS |
 
 **Post-Design Re-check**: 모든 원칙 PASS. Complexity Tracking 해당 없음.
 
@@ -91,7 +91,7 @@ trips/                          # 여행 데이터 (마크다운)
     └── ...
 ```
 
-**Structure Decision**: Python MCP 서버(`src/travel_mcp/`)와 Next.js 웹앱(`src/app/`, `src/lib/`)이 루트에 공존. GitHub Pages로 정적 배포(static export), 커스텀 도메인 `trip.idean.me`. BE 확장 시 AppPaaS/Vercel로 전환 가능. 아키텍처 결정은 [ADR-001](adr/001-fe-only-stateless-architecture.md) 참조.
+**Structure Decision**: Python MCP 서버(`src/travel_mcp/`)와 Next.js 웹앱(`src/app/`, `src/lib/`)이 루트에 공존. GitHub Pages로 정적 배포(static export), 커스텀 도메인 `trip.idean.me`. BE 확장 시 사내 PaaS/Vercel로 전환 가능. 아키텍처 결정은 [ADR-001](adr/001-fe-only-stateless-architecture.md) 참조.
 
 ## 모바일 UX 개선 (FR-013~016)
 
