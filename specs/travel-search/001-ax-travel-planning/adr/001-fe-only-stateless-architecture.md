@@ -10,8 +10,8 @@
 여행 일정 검색·조회·공유를 위한 웹 애플리케이션을 구축한다. 개발자 1인이 전체 스택을 담당하며, 사용 데이터는 여행 일정(도시, 숙소명, 관광지, 예산 등)으로 **개인정보를 일체 포함하지 않는다.**
 
 기술 제약:
-- AppPaaS 배포 (FE: React/Vue/Svelte 지원, BE/DB도 별도 제공)
-- Node.js 20 (AppPaaS 최대 버전)
+- 사내 PaaS 배포 (FE: React/Vue/Svelte 지원, BE/DB도 별도 제공)
+- Node.js 20 (사내 PaaS 최대 버전)
 - FE 코드는 AI(Claude)가 전량 생성 (AX 기반 개발)
 
 ## Decision
@@ -27,19 +27,19 @@
 | Vue (Nuxt) | 보통 | BE 추가 가능 | 중간 | React 전환 시 전면 재작성 |
 
 - AX 관점에서 SvelteKit이 문법 단순성으로 소폭 우위이나, **확장 시 컨버팅 비용이 결정적**
-- BE 개발자로서 향후 AppPaaS BE + DB 추가, OAuth2 연동, 슈퍼앱 통합 가능성 존재
+- BE 개발자로서 향후 사내 PaaS BE + DB 추가, OAuth2 연동, 슈퍼앱 통합 가능성 존재
 - React → 다른 프레임워크 전환 필요 없음. 반대 방향은 전면 재작성
 
 **기각된 대안:**
 
-- **Astro**: AX 최적이나 AppPaaS 미지원 (React/Vue/Svelte만 제공)
+- **Astro**: AX 최적이나 사내 PaaS 미지원 (React/Vue/Svelte만 제공)
 - **SvelteKit**: AX 단독 우위이나, 확장 시 React 전환 비용 > 현재 React 보일러플레이트 비용 (AI가 생성하므로 보일러플레이트는 비용 아님)
 
 ### 2. 아키텍처: FE-Only, Stateless
 
 **현재 구조:**
 ```
-[사용자] → [Next.js FE (AppPaaS)] → [정적 데이터 (JSON/마크다운, 빌드 번들)]
+[사용자] → [Next.js FE (사내 PaaS)] → [정적 데이터 (JSON/마크다운, 빌드 번들)]
 ```
 
 - BE 서버 없음, DB 없음
@@ -48,11 +48,11 @@
 
 **확장 방향 (구현하지 않음, 방향성만 기록):**
 ```
-[사용자] → [Next.js FE] → [AppPaaS BE (Spring/Node)] → [AppPaaS DB]
+[사용자] → [Next.js FE] → [사내 PaaS BE (Spring/Node)] → [사내 PaaS DB]
 ```
 
 - OAuth2 인증, 사용자별 데이터 분리, 슈퍼앱 연동 시 BE 도입
-- AppPaaS 인프라로 BE/DB 모두 지원되므로 SaaS 벤더 종속 없음
+- 사내 PaaS 인프라로 BE/DB 모두 지원되므로 SaaS 벤더 종속 없음
 
 ### 3. 보안 수준: 최소 (의식적 판단)
 
@@ -93,7 +93,7 @@
 | PDF 추출 | 웹 뷰로 대체. 모바일 브라우저에서 직접 조회 |
 | iCal 생성 | 현 스코프 밖. 캘린더 연동은 확장 시 검토 |
 | MCP 서버 (검색 도구) | 토큰 낭비. CLI 스크립트 방식으로 전환 |
-| BE / DB | 1인 개발, FE-only로 충분. 확장 시 AppPaaS BE 도입 |
+| BE / DB | 1인 개발, FE-only로 충분. 확장 시 사내 PaaS BE 도입 |
 | 인증 (OAuth2 등) | 단일 사용자, 개인정보 없음. 확장 시 도입 |
 
 ## Decision Log
@@ -112,7 +112,7 @@
 **1차 후보 — Astro 5.x**:
 - AX 관점 최적 (HTML 기반, AI 오류 표면 최소, 마크다운 네이티브, JS 제로)
 - Node 20 지원 (`^20.3.0`)
-- **탈락 사유**: AppPaaS가 React/Vue/Svelte만 지원. Astro는 배포 불가
+- **탈락 사유**: 사내 PaaS가 React/Vue/Svelte만 지원. Astro는 배포 불가
 
 **2차 후보 — SvelteKit**:
 - AX 코드 생성 우수 (HTML에 가까운 문법)
@@ -123,7 +123,7 @@
 - AI 훈련 데이터 최다 → 코드 생성 품질 안정적
 - BE 확장 시 API routes 추가만으로 전환 가능
 - React 보일러플레이트가 많다는 단점은 AI가 전량 생성하므로 비용 아님
-- AppPaaS 주류 지원, 인력풀 최대
+- 사내 PaaS 주류 지원, 인력풀 최대
 
 ### 3. 보안 수준 결정 과정
 
@@ -140,20 +140,20 @@
 
 **면접 관점**: "위협 분석을 수행했고, 보호할 자산이 없으므로 유보한다. 개인정보가 들어오면 즉시 인증 + BE 분리한다"가 핵심 논리. 보안을 모르는 것이 아니라, 과잉 설계를 피한 것.
 
-### 4. GitHub Pages → AppPaaS 전환
+### 4. GitHub Pages → 사내 PaaS 전환
 
 **기존 spec**: GitHub Pages (Jekyll) + 정적 마크다운 공유
 **문제**: 정적 사이트는 검색 결과 연동, 인터랙션 불가. 웹 뷰로 딜리버리하려면 동적 기능 필요
-**전환점**: AppPaaS로 Svelte/React 배포 가능하다는 사실 확인
-**결정**: AppPaaS 웹앱으로 전환. 검색 + 일정 조회 + 모바일 최적화를 하나의 앱으로
+**전환점**: 사내 PaaS로 Svelte/React 배포 가능하다는 사실 확인
+**결정**: 사내 PaaS 웹앱으로 전환. 검색 + 일정 조회 + 모바일 최적화를 하나의 앱으로
 
-### 6. AppPaaS → GitHub Pages 재전환 (2026-04-05)
+### 6. 사내 PaaS → GitHub Pages 재전환 (2026-04-05)
 
-**기존**: AppPaaS Next.js 서버 모드 배포 (ADR Decision Log #4)
-**문제**: Next.js 빌드는 성공하나 AppPaaS 컨테이너 이미지 생성이 반복 실패. 원인은 AppPaaS 내부 빌더가 monorepo 구조(`web/` 하위)를 처리하지 못하고, 루트로 이동 후에도 "An unexpected error occurred"로 실패. AppPaaS 지원팀 문의 외에는 해결 불가.
+**기존**: 사내 PaaS Next.js 서버 모드 배포 (ADR Decision Log #4)
+**문제**: Next.js 빌드는 성공하나 사내 PaaS 컨테이너 이미지 생성이 반복 실패. 원인은 사내 PaaS 내부 빌더가 monorepo 구조(`web/` 하위)를 처리하지 못하고, 루트로 이동 후에도 "An unexpected error occurred"로 실패. 사내 PaaS 지원팀 문의 외에는 해결 불가.
 **전환점**: 현재 모든 페이지가 SSG(정적 생성)이므로 서버가 불필요. `output: "export"`로 정적 HTML만 출력하면 GitHub Pages에서 서빙 가능.
 **결정**: GitHub Pages + Next.js static export로 전환. 커스텀 도메인 `trip.idean.me` 설정.
-- AppPaaS는 BE가 필요해질 때 재전환 (ADR Decision Log #4의 확장 방향 유지)
+- 사내 PaaS는 BE가 필요해질 때 재전환 (ADR Decision Log #4의 확장 방향 유지)
 - `output: "export"` 제거만으로 서버 모드 복구 가능
 - React(Next.js) 프레임워크 선택은 변경 없음 — 확장성 판단 유지
 
@@ -181,4 +181,4 @@
 
 **리스크:**
 - Next.js 메이저 업데이트 시 AI 생성 코드 호환성 확인 필요
-- BE 도입 시 AppPaaS 컨테이너 빌드 문제 재발 가능 — Vercel 전환 검토
+- BE 도입 시 사내 PaaS 컨테이너 빌드 문제 재발 가능 — Vercel 전환 검토

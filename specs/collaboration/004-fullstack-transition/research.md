@@ -62,7 +62,7 @@
 **Rationale**: Next.js SSR 네이티브 지원. Neon 직접 통합. 무료 티어로 충분.
 **Alternatives considered**:
 - GitHub Pages 유지: static export만 가능, SSR/API Routes 불가
-- AppPaaS: Phase 1에서 빌드 실패 경험. React 20 제한
+- 사내 PaaS: Phase 1에서 빌드 실패 경험. React 20 제한
 
 ### 세부 결정
 
