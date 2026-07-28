@@ -3,7 +3,7 @@
 > vitest run tests/components/ActivityList.test.tsx --run
 
 
- RUN  v4.1.4 /Users/nhn/git-project/idean3885/trip-planner
+ RUN  v4.1.4 /Users/<user>/git-project/idean3885/trip-planner
 
 
  Test Files  1 passed (1)

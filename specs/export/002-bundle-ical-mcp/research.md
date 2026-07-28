@@ -18,7 +18,7 @@ install.sh에 che-ical-mcp를 번들하려면, 해당 패키지의 배포 방식
 
 | 환경 | 등록 여부 | 경로 |
 |------|-----------|------|
-| Claude Code (user scope) | ✅ 등록됨 | `/Users/nhn/bin/CheICalMCP` |
+| Claude Code (user scope) | ✅ 등록됨 | `/Users/<user>/bin/CheICalMCP` |
 | Claude Desktop | ❌ 미등록 | - |
 
 ### 설치 방식
