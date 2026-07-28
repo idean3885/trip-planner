@@ -11,7 +11,7 @@
 1. MCP 서버가 Claude Desktop에 등록되어 있어야 함 (Hotels, Flights 검색 시)
 2. `.env` 파일에 `RAPIDAPI_KEY` 설정 완료
 3. CLI 스크립트 실행 가능: `python scripts/search_attraction_locations.py --help`
-4. AppPaaS 웹앱이 배포되어 있어야 함 (US3 검증 시)
+4. 사내 PaaS 웹앱이 배포되어 있어야 함 (US3 검증 시)
 
 ---
 
@@ -108,20 +108,20 @@ python scripts/search_attractions.py --location-id "{위에서 얻은 ID}" --dat
 
 ## QS3. 웹앱 딜리버리 (US3)
 
-### 시나리오: AppPaaS 배포 후 모바일 열람
+### 시나리오: 사내 PaaS 배포 후 모바일 열람
 
 ```
-개발자: 웹앱 빌드 → AppPaaS 배포
+개발자: 웹앱 빌드 → 사내 PaaS 배포
 동행자: 공유받은 URL을 모바일에서 열기
 ```
 
 **예상 동작**:
-1. Next.js 앱 빌드 → AppPaaS 배포
+1. Next.js 앱 빌드 → 사내 PaaS 배포
 2. 웹앱 URL 접근 가능
 3. 모바일 브라우저에서 정상 표시
 
 **검증 포인트**:
-- [ ] AppPaaS 배포가 정상 완료되는가
+- [ ] 사내 PaaS 배포가 정상 완료되는가
 - [ ] 모바일에서 추가 조작(줌, 가로 스크롤) 없이 열람 가능한가
 - [ ] 일별 일정 링크가 모바일에서 탭으로 이동 가능한가
 - [ ] 숙소/관광지 외부 링크가 모바일에서 정상 동작하는가
@@ -144,7 +144,7 @@ python scripts/search_attractions.py --location-id "{위에서 얻은 ID}" --dat
 ### 시나리오: 단위 테스트 실행
 
 ```bash
-cd /Users/nhn/git-project/idean3885/trip-planner
+cd /Users/<user>/git-project/idean3885/trip-planner
 pytest tests/unit/ -v
 ```
 
